@@ -6,10 +6,10 @@ SKIP_CODEX_RUNNING_CHECK=false
 UPDATE_LOCK_DIR="${TMPDIR:-/tmp}/intuitive-flow-update.lock.d"
 UPDATE_LOCK_PID_FILE="$UPDATE_LOCK_DIR/pid"
 UPDATE_LOCK_HELD=false
-NPM_REGISTRY_MODE="${NPM_REGISTRY_MODE:-mirror-first}"
+NPM_REGISTRY_MODE="${NPM_REGISTRY_MODE:-direct}"
 
 usage() {
-    echo "Usage: ${0##*/} [--tmp-fix] [--skip-codex-running-check] [--no-npm-mirror]"
+    echo "Usage: ${0##*/} [--tmp-fix] [--skip-codex-running-check] [--npm-mirror]"
 }
 
 codex_running_hint() {
@@ -26,15 +26,20 @@ print_npm_source() {
                 echo "  ✓ npm registry mode: direct ($NPM_FALLBACK_REGISTRY)"
             fi
             ;;
-        mirror-first)
-            :
+        mirror)
+            if declare -F task_success >/dev/null 2>&1; then
+                task_success "npm registry mode: mirror ($NPM_MIRROR_REGISTRY)"
+            else
+                echo "  ✓ npm registry mode: mirror ($NPM_MIRROR_REGISTRY)"
+            fi
             ;;
         *)
             if declare -F task_warn >/dev/null 2>&1; then
-                task_warn "unknown NPM_REGISTRY_MODE=$NPM_REGISTRY_MODE; using mirror-first selector"
+                task_warn "unknown NPM_REGISTRY_MODE=$NPM_REGISTRY_MODE; using direct registry"
             else
-                echo "  ! unknown NPM_REGISTRY_MODE=$NPM_REGISTRY_MODE; using mirror-first selector"
+                echo "  ! unknown NPM_REGISTRY_MODE=$NPM_REGISTRY_MODE; using direct registry"
             fi
+            NPM_REGISTRY_MODE=direct
             ;;
     esac
 }
@@ -119,6 +124,9 @@ for arg in "$@"; do
             ;;
         --skip-codex-running-check)
             SKIP_CODEX_RUNNING_CHECK=true
+            ;;
+        --npm-mirror)
+            NPM_REGISTRY_MODE=mirror
             ;;
         --no-npm-mirror)
             NPM_REGISTRY_MODE=direct

@@ -2,8 +2,8 @@
 
 # Codex publishes platform-native binaries through optional dependency aliases:
 #   @openai/codex-linux-x64 -> npm:@openai/codex@<version>-linux-x64
-# Keep this validation separate from registry selection so mirror fallback logic
-# stays readable.
+# Keep this validation separate from registry selection so direct and mirror
+# checks stay readable.
 
 codex_native_package_name() {
     node - <<'NODE'

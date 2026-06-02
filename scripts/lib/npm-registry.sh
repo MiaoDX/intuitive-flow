@@ -2,7 +2,7 @@
 
 NPM_MIRROR_REGISTRY="${NPM_MIRROR_REGISTRY:-https://registry.npmmirror.com}"
 NPM_FALLBACK_REGISTRY="${NPM_FALLBACK_REGISTRY:-https://registry.npmjs.org}"
-NPM_REGISTRY_MODE="${NPM_REGISTRY_MODE:-mirror-first}"
+NPM_REGISTRY_MODE="${NPM_REGISTRY_MODE:-direct}"
 
 npm_registry_notice() {
     local message="$*"
@@ -102,9 +102,14 @@ select_npm_registry() {
         npm_registry_has_required_native_packages "$NPM_FALLBACK_REGISTRY" "$@" || return 1
 
         npm_registry_notice "$purpose: using npm registry $NPM_FALLBACK_REGISTRY"
-        echo "  ✓ $purpose registry: $NPM_FALLBACK_REGISTRY (--no-npm-mirror)" >&2
+        echo "  ✓ $purpose registry: $NPM_FALLBACK_REGISTRY" >&2
         printf '%s\n' "$NPM_FALLBACK_REGISTRY"
         return 0
+    fi
+
+    if [ "$NPM_REGISTRY_MODE" != "mirror" ]; then
+        npm_registry_warn "unknown NPM_REGISTRY_MODE=$NPM_REGISTRY_MODE; expected direct or mirror"
+        return 1
     fi
 
     local package missing=()
@@ -115,29 +120,18 @@ select_npm_registry() {
     done
 
     if [ "${#missing[@]}" -eq 0 ] && npm_registry_has_required_native_packages "$NPM_MIRROR_REGISTRY" "$@"; then
+        npm_registry_notice "$purpose: using mirror registry $NPM_MIRROR_REGISTRY"
+        echo "  ✓ $purpose registry: $NPM_MIRROR_REGISTRY (--npm-mirror)" >&2
         printf '%s\n' "$NPM_MIRROR_REGISTRY"
         return 0
     fi
 
     if [ "${#missing[@]}" -gt 0 ]; then
-        npm_registry_notice "$purpose: mirror missing ${missing[*]}; checking fallback $NPM_FALLBACK_REGISTRY"
         npm_registry_warn "$purpose mirror missing package(s): ${missing[*]}"
     else
-        npm_registry_notice "$purpose: mirror missing required native package; checking fallback $NPM_FALLBACK_REGISTRY"
         npm_registry_warn "$purpose mirror missing required native package(s)"
     fi
-    npm_registry_warn "falling back to $NPM_FALLBACK_REGISTRY"
-
-    for package in "$@"; do
-        if ! npm_package_available "$package" "$NPM_FALLBACK_REGISTRY"; then
-            npm_registry_warn "$purpose package unavailable from fallback registry: $package"
-            return 1
-        fi
-    done
-    npm_registry_has_required_native_packages "$NPM_FALLBACK_REGISTRY" "$@" || return 1
-
-    npm_registry_notice "$purpose: using fallback registry $NPM_FALLBACK_REGISTRY"
-    printf '%s\n' "$NPM_FALLBACK_REGISTRY"
+    return 1
 }
 
 claude_native_package() {

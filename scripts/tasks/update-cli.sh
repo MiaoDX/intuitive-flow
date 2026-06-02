@@ -87,7 +87,6 @@ print_npm_failure_hint() {
     registry=$(
         sed -n \
             -e 's/^  ✓ Global CLI tools registry: \([^ ]*\).*/\1/p' \
-            -e 's/^  ! falling back to \([^ ]*\).*/\1/p' \
             "$log_file" | tail -1
     )
     if [ -z "$registry" ]; then
@@ -309,7 +308,7 @@ run_global_cli_tools() {
 
     # Keep all global npm installs in one command so they do not race on the same prefix.
     echo "  → installing package(s): ${GLOBAL_CLI_INSTALL_PACKAGES[*]}"
-    if [ "$registry" = "$NPM_MIRROR_REGISTRY" ] && [ "$NPM_REGISTRY_MODE" != "direct" ]; then
+    if [ "$registry" = "$NPM_MIRROR_REGISTRY" ] && [ "$NPM_REGISTRY_MODE" = "mirror" ]; then
         task_notice "Global CLI tools: installing ${GLOBAL_CLI_INSTALL_PACKAGES[*]}"
     else
         task_notice "Global CLI tools: installing ${GLOBAL_CLI_INSTALL_PACKAGES[*]} via $registry"
@@ -420,7 +419,7 @@ run_gsd_installer() {
     local target="$2"
     local out
 
-    if [ "$registry" = "$NPM_MIRROR_REGISTRY" ] && [ "$NPM_REGISTRY_MODE" != "direct" ]; then
+    if [ "$registry" = "$NPM_MIRROR_REGISTRY" ] && [ "$NPM_REGISTRY_MODE" = "mirror" ]; then
         task_notice "GSD workflow: running installer $target"
     else
         task_notice "GSD workflow: running installer $target via $registry"

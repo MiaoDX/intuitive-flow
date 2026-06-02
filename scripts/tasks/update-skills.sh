@@ -12,7 +12,7 @@ _run_skills() {
     local agent="$1" repo="$2" label="$3"; shift 3
     local out registry
     registry=$(select_npm_registry "Skills CLI" skills) || return 1
-    if [ "$registry" = "$NPM_MIRROR_REGISTRY" ] && [ "$NPM_REGISTRY_MODE" != "direct" ]; then
+    if [ "$registry" = "$NPM_MIRROR_REGISTRY" ] && [ "$NPM_REGISTRY_MODE" = "mirror" ]; then
         task_notice "Skills: installing $label for $agent"
     else
         task_notice "Skills: installing $label for $agent via $registry"
