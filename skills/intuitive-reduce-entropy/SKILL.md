@@ -44,6 +44,47 @@ and unsurprising for the next human or agent.
 When presenting candidates, include a brief `Zen hint:` for the recommended
 slice that states which clarity principle the slice advances.
 
+## Design Pattern Fit Bias
+
+For code cleanup, architecture discovery, and refactor-shaped entropy, add a
+design-pattern lens after the Zen lens. Some entropy slices are not just
+"simplify this file"; they are places where a small, named pattern can make the
+next change more local, explicit, and testable.
+
+Use patterns only when the repo evidence shows recurring shape. Prefer direct
+code when a pattern would add ceremony, naming overhead, or indirection without
+removing meaningful complexity.
+
+Good pattern-fit signals:
+
+- Repeated conditional behavior by type, mode, provider, command, or format ->
+  Strategy, Command, or polymorphic dispatch.
+- Multi-step object construction, option normalization, or environment setup
+  scattered across call sites -> Builder or Factory.
+- Incompatible external APIs, tool runners, storage backends, or legacy command
+  surfaces leaking into core code -> Adapter or Facade.
+- Cross-cutting concerns such as logging, validation, caching, retries, or
+  metrics tangled into business logic -> Decorator, middleware, or pipeline.
+- Ordered transformation, validation, or handling stages with growing
+  special-case branches -> Chain of Responsibility or pipeline.
+- Domain state transitions encoded as loose booleans, string flags, or repeated
+  switch blocks -> State pattern or an explicit state machine.
+- Many observers, callbacks, event emitters, or UI updates wired manually ->
+  Observer/pub-sub with clear ownership boundaries.
+
+Bad pattern-fit signals:
+
+- The code has one variation point, one caller, or one known implementation.
+- A small function, direct data table, or local helper would make the behavior
+  clearer than a named abstraction.
+- The proposed pattern preserves obsolete compatibility instead of deleting or
+  migrating it.
+- The pattern name is doing more justification work than the actual evidence.
+
+When presenting candidates, include a brief `Pattern hint:` for code or
+architecture slices. Name the likely pattern and the concrete complexity it
+would remove, or say `Pattern hint: no pattern; direct cleanup is clearer.`
+
 ## Human/Agent Surface Rule
 
 The default human-facing source of truth is intentionally small:
@@ -223,7 +264,9 @@ Use this route unless the user already names a specific entropy source.
 3. **Recommend**: present 2-4 candidate slices when the best path is not
    obvious. Include one recommended slice first and attach a `Zen hint:` that
    explains how it makes the repo more explicit, simple, canonical, or
-   unsurprising.
+   unsurprising. For code or architecture slices, also attach a `Pattern hint:`
+   that names a likely design pattern fit or explicitly says direct cleanup is
+   clearer.
 4. **Discover architecture**: when the best slice is architecture/deepening but
    no target seam has been accepted, route to `$improve-codebase-architecture`
    in report-only mode. Treat its output as candidate evidence, not execution
@@ -245,6 +288,7 @@ stage does not repeat the whole audit:
 Selected slice:
 Entropy source:
 Zen hint:
+Pattern hint:
 Evidence:
 Affected paths:
 Discovery skill:
@@ -287,6 +331,8 @@ If the user gives no area, do not guess silently. Return a short candidate list:
 ```text
 Recommended slice: <one option>
 Why: <repo evidence>
+Zen hint: <clarity principle advanced>
+Pattern hint: <pattern fit, or direct cleanup is clearer>
 Alternatives:
 - <option 2>
 - <option 3>
@@ -332,6 +378,8 @@ Entropy source:
 Selected slice:
 Specialist owner:
 Gate:
+Zen hint:
+Pattern hint:
 Changes:
 Verification:
 Parked items:
