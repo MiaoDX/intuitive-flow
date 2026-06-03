@@ -115,6 +115,7 @@ def main() -> int:
         reason = str(sandbox_decision["reason"])
         write_result(run_dir, session, "BLOCKED", reason)
         write_eval(run_dir, cwd, skill_repo, "BLOCKED", 125, reason)
+        write_skill_review(run_dir, cwd, skill_repo, skills, "BLOCKED", reason)
         print(run_dir)
         return 125
 
@@ -124,6 +125,14 @@ def main() -> int:
     if args.dry_run:
         write_result(run_dir, session, "DRY_RUN", "Prompt rewritten; tmux session not started.")
         write_eval(run_dir, cwd, skill_repo, "DRY_RUN", 0, "No worker run executed.")
+        write_skill_review(
+            run_dir,
+            cwd,
+            skill_repo,
+            skills,
+            "DRY_RUN",
+            "Prompt rewritten; tmux session not started.",
+        )
         print(run_dir)
         return 0
 
@@ -136,6 +145,7 @@ def main() -> int:
             stop_session(session, run_dir, reason)
             write_result(run_dir, session, "BLOCKED", reason)
             write_eval(run_dir, cwd, skill_repo, "BLOCKED", 125, reason)
+            write_skill_review(run_dir, cwd, skill_repo, skills, "BLOCKED", reason)
             print(run_dir)
             return 125
 
@@ -147,6 +157,7 @@ def main() -> int:
                 skill_repo=skill_repo,
                 run_dir=run_dir,
                 session=session,
+                skills=skills,
                 workspace_status_before=workspace_status_before,
                 initial_dangerous=initial_dangerous,
             )
@@ -175,6 +186,7 @@ def main() -> int:
         skill_repo=skill_repo,
         run_dir=run_dir,
         session=session,
+        skills=skills,
         workspace_status_before=workspace_status_before,
         initial_dangerous=initial_dangerous,
     )
@@ -187,6 +199,7 @@ def supervise_to_completion(
     skill_repo: Path,
     run_dir: Path,
     session: str,
+    skills: list[str],
     workspace_status_before: str,
     initial_dangerous: bool,
 ) -> int:
@@ -244,6 +257,7 @@ def supervise_to_completion(
 
     write_result(run_dir, session, status, reason)
     write_eval(run_dir, cwd, skill_repo, status, exit_code, reason)
+    write_skill_review(run_dir, cwd, skill_repo, skills, status, reason)
     print(run_dir)
     return exit_code
 
@@ -255,6 +269,7 @@ def spawn_detached_supervisor(
     skill_repo: Path,
     run_dir: Path,
     session: str,
+    skills: list[str],
     workspace_status_before: str,
     initial_dangerous: bool,
 ) -> int:
@@ -308,6 +323,7 @@ def spawn_detached_supervisor(
                 skill_repo=skill_repo,
                 run_dir=run_dir,
                 session=session,
+                skills=skills,
                 workspace_status_before=workspace_status_before,
                 initial_dangerous=initial_dangerous,
             )
@@ -1426,6 +1442,124 @@ Patch a skill only for reusable workflow defects. Prefer deleting, simplifying,
 or moving detail to a script/reference before adding new rules.
 """,
     )
+
+
+def write_skill_review(
+    run_dir: Path,
+    cwd: Path,
+    skill_repo: Path,
+    skills: list[str],
+    status: str,
+    reason: str,
+) -> None:
+    """Write the default post-run skill-performance review artifact.
+
+    This is deliberately advisory. The runner should make skill feedback easy
+    to batch-review without turning every product run into automatic skill
+    maintenance.
+    """
+    workspace_skill_status = git_status(cwd, ["--", "skills"])
+    custom_skill_status = git_status(skill_repo, ["--", "skills"])
+    notes = extract_final_field(run_dir, "SKILL_BEHAVIOR_NOTES")
+    recommendation = skill_review_recommendation(
+        status=status,
+        notes=notes,
+        workspace_skill_status=workspace_skill_status,
+        custom_skill_status=custom_skill_status,
+    )
+    selected_skills = ", ".join(f"${skill}" for skill in skills) if skills else "none detected"
+    notes_text = notes or "none"
+    write_text(
+        run_dir / "skill-review.md",
+        f"""# Skill Runner Skill Review
+
+## Run
+
+- Status: {status}
+- Reason: {reason}
+- Selected skills: {selected_skills}
+
+## Worker Skill Behavior Notes
+
+{notes_text}
+
+## Workspace Skill Diff
+
+```text
+{workspace_skill_status or "clean"}
+```
+
+## Custom Skill Source Diff
+
+```text
+{custom_skill_status or "clean"}
+```
+
+## Recommendation
+
+{recommendation}
+
+## User Decision
+
+Choose one after reviewing this run and the actual diff:
+
+- `NO_SKILL_CHANGE` - behavior was acceptable or the issue was task-specific.
+- `RECORD_LEARNING` - keep as a candidate learning; do not edit a skill yet.
+- `PATCH_REPO_SKILL` - update a repo-local skill source under `skills/`.
+- `PATCH_CUSTOM_SKILL` - update the shared custom skill source in the skill repo.
+- `FIX_RUNNER` - change skill-runner mechanics or artifact parsing.
+""",
+    )
+
+
+def skill_review_recommendation(
+    *,
+    status: str,
+    notes: str,
+    workspace_skill_status: str,
+    custom_skill_status: str,
+) -> str:
+    has_skill_diff = bool(workspace_skill_status.strip() or custom_skill_status.strip())
+    normalized_notes = notes.strip().lower()
+    if has_skill_diff:
+        return (
+            "REVIEW_REQUIRED: this run changed skill source files. Inspect whether the "
+            "skill change is general, small, verified, and separate from product-task work."
+        )
+    if normalized_notes and normalized_notes not in {"none", "n/a", "na"}:
+        return (
+            "CANDIDATE_LEARNING: the worker reported skill behavior notes. Review them "
+            "across runs before deciding whether to patch a skill."
+        )
+    if status in {"FAILED", "BLOCKED"}:
+        return (
+            "NO_SKILL_CHANGE by default: the run did not identify a reusable skill "
+            "defect. Inspect logs only if the failure pattern repeats."
+        )
+    return "NO_SKILL_CHANGE: no reusable skill issue was reported."
+
+
+def extract_final_field(run_dir: Path, field: str) -> str:
+    text = final_message_text(run_dir)
+    if not text:
+        return ""
+    pattern = re.compile(
+        rf"(?ims)^\s*{re.escape(field)}\s*:\s*(.*?)(?=^\s*[A-Z_]+\s*:|\Z)"
+    )
+    match = pattern.search(text)
+    if not match:
+        return ""
+    return match.group(1).strip()
+
+
+def final_message_text(run_dir: Path) -> str:
+    for name in ("last-message.md", "terminal.log", "events.jsonl"):
+        path = run_dir / name
+        if not path.exists():
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace")
+        return strip_ansi(text) if name == "terminal.log" else text
+    return ""
 
 
 def git_status(cwd: Path, extra: list[str] | None = None) -> str:

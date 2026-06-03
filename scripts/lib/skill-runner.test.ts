@@ -453,6 +453,106 @@ print(json.dumps({
     }
   });
 
+  test("writes skill review artifact from worker behavior notes", () => {
+    const tempDir = mkdtempSync(join(tmpdir(), "skill-runner-review-"));
+    const tempRepo = mkdtempSync(join(tmpdir(), "skill-runner-review-clean-repo-"));
+    const skillRepo = mkdtempSync(join(tmpdir(), "skill-runner-review-clean-skillrepo-"));
+    try {
+      spawnSync("git", ["init"], { cwd: tempRepo, encoding: "utf8" });
+      spawnSync("git", ["init"], { cwd: skillRepo, encoding: "utf8" });
+      writeFileSync(
+        join(tempDir, "last-message.md"),
+        [
+          "RESULT_STATUS: SUCCESS",
+          "SUMMARY: complete",
+          "CHANGED_FILES: none",
+          "COMMITS: none",
+          "VERIFICATION: fake",
+          "OPEN_DECISIONS: none",
+          "SKILL_BEHAVIOR_NOTES: $molmo-realworld-cleanup should explain sanitized destination policy more directly.",
+          "RECOMMENDED_GOAL_REVISION: none",
+          "",
+        ].join("\n"),
+      );
+
+      const output = runPython(`
+from pathlib import Path
+run_dir = Path(${JSON.stringify(tempDir)})
+module.write_skill_review(
+    run_dir,
+    Path(${JSON.stringify(tempRepo)}),
+    Path(${JSON.stringify(skillRepo)}),
+    ["molmo-realworld-cleanup", "intuitive-flow"],
+    "SUCCESS",
+    "worker reported success",
+)
+print(json.dumps({"review": (run_dir / "skill-review.md").read_text()}))
+`);
+      expect(output.review).toContain("Selected skills: $molmo-realworld-cleanup, $intuitive-flow");
+      expect(output.review).toContain("CANDIDATE_LEARNING");
+      expect(output.review).toContain("sanitized destination policy");
+      expect(output.review).toContain("User Decision");
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+      rmSync(tempRepo, { recursive: true, force: true });
+      rmSync(skillRepo, { recursive: true, force: true });
+    }
+  });
+
+  test("skill review reports workspace-local skill diffs separately", () => {
+    const tempRepo = mkdtempSync(join(tmpdir(), "skill-runner-review-repo-"));
+    const skillRepo = mkdtempSync(join(tmpdir(), "skill-runner-review-skillrepo-"));
+    try {
+      spawnSync("git", ["init"], { cwd: tempRepo, encoding: "utf8" });
+      spawnSync("git", ["init"], { cwd: skillRepo, encoding: "utf8" });
+      writeFileSync(join(tempRepo, "README.md"), "repo\n");
+      writeFileSync(join(skillRepo, "README.md"), "skills\n");
+      spawnSync("mkdir", ["-p", join(tempRepo, "skills", "local-skill")]);
+      spawnSync("mkdir", ["-p", join(skillRepo, "skills", "shared-skill")]);
+      writeFileSync(join(tempRepo, "skills", "local-skill", "SKILL.md"), "local\n");
+      writeFileSync(join(skillRepo, "skills", "shared-skill", "SKILL.md"), "shared\n");
+      spawnSync("git", ["add", "."], { cwd: tempRepo, encoding: "utf8" });
+      spawnSync(
+        "git",
+        ["-c", "user.name=Skill Runner Test", "-c", "user.email=test@example.com", "commit", "-m", "init"],
+        { cwd: tempRepo, encoding: "utf8" },
+      );
+      spawnSync("git", ["add", "."], { cwd: skillRepo, encoding: "utf8" });
+      spawnSync(
+        "git",
+        ["-c", "user.name=Skill Runner Test", "-c", "user.email=test@example.com", "commit", "-m", "init"],
+        { cwd: skillRepo, encoding: "utf8" },
+      );
+
+      writeFileSync(join(tempRepo, "skills", "local-skill", "SKILL.md"), "local changed\n");
+      writeFileSync(join(skillRepo, "skills", "shared-skill", "SKILL.md"), "shared changed\n");
+
+      const runDir = mkdtempSync(join(tmpdir(), "skill-runner-review-out-"));
+      const output = runPython(`
+from pathlib import Path
+run_dir = Path(${JSON.stringify(runDir)})
+module.write_skill_review(
+    run_dir,
+    Path(${JSON.stringify(tempRepo)}),
+    Path(${JSON.stringify(skillRepo)}),
+    ["local-skill"],
+    "SUCCESS",
+    "worker reported success",
+)
+print(json.dumps({"review": (run_dir / "skill-review.md").read_text()}))
+`);
+      expect(output.review).toContain("Workspace Skill Diff");
+      expect(output.review).toContain("skills/local-skill/SKILL.md");
+      expect(output.review).toContain("Custom Skill Source Diff");
+      expect(output.review).toContain("skills/shared-skill/SKILL.md");
+      expect(output.review).toContain("REVIEW_REQUIRED");
+      rmSync(runDir, { recursive: true, force: true });
+    } finally {
+      rmSync(tempRepo, { recursive: true, force: true });
+      rmSync(skillRepo, { recursive: true, force: true });
+    }
+  });
+
   test.skipIf(!hasTmux)("interactive idle-timeout fires stop_session when RESULT_STATUS never arrives", () => {
     const stuckAgent = [
       "#!/usr/bin/env bash",
@@ -484,7 +584,7 @@ print(json.dumps({
     } finally {
       rmSync(run.tempDir, { recursive: true, force: true });
     }
-  });
+  }, 10000);
 
   test.skipIf(!hasTmux)("interactive startup exit writes blocked artifacts instead of traceback", () => {
     const run = runFakeInteractiveRunner([], {

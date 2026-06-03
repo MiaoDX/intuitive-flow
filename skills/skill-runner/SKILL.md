@@ -47,7 +47,8 @@ Keep skills small, composable, and boring.
    original prompt and that workspace as `--cwd`.
 4. Wait for the tmux session by default, unless the user asks to detach.
 5. Read only the compact run artifacts first: `result.md`, `eval.md`, and the
-   worker's final message.
+   worker's final message. Read `skill-review.md` when deciding whether this
+   run exposed reusable skill changes.
 6. Inspect the actual diff and verification output before trusting the result.
 7. Apply follow-up fixes in the main session only when needed.
 8. Consider skill changes only for reusable workflow defects.
@@ -98,6 +99,13 @@ Suggested next action:
 The script's `RESULT_STATUS` final response is still the machine-readable
 status contract. The main session should inspect the compact artifacts and the
 actual diff before trusting that status.
+
+Every completed run writes `skill-review.md` as the default post-run skill
+feedback artifact. It records the selected skills, the worker's
+`SKILL_BEHAVIOR_NOTES`, repo-local skill diffs, shared custom-skill diffs, and a
+conservative recommendation such as `NO_SKILL_CHANGE`, `CANDIDATE_LEARNING`, or
+`REVIEW_REQUIRED`. Treat it as an options list for the human or supervising
+session, not permission for the runner to patch skills automatically.
 
 ## Command
 
@@ -252,6 +260,19 @@ Evaluate behavior using stable invariants that apply across different tasks:
 ## Skill Change Policy
 
 Default verdict: `NO_SKILL_CHANGE`.
+
+The default storage location for skill-performance feedback is the run's
+`skill-review.md`. Use that file when reviewing one run immediately or when
+batch-reviewing many past runs. It should make the decision cheap:
+
+- what skill(s) were in scope
+- what the worker said about skill behavior
+- whether repo-local or shared custom skill files changed
+- which follow-up options are plausible
+
+Runner-generated recommendations are advisory. A human or supervising session
+chooses whether to record a learning, patch a repo-local skill, patch a shared
+custom skill, or fix runner mechanics.
 
 Only patch a skill when the run reveals a reusable workflow defect:
 
