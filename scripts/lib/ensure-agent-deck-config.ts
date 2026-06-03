@@ -11,6 +11,7 @@ type Setting = {
 
 const settings: Setting[] = [
   { section: "", key: "default_tool", value: '"codex"' },
+  { section: "instances", key: "allow_multiple", value: "true" },
   { section: "tmux", key: "socket_name", value: '"agent-deck"' },
   { section: "tmux", key: "inject_status_line", value: "true" },
   { section: "tmux", key: "mouse", value: "true" },
@@ -27,7 +28,7 @@ const settings: Setting[] = [
   { section: "worktree", key: "default_location", value: '"subdirectory"' },
 ];
 
-const sectionOrder = ["", "tmux", "updates", "global_search", "mcp_pool", "docker", "worktree"];
+const sectionOrder = ["", "instances", "tmux", "updates", "global_search", "mcp_pool", "docker", "worktree"];
 
 const escapeRegex = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 

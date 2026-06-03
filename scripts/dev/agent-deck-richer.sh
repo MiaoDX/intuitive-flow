@@ -5,6 +5,7 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 REPO_SCRIPTS_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 
 # Install and configure Agent Deck as an isolated AI-agent session dashboard.
+# The generated config allows multiple TUI windows for the same profile.
 # https://github.com/asheshgoplani/agent-deck
 #
 # Defaults can be overridden by environment variables:
@@ -164,7 +165,7 @@ if ! out=$(bun "$REPO_SCRIPTS_DIR/lib/ensure-agent-deck-config.ts" "$AGENT_DECK_
     print_failure "agent-deck config update failed" "$out"
     exit 1
 fi
-echo "  ✓ agent-deck config"
+echo "  ✓ agent-deck config (multiple instances enabled)"
 
 if [ "$AGENT_DECK_AVAILABLE" = true ]; then
     task_notice "Agent Deck: checking version"

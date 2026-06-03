@@ -7,6 +7,9 @@ describe("agent-deck config helper", () => {
       [
         'default_tool = "codex"',
         "",
+        "[instances]",
+        "allow_multiple = true",
+        "",
         "[tmux]",
         'socket_name = "agent-deck"',
         "inject_status_line = true",
@@ -61,6 +64,7 @@ describe("agent-deck config helper", () => {
 
     expect(output).toContain('default_tool = "claude"\ncustom_top = true');
     expect(output).toContain("[tmux]\n" + "mouse = true\n" + 'socket_name = "default"\n' + "inject_status_line = false");
+    expect(output).toContain("[instances]\nallow_multiple = true");
     expect(output).toContain("[global_search]\n" + 'tier = "balanced"\n' + "memory_limit_mb = 100\n");
     expect(output).toContain("enabled = false");
     expect(output).toContain("recent_days = 365");
