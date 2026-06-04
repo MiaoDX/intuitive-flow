@@ -1,6 +1,6 @@
 ---
 name: intuitive-port-worktree
-description: Port changes from one git worktree or checkout into the default repository folder's current branch. Use when the user asks to move, copy, transfer, transplant, cherry-pick, apply a patch, or port worktree changes into the main/default repo checkout without changing the target branch.
+description: Port changes from one git worktree or checkout into the default repository folder's current branch, then by default sync the result to the remote default branch when everything is clean. Use when the user asks to move, copy, transfer, transplant, cherry-pick, apply a patch, or port worktree changes into the main/default repo checkout without changing the target branch.
 ---
 
 # Intuitive Port Worktree
@@ -209,6 +209,88 @@ Do not auto-commit when:
 If the target has unrelated dirty changes on non-overlapping paths, commit only
 the ported paths and leave unrelated work untouched.
 
+## Auto-Sync Policy
+
+After a successful auto-commit, sync the result to the remote by default. The
+user who ports into the default checkout almost always wants that work to land
+upstream, not sit as a local-only commit. Treat sync as the normal completion
+state of a clean port.
+
+"Sync" means two layers — do both when they apply:
+
+1. **Land upstream**: get the ported commit(s) onto the remote default branch
+   (e.g. `origin/main`). Push the commit, and integrate it via the route the
+   remote actually allows.
+2. **Fast-forward local**: bring the target checkout's default branch up to the
+   integrated remote state so local and remote match.
+
+Do NOT auto-sync — stop at the committed-but-unpushed state and report — when
+any of these hold (they mirror and extend the auto-commit gate):
+
+- the auto-commit gate did not pass, so there is no clean commit to sync;
+- verification failed, was skipped, or only partially ran;
+- the port required a semantically large decision;
+- the target branch is not the remote default branch, OR the user did not ask to
+  land on the default branch — pushing a feature/topic branch is fine, but
+  merging into the default branch is the outward-facing, hard-to-reverse step;
+- a backup or unrelated local branch would also be pushed by a broad push — push
+  only the intended ref;
+- the remote integration would require force-push, history rewrite, or bypassing
+  a failing required check.
+
+### How to sync
+
+Discover the remote and its rules before acting — never assume:
+
+```bash
+git -C <target> remote -v                       # which remote is the GitHub/default origin
+gh repo view --json nameWithOwner,defaultBranchRef
+```
+
+Pick the integration route by branch shape and remote policy:
+
+- **Target branch IS the remote default branch, fast-forward only** (the common
+  clean-port case where the port sits directly on top of the default branch):
+  push directly.
+
+  ```bash
+  git -C <target> push origin HEAD:<default-branch>
+  ```
+
+- **Target is a topic branch the user wants merged into the default branch**:
+  push the branch, open one PR, then merge via the route the repo allows. Probe
+  which merge methods are enabled rather than hardcoding — repos disable squash
+  or merge-commit and may allow only rebase:
+
+  ```bash
+  git -C <target> push -u origin <branch>
+  gh pr create --base <default-branch> --head <branch> --title "<result>" --body "..."
+  gh pr checks <n>                                # surface CI/required-check state
+  # try the allowed method; fall back on "not allowed" errors:
+  gh pr merge <n> --squash --auto --delete-branch \
+    || gh pr merge <n> --merge --auto --delete-branch \
+    || gh pr merge <n> --rebase --auto --delete-branch
+  ```
+
+  Use `--auto` so the merge waits on required checks. If required checks are
+  pending or a protection rule blocks the merge, leave auto-merge armed and
+  report that it will land when checks pass — do not bypass the gate.
+
+After integration, fast-forward the local default branch and confirm parity:
+
+```bash
+git -C <target> pull --ff-only           # or fetch + reset to origin/<default> if detached
+git -C <target> rev-list --left-right --count origin/<default-branch>...HEAD
+```
+
+A local post-merge hook may already fast-forward the checkout during the merge;
+verify the actual `origin/<default>` vs `HEAD` state rather than assuming either
+that it did or did not run.
+
+Even with auto-sync on, the outward-facing merge into a shared default branch is
+hard to reverse. Proceed without re-asking when the user has authorized landing
+upstream in this request; otherwise push the branch and ask before merging.
+
 ## Final Report
 
 Report:
@@ -218,6 +300,9 @@ Report:
 - target commit hash if committed
 - main files changed
 - verification commands and outcomes
+- sync outcome: pushed ref, PR number + merge method if opened, the resulting
+  remote default-branch commit, and local-vs-remote parity — or, if auto-sync
+  was withheld, which gate stopped it and the safe state left behind
 - any residual risk, skipped checks, or source changes intentionally not ported
 
 If the user asks what the operation is called, answer with the precise method
