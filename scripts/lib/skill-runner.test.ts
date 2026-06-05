@@ -39,6 +39,27 @@ ${body}
 }
 
 describe("skill-runner script", () => {
+  test("rewritten prompt includes an acceptance contract", () => {
+    const output = runPython(`
+from pathlib import Path
+
+prompt = module.rewrite_prompt(
+    prompt="Implement docs/plans/example.md with $intuitive-flow",
+    skills=["intuitive-flow"],
+    cwd=Path(${JSON.stringify(repoRoot)}),
+    owned_paths=[],
+)
+print(json.dumps({"prompt": prompt}))
+`);
+
+    expect(output.prompt).toContain("Acceptance contract:");
+    expect(output.prompt).toContain("SUCCESS only if");
+    expect(output.prompt).toContain("PARTIAL if");
+    expect(output.prompt).toContain("BLOCKED_NEEDS_DECISION if");
+    expect(output.prompt).toContain("Must not regress");
+    expect(output.prompt).toContain("ACCEPTANCE_EVIDENCE");
+  });
+
   test("detects Codex bwrap sandbox failures reported in last-message", () => {
     const runDir = mkdtempSync(join(tmpdir(), "skill-runner-bwrap-"));
     try {

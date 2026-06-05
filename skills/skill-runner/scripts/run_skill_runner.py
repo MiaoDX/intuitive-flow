@@ -603,6 +603,18 @@ Workspace:
 Owned paths:
 {owned_text}
 
+Acceptance contract:
+- SUCCESS only if: the task-specific acceptance criteria in the user objective
+  or approved plan are satisfied with observable evidence, not just attempted.
+- PARTIAL if: useful scoped work lands but any acceptance criterion, required
+  verification, or user-visible behavior remains incomplete or unproven.
+- BLOCKED_NEEDS_DECISION if: success criteria, scope, non-goals, route, or an
+  external gate are unclear enough that implementation would require guessing
+  what the user wants.
+- Must not regress: preserve existing public behavior, documented commands,
+  tests, contracts, and unrelated user changes unless the objective explicitly
+  approves changing them.
+
 Operating contract:
 - Treat the workspace above as the task/product repo and apply the selected
   skill workflows there.
@@ -612,6 +624,9 @@ Operating contract:
   BLOCKED_NEEDS_DECISION instead of doing a plausible task in the wrong repo.
 - Use the selected skill workflows honestly. If a named skill is unavailable, say so and stop.
 - Keep the work KISS: smallest useful change, fewest artifacts, clear stop condition.
+- If the prompt lacks task-specific acceptance criteria, stop early and report
+  BLOCKED_NEEDS_DECISION with the missing acceptance questions or a proposed
+  `$intuitive-contract` draft. Do not infer SUCCESS from relevant tests alone.
 - Preserve unrelated user changes. Do not revert work you did not make.
 - If owned paths are listed, limit edits to those paths unless the task becomes
   impossible without a clearly named adjacent change.
@@ -644,6 +659,7 @@ COMMITS: <hashes or "none">
 VERIFICATION: <commands and results>
 OPEN_DECISIONS: <remaining decisions or "none">
 SKILL_BEHAVIOR_NOTES: <reusable skill issue candidates or "none">
+ACCEPTANCE_EVIDENCE: <how each SUCCESS-only-if condition was proven, or "incomplete">
 RECOMMENDED_GOAL_REVISION: <only if the current goal or prompt should be changed; otherwise "none">
 """
 

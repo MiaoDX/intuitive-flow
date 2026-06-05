@@ -40,6 +40,7 @@
   layout, and `$intuitive-reduce-entropy` when the owner is unclear.
 - Use `$intuitive-tests` for test suite organization, markers, pruning, fixtures, and behavior-focused unit tests.
 - Use `$intuitive-flow` as the default build/change entrypoint; it routes small direct edits directly, cleanup/refactor targets to `$intuitive-refactor`, and large staged work through plan/review/GSD execution.
+- Use `$intuitive-contract` before executing a plan or vague task when scope, non-goals, acceptance criteria, verification, route, or main-session `/goal` wording need human approval first.
 - Use `$intuitive-refactor` before broad refactors or architecture cleanup so the target, accepted severities, evidence ladder, and stop condition are explicit.
 - Use `$intuitive-squash` before PRs or branch handoff when local agent commits need a clean reviewable story.
 - Keep `AGENTS.md` and `CLAUDE.md` project-local. Shared skills and commands can be synced or linked; root agent guidance should preserve each repo's own commands, constraints, and current source-of-truth rules.

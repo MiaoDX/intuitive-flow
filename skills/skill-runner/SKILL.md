@@ -242,11 +242,19 @@ The worker prompt should be compact and explicit:
 - Objective
 - Selected skills
 - Scope and non-goals
+- Acceptance contract
 - KISS / Zen constraints
 - Source-of-truth rules
 - Stop conditions
 - Verification required
 - Final output shape
+
+Acceptance contract must name `SUCCESS only if`, `PARTIAL if`,
+`BLOCKED_NEEDS_DECISION if`, and `Must not regress`. If the user's prompt or
+approved plan does not contain task-specific acceptance criteria, the worker
+must not silently invent a broad success definition. It should stop with
+`BLOCKED_NEEDS_DECISION` or return a recommended contract for main-session
+approval.
 
 For `$intuitive-flow`, require coherent phase scope. Do not create many
 micro-phases unless the worker first stops and asks for grouping approval.

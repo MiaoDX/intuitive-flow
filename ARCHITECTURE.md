@@ -73,12 +73,15 @@ are expected.
 
 The primary user-facing skills are `$intuitive-flow`, `$intuitive-refactor`,
 and `$intuitive-reduce-entropy`, with `$intuitive-squash` as a handoff utility.
-Specialist skills such as `$intuitive-doc`, `$intuitive-init`, and
-`$intuitive-tests` remain available for direct or routed use, but are not the
-default choice a user must make up front. Open-ended architecture discovery may
-route to the external `improve-codebase-architecture` skill when it is
-installed; accepted cleanup still returns to `$intuitive-refactor` for the
-scope gate and execution.
+Specialist skills such as `$intuitive-contract`, `$intuitive-doc`,
+`$intuitive-init`, and `$intuitive-tests` remain available for direct or routed
+use, but are not the default choice a user must make up front.
+`$intuitive-contract` owns approval-ready execution contracts before a plan or
+vague task starts: scope, non-goals, acceptance criteria, verification, route,
+worker strategy, and main-session `/goal` wording. Open-ended architecture
+discovery may route to the external `improve-codebase-architecture` skill when
+it is installed; accepted cleanup still returns to `$intuitive-refactor` for
+the scope gate and execution.
 
 Repo-owned skills are authored directly under `skills/<name>/SKILL.md`. Large
 skills should use progressive disclosure instead of generated includes:
