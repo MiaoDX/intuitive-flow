@@ -53,6 +53,36 @@ For a precise target where the user asks for implementation, apply one coherent
 vertical slice. Keep newly discovered unrelated ideas parked instead of letting
 the work expand by drift.
 
+## Architecture Packet Rule
+
+For refactors that touch architecture seams, public APIs, public contracts,
+task/skill/profile boundaries, MCP/tool surfaces, lifecycle gates, data flow, or
+runtime behavior, require an architecture packet before production edits. The
+packet must come from either:
+
+- the current turn's `$zoom-out` map plus `$plan-eng-review` /
+  `$gstack-plan-eng-review` findings; or
+- an existing plan, ADR, or refactor gate that already contains equivalent
+  evidence and can be cited.
+
+If the packet is missing, run `$zoom-out` first and then `$plan-eng-review`
+before producing the refactor scope gate. If the interactive gstack review gate
+is unavailable, apply the same engineering-review frame in prose and record the
+tool limitation.
+
+Minimum architecture packet shape:
+
+```text
+Zoom-out map:
+Eng-review recommendation:
+Public contract / boundary:
+Data flow:
+Accepted seam:
+Rejected alternatives:
+Verification ladder:
+Stop condition:
+```
+
 ## Canonical Cleanup Rule
 
 Prefer the new intuitive API, path, module boundary, command shape, or folder
@@ -201,6 +231,8 @@ Read the user's goal and identify:
 - whether the target repo's LSP is configured and healthy for the affected
   language stack
 - whether any evidence is local-only, paid, slow, or environment-sensitive
+- whether this is architecture/public-contract shaped and therefore needs an
+  architecture packet before edits
 
 If repo-local docs exist, read the agent config first:
 
@@ -220,6 +252,10 @@ Look for an existing gate before proposing new work:
 If the target seam is unclear, stop after a report-only map. Do not wander
 through the whole repo looking for unrelated cleanup.
 
+If the target is architecture/public-contract shaped, look for an existing
+architecture packet in the user prompt, plan, ADR, or gate. If none exists, run
+`$zoom-out` and `$plan-eng-review` before producing the scope gate.
+
 Check LSP before risky symbol-level edits. Use repo evidence such as manifests,
 lockfiles, compiler config, `.claude/settings.json`, `.vscode/settings.json`,
 `docs/agents/**`, and language-server config to determine whether definition,
@@ -238,8 +274,9 @@ the accepted cleanup when the user has approved the target.
 
 Use another workflow when it materially improves the current pass:
 
-- unclear architecture or seam quality -> use an architecture scanner in
-  report-only mode
+- unclear architecture or seam quality -> run `$zoom-out` plus
+  `$plan-eng-review`; use an architecture scanner only as extra report-only
+  candidate discovery
 - missing behavior coverage -> use TDD to add one public-interface proof
   before refactoring
 - bug, flake, perf regression, or known blind spot -> diagnose to build
@@ -273,6 +310,7 @@ Before implementation, present this compact gate:
 - Minimum confidence level:
 - Existing evidence:
 - Missing evidence:
+- Architecture packet:
 - LSP status:
 - Local-only gates:
 - Recommended next skill:

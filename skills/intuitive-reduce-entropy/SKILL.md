@@ -85,6 +85,43 @@ When presenting candidates, include a brief `Pattern hint:` for code or
 architecture slices. Name the likely pattern and the concrete complexity it
 would remove, or say `Pattern hint: no pattern; direct cleanup is clearer.`
 
+## Architecture Review Sequence
+
+For architecture-shaped entropy, public-contract drift, task/skill/profile
+boundary questions, MCP/tool surface changes, lifecycle gates, data-flow
+cleanup, or code seams where the module map is unclear, run an explicit review
+sequence before recommending implementation:
+
+1. `$zoom-out`: build a domain-language map of the relevant modules, callers,
+   public contracts, data flow, and invariants. Use repo docs and code, not just
+   intuition.
+2. `$plan-eng-review` / `$gstack-plan-eng-review`: stress-test the proposed
+   slice for architecture fit, data flow, edge cases, acceptance gates,
+   verification level, performance/cost risk, and rollout risk. If the
+   interactive AskUserQuestion variant is unavailable, apply the same review
+   frame in prose and state that the interactive gate was unavailable.
+3. `$intuitive-refactor`: only after the target seam, accepted checklist,
+   evidence ladder, and stop condition are explicit.
+
+Do not ask the user to choose these subskills for an architecture slice; the
+sequence is part of this skill's default routing. You may skip a subskill only
+when a current plan, ADR, or gate already contains equivalent evidence. If so,
+cite the source and summarize the evidence instead of rerunning the same
+discussion.
+
+Architecture sequence output should be compact and reusable:
+
+```text
+Zoom-out map:
+Eng-review recommendation:
+Public contract / boundary:
+Data flow:
+Accepted seam:
+Rejected alternatives:
+Verification ladder:
+Stop condition:
+```
+
 ## Human/Agent Surface Rule
 
 The default human-facing source of truth is intentionally small:
@@ -267,11 +304,13 @@ Use this route unless the user already names a specific entropy source.
    unsurprising. For code or architecture slices, also attach a `Pattern hint:`
    that names a likely design pattern fit or explicitly says direct cleanup is
    clearer.
-4. **Discover architecture**: when the best slice is architecture/deepening but
-   no target seam has been accepted, route to `$improve-codebase-architecture`
-   in report-only mode. Treat its output as candidate evidence, not execution
-   approval, and stop for candidate selection unless the user already accepted a
-   candidate.
+4. **Architecture sequence**: when the best slice is architecture/deepening,
+   public-contract cleanup, MCP/tool boundary cleanup, lifecycle gates, or an
+   unclear target seam, run `$zoom-out` and `$plan-eng-review` before execution.
+   If no target seam has been accepted after that, optionally route to
+   `$improve-codebase-architecture` in report-only mode. Treat all discovery
+   output as candidate evidence, not execution approval, and stop for candidate
+   selection unless the user already accepted a candidate.
 5. **Gate**: if execution is requested, use `$intuitive-refactor` to create or
    update one persistent maintenance gate, normally
    `docs/plans/refactor-reduce-entropy-<target>.md` unless a better existing
@@ -289,6 +328,8 @@ Selected slice:
 Entropy source:
 Zen hint:
 Pattern hint:
+Zoom-out map:
+Eng-review recommendation:
 Evidence:
 Affected paths:
 Discovery skill:
@@ -318,8 +359,10 @@ If the user names a likely area, route directly:
   `$intuitive-tests`.
 - "improve architecture", "architecture cleanup", "deepening", "shallow
   module", "hard to test", "hard to navigate", "find refactoring
-  opportunities" -> `$improve-codebase-architecture` when the user wants
-  discovery or no target seam is accepted yet.
+  opportunities", "public contract", "MCP", "tool surface", "lifecycle gate" ->
+  run the Architecture Review Sequence first. Use
+  `$improve-codebase-architecture` only when extra report-only candidate
+  discovery is still needed after `$zoom-out` and `$plan-eng-review`.
 - "module", "API", "compatibility", "seam", "stale wrapper", "known
   architecture target" ->
   `$intuitive-refactor`.
