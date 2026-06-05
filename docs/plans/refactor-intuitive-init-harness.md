@@ -4,7 +4,7 @@ status: DONE
 accepted_severities:
   - P1
   - P2
-last_verified: 2026-05-17
+last_verified: 2026-06-05
 ---
 
 # Refactor Scope: Intuitive Init Harness
@@ -27,6 +27,9 @@ project-local agent harness files for Claude Code and Codex.
 - P2: The skill should encode practical harness cleanup guidance around concise
   root files, WHY/WHAT/HOW content, hooks, nested guidance, skills, and
   team-shared MCP configuration.
+- P2: Rare LSP/Serena/MCP setup detail should use progressive disclosure so
+  ordinary `$intuitive-init` runs do not always load the full operational
+  reference.
 
 ## Accepted Cleanup Checklist
 
@@ -44,6 +47,8 @@ project-local agent harness files for Claude Code and Codex.
 - [x] Recommend checked-in `.mcp.json` when MCP configuration is team-shared.
 - [x] Preserve the existing stdin-bundled Codex discovery fallback for hosts
       without native slash-command support.
+- [x] Move detailed LSP/Serena/MCP guidance behind a referenced file while
+      keeping the short default rule and stop gates in `SKILL.md`.
 
 ## Parked Cross-Seam / Future Ideas
 
@@ -55,16 +60,15 @@ project-local agent harness files for Claude Code and Codex.
 
 ## Evidence Ladder
 
-- L0 Static: `bun run build:skills:check`
+- L0 Static: `bun run check:skills`
 - L1 Unit/mock: `bun run test`
 - L2 Contract: `bun run verify`
 
 ## Stop Condition
 
-Stop when the accepted checklist is complete in `skills-src/intuitive-init`,
-generated `skills/intuitive-init` is refreshed, `bun run verify` passes, the
-installed Codex copy is synced or explicitly skipped, and only parked
-cross-seam ideas remain.
+Stop when the accepted checklist is complete in `skills/intuitive-init`,
+referenced skill resources validate with `bun run check:skills`, `bun run
+verify` passes, and only parked cross-seam ideas remain.
 
 ## Execution Log
 
@@ -85,3 +89,13 @@ cross-seam ideas remain.
 - 2026-05-17: Synced the generated skill to
   `/Users/fl/.codex/skills/intuitive-init/SKILL.md` and confirmed it matches
   `skills/intuitive-init/SKILL.md`.
+- 2026-06-05: Reopened for a P2 progressive-disclosure pass after the user
+  asked whether intuitive-family skills could be shorter without over-scripting.
+  Target: extract rare LSP/Serena/MCP setup detail from
+  `skills/intuitive-init/SKILL.md` into a referenced file while keeping the
+  default rule loaded.
+- 2026-06-05: Added
+  `skills/intuitive-init/references/lsp-and-mcp.md` and reduced
+  `skills/intuitive-init/SKILL.md` from 639 to 531 lines. Verified L2 with
+  `bun run verify`: skill structure passed, TypeScript check passed, and 57 Bun
+  tests passed.
