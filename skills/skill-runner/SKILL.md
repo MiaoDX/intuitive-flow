@@ -128,13 +128,12 @@ task is solely custom skill maintenance.
 Useful options:
 
 - `--agent codex|claude` chooses the worker CLI.
-- `--detach` starts tmux and returns immediately. When combined with
-  `--interactive`, the runner double-forks a background supervisor that still
-  watches `terminal.log` for `RESULT_STATUS`, closes the tmux session, writes
-  `last-message.md`, and rewrites `result.md` with the real outcome. Pass
-  `--no-detached-supervisor` to opt out and keep the legacy
-  fire-and-forget behavior (the tmux session and `result.md: DETACHED`
-  will then leak).
+- `--detach` starts tmux and returns immediately. By default, the runner
+  double-forks a background supervisor that still watches the worker artifacts,
+  closes interactive sessions on `RESULT_STATUS`, and rewrites `result.md` /
+  `eval.md` / `skill-review.md` with the real outcome when the worker exits.
+  Pass `--no-detached-supervisor` to opt out and keep the legacy
+  fire-and-forget behavior (`result.md: DETACHED` can then leak).
 - `--timeout-min N` caps total runtime. Default is 600 minutes, so long
   refactors and slow verification can run when the supervisor deliberately
   allows them.
@@ -179,6 +178,22 @@ Useful options:
   `last-message.md`, because some Codex runs report the sandbox failure there
   even when `stderr.log` only contains transport noise.
 - `--dry-run` writes the rewritten prompt and artifacts without starting tmux.
+- `--finalize-run <run_dir>` rewrites compact artifacts for an existing run
+  directory. Use it on older detached runs when `last-message.md` or
+  `exit_code` appeared after the parent already returned `DETACHED`.
+- `--owned-path <path>` can be repeated to record which paths the worker owns.
+  `eval.md` then splits current diff into owned and outside-owned sections so
+  supervisors can spot accidental scope expansion in dirty worktrees.
+
+Batch review helper:
+
+```bash
+python3 /path/to/intuitive-flow/skills/skill-runner/scripts/summarize_skill_runner_runs.py \
+  --since 2026-06-03
+```
+
+The summary reports status counts, result/worker `RESULT_STATUS` mismatches,
+and skill-review recommendations without loading full transcripts.
 
 The script writes run artifacts under `~/.cache/skill-runner/runs/` by default.
 
@@ -195,7 +210,10 @@ Exec-mode runs source `RESULT_STATUS` from the agent-written `last-message.md`.
 Interactive runs detect it by scanning `terminal.log` (ANSI escape sequences
 are stripped first so cursor moves and syntax-highlighting do not break the
 regex), then reconstruct `last-message.md` from the terminal scrape so
-downstream artifact consumers see the same shape as exec-mode runs.
+downstream artifact consumers see the same shape as exec-mode runs. If tmux
+disappears before the wrapper's `exit_code` file is visible, the supervisor
+waits briefly for artifacts to settle and classifies from `RESULT_STATUS`
+before falling back to `FAILED`.
 
 Automatic blocker detection is intentionally narrow. In exec mode it scans
 `stderr.log` only, so normal repo documentation mentioning auth, API keys, or

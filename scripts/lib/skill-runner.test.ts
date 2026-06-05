@@ -453,6 +453,39 @@ print(json.dumps({
     }
   });
 
+  test("recovers RESULT_STATUS when tmux ended before exit_code appeared", () => {
+    const runDir = mkdtempSync(join(tmpdir(), "skill-runner-recover-status-"));
+    try {
+      writeFileSync(
+        join(runDir, "terminal.log"),
+        [
+          "worker output",
+          "RESULT_STATUS: SUCCESS",
+          "SUMMARY: completed despite missing exit_code",
+          "",
+        ].join("\n"),
+      );
+
+      const output = runPython(`
+from pathlib import Path
+run_dir = Path(${JSON.stringify(runDir)})
+print(json.dumps({
+    "classification": module.recover_missing_exit_code_after_tmux_end(
+        run_dir=run_dir,
+        grace_seconds=0,
+    ),
+    "last_message": (run_dir / "last-message.md").read_text(),
+}))
+`);
+      expect(output.classification[0]).toBe("SUCCESS");
+      expect(output.classification[1]).toBe(0);
+      expect(output.classification[2]).toContain("recovered RESULT_STATUS");
+      expect(output.last_message).toContain("RESULT_STATUS: SUCCESS");
+    } finally {
+      rmSync(runDir, { recursive: true, force: true });
+    }
+  });
+
   test("writes skill review artifact from worker behavior notes", () => {
     const tempDir = mkdtempSync(join(tmpdir(), "skill-runner-review-"));
     const tempRepo = mkdtempSync(join(tmpdir(), "skill-runner-review-clean-repo-"));
@@ -552,6 +585,163 @@ print(json.dumps({"review": (run_dir / "skill-review.md").read_text()}))
       rmSync(skillRepo, { recursive: true, force: true });
     }
   });
+
+  test("non-git custom skill source does not force REVIEW_REQUIRED", () => {
+    const tempDir = mkdtempSync(join(tmpdir(), "skill-runner-review-nongit-"));
+    const tempRepo = mkdtempSync(join(tmpdir(), "skill-runner-review-nongit-repo-"));
+    const skillRepo = mkdtempSync(join(tmpdir(), "skill-runner-review-nongit-skillrepo-"));
+    try {
+      spawnSync("git", ["init"], { cwd: tempRepo, encoding: "utf8" });
+      const output = runPython(`
+from pathlib import Path
+run_dir = Path(${JSON.stringify(tempDir)})
+module.write_eval(
+    run_dir,
+    Path(${JSON.stringify(tempRepo)}),
+    Path(${JSON.stringify(skillRepo)}),
+    "SUCCESS",
+    0,
+    "worker reported success",
+)
+module.write_skill_review(
+    run_dir,
+    Path(${JSON.stringify(tempRepo)}),
+    Path(${JSON.stringify(skillRepo)}),
+    ["intuitive-flow"],
+    "SUCCESS",
+    "worker reported success",
+)
+print(json.dumps({
+    "eval": (run_dir / "eval.md").read_text(),
+    "review": (run_dir / "skill-review.md").read_text(),
+}))
+`);
+      expect(output.eval).toContain("Custom Skill Diff");
+      expect(output.eval).toContain("not a git worktree");
+      expect(output.eval).toContain("NO_SKILL_CHANGE");
+      expect(output.eval).not.toContain("REVIEW_REQUIRED");
+      expect(output.review).toContain("Custom Skill Source Diff");
+      expect(output.review).toContain("not a git worktree");
+      expect(output.review).toContain("NO_SKILL_CHANGE");
+      expect(output.review).not.toContain("REVIEW_REQUIRED");
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+      rmSync(tempRepo, { recursive: true, force: true });
+      rmSync(skillRepo, { recursive: true, force: true });
+    }
+  });
+
+  test("eval can split owned path changes from outside dirty work", () => {
+    const tempDir = mkdtempSync(join(tmpdir(), "skill-runner-owned-eval-"));
+    const tempRepo = mkdtempSync(join(tmpdir(), "skill-runner-owned-eval-repo-"));
+    const skillRepo = mkdtempSync(join(tmpdir(), "skill-runner-owned-eval-skillrepo-"));
+    try {
+      spawnSync("git", ["init"], { cwd: tempRepo, encoding: "utf8" });
+      spawnSync("git", ["init"], { cwd: skillRepo, encoding: "utf8" });
+      spawnSync("mkdir", ["-p", join(tempRepo, "src"), join(tempRepo, "docs")]);
+      writeFileSync(join(tempRepo, "src", "owned.txt"), "old\n");
+      writeFileSync(join(tempRepo, "docs", "outside.txt"), "old\n");
+      spawnSync("git", ["add", "."], { cwd: tempRepo, encoding: "utf8" });
+      spawnSync(
+        "git",
+        ["-c", "user.name=Skill Runner Test", "-c", "user.email=test@example.com", "commit", "-m", "init"],
+        { cwd: tempRepo, encoding: "utf8" },
+      );
+      writeFileSync(join(tempRepo, "docs", "outside.txt"), "pre-existing\n");
+      const before = spawnSync("git", ["status", "--short"], {
+        cwd: tempRepo,
+        encoding: "utf8",
+      }).stdout.trim();
+      writeFileSync(join(tempRepo, "src", "owned.txt"), "owned change\n");
+
+      const output = runPython(`
+from pathlib import Path
+run_dir = Path(${JSON.stringify(tempDir)})
+module.write_eval(
+    run_dir,
+    Path(${JSON.stringify(tempRepo)}),
+    Path(${JSON.stringify(skillRepo)}),
+    "SUCCESS",
+    0,
+    "worker reported success",
+    workspace_status_before=${JSON.stringify(before)},
+    owned_paths=["src"],
+)
+print(json.dumps({"eval": (run_dir / "eval.md").read_text()}))
+`);
+      expect(output.eval).toContain("Owned Path Diff");
+      expect(output.eval).toContain("src/owned.txt");
+      expect(output.eval).toContain("docs/outside.txt");
+      expect(output.eval).toContain("Pre-run status no longer present");
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+      rmSync(tempRepo, { recursive: true, force: true });
+      rmSync(skillRepo, { recursive: true, force: true });
+    }
+  });
+
+  test.skipIf(!hasTmux)("detached exec mode supervisor rewrites DETACHED result", () => {
+    const tempDir = mkdtempSync(join(tmpdir(), "skill-runner-detached-exec-"));
+    const fakeAgent = join(tempDir, "fake-exec-agent.sh");
+    writeFileSync(
+      fakeAgent,
+      [
+        "#!/usr/bin/env bash",
+        "cat >/dev/null",
+        "printf 'RESULT_STATUS: SUCCESS\\nSUMMARY: detached exec complete\\nCHANGED_FILES: none\\nCOMMITS: none\\nVERIFICATION: fake\\nOPEN_DECISIONS: none\\nSKILL_BEHAVIOR_NOTES: none\\nRECOMMENDED_GOAL_REVISION: none\\n'",
+        "",
+      ].join("\n"),
+      { mode: 0o755 },
+    );
+
+    const result = spawnSync(
+      "python3",
+      [
+        runnerScript,
+        "--detach",
+        "--dangerous",
+        "--agent-command",
+        fakeAgent,
+        "--cwd",
+        repoRoot,
+        "--run-root",
+        tempDir,
+        "--timeout-min",
+        "0.05",
+        "--idle-timeout-min",
+        "0.05",
+        "--poll-interval-sec",
+        "0.1",
+        "--",
+        "fake detached exec task",
+      ],
+      { cwd: repoRoot, encoding: "utf8" },
+    );
+
+    const runDirLine = result.stdout
+      .split("\n")
+      .find((line) => line.startsWith("run_dir: "));
+    const runDir = runDirLine?.replace("run_dir: ", "").trim() ?? "";
+
+    try {
+      expect(result.status).toBe(0);
+      expect(runDir).not.toBe("");
+      let resultText = "";
+      const deadline = Date.now() + 5000;
+      while (Date.now() < deadline) {
+        if (existsSync(join(runDir, "result.md"))) {
+          resultText = readFileSync(join(runDir, "result.md"), "utf8");
+          if (resultText.includes("Status: SUCCESS")) break;
+        }
+        spawnSync("sleep", ["0.1"]);
+      }
+      expect(resultText).toContain("Status: SUCCESS");
+      expect(resultText).not.toContain("Status: DETACHED");
+      expect(readFileSync(join(runDir, "eval.md"), "utf8")).toContain("Status: SUCCESS");
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  }, 10000);
 
   test.skipIf(!hasTmux)("interactive idle-timeout fires stop_session when RESULT_STATUS never arrives", () => {
     const stuckAgent = [

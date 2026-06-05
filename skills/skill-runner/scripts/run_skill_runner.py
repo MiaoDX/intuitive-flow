@@ -21,6 +21,8 @@ DEFAULT_CACHE_ROOT = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache
 DEFAULT_RUN_ROOT = DEFAULT_CACHE_ROOT / "runs"
 DEFAULT_TIMEOUT_MINUTES = 600.0
 DEFAULT_IDLE_TIMEOUT_MINUTES = 20.0
+DEFAULT_EXIT_GRACE_SECONDS = 2.0
+INTERACTIVE_EXIT_PROMPT_TIMEOUT_SECONDS = 1.0
 SANDBOX_CAPABILITY_CACHE = DEFAULT_CACHE_ROOT / "sandbox-capability.json"
 SANDBOX_CACHE_SCHEMA_VERSION = 1
 COMMAND_PROBE_TIMEOUT_SECONDS = 5
@@ -75,6 +77,12 @@ RISK_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
 
 def main() -> int:
     args = parse_args()
+    if args.finalize_run:
+        return finalize_existing_run(
+            run_dir=Path(args.finalize_run).expanduser().resolve(),
+            skill_repo=Path(args.skill_repo).expanduser().resolve(),
+        )
+
     if args.prompt and args.prompt[0] == "--":
         args.prompt = args.prompt[1:]
     prompt = " ".join(args.prompt).strip()
@@ -88,7 +96,8 @@ def main() -> int:
     run_dir.mkdir(parents=True, exist_ok=False)
 
     skills = detect_skills(prompt)
-    rewritten = rewrite_prompt(prompt=prompt, skills=skills, cwd=cwd)
+    owned_paths = normalize_owned_paths(args.owned_path, cwd)
+    rewritten = rewrite_prompt(prompt=prompt, skills=skills, cwd=cwd, owned_paths=owned_paths)
 
     write_text(run_dir / "input.md", prompt + "\n")
     write_text(run_dir / "rewritten-prompt.md", rewritten)
@@ -104,6 +113,7 @@ def main() -> int:
             "goal": args.goal,
             "skills": skills,
             "session": session,
+            "owned_paths": owned_paths,
             "created_at": dt.datetime.now(dt.timezone.utc).isoformat(),
             "auto_retry_sandbox_failure": args.auto_retry_sandbox_failure,
             "sandbox": sandbox_decision,
@@ -114,7 +124,16 @@ def main() -> int:
     if sandbox_decision.get("blocked"):
         reason = str(sandbox_decision["reason"])
         write_result(run_dir, session, "BLOCKED", reason)
-        write_eval(run_dir, cwd, skill_repo, "BLOCKED", 125, reason)
+        write_eval(
+            run_dir,
+            cwd,
+            skill_repo,
+            "BLOCKED",
+            125,
+            reason,
+            workspace_status_before=workspace_status_before,
+            owned_paths=owned_paths,
+        )
         write_skill_review(run_dir, cwd, skill_repo, skills, "BLOCKED", reason)
         print(run_dir)
         return 125
@@ -124,7 +143,16 @@ def main() -> int:
 
     if args.dry_run:
         write_result(run_dir, session, "DRY_RUN", "Prompt rewritten; tmux session not started.")
-        write_eval(run_dir, cwd, skill_repo, "DRY_RUN", 0, "No worker run executed.")
+        write_eval(
+            run_dir,
+            cwd,
+            skill_repo,
+            "DRY_RUN",
+            0,
+            "No worker run executed.",
+            workspace_status_before=workspace_status_before,
+            owned_paths=owned_paths,
+        )
         write_skill_review(
             run_dir,
             cwd,
@@ -144,13 +172,29 @@ def main() -> int:
             reason = f"interactive prompt injection failed: {exc}"
             stop_session(session, run_dir, reason)
             write_result(run_dir, session, "BLOCKED", reason)
-            write_eval(run_dir, cwd, skill_repo, "BLOCKED", 125, reason)
+            write_eval(
+                run_dir,
+                cwd,
+                skill_repo,
+                "BLOCKED",
+                125,
+                reason,
+                workspace_status_before=workspace_status_before,
+                owned_paths=owned_paths,
+            )
             write_skill_review(run_dir, cwd, skill_repo, skills, "BLOCKED", reason)
             print(run_dir)
             return 125
 
     if args.detach:
-        if args.interactive and not args.no_detached_supervisor:
+        if not args.no_detached_supervisor:
+            write_result(
+                run_dir,
+                session,
+                "DETACHED",
+                "Worker session started; detached supervisor will close the session "
+                "when possible and update result.md.",
+            )
             supervisor_pid = spawn_detached_supervisor(
                 args=args,
                 cwd=cwd,
@@ -160,13 +204,6 @@ def main() -> int:
                 skills=skills,
                 workspace_status_before=workspace_status_before,
                 initial_dangerous=initial_dangerous,
-            )
-            write_result(
-                run_dir,
-                session,
-                "DETACHED",
-                f"Worker session started; detached supervisor (pid {supervisor_pid}) "
-                "will close the session on RESULT_STATUS and update result.md.",
             )
             print(f"session: {session}")
             print(f"run_dir: {run_dir}")
@@ -256,10 +293,73 @@ def supervise_to_completion(
         maybe_commit_skill_changes(skill_repo)
 
     write_result(run_dir, session, status, reason)
-    write_eval(run_dir, cwd, skill_repo, status, exit_code, reason)
+    owned_paths = [str(item) for item in getattr(args, "owned_path", []) or []]
+    normalized_owned_paths = normalize_owned_paths(owned_paths, cwd)
+    write_eval(
+        run_dir,
+        cwd,
+        skill_repo,
+        status,
+        exit_code,
+        reason,
+        workspace_status_before=workspace_status_before,
+        owned_paths=normalized_owned_paths,
+    )
     write_skill_review(run_dir, cwd, skill_repo, skills, status, reason)
     print(run_dir)
     return exit_code
+
+
+def finalize_existing_run(*, run_dir: Path, skill_repo: Path) -> int:
+    """Rewrite compact artifacts for an existing run directory.
+
+    This is useful for legacy detached runs where the worker wrote
+    `last-message.md` or `exit_code` after the parent had already returned with
+    `result.md: DETACHED`.
+    """
+    metadata = load_run_metadata(run_dir)
+    cwd = Path(str(metadata.get("cwd") or os.getcwd())).expanduser().resolve()
+    session = str(metadata.get("session") or default_session_name(run_dir))
+    skills = [str(item) for item in metadata.get("skills", []) if isinstance(item, str)]
+    owned_paths = [
+        str(item) for item in metadata.get("owned_paths", []) if isinstance(item, str)
+    ]
+    status, exit_code, reason = classify_existing_run(run_dir=run_dir, session=session)
+    write_result(run_dir, session, status, reason)
+    write_eval(
+        run_dir,
+        cwd,
+        skill_repo,
+        status,
+        exit_code,
+        reason,
+        workspace_status_before="",
+        owned_paths=owned_paths,
+    )
+    write_skill_review(run_dir, cwd, skill_repo, skills, status, reason)
+    print(run_dir)
+    return exit_code
+
+
+def load_run_metadata(run_dir: Path) -> dict[str, object]:
+    try:
+        data = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def classify_existing_run(*, run_dir: Path, session: str) -> tuple[str, int, str]:
+    if (run_dir / "exit_code").exists():
+        code = read_exit_code(run_dir / "exit_code")
+        return classify_worker_exit(run_dir, code)
+    materialize_interactive_last_message(run_dir)
+    if read_worker_result_status(run_dir):
+        status, exit_code, reason = classify_worker_exit(run_dir, 0)
+        return status, exit_code, f"finalized from existing RESULT_STATUS; {reason}"
+    if tmux_has_session(session):
+        return "DETACHED", 0, "Worker session is still running."
+    return "FAILED", 1, "tmux session ended without exit_code"
 
 
 def spawn_detached_supervisor(
@@ -418,8 +518,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--no-detached-supervisor",
         action="store_true",
-        help="With --interactive --detach, do NOT spawn the background supervisor "
-        "that auto-closes the worker on RESULT_STATUS. Leaks the tmux session.",
+        help="With --detach, do NOT spawn the background supervisor that updates "
+        "result.md after worker completion. Leaks legacy DETACHED artifacts.",
+    )
+    parser.add_argument(
+        "--finalize-run",
+        help="Rewrite result.md/eval.md/skill-review.md for an existing run directory.",
+    )
+    parser.add_argument(
+        "--owned-path",
+        action="append",
+        default=[],
+        help="Path owned by this worker. Repeat to split eval.md owned vs pre-existing diff.",
     )
     parser.add_argument("--sync-on-skill-change", action="store_true")
     parser.add_argument("--commit-skill-changes", action="store_true")
@@ -458,8 +568,29 @@ def detect_skills(prompt: str) -> list[str]:
     return found
 
 
-def rewrite_prompt(*, prompt: str, skills: list[str], cwd: Path) -> str:
+def normalize_owned_paths(paths: list[str], cwd: Path) -> list[str]:
+    normalized: list[str] = []
+    for raw in paths:
+        text = str(raw).strip()
+        if not text:
+            continue
+        path = Path(text).expanduser()
+        if path.is_absolute():
+            try:
+                text = path.resolve().relative_to(cwd).as_posix()
+            except ValueError:
+                text = path.as_posix()
+        else:
+            text = path.as_posix()
+        text = text.strip("/")
+        if text and text not in normalized:
+            normalized.append(text)
+    return normalized
+
+
+def rewrite_prompt(*, prompt: str, skills: list[str], cwd: Path, owned_paths: list[str]) -> str:
     selected = ", ".join(f"${s}" for s in skills) if skills else "none explicitly named"
+    owned_text = "\n".join(f"- {path}" for path in owned_paths) if owned_paths else "none specified"
     return f"""Objective:
 {prompt}
 
@@ -468,6 +599,9 @@ Selected skills:
 
 Workspace:
 {cwd}
+
+Owned paths:
+{owned_text}
 
 Operating contract:
 - Treat the workspace above as the task/product repo and apply the selected
@@ -479,6 +613,8 @@ Operating contract:
 - Use the selected skill workflows honestly. If a named skill is unavailable, say so and stop.
 - Keep the work KISS: smallest useful change, fewest artifacts, clear stop condition.
 - Preserve unrelated user changes. Do not revert work you did not make.
+- If owned paths are listed, limit edits to those paths unless the task becomes
+  impossible without a clearly named adjacent change.
 - Do not edit custom skills unless the objective explicitly asks for skill work.
 - Do not edit third-party/system skills directly.
 - Commit only when the user's prompt or repo workflow asks for a commit.
@@ -918,6 +1054,8 @@ def write_run_script(
     exit_path = run_dir / "exit_code"
     if args.interactive:
         command = interactive_agent_command(args=args, cwd=cwd, dangerous=dangerous, run_dir=run_dir)
+    elif args.agent_command:
+        command = shlex.split(str(args.agent_command))
     elif args.agent == "codex":
         command = [
             "codex",
@@ -1184,7 +1322,10 @@ def wait_for_worker(*, session: str, run_dir: Path, args: argparse.Namespace) ->
             return classify_worker_exit(run_dir, code)
 
         if not tmux_has_session(session):
-            return "FAILED", 1, "tmux session ended without exit_code"
+            return recover_missing_exit_code_after_tmux_end(
+                run_dir=run_dir,
+                grace_seconds=DEFAULT_EXIT_GRACE_SECONDS,
+            )
 
         current_size = log_size(run_dir)
         if current_size != last_size:
@@ -1208,6 +1349,34 @@ def wait_for_worker(*, session: str, run_dir: Path, args: argparse.Namespace) ->
         time.sleep(max(0.1, float(args.poll_interval_sec)))
 
 
+def recover_missing_exit_code_after_tmux_end(
+    *,
+    run_dir: Path,
+    grace_seconds: float,
+) -> tuple[str, int, str]:
+    """Recover status when tmux exits before `exit_code` is visible.
+
+    The shell wrapper usually writes `exit_code`, but real tmux-backed workers
+    can disappear at the same moment the supervisor polls. Give filesystem
+    artifacts a short chance to settle, then trust RESULT_STATUS if it is
+    already present in compact logs.
+    """
+    deadline = time.monotonic() + max(0.0, grace_seconds)
+    while True:
+        exit_path = run_dir / "exit_code"
+        if exit_path.exists():
+            code = read_exit_code(exit_path)
+            status, exit_code, reason = classify_worker_exit(run_dir, code)
+            return status, exit_code, f"recovered after tmux exit; {reason}"
+        materialize_interactive_last_message(run_dir)
+        if read_worker_result_status(run_dir):
+            status, exit_code, reason = classify_worker_exit(run_dir, 0)
+            return status, exit_code, f"recovered RESULT_STATUS after tmux exit; {reason}"
+        if time.monotonic() >= deadline:
+            return "FAILED", 1, "tmux session ended without exit_code"
+        time.sleep(0.05)
+
+
 def tmux_has_session(session: str) -> bool:
     return subprocess.run(["tmux", "has-session", "-t", session], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
 
@@ -1224,7 +1393,11 @@ def stop_session(session: str, run_dir: Path, reason: str) -> None:
 
 def close_interactive_session(*, session: str, run_dir: Path, args: argparse.Namespace) -> None:
     if args.clear_goal_on_exit and args.goal:
-        wait_for_interactive_prompt(session=session, run_dir=run_dir, timeout_sec=10.0)
+        wait_for_interactive_prompt(
+            session=session,
+            run_dir=run_dir,
+            timeout_sec=INTERACTIVE_EXIT_PROMPT_TIMEOUT_SECONDS,
+        )
         send_tmux_line(
             session=session,
             run_dir=run_dir,
@@ -1233,7 +1406,11 @@ def close_interactive_session(*, session: str, run_dir: Path, args: argparse.Nam
             settle_sec=float(args.interactive_send_settle_sec),
         )
     if args.clear_context_on_exit:
-        wait_for_interactive_prompt(session=session, run_dir=run_dir, timeout_sec=10.0)
+        wait_for_interactive_prompt(
+            session=session,
+            run_dir=run_dir,
+            timeout_sec=INTERACTIVE_EXIT_PROMPT_TIMEOUT_SECONDS,
+        )
         send_tmux_line(
             session=session,
             run_dir=run_dir,
@@ -1408,10 +1585,52 @@ on this run.
     )
 
 
-def write_eval(run_dir: Path, cwd: Path, skill_repo: Path, status: str, exit_code: int, reason: str) -> None:
+def write_eval(
+    run_dir: Path,
+    cwd: Path,
+    skill_repo: Path,
+    status: str,
+    exit_code: int,
+    reason: str,
+    *,
+    workspace_status_before: str = "",
+    owned_paths: list[str] | None = None,
+) -> None:
     workspace_status = git_status(cwd)
     skill_status = git_status(skill_repo, ["--", "skills"])
-    verdict = "NO_SKILL_CHANGE" if not skill_status.strip() else "REVIEW_REQUIRED"
+    verdict = skill_diff_verdict("", skill_status)
+    owned_paths = owned_paths or []
+    ownership_sections = ""
+    if owned_paths:
+        owned_status, outside_status = split_status_by_owned_paths(workspace_status, owned_paths)
+        pre_existing_status = diff_status_lines(workspace_status_before, workspace_status)
+        ownership_sections = f"""
+## Owned Path Diff
+
+Owned paths:
+
+```text
+{chr(10).join(owned_paths)}
+```
+
+Owned changes:
+
+```text
+{owned_status or "clean"}
+```
+
+Outside owned paths:
+
+```text
+{outside_status or "clean"}
+```
+
+Pre-run status no longer present:
+
+```text
+{pre_existing_status or "none"}
+```
+"""
     write_text(
         run_dir / "eval.md",
         f"""# Skill Runner Evaluation
@@ -1427,6 +1646,7 @@ def write_eval(run_dir: Path, cwd: Path, skill_repo: Path, status: str, exit_cod
 ```text
 {workspace_status or "clean"}
 ```
+{ownership_sections}
 
 ## Custom Skill Diff
 
@@ -1519,7 +1739,7 @@ def skill_review_recommendation(
     workspace_skill_status: str,
     custom_skill_status: str,
 ) -> str:
-    has_skill_diff = bool(workspace_skill_status.strip() or custom_skill_status.strip())
+    has_skill_diff = skill_diff_verdict(workspace_skill_status, custom_skill_status) == "REVIEW_REQUIRED"
     normalized_notes = notes.strip().lower()
     if has_skill_diff:
         return (
@@ -1537,6 +1757,46 @@ def skill_review_recommendation(
             "defect. Inspect logs only if the failure pattern repeats."
         )
     return "NO_SKILL_CHANGE: no reusable skill issue was reported."
+
+
+def skill_diff_verdict(workspace_skill_status: str, custom_skill_status: str) -> str:
+    statuses = (workspace_skill_status.strip(), custom_skill_status.strip())
+    has_real_diff = any(status and status != "not a git worktree" for status in statuses)
+    return "REVIEW_REQUIRED" if has_real_diff else "NO_SKILL_CHANGE"
+
+
+def split_status_by_owned_paths(status: str, owned_paths: list[str]) -> tuple[str, str]:
+    owned: list[str] = []
+    outside: list[str] = []
+    for line in status.splitlines():
+        if not line.strip():
+            continue
+        path = git_status_path(line)
+        target = owned if path_matches_owned(path, owned_paths) else outside
+        target.append(line)
+    return "\n".join(owned), "\n".join(outside)
+
+
+def git_status_path(line: str) -> str:
+    text = line[3:] if len(line) > 3 else line.strip()
+    if " -> " in text:
+        text = text.rsplit(" -> ", 1)[1]
+    return text.strip()
+
+
+def path_matches_owned(path: str, owned_paths: list[str]) -> bool:
+    normalized = path.strip("/")
+    for owned in owned_paths:
+        candidate = owned.strip("/")
+        if normalized == candidate or normalized.startswith(candidate + "/"):
+            return True
+    return False
+
+
+def diff_status_lines(before: str, after: str) -> str:
+    before_set = {line for line in before.splitlines() if line.strip()}
+    after_set = {line for line in after.splitlines() if line.strip()}
+    return "\n".join(sorted(before_set - after_set))
 
 
 def extract_final_field(run_dir: Path, field: str) -> str:

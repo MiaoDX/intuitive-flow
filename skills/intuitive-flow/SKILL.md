@@ -247,6 +247,13 @@ and run the shortest safe route.
 | Changed code cleanup | `simplify <changed-scope>` -> rerun relevant proof | `gsd-handoff.md` |
 | Direct concrete edit | implement locally -> focused verification -> closeout; bypass planning stages with reason | `output-shapes.md` as needed |
 
+When the prompt is a read-only diagnostic, status check, or one-file/two-file
+concrete fix, prefer the direct route. Do not wrap it in durable Flow or a
+`skill-runner` worker merely because the user mentioned `$intuitive-flow`; a
+short route note plus focused evidence is enough. Escalate to durable Flow only
+when the task needs staged source-of-truth management, review/handoff, broad
+refactor control, or long-running isolated execution.
+
 For whole-flow or durable auto-runs, first read
 `references/checkpoints-and-auto-run.md` and confirm the run contract unless the
 latest user message already supplied goal, success criteria, stop condition, and
