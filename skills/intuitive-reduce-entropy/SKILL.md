@@ -240,9 +240,11 @@ the repo has been diagnosed:
   discovery, hooks, skills, and MCP guidance.
 - `$intuitive-tests` owns test taxonomy, behavior quality, markers, pruning,
   fixture/factory extraction, and test folder layout.
-- `$improve-codebase-architecture` owns report-only architecture/deepening
-  discovery when the repo has code architecture friction but no accepted target
-  seam yet.
+- `$zoom-out` plus `$plan-eng-review` own the first architecture review pass:
+  map the module/caller context, then stress-test the slice before execution.
+- `$improve-codebase-architecture` owns optional extra report-only
+  architecture/deepening candidate discovery when the review sequence still
+  leaves no accepted target seam.
 - `$intuitive-refactor` owns known code/module/API cleanup targets and
   persistent refactor gates, including execution of an accepted architecture
   candidate.
@@ -257,7 +259,7 @@ Classify the user's prompt and repo evidence into one or more entropy sources:
 | Human docs | stale README/architecture/status, missing current truth, generated evidence in human docs | `$intuitive-doc` |
 | Tests | low-signal tests, unclear markers, brittle fixtures, flat or confusing test layout, flaky or slow defaults | `$intuitive-tests` |
 | Repo surface layout | mixed human/agent/runtime/test/script surfaces, flat scripts/examples, misplaced files, stale path consumers | route by object; see Layout Routing |
-| Architecture discovery | open-ended architecture improvement, shallow modules, hard-to-test or hard-to-navigate code, unclear module depth or seams, request to find refactoring opportunities | `$improve-codebase-architecture` in report-only mode, then `$intuitive-refactor` after a candidate is accepted |
+| Architecture discovery | open-ended architecture improvement, shallow modules, hard-to-test or hard-to-navigate code, unclear module depth or seams, request to find refactoring opportunities | Architecture Review Sequence first; optionally `$improve-codebase-architecture` in report-only mode; then `$intuitive-refactor` after a candidate is accepted |
 | Known code cleanup | named module, accepted seam, stale API, compatibility shim, or target-local architecture cleanup | `$intuitive-refactor` |
 | Workflow drift | unclear source of truth between plans, GSD, issues, docs, and commits | `$intuitive-flow` or `$intuitive-refactor`, depending on whether work is planned or cleanup-shaped |
 
@@ -273,7 +275,9 @@ organized:
 - Code/package/module/API layout, stale imports, wrappers, or compatibility
   surfaces -> `$intuitive-refactor`.
 - Unclear module depth, shallow seams, or broad "find architecture cleanup"
-  requests -> `$improve-codebase-architecture` first in report-only mode.
+  requests -> Architecture Review Sequence first; use
+  `$improve-codebase-architecture` only if extra report-only candidate discovery
+  is still needed.
 - Mixed top-level surfaces, flat scripts/examples, agent-vs-human workspace
   separation, or unclear repo navigation -> keep the slice here and route
   subparts to the relevant specialist.
@@ -333,6 +337,7 @@ Eng-review recommendation:
 Evidence:
 Affected paths:
 Discovery skill:
+Architecture packet:
 Owner skill:
 Proof commands:
 Parked items:
@@ -423,6 +428,7 @@ Specialist owner:
 Gate:
 Zen hint:
 Pattern hint:
+Architecture packet:
 Changes:
 Verification:
 Parked items:
