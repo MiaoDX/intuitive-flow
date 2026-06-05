@@ -603,6 +603,16 @@ Workspace:
 Owned paths:
 {owned_text}
 
+Context package:
+- Must inspect first: the user objective, any approved plan/contract it names,
+  the selected skill instructions, and the smallest relevant live repo files or
+  logs needed to prove the task.
+- Useful evidence: recent diffs, tests, docs, issues, run artifacts, or command
+  output directly tied to the objective.
+- Do not inspect unless needed: broad historical archives, unrelated generated
+  output, unrelated vendored dependencies, or the custom skill source repo when
+  the task workspace is a product repo.
+
 Acceptance contract:
 - SUCCESS only if: the task-specific acceptance criteria in the user objective
   or approved plan are satisfied with observable evidence, not just attempted.
@@ -627,6 +637,9 @@ Operating contract:
 - If the prompt lacks task-specific acceptance criteria, stop early and report
   BLOCKED_NEEDS_DECISION with the missing acceptance questions or a proposed
   `$intuitive-contract` draft. Do not infer SUCCESS from relevant tests alone.
+- If the prompt lacks required context, stop early and report
+  BLOCKED_NEEDS_DECISION with the missing files, plans, issues, logs, artifacts,
+  commands, or a proposed `$intuitive-contract` context package.
 - Preserve unrelated user changes. Do not revert work you did not make.
 - If owned paths are listed, limit edits to those paths unless the task becomes
   impossible without a clearly named adjacent change.

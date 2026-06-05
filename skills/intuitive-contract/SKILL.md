@@ -3,10 +3,11 @@ name: intuitive-contract
 description: |
   Turn a vague task, plan, issue, or "LGTM/go ahead" request into an
   approval-ready execution contract before implementation starts. Use when the
-  user wants clearer scope, non-goals, acceptance criteria, verification,
-  stop gates, main-session /goal wording, or skill-runner worker prompts for
-  an intuitive-flow run. This skill does not execute; it produces the contract
-  that $intuitive-flow or a main-session goal can execute after approval.
+  user wants clearer scope, non-goals, context package, acceptance criteria,
+  verification, stop gates, main-session /goal wording, or skill-runner worker
+  prompts for an intuitive-flow run. This skill does not execute; it produces
+  the contract that $intuitive-flow or a main-session goal can execute after
+  approval.
 ---
 
 # Intuitive Contract
@@ -20,6 +21,8 @@ implementation step.
 `$intuitive-contract` owns:
 
 - turning rough intent into scope, non-goals, and acceptance criteria
+- packaging the execution context the worker should inspect first: files,
+  plans, issues, logs, artifacts, commands, and known non-sources
 - deciding the likely route: direct, `$intuitive-refactor`, durable
   `$intuitive-flow`, or `skill-runner`
 - naming the main-session `/goal` prompt for long-running supervised work
@@ -45,6 +48,7 @@ when any of these are unclear and materially change the work:
 - target user, product intent, or desired behavior
 - public contract, API, data model, or compatibility boundary
 - scope/non-goal boundary
+- required context source, artifact, file, issue, plan, or log
 - acceptance criteria or success threshold
 - destructive action, broad file movement, or compatibility removal
 - paid, credentialed, hardware, Docker, GPU, real simulator, or provider gate
@@ -71,6 +75,14 @@ Scope:
 
 Non-goals:
 - <explicitly excluded work>
+
+Context package:
+- Must read:
+  - <canonical files, plans, issues, logs, or artifacts>
+- Useful evidence:
+  - <optional context that can improve execution>
+- Do not read unless needed:
+  - <large, stale, noisy, or historical sources>
 
 Acceptance criteria:
 - SUCCESS only if:

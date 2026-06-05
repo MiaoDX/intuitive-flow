@@ -242,6 +242,7 @@ The worker prompt should be compact and explicit:
 - Objective
 - Selected skills
 - Scope and non-goals
+- Context package
 - Acceptance contract
 - KISS / Zen constraints
 - Source-of-truth rules
@@ -255,6 +256,12 @@ approved plan does not contain task-specific acceptance criteria, the worker
 must not silently invent a broad success definition. It should stop with
 `BLOCKED_NEEDS_DECISION` or return a recommended contract for main-session
 approval.
+
+Context package should name what the worker must inspect first and what should
+stay out unless needed. If the prompt or approved plan does not identify the
+needed files, issue, plan, logs, artifacts, or commands, the worker should stop
+with `BLOCKED_NEEDS_DECISION` or propose a `$intuitive-contract` draft instead
+of spending a long run on guessed context.
 
 For `$intuitive-flow`, require coherent phase scope. Do not create many
 micro-phases unless the worker first stops and asks for grouping approval.

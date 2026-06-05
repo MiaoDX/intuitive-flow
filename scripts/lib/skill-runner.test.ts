@@ -60,6 +60,26 @@ print(json.dumps({"prompt": prompt}))
     expect(output.prompt).toContain("ACCEPTANCE_EVIDENCE");
   });
 
+  test("rewritten prompt includes a context package", () => {
+    const output = runPython(`
+from pathlib import Path
+
+prompt = module.rewrite_prompt(
+    prompt="Implement docs/plans/example.md with $intuitive-flow",
+    skills=["intuitive-flow"],
+    cwd=Path(${JSON.stringify(repoRoot)}),
+    owned_paths=[],
+)
+print(json.dumps({"prompt": prompt}))
+`);
+
+    expect(output.prompt).toContain("Context package:");
+    expect(output.prompt).toContain("Must inspect first");
+    expect(output.prompt).toContain("Useful evidence");
+    expect(output.prompt).toContain("Do not inspect unless needed");
+    expect(output.prompt).toContain("If the prompt lacks required context");
+  });
+
   test("detects Codex bwrap sandbox failures reported in last-message", () => {
     const runDir = mkdtempSync(join(tmpdir(), "skill-runner-bwrap-"));
     try {
