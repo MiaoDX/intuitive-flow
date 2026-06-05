@@ -158,6 +158,32 @@ For a precise target where the user asks for implementation, apply one coherent
 vertical slice. Keep newly discovered unrelated ideas parked instead of letting
 the work expand by drift.
 
+## No-Change Outcome Rule
+
+Treat "stable enough; no change needed" as a valid result. This skill must not
+manufacture a maintenance slice just because the user asked for an entropy pass.
+After inspection, recommend no change when the remaining observations are only:
+
+- taste or wording polish that does not change routing, contracts, tests, or
+  stop conditions;
+- speculative future cleanup with no current friction;
+- already-resolved issues covered by a current plan, ADR, gate, or recent
+  verified change;
+- another possible refactor that would not make the next human or agent
+  materially less surprised.
+
+When no candidate passes that bar, stop with a no-change report instead of
+asking the user to proceed. The shape is:
+
+```text
+Entropy source:
+Selected slice: none
+Why no change:
+Verification:
+Parked items:
+Next safe task:
+```
+
 ## Delegation Model
 
 Keep the main session as the coordinator, decision point, and canonical
@@ -307,7 +333,8 @@ Use this route unless the user already names a specific entropy source.
    explains how it makes the repo more explicit, simple, canonical, or
    unsurprising. For code or architecture slices, also attach a `Pattern hint:`
    that names a likely design pattern fit or explicitly says direct cleanup is
-   clearer.
+   clearer. If no candidate passes the No-Change Outcome Rule, report
+   `Selected slice: none` and stop.
 4. **Architecture sequence**: when the best slice is architecture/deepening,
    public-contract cleanup, MCP/tool boundary cleanup, lifecycle gates, or an
    unclear target seam, run `$zoom-out` and `$plan-eng-review` before execution.
@@ -416,6 +443,8 @@ Stop when all of these are true:
   reason
 - the agent can state the next safe task without starting another broad cleanup
   sweep
+- no-change runs explicitly say `Selected slice: none` and do not create a
+  gate, commit, or follow-up refactor proposal
 
 ## Report Format
 
@@ -430,6 +459,17 @@ Zen hint:
 Pattern hint:
 Architecture packet (architecture-shaped slices only):
 Changes:
+Verification:
+Parked items:
+Next safe task:
+```
+
+For no-change runs, use:
+
+```text
+Entropy source:
+Selected slice: none
+Why no change:
 Verification:
 Parked items:
 Next safe task:
