@@ -332,12 +332,12 @@ Selected slice:
 Entropy source:
 Zen hint:
 Pattern hint:
-Zoom-out map:
-Eng-review recommendation:
+Zoom-out map (architecture-shaped slices only):
+Eng-review recommendation (architecture-shaped slices only):
 Evidence:
 Affected paths:
 Discovery skill:
-Architecture packet:
+Architecture packet (architecture-shaped slices only):
 Owner skill:
 Proof commands:
 Parked items:
@@ -428,7 +428,7 @@ Specialist owner:
 Gate:
 Zen hint:
 Pattern hint:
-Architecture packet:
+Architecture packet (architecture-shaped slices only):
 Changes:
 Verification:
 Parked items:
