@@ -12,11 +12,13 @@ describe("local skill manifest", () => {
       root-skill intuitive-flow
       legacy-skill old-flow
       legacy-command old.md
+      legacy-mimocode-command stale.md
     `);
 
     expect(manifest.rootSkills).toEqual(["intuitive-flow"]);
     expect(manifest.legacySkills).toEqual(["old-flow"]);
     expect(manifest.legacyCommands).toEqual(["old.md"]);
+    expect(manifest.legacyMimocodeCommands).toEqual(["stale.md"]);
   });
 
   test("rejects path-like values", () => {
@@ -47,12 +49,17 @@ describe("local skill manifest", () => {
       mkdirSync(join(home, ".codex", "skills", "keep-skill"), { recursive: true });
       mkdirSync(join(home, ".claude", "commands"), { recursive: true });
       writeFileSync(join(home, ".claude", "commands", "old.md"), "");
+      mkdirSync(join(home, ".config", "mimocode", "command"), { recursive: true });
+      writeFileSync(join(home, ".config", "mimocode", "command", "stale.md"), "");
+      writeFileSync(join(home, ".config", "mimocode", "command", "keep.md"), "");
 
-      const removed = pruneLegacyArtifacts(parseManifestText("legacy-skill old-skill\nlegacy-command old.md\n"), home);
+      const removed = pruneLegacyArtifacts(parseManifestText("legacy-skill old-skill\nlegacy-command old.md\nlegacy-mimocode-command stale.md\n"), home);
 
-      expect(removed).toBe(2);
+      expect(removed).toBe(3);
       expect(existsSync(join(home, ".codex", "skills", "old-skill"))).toBe(false);
       expect(existsSync(join(home, ".claude", "commands", "old.md"))).toBe(false);
+      expect(existsSync(join(home, ".config", "mimocode", "command", "stale.md"))).toBe(false);
+      expect(existsSync(join(home, ".config", "mimocode", "command", "keep.md"))).toBe(true);
       expect(existsSync(join(home, ".codex", "skills", "keep-skill"))).toBe(true);
     } finally {
       rmSync(home, { recursive: true, force: true });

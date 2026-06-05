@@ -63,6 +63,18 @@ describe("local command and skill sync task", () => {
         expect(existsSync(join(home, ".codex", "skills", skillName, "SKILL.md"))).toBe(true);
         expect(existsSync(join(home, ".codex", "skills", skillName, skillName, "SKILL.md"))).toBe(false);
         expect(npxCalls).toContain(join(repoRoot, "skills", skillName));
+
+        const commandPath = join(home, ".config", "mimocode", "command", `${skillName}.md`);
+        expect(existsSync(commandPath)).toBe(true);
+        const commandText = await Bun.file(commandPath).text();
+        expect(commandText).toContain("description:");
+        expect(commandText).toContain(`Load and run the \`${skillName}\` skill.`);
+        expect(commandText).toContain("User input: $ARGUMENTS");
+        // description must be resolved, not a bare YAML block-scalar marker
+        const descLine = commandText.split("\n").find((l) => l.startsWith("description:")) ?? "";
+        expect(descLine).not.toBe('description: "|"');
+        expect(descLine).not.toBe('description: ">"');
+        expect(descLine.length).toBeGreaterThan("description: \"\"".length + 5);
       }
     } finally {
       rmSync(home, { recursive: true, force: true });

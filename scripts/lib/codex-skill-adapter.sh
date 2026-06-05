@@ -76,3 +76,47 @@ render_codex_skill() {
         printf '%s\n' "$body"
     } > "$dest_dir/SKILL.md"
 }
+
+# render_mimocode_command <src_skill_md> <dest_md> <name>
+# Renders a MiMoCode slash-command wrapper for a repo-owned skill. MiMoCode
+# discovers skills natively via ~/.codex/skills, so the command only needs to
+# tell the agent to load the skill (no Codex adapter block). Reads the skill's
+# own `description:` frontmatter so the / menu shows meaningful help.
+render_mimocode_command() {
+    local src_md="$1" dest_md="$2" name="$3"
+
+    # Extract the skill's `description:` from frontmatter. Handles both inline
+    # (`description: text`) and YAML block scalar (`description: |` followed by
+    # indented lines) forms, collapsing block scalars to a single line.
+    local description
+    description=$(awk '
+        /^---/ { c++; next }
+        c == 1 && /^description:[[:space:]]*$/ { next }
+        c == 1 && /^description:[[:space:]]*[|>]/ {
+            block = 1; next
+        }
+        c == 1 && block && /^[[:space:]]+/ {
+            sub(/^[[:space:]]+/, ""); printf "%s%s", (n++ ? " " : ""), $0; next
+        }
+        c == 1 && block { exit }
+        c == 1 && /^description:/ {
+            sub(/^description:[[:space:]]*/, "");
+            gsub(/^"|"$/, "");
+            print; exit
+        }
+    ' "$src_md")
+    if [ -z "$description" ]; then
+        description="Load and run the $name skill."
+    fi
+    # Escape embedded double quotes for safe YAML double-quoted scalar output.
+    description=${description//\"/\\\"}
+
+    mkdir -p "$(dirname "$dest_md")"
+    {
+        printf -- '---\n'
+        printf 'description: "%s"\n' "$description"
+        printf -- '---\n\n'
+        printf 'Load and run the `%s` skill.\n\n' "$name"
+        printf 'User input: $ARGUMENTS\n'
+    } > "$dest_md"
+}

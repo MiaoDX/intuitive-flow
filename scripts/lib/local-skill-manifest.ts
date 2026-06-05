@@ -4,18 +4,20 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, statSync, writ
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
-type ManifestKind = "root-skill" | "legacy-skill" | "legacy-command";
+type ManifestKind = "root-skill" | "legacy-skill" | "legacy-command" | "legacy-mimocode-command";
 
 export type LocalSkillManifest = {
   rootSkills: string[];
   legacySkills: string[];
   legacyCommands: string[];
+  legacyMimocodeCommands: string[];
 };
 
 const kindToField: Record<ManifestKind, keyof LocalSkillManifest> = {
   "root-skill": "rootSkills",
   "legacy-skill": "legacySkills",
   "legacy-command": "legacyCommands",
+  "legacy-mimocode-command": "legacyMimocodeCommands",
 };
 
 const skillInstallRoots = (home: string) => [
@@ -35,6 +37,7 @@ export const parseManifestText = (text: string): LocalSkillManifest => {
     rootSkills: [],
     legacySkills: [],
     legacyCommands: [],
+    legacyMimocodeCommands: [],
   };
   const seen = new Set<string>();
 
@@ -116,6 +119,14 @@ export const pruneLegacyArtifacts = (
     }
   }
 
+  for (const commandName of manifest.legacyMimocodeCommands) {
+    const commandPath = join(home, ".config", "mimocode", "command", commandName);
+    if (existsSync(commandPath)) {
+      rmSync(commandPath, { recursive: true, force: true });
+      removed += 1;
+    }
+  }
+
   for (const skillName of manifest.legacySkills) {
     for (const installRoot of skillInstallRoots(home)) {
       const skillPath = join(installRoot, skillName);
@@ -139,14 +150,16 @@ const main = async () => {
   try {
     if (command === "self-test") {
       const tempHome = mkdtempSync(join(tmpdir(), "local-skill-manifest-"));
-      const manifest = parseManifestText("root-skill alpha\nlegacy-skill old-skill\nlegacy-command old.md\n");
+      const manifest = parseManifestText("root-skill alpha\nlegacy-skill old-skill\nlegacy-command old.md\nlegacy-mimocode-command stale.md\n");
       mkdirSync(join(tempHome, ".codex", "skills", "old-skill"), { recursive: true });
       mkdirSync(join(tempHome, ".claude", "commands"), { recursive: true });
       writeFileSync(join(tempHome, ".claude", "commands", "old.md"), "");
+      mkdirSync(join(tempHome, ".config", "mimocode", "command"), { recursive: true });
+      writeFileSync(join(tempHome, ".config", "mimocode", "command", "stale.md"), "");
       const removed = pruneLegacyArtifacts(manifest, tempHome);
       rmSync(tempHome, { recursive: true, force: true });
-      if (removed !== 2) {
-        throw new Error(`self-test expected 2 removals, got ${removed}`);
+      if (removed !== 3) {
+        throw new Error(`self-test expected 3 removals, got ${removed}`);
       }
       return;
     }

@@ -45,6 +45,9 @@ _check_root_skill_manifest() {
 # Sync .claude/commands/*.md from this repo to:
 #   ~/.claude/commands/   (Claude Code global commands — raw .md copy)
 #   ~/.codex/skills/      (Codex skills — rendered via render_codex_skill)
+# Sync repo-owned skills/* to:
+#   Claude Code + ~/.codex/skills/  (skills)
+#   ~/.config/mimocode/command/     (MiMoCode slash-command wrappers)
 run_sync_local_commands_skills() {
     local project_dir commands_src local_skill_manifest
     project_dir=$(cd "$SCRIPT_DIR/.." && pwd)
@@ -118,12 +121,15 @@ run_sync_local_commands_skills() {
     if [ -d "$root_skills_src" ]; then
         local root_skills_codex_synced=0
         local root_skills_claude_synced=0
+        local root_skills_mimocode_synced=0
+        local mimocode_command_dest="$HOME/.config/mimocode/command"
         local skill_dir skill_name
         if ! _check_root_skill_manifest "$local_skill_manifest" "$root_skills_src"; then
             return 1
         fi
         local skills_registry
         skills_registry=$(select_npm_registry "Skills CLI" skills) || return 1
+        mkdir -p "$mimocode_command_dest"
         while IFS= read -r skill_name; do
             skill_dir="$root_skills_src/$skill_name"
 
@@ -142,11 +148,20 @@ run_sync_local_commands_skills() {
                 fi
                 root_skills_codex_synced=$((root_skills_codex_synced + 1))
             fi
+
+            # MiMoCode reads skills from ~/.codex/skills natively; generate a
+            # slash-command wrapper so /<skill_name> is available in MiMoCode too.
+            render_mimocode_command "$skill_dir/SKILL.md" "$mimocode_command_dest/$skill_name.md" "$skill_name"
+            root_skills_mimocode_synced=$((root_skills_mimocode_synced + 1))
+
             echo "  synced skill: $skill_name"
         done < <(_manifest_tool root-skills "$local_skill_manifest")
         if [ "$root_skills_claude_synced" -gt 0 ] || [ "$root_skills_codex_synced" -gt 0 ]; then
             echo "  ✓ $root_skills_claude_synced repo-local skill(s) → Claude Code"
             echo "  ✓ $root_skills_codex_synced repo-local skill(s) → ~/.codex/skills/"
+        fi
+        if [ "$root_skills_mimocode_synced" -gt 0 ]; then
+            echo "  ✓ $root_skills_mimocode_synced repo-local command(s) → ~/.config/mimocode/command/"
         fi
     fi
 }
