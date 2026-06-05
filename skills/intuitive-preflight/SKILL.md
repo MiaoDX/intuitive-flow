@@ -1,24 +1,24 @@
 ---
-name: intuitive-contract
+name: intuitive-preflight
 description: |
   Turn a vague task, plan, issue, or "LGTM/go ahead" request into an
-  approval-ready execution contract before implementation starts. Use when the
-  user wants clearer scope, non-goals, context package, acceptance criteria,
-  verification, stop gates, main-session /goal wording, or skill-runner worker
-  prompts for an intuitive-flow run. This skill does not execute; it produces
-  the contract that $intuitive-flow or a main-session goal can execute after
-  approval.
+  approval-ready preflight contract before implementation starts. Use when the
+  user wants prompt preflight, clearer scope, non-goals, context package,
+  acceptance criteria, definition of done, verification, stop gates,
+  main-session /goal wording, or skill-runner worker prompts for an
+  intuitive-flow run. This skill does not execute; it produces the contract
+  that $intuitive-flow or a main-session goal can execute after approval.
 ---
 
-# Intuitive Contract
+# Intuitive Preflight
 
 Use this skill to make execution intent explicit before work starts. The output
-is a contract the user can approve, revise, or reject. It is not an
+is a preflight contract the user can approve, revise, or reject. It is not an
 implementation step.
 
 ## Boundary
 
-`$intuitive-contract` owns:
+`$intuitive-preflight` owns:
 
 - turning rough intent into scope, non-goals, and acceptance criteria
 - packaging the execution context the worker should inspect first: files,
@@ -38,7 +38,8 @@ It does not own:
 - approving its own contract
 
 After approval, execution normally returns to `$intuitive-flow`. For known
-refactor or cleanup contracts, execution may route to `$intuitive-refactor`.
+refactor or cleanup preflight contracts, execution may route to
+`$intuitive-refactor`.
 
 ## When To Stop And Ask
 
@@ -62,7 +63,7 @@ mark when to revisit it.
 Return this shape. Keep it compact enough for the user to approve in one pass.
 
 ```text
-Contract status: DRAFT | BLOCKED_NEEDS_DECISION
+Preflight status: DRAFT | BLOCKED_NEEDS_DECISION
 Task source: <user prompt | plan path | issue | mixed>
 Canonical source: <docs/plans/... | issue URL | conversation only>
 Route: <main direct | $intuitive-refactor | durable $intuitive-flow | skill-runner worker>
@@ -84,7 +85,7 @@ Context package:
 - Do not read unless needed:
   - <large, stale, noisy, or historical sources>
 
-Acceptance criteria:
+Definition of Done / acceptance criteria:
 - SUCCESS only if:
   - <observable proof>
 - PARTIAL if:
@@ -156,9 +157,9 @@ goal.
 
 ## Approval Handling
 
-If the user approves a DRAFT contract in the next turn, do not rewrite the
-contract unless their approval includes changes. Execute or route according to
-the approved contract.
+If the user approves a DRAFT preflight contract in the next turn, do not
+rewrite the contract unless their approval includes changes. Execute or route
+according to the approved contract.
 
 Approval phrases include:
 

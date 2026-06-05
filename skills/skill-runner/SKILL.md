@@ -260,7 +260,7 @@ approval.
 Context package should name what the worker must inspect first and what should
 stay out unless needed. If the prompt or approved plan does not identify the
 needed files, issue, plan, logs, artifacts, or commands, the worker should stop
-with `BLOCKED_NEEDS_DECISION` or propose a `$intuitive-contract` draft instead
+with `BLOCKED_NEEDS_DECISION` or propose a `$intuitive-preflight` draft instead
 of spending a long run on guessed context.
 
 For `$intuitive-flow`, require coherent phase scope. Do not create many

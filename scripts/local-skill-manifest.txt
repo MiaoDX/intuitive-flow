@@ -1,6 +1,6 @@
 # Repo-owned root skills installed from ./skills.
 root-skill grill-with-docs-batch
-root-skill intuitive-contract
+root-skill intuitive-preflight
 root-skill intuitive-doc
 root-skill intuitive-flow
 root-skill intuitive-init
@@ -21,6 +21,7 @@ legacy-skill gsd-squash
 legacy-skill gsd_squash
 legacy-skill hybrid-phase-pipeline
 legacy-skill intuitive-build
+legacy-skill intuitive-contract
 legacy-skill intuitive-layout
 legacy-skill intuitive-migrate
 legacy-skill intuitive-ut

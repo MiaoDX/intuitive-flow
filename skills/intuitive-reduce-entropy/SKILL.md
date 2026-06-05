@@ -254,8 +254,8 @@ Keep the user-facing choice small:
 - `$intuitive-flow` -> default build/change entrypoint; routes tiny concrete
   work directly, cleanup/refactor work to `$intuitive-refactor`, and broad work
   through durable Flow.
-- `$intuitive-contract` -> turn a vague task, plan, issue, or approval request
-  into an execution contract before implementation starts.
+- `$intuitive-preflight` -> turn a vague task, plan, issue, or approval request
+  into a preflight contract before implementation starts.
 - `$intuitive-refactor` -> clean a known module, seam, API, or architecture
   target.
 - `$intuitive-reduce-entropy` -> find what repo maintenance would pay off most
@@ -270,9 +270,9 @@ the repo has been diagnosed:
   discovery, hooks, skills, and MCP guidance.
 - `$intuitive-tests` owns test taxonomy, behavior quality, markers, pruning,
   fixture/factory extraction, and test folder layout.
-- `$intuitive-contract` owns pre-execution contracts: scope, non-goals,
-  acceptance criteria, verification, route, worker strategy, and main-session
-  `/goal` wording.
+- `$intuitive-preflight` owns pre-execution contracts: context package, scope,
+  non-goals, definition of done, verification, route, worker strategy, and
+  main-session `/goal` wording.
 - `$zoom-out` plus `$plan-eng-review` own the first architecture review pass:
   map the module/caller context, then stress-test the slice before execution.
 - `$improve-codebase-architecture` owns optional extra report-only

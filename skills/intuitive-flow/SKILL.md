@@ -254,11 +254,12 @@ can classify the request safely. The route brief should name the selected path,
 the executor, and any heavier stages bypassed.
 
 Before executing a vague task, plan-backed task, or short approval prompt such
-as "LGTM, do this", route to `$intuitive-contract` when the current plan or
-conversation does not already contain an approved execution contract with
-scope, non-goals, acceptance criteria, verification, route, worker strategy, and
-main-session `/goal` wording. Do not start durable implementation from a thin
-approval prompt and invent success criteria during execution.
+as "LGTM, do this", route to `$intuitive-preflight` when the current plan or
+conversation does not already contain an approved preflight contract with
+context package, scope, non-goals, definition of done, verification, route,
+worker strategy, and main-session `/goal` wording. Do not start durable
+implementation from a thin approval prompt and invent success criteria during
+execution.
 
 ## Stage Router
 
@@ -288,9 +289,9 @@ For whole-flow or durable auto-runs, first read
 latest user message already supplied goal, success criteria, stop condition, and
 boundaries and told you to use them as-is.
 
-If `$intuitive-contract` produced the approved run contract, treat that contract
-as the execution source. Preserve the main session as the root supervisor; use
-worker-local goals only for bounded `skill-runner` sub-phases.
+If `$intuitive-preflight` produced the approved preflight contract, treat that
+contract as the execution source. Preserve the main session as the root
+supervisor; use worker-local goals only for bounded `skill-runner` sub-phases.
 
 When resuming a durable auto-run, check the stop gate before doing new work. If
 canonical state already says the current phase is blocked and the gate still

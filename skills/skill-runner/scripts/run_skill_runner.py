@@ -636,10 +636,10 @@ Operating contract:
 - Keep the work KISS: smallest useful change, fewest artifacts, clear stop condition.
 - If the prompt lacks task-specific acceptance criteria, stop early and report
   BLOCKED_NEEDS_DECISION with the missing acceptance questions or a proposed
-  `$intuitive-contract` draft. Do not infer SUCCESS from relevant tests alone.
+  `$intuitive-preflight` draft. Do not infer SUCCESS from relevant tests alone.
 - If the prompt lacks required context, stop early and report
   BLOCKED_NEEDS_DECISION with the missing files, plans, issues, logs, artifacts,
-  commands, or a proposed `$intuitive-contract` context package.
+  commands, or a proposed `$intuitive-preflight` context package.
 - Preserve unrelated user changes. Do not revert work you did not make.
 - If owned paths are listed, limit edits to those paths unless the task becomes
   impossible without a clearly named adjacent change.

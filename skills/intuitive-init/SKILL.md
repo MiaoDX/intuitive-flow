@@ -337,9 +337,9 @@ Use this workflow unless the user asks for report-only or a specific file.
    - `$intuitive-tests` for test-suite structure and behavior-focused cleanup.
    - `$intuitive-flow` as the default build/change entrypoint that routes by
      scope.
-   - `$intuitive-contract` before plan or vague-task execution when approval
-     should cover scope, acceptance criteria, verification, route, and
-     main-session `/goal` wording.
+   - `$intuitive-preflight` before plan or vague-task execution when approval
+     should cover context package, scope, definition of done, verification,
+     route, and main-session `/goal` wording.
    - `$intuitive-refactor` before broad architecture or refactor work.
    - `$intuitive-reduce-entropy` for periodic repo maintenance when the user
      does not already know which surface needs cleanup.

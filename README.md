@@ -74,12 +74,12 @@ Keep the public choice small:
 | Skill | Use it for |
 | --- | --- |
 | **intuitive-flow** | Default build/change entrypoint; routes tiny concrete work directly, cleanup/refactor work to `intuitive-refactor`, and broad work through plan/review/execution |
-| **intuitive-contract** | Turn a rough task, plan, issue, or approval into a scoped execution contract with acceptance criteria, verification, route, worker strategy, and main-session goal prompt |
+| **intuitive-preflight** | Turn a rough task, plan, issue, or approval into a preflight contract with context package, definition of done, verification, route, worker strategy, and main-session goal prompt |
 | **intuitive-refactor** | Directly clean a known module, seam, stale API, compatibility surface, code/package/module layout issue, or architecture target |
 | **intuitive-reduce-entropy** | Periodically inspect repo mess and recommend the highest-value maintenance slice; routes docs, agent guidance, tests, architecture discovery, and known code cleanup to the right specialist |
 | **intuitive-squash** | Compress noisy local agent history into a clean reviewable commit story |
 
-Specialist skills still exist for direct or routed use: `$intuitive-contract`,
+Specialist skills still exist for direct or routed use: `$intuitive-preflight`,
 `$intuitive-doc`, `$intuitive-init`, `$intuitive-tests`, and architecture discovery via
 `improve-codebase-architecture` when that external skill is installed.
 
