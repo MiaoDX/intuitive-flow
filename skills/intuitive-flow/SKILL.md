@@ -1,18 +1,21 @@
 ---
 name: intuitive-flow
 description: |
-  Orchestrate a staged idea-to-execution workflow across planning, review,
-  GSD handoff, implementation, cleanup, and verification. Use when the user asks
-  for fuzzy idea shaping, durable planning, implementation from a plan, Matt
-  Pocock skills + gstack + GSD together, broad refactor routing, or one coherent
-  source of truth from idea to verified work.
+  Stable build/change entrypoint that routes by task scope: tiny concrete work
+  can run directly, refactor-shaped work delegates to intuitive-refactor, and
+  broad or durable work runs through staged planning, review, GSD handoff,
+  implementation, cleanup, and verification. Use when the user asks for fuzzy
+  idea shaping, durable planning, implementation from a plan, Matt Pocock skills
+  + gstack + GSD together, broad refactor routing, or one coherent source of
+  truth from idea to verified work.
 ---
 
 # Intuitive Flow
 
-Route work through the smallest staged workflow that preserves a clear source of
-truth. This skill is an orchestrator: use downstream skills for their own
-mechanics, and keep canonical route decisions in the main session.
+`$intuitive-flow` is a stable user-facing trigger, not only the heavy workflow.
+Accept the trigger, then route work through the smallest executor that preserves
+a clear source of truth. This skill is an orchestrator: use downstream skills
+for their own mechanics, and keep canonical route decisions in the main session.
 
 ## Latest User Intent Gate
 
@@ -232,6 +235,24 @@ Name plausible but skipped stages such as `grill-me`, `office-hours`,
 `autoplan`, `to-issues`, GSD handoff, `simplify`, or verification. This makes
 shortcuts visible without turning every task into a ceremony.
 
+## Stable Entry Router
+
+When invoked, accept `$intuitive-flow` as the entrypoint and classify the task
+before choosing the execution surface:
+
+- Read-only diagnostics, status checks, and one-file/two-file concrete fixes:
+  use the direct route in the main session with a short route note and focused
+  evidence.
+- Refactor, cleanup, stale API, compatibility, module layout, or known seam
+  work: route to `$intuitive-refactor` so the scope gate, accepted checklist,
+  evidence ladder, and stop condition are explicit.
+- Plan-backed, broad, stateful, multi-stage, or long-running work: use durable
+  Flow and `skill-runner`/tmux as needed.
+
+Do not make the user choose the specialist skill upfront when `$intuitive-flow`
+can classify the request safely. The route brief should name the selected path,
+the executor, and any heavier stages bypassed.
+
 ## Stage Router
 
 Start by classifying the user's current state. Then read the matching reference
@@ -243,16 +264,17 @@ and run the shortest safe route.
 | Draft plan exists | single plan-file intake if needed -> `gstack-autoplan docs/plans/<slug>.md` -> reconcile accepted decisions into the plan | `plan-intake-and-autoplan.md` |
 | Reviewed plan, not under GSD | pass `autoplan` precheck -> optional `to-issues` -> `gsd-plan-phase --prd` or manifest + `gsd-ingest-docs` then `gsd-plan-phase` | `gsd-handoff.md` |
 | Committed GSD phase | `gsd-execute-phase <phase>` -> `simplify <changed-scope>` -> `gsd-verify-work <phase>` -> final `$intuitive-doc` doc-alignment sub-phase when significant human truth may have changed | `gsd-handoff.md` |
-| Architecture/refactor goal | create/read refactor scope gate -> execute accepted P0/P1 slices -> final `$intuitive-doc` doc-alignment sub-phase -> parked-todo closeout | `refactor-and-closeout.md` |
+| Architecture/refactor goal | route to `$intuitive-refactor` for scope gate -> execute accepted P0/P1 slices -> final `$intuitive-doc` doc-alignment sub-phase -> parked-todo closeout | `refactor-and-closeout.md` |
 | Changed code cleanup | `simplify <changed-scope>` -> rerun relevant proof | `gsd-handoff.md` |
 | Direct concrete edit | implement locally -> focused verification -> closeout; bypass planning stages with reason | `output-shapes.md` as needed |
 
-When the prompt is a read-only diagnostic, status check, or one-file/two-file
-concrete fix, prefer the direct route. Do not wrap it in durable Flow or a
-`skill-runner` worker merely because the user mentioned `$intuitive-flow`; a
-short route note plus focused evidence is enough. Escalate to durable Flow only
-when the task needs staged source-of-truth management, review/handoff, broad
-refactor control, or long-running isolated execution.
+Treat direct routing as an internal `$intuitive-flow` decision, not a refusal of
+the trigger. If the task is small and concrete, run it directly and say which
+heavier stages were bypassed. If the task is cleanup/refactor-shaped, delegate
+to `$intuitive-refactor` instead of silently broadening direct implementation.
+Escalate to durable Flow only when the task needs staged source-of-truth
+management, review/handoff, broad refactor control, or long-running isolated
+execution.
 
 For whole-flow or durable auto-runs, first read
 `references/checkpoints-and-auto-run.md` and confirm the run contract unless the

@@ -33,7 +33,8 @@ evidence, retrospectives, scratch work, and low-level churn. Humans can inspect
 it when something is risky or broken. They should not have to live there.
 
 The workflow keeps the user-facing choices small: use `office-hours` or
-`grill-me` for what to build, `$intuitive-flow` to build it,
+`grill-me` for what to build, `$intuitive-flow` as the default build/change
+entrypoint,
 `$intuitive-refactor` to clean a known target, and
 `$intuitive-reduce-entropy` to find what repo maintenance would pay off most.
 See [BELIEFS.md](BELIEFS.md) for the full doctrine.
@@ -72,7 +73,7 @@ Keep the public choice small:
 
 | Skill | Use it for |
 | --- | --- |
-| **intuitive-flow** | Move a fuzzy idea through plan review, GSD handoff, execution, cleanup, and verification |
+| **intuitive-flow** | Default build/change entrypoint; routes tiny concrete work directly, cleanup/refactor work to `intuitive-refactor`, and broad work through plan/review/execution |
 | **intuitive-refactor** | Directly clean a known module, seam, stale API, compatibility surface, code/package/module layout issue, or architecture target |
 | **intuitive-reduce-entropy** | Periodically inspect repo mess and recommend the highest-value maintenance slice; routes docs, agent guidance, tests, architecture discovery, and known code cleanup to the right specialist |
 | **intuitive-squash** | Compress noisy local agent history into a clean reviewable commit story |

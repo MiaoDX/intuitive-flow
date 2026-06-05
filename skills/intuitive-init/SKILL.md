@@ -335,7 +335,8 @@ Use this workflow unless the user asks for report-only or a specific file.
    - `$intuitive-init` for agent guidance initialization and periodic refresh.
    - `$intuitive-doc` for human-facing docs and doc drift.
    - `$intuitive-tests` for test-suite structure and behavior-focused cleanup.
-   - `$intuitive-flow` for fuzzy idea to planned execution.
+   - `$intuitive-flow` as the default build/change entrypoint that routes by
+     scope.
    - `$intuitive-refactor` before broad architecture or refactor work.
    - `$intuitive-reduce-entropy` for periodic repo maintenance when the user
      does not already know which surface needs cleanup.

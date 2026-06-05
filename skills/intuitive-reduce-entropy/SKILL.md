@@ -251,7 +251,9 @@ surfaces are migration targets, not contracts.
 
 Keep the user-facing choice small:
 
-- `$intuitive-flow` -> build or ship something new.
+- `$intuitive-flow` -> default build/change entrypoint; routes tiny concrete
+  work directly, cleanup/refactor work to `$intuitive-refactor`, and broad work
+  through durable Flow.
 - `$intuitive-refactor` -> clean a known module, seam, API, or architecture
   target.
 - `$intuitive-reduce-entropy` -> find what repo maintenance would pay off most
