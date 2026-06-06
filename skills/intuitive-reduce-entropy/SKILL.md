@@ -66,16 +66,21 @@ Discovery and execution have different boundaries:
 - Execution should still apply one coherent slice at a time, with its own
   accepted checklist and verification, unless the user explicitly asks for a
   loop or multi-round cleanup.
-- If the user asks to "run a loop", "do the top N", "fix these", or otherwise
-  approves execution, create or update one loop gate such as
-  `docs/plans/refactor-reduce-entropy-loop.md`, list the accepted candidates,
-  then execute candidates in priority order while keeping each slice separately
-  verifiable.
+- If the user asks to "run a loop", "do the top N", "do another N", "fix
+  these", or otherwise approves execution, treat N as an upper bound, not a
+  quota. Create or update one loop gate such as
+  `docs/plans/refactor-reduce-entropy-loop.md`, list the accepted candidates
+  or audit budget, then execute only candidates that still pass the No-Change
+  Outcome Rule from the current repository state.
+- In a multi-round loop, every round starts with a fresh audit from current
+  HEAD. Stop early when the best remaining observation is only small polish,
+  optional wording, or a change that would make the user wonder why another
+  commit was needed.
 - Pause before broad file moves, deletes with uncertain consumers, public API
   changes, external compatibility removal, paid/slow/local-provider gates, or
   product-scope decisions even if they appear in the batch.
 - After each executed candidate, update the loop gate and continue only while
-  another accepted P0/P1/P2 candidate remains in scope.
+  another accepted P0/P1 or materially useful P2 candidate remains in scope.
 
 ## Zen Of Python Bias
 
@@ -226,6 +231,9 @@ After inspection, recommend no change when the remaining observations are only:
   verified change;
 - another possible refactor that would not make the next human or agent
   materially less surprised.
+- a tiny route, copy, formatting, or index tweak whose main value is aesthetic
+  neatness rather than preventing rediscovery, false confidence, or real
+  operational confusion.
 
 When no candidate passes that bar, stop with a no-change report instead of
 asking the user to proceed. The shape is:
@@ -238,6 +246,11 @@ Verification:
 Parked items:
 Next safe task:
 ```
+
+In an active loop, this same rule is the saturation check. If a fresh round
+finds no P0/P1 or materially useful P2 candidate, close the existing loop gate
+as `DONE` or `PARK`, record why the loop stopped before the budget was spent,
+and do not make another cleanup commit merely to satisfy the requested count.
 
 ## Delegation Model
 
@@ -407,8 +420,10 @@ Use this route unless the user already names a specific entropy source.
    update one persistent maintenance gate for a single accepted target, normally
    `docs/plans/refactor-reduce-entropy-<target>.md`; for an approved multi-round
    cleanup, create or update a loop gate such as
-   `docs/plans/refactor-reduce-entropy-loop.md` with the accepted candidate list,
-   execution order, proof commands, and stop condition.
+   `docs/plans/refactor-reduce-entropy-loop.md` with the accepted candidate list
+   or maximum audit budget, execution order, proof commands, and stop
+   condition. The stop condition must say the loop may finish before the budget
+   is exhausted when a fresh round returns `Selected candidates: none`.
 6. **Route**: run the specialist owner for each accepted candidate, or keep the
    slice here only when it spans mixed repo surfaces without a narrower owner.
 7. **Verify and close**: run the repo's relevant checks after each executed
@@ -438,8 +453,10 @@ For long or stateful specialist execution, pass that packet through
 `skill-runner`/tmux and have the main session inspect `result.md`, `eval.md`,
 worker output, the actual diff, and verification before closeout.
 
-Run another slice only when the accepted loop gate still has a concrete P0/P1/P2
-candidate inside scope. Do not repeat just because more possible cleanup exists.
+Run another slice only when the accepted loop gate still has a concrete P0/P1
+or materially useful P2 candidate inside scope. Do not repeat just because more
+possible cleanup exists, and do not downgrade the materiality bar after several
+successful rounds.
 
 ## User Input Routing
 
@@ -481,7 +498,7 @@ Parked items:
 Suggested proof:
 - <commands/searches>
 
-Proceed with candidate <N>, or run the top <N> as a loop?
+Proceed with candidate <N>, or run up to the top <N> as a loop?
 ```
 
 ## Decision Policy
@@ -507,7 +524,8 @@ Stop when all of these are true:
 - the accepted maintenance gate or loop gate is `DONE` or `PARK`, with
   remaining ideas recorded
 - either a ranked candidate batch was delivered for selection, or the accepted
-  execution loop completed exactly the approved candidates
+  execution loop completed the approved candidates or saturated early with
+  `Selected candidates: none`
 - specialist skills were used for their owned surfaces instead of duplicating
   their full procedures here
 - verification commands pass, or skipped gates are documented with a concrete

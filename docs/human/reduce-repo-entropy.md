@@ -25,6 +25,9 @@ Start by classifying entropy sources:
 Present the serious group of current candidates in one pass, normally 3-7
 items. Rank them by severity, evidence, and future surprise reduction. If fewer
 than 3 candidates pass the bar, explain why the other observations are parked.
+Treat "do another N" or "run the top N" as a maximum budget, not a requirement
+to manufacture N commits. On each fresh round, stop early with
+`Selected candidates: none` when only tiny polish remains.
 
 For each candidate include:
 - severity
@@ -61,7 +64,7 @@ After a successful maintenance pass, the repo should have:
 
 - a ranked batch of credible entropy candidates, or an explicit no-change report
 - one accepted entropy source selected and addressed, an accepted top-N loop
-  completed, or all candidates explicitly parked
+  completed or saturated early, or all candidates explicitly parked
 - current human docs in `README.md`, `ARCHITECTURE.md`, `STATUS.md`, and
   `docs/human/**`
 - agent guidance that points at the right docs and commands without bloated
