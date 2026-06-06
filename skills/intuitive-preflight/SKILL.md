@@ -107,19 +107,31 @@ Main-session /goal prompt:
 <include exact prompt text, starting with "/goal", that keeps the main session
 as root supervisor and uses $intuitive-flow for route control>
 
+To execute:
+ /goal execute <canonical source> with intuitive-flow
+
 Approval gate:
-Reply LGTM, approve, or go ahead to execute; otherwise request edits.
+Reply LGTM, approve, or go ahead to approve the contract. To start durable
+execution from the main session, use the exact `To execute` command above;
+otherwise request edits.
 ```
 
-The main-session `/goal` prompt should normally say:
+The main-session `/goal` prompt should normally be the compact durable command:
 
 ```text
-/goal
-Execute the approved contract for <task>.
-Keep this main session as the root supervisor.
-Use $intuitive-flow for route control and skill-runner only for bounded workers.
-Do not mark complete unless the acceptance criteria pass.
+/goal execute <canonical source> with intuitive-flow
 ```
+
+Use a real durable artifact when available, for example:
+
+```text
+To execute:
+ /goal execute docs/plans/foo.md with intuitive-flow
+```
+
+If the canonical source is conversation-only, first recommend writing or
+updating a plan file with this contract so context compression cannot erase the
+approved scope and acceptance criteria.
 
 If blocked, replace the execution sections with:
 
