@@ -113,12 +113,48 @@ The install surface is controlled by `scripts/local-skill-manifest.txt`:
 - The manifest check fails if a root skill exists but is not listed, or if the
   manifest lists a missing root skill.
 
+During `scripts/update.sh`, the local sync writes
+`~/.intuitive-flow/owned-root-skills.json` after a successful root-skill sync.
+On later runs, it removes only skill directories that were previously recorded
+as Intuitive-owned but are no longer listed as `root-skill`. If the ownership
+state does not exist yet, the updater seeds it after sync and does not infer
+ownership from matching names. User-installed skills outside that owned state
+are preserved.
+
 External skill installs are controlled by `scripts/external-skill-sources.txt`.
 Each source names a label, an upstream GitHub repo, and either an explicit
 `allowlist` of trusted skill names or an intentional `all` install. The updater
 reads this manifest before running `npx skills add`, and `bun run check:skills`
 validates the manifest shape so external source drift is visible in the normal
-proof boundary.
+proof boundary. Matt Pocock skills are intentionally allowlisted to the small
+debugging, TDD, handoff, and planning-discussion surface that Intuitive still
+routes to; deprecated, in-progress, setup, writing, and issue-workflow skills
+are not installed by default.
+
+External source cleanup uses the same ownership rule. After each successful
+external install, the updater writes
+`~/.intuitive-flow/external-skills-<label>.json`. Later runs remove only skills
+that were previously recorded for that label but are no longer desired. For
+`allowlist` sources, desired skills come from `scripts/external-skill-sources.txt`;
+for intentional `all` sources, desired skills come from `.agents/.skill-lock.json`
+entries for that exact upstream source. If the lock has no source evidence, the
+cleanup fails closed and preserves the previous state.
+
+GSD installs default to `GSD_INSTALL_PROFILE=standard`, not upstream `full`.
+The wrapper passes `--profile=$GSD_INSTALL_PROFILE` and treats a profile drift as
+requiring reinstall even when the installed GSD version is current. Set
+`GSD_INSTALL_PROFILE=core` for the smallest project-loop surface or `full` for
+the complete command set.
+
+GStack installation is upstream-owned but wrapped by this updater. After a
+successful GStack setup, the wrapper records generated Codex `gstack-*` skills in
+`~/.intuitive-flow/gstack-codex-skills.json` and Claude short-name wrappers in
+`~/.intuitive-flow/gstack-claude-skills.json`. The default
+`GSTACK_SKILL_SURFACE=standard` keeps the common browser, QA, review, ship,
+health, investigate, guard, scrape, and spec entrypoints. It prunes only stale
+symlinks or `SKILL.md` wrappers that point into the managed GStack checkout. Set
+`GSTACK_SKILL_SURFACE=full` to expose every upstream GStack skill. It does not
+infer ownership from plain directory names or delete unrelated user skills.
 
 To add a public skill, create `skills/<name>/SKILL.md`, add it to the manifest,
 update `README.md` if it belongs in the preferred skill list, and run
@@ -201,7 +237,9 @@ references, or deprecated `skills-src/` files fail CI.
 At the moment, the test suite covers the local skill manifest parser, root-skill
 manifest checks, direct skill validation, deprecated source rejection, resource
 reference checks, external skill source validation, and pruning of
-manifest-owned legacy artifacts.
+manifest-owned legacy artifacts, stale previously owned root skills, stale
+managed external skills, stale managed GStack skill links, default GStack
+surface pruning, and installer wrapper calls that enforce managed state.
 
 The repo-owned pre-commit hook repeats the skill structure check locally when
 `core.hooksPath` points at `.githooks/`.

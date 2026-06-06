@@ -36,6 +36,16 @@ _remove_stale_local_artifacts() {
     _manifest_tool prune "$manifest"
 }
 
+_remove_stale_owned_root_skills() {
+    local manifest="$1"
+    _manifest_tool prune-owned-root-skills "$manifest"
+}
+
+_record_owned_root_skills() {
+    local manifest="$1"
+    _manifest_tool record-owned-root-skills "$manifest"
+}
+
 _check_root_skill_manifest() {
     local manifest="$1"
     local root_skills_src="$2"
@@ -56,6 +66,7 @@ run_sync_local_commands_skills() {
 
     task_notice "Repo-local commands & skills: pruning stale artifacts"
     _remove_stale_local_artifacts "$local_skill_manifest" || return 1
+    _remove_stale_owned_root_skills "$local_skill_manifest" || return 1
 
     local claude_dest="$HOME/.claude/commands"
     local codex_dest="$HOME/.codex/skills"
@@ -163,6 +174,7 @@ run_sync_local_commands_skills() {
         if [ "$root_skills_mimocode_synced" -gt 0 ]; then
             echo "  ✓ $root_skills_mimocode_synced repo-local command(s) → ~/.config/mimocode/command/"
         fi
+        _record_owned_root_skills "$local_skill_manifest" || return 1
     fi
 }
 

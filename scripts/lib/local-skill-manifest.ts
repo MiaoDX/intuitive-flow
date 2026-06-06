@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
@@ -11,6 +11,11 @@ export type LocalSkillManifest = {
   legacySkills: string[];
   legacyCommands: string[];
   legacyMimocodeCommands: string[];
+};
+
+type OwnedRootSkillState = {
+  schemaVersion: 1;
+  rootSkills: string[];
 };
 
 const kindToField: Record<ManifestKind, keyof LocalSkillManifest> = {
@@ -26,11 +31,17 @@ const skillInstallRoots = (home: string) => [
   join(home, ".claude", "skills"),
 ];
 
+const ownedRootSkillsStatePath = (home: string) => join(home, ".intuitive-flow", "owned-root-skills.json");
+
 const assertSafeName = (value: string, lineNumber: number) => {
   if (value.includes("/") || value.includes("\\") || value === "." || value === ".." || value.includes("..")) {
     throw new Error(`unsafe manifest value on line ${lineNumber}: ${value}`);
   }
 };
+
+const isSafeName = (value: string) => (
+  !value.includes("/") && !value.includes("\\") && value !== "." && value !== ".." && !value.includes("..")
+);
 
 export const parseManifestText = (text: string): LocalSkillManifest => {
   const manifest: LocalSkillManifest = {
@@ -140,8 +151,80 @@ export const pruneLegacyArtifacts = (
   return removed;
 };
 
+const readOwnedRootSkillState = (home: string): OwnedRootSkillState | null => {
+  const statePath = ownedRootSkillsStatePath(home);
+  if (!existsSync(statePath)) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(readFileSync(statePath, "utf8")) as Partial<OwnedRootSkillState>;
+    if (parsed.schemaVersion !== 1 || !Array.isArray(parsed.rootSkills)) {
+      return null;
+    }
+
+    return {
+      schemaVersion: 1,
+      rootSkills: parsed.rootSkills.filter((skillName): skillName is string => (
+        typeof skillName === "string" && isSafeName(skillName)
+      )),
+    };
+  } catch {
+    return null;
+  }
+};
+
+export const pruneRemovedOwnedRootSkills = (
+  manifest: LocalSkillManifest,
+  home = process.env.HOME ?? "",
+): number => {
+  if (home === "") {
+    throw new Error("HOME is required for local owned skill pruning");
+  }
+
+  const state = readOwnedRootSkillState(home);
+  if (!state) {
+    return 0;
+  }
+
+  const desired = new Set(manifest.rootSkills);
+  let removed = 0;
+
+  for (const skillName of state.rootSkills) {
+    if (desired.has(skillName)) {
+      continue;
+    }
+
+    for (const installRoot of skillInstallRoots(home)) {
+      const skillPath = join(installRoot, skillName);
+      if (existsSync(skillPath)) {
+        rmSync(skillPath, { recursive: true, force: true });
+        removed += 1;
+      }
+    }
+  }
+
+  return removed;
+};
+
+export const recordOwnedRootSkills = (
+  manifest: LocalSkillManifest,
+  home = process.env.HOME ?? "",
+): void => {
+  if (home === "") {
+    throw new Error("HOME is required for local owned skill state");
+  }
+
+  const statePath = ownedRootSkillsStatePath(home);
+  mkdirSync(join(home, ".intuitive-flow"), { recursive: true });
+  writeFileSync(
+    statePath,
+    JSON.stringify({ schemaVersion: 1, rootSkills: manifest.rootSkills } satisfies OwnedRootSkillState, null, 2) + "\n",
+  );
+};
+
 const usage = () => {
-  console.error("Usage: local-skill-manifest.ts <root-skills|check-root-skills|prune|self-test> <manifest> [root-skills-dir]");
+  console.error("Usage: local-skill-manifest.ts <root-skills|check-root-skills|prune|prune-owned-root-skills|record-owned-root-skills|self-test> <manifest> [root-skills-dir]");
 };
 
 const main = async () => {
@@ -152,14 +235,23 @@ const main = async () => {
       const tempHome = mkdtempSync(join(tmpdir(), "local-skill-manifest-"));
       const manifest = parseManifestText("root-skill alpha\nlegacy-skill old-skill\nlegacy-command old.md\nlegacy-mimocode-command stale.md\n");
       mkdirSync(join(tempHome, ".codex", "skills", "old-skill"), { recursive: true });
+      mkdirSync(join(tempHome, ".codex", "skills", "alpha"), { recursive: true });
+      mkdirSync(join(tempHome, ".codex", "skills", "removed-alpha"), { recursive: true });
       mkdirSync(join(tempHome, ".claude", "commands"), { recursive: true });
       writeFileSync(join(tempHome, ".claude", "commands", "old.md"), "");
       mkdirSync(join(tempHome, ".config", "mimocode", "command"), { recursive: true });
       writeFileSync(join(tempHome, ".config", "mimocode", "command", "stale.md"), "");
+      mkdirSync(join(tempHome, ".intuitive-flow"), { recursive: true });
+      writeFileSync(ownedRootSkillsStatePath(tempHome), JSON.stringify({ schemaVersion: 1, rootSkills: ["alpha", "removed-alpha"] }) + "\n");
       const removed = pruneLegacyArtifacts(manifest, tempHome);
+      const removedOwned = pruneRemovedOwnedRootSkills(manifest, tempHome);
+      recordOwnedRootSkills(manifest, tempHome);
       rmSync(tempHome, { recursive: true, force: true });
       if (removed !== 3) {
         throw new Error(`self-test expected 3 removals, got ${removed}`);
+      }
+      if (removedOwned !== 1) {
+        throw new Error(`self-test expected 1 owned removal, got ${removedOwned}`);
       }
       return;
     }
@@ -193,6 +285,19 @@ const main = async () => {
       if (removed > 0) {
         console.log(`  ✓ removed ${removed} stale local command/skill artifact(s)`);
       }
+      return;
+    }
+
+    if (command === "prune-owned-root-skills") {
+      const removed = pruneRemovedOwnedRootSkills(manifest);
+      if (removed > 0) {
+        console.log(`  ✓ removed ${removed} stale owned root skill artifact(s)`);
+      }
+      return;
+    }
+
+    if (command === "record-owned-root-skills") {
+      recordOwnedRootSkills(manifest);
       return;
     }
 

@@ -394,21 +394,37 @@ gsd_current_for_target() {
     local config_dir="$2"
     local latest="$3"
     local version_file="$config_dir/get-shit-done/VERSION"
+    local profile_file="$config_dir/.gsd-profile"
+    local desired_profile="${GSD_INSTALL_PROFILE:-standard}"
     local installed=""
+    local active_profile=""
 
     if [ -f "$version_file" ]; then
         installed=$(cat "$version_file")
     fi
 
+    if [ -f "$profile_file" ]; then
+        active_profile=$(cat "$profile_file")
+    fi
+
     if [ "$installed" = "$latest" ]; then
-        echo "  ✓ gsd $label already current: v$installed"
-        return 0
+        if [ "$active_profile" = "$desired_profile" ]; then
+            echo "  ✓ gsd $label already current: v$installed ($desired_profile profile)"
+            return 0
+        fi
+
+        if [ -z "$active_profile" ]; then
+            echo "  ! gsd $label profile missing; reinstalling v$installed with $desired_profile profile"
+        else
+            echo "  ! gsd $label profile is $active_profile; reinstalling v$installed with $desired_profile profile"
+        fi
+        return 1
     fi
 
     if [ -z "$installed" ]; then
-        echo "  ! gsd $label missing; installing v$latest"
+        echo "  ! gsd $label missing; installing v$latest with $desired_profile profile"
     else
-        echo "  ! gsd $label update available: v$installed → v$latest"
+        echo "  ! gsd $label update available: v$installed → v$latest with $desired_profile profile"
     fi
 
     return 1
@@ -417,14 +433,15 @@ gsd_current_for_target() {
 run_gsd_installer() {
     local registry="$1"
     local target="$2"
+    local profile="${GSD_INSTALL_PROFILE:-standard}"
     local out
 
     if [ "$registry" = "$NPM_MIRROR_REGISTRY" ] && [ "$NPM_REGISTRY_MODE" = "mirror" ]; then
-        task_notice "GSD workflow: running installer $target"
+        task_notice "GSD workflow: running installer $target --profile=$profile"
     else
-        task_notice "GSD workflow: running installer $target via $registry"
+        task_notice "GSD workflow: running installer $target --profile=$profile via $registry"
     fi
-    out=$(npx --registry="$registry" -y @opengsd/get-shit-done-redux "$target" --global 2>&1) || { echo "$out"; return 1; }
+    out=$(npx --registry="$registry" -y @opengsd/get-shit-done-redux "$target" --global "--profile=$profile" 2>&1) || { echo "$out"; return 1; }
     echo "$out" | grep -E '^  [⚠✗!]' || true
 }
 

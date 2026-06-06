@@ -1,6 +1,6 @@
 # Status
 
-Last reviewed: 2026-05-22
+Last reviewed: 2026-06-06
 
 ## Current State
 
@@ -55,6 +55,8 @@ The current maintenance focus is keeping the repo dogfoodable:
   squash; route doc/init/tests and architecture discovery as specialist skills
 - keep root skills listed in `scripts/local-skill-manifest.txt`
 - keep external skill installs explicit in `scripts/external-skill-sources.txt`
+- keep installed global skill surfaces pruned by owner state: Intuitive root
+  skills, managed external sources, GSD profile installs, and GStack wrappers
 - edit repo-owned skills directly under `skills/`
 - keep local hooks enabled with `bun run setup:hooks` so skill structure,
   manifest coverage, and local resource references are checked before commit
@@ -79,6 +81,10 @@ There is no active `.planning/` roadmap or GSD phase in this checkout.
   and user config.
 - Full external skill-source installs are intentional only when listed as `all`
   in `scripts/external-skill-sources.txt`; prefer `allowlist` for narrow trust.
+- GSD installs default to `GSD_INSTALL_PROFILE=standard`; set `core` or `full`
+  only when intentionally changing the visible GSD command surface.
+- GStack installs default to `GSTACK_SKILL_SURFACE=standard`; set `full` only
+  when intentionally exposing every upstream GStack skill.
 - `skills/` is the canonical repo-owned skill source and install surface.
 - `.githooks/pre-commit` is opt-in per checkout through `bun run setup:hooks`
   because Git does not version local hook configuration.

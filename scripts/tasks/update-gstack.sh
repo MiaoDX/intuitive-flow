@@ -20,6 +20,15 @@ print_gstack_failure_hint() {
     fi
 }
 
+_managed_skill_state_tool() {
+    if ! command -v bun >/dev/null 2>&1; then
+        echo "  ! bun not found; run scripts/update.sh after fixing the environment pre-check"
+        return 1
+    fi
+
+    bun "$SCRIPT_DIR/lib/managed-skill-state.ts" "$@"
+}
+
 run_gstack() {
     local project_dir repo_dir repo_parent
 
@@ -64,6 +73,8 @@ run_gstack() {
         echo "  ! gstack setup failed"
         return 1
     }
+
+    _managed_skill_state_tool gstack-sync "$repo_dir" || return 1
 
     echo "  ✓ gstack latest"
     echo "  ✓ gstack path: $repo_dir"

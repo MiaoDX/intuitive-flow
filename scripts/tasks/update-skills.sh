@@ -35,6 +35,15 @@ _external_skill_tool() {
     bun "$SCRIPT_DIR/lib/external-skill-sources.ts" "$@"
 }
 
+_managed_skill_state_tool() {
+    if ! command -v bun >/dev/null 2>&1; then
+        echo "  ! bun not found; run scripts/update.sh after fixing the environment pre-check"
+        return 1
+    fi
+
+    bun "$SCRIPT_DIR/lib/managed-skill-state.ts" "$@"
+}
+
 _run_external_skills() {
     local agent="$1" label="$2"
     local manifest repo skill_args_output
@@ -50,10 +59,12 @@ _run_external_skills() {
     fi
 
     if [ "${#skill_args[@]}" -gt 0 ]; then
-        _run_skills "$agent" "$repo" "$label" "${skill_args[@]}"
+        _run_skills "$agent" "$repo" "$label" "${skill_args[@]}" || return 1
     else
-        _run_skills "$agent" "$repo" "$label"
+        _run_skills "$agent" "$repo" "$label" || return 1
     fi
+
+    _managed_skill_state_tool external-sync "$manifest" "$label"
 }
 
 run_skills_anthro() {

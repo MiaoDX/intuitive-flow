@@ -6,6 +6,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -114,6 +115,73 @@ describe("local command and skill sync task", () => {
 
       expect(result.status).toBe(1);
       expect(result.stderr).toContain("root skill missing from manifest: unlisted");
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+      rmSync(fixture, { recursive: true, force: true });
+    }
+  });
+
+  test("records owned root skills and prunes only previously owned removals", () => {
+    const home = mkdtempSync(join(tmpdir(), "sync-skills-owned-home-"));
+    const fixture = mkdtempSync(join(tmpdir(), "sync-skills-project-"));
+    try {
+      const { stubBin } = createNpxStub(home);
+      mkdirSync(join(home, ".codex", "skills"), { recursive: true });
+      mkdirSync(join(fixture, "scripts", "lib"), { recursive: true });
+      mkdirSync(join(fixture, "skills", "alpha"), { recursive: true });
+      mkdirSync(join(fixture, "skills", "beta"), { recursive: true });
+      writeFileSync(join(fixture, "scripts", "local-skill-manifest.txt"), "root-skill alpha\nroot-skill beta\n");
+      writeFileSync(join(fixture, "skills", "alpha", "SKILL.md"), "---\nname: alpha\ndescription: Alpha skill.\n---\n");
+      writeFileSync(join(fixture, "skills", "beta", "SKILL.md"), "---\nname: beta\ndescription: Beta skill.\n---\n");
+      copyFileSync(
+        join(repoRoot, "scripts", "lib", "local-skill-manifest.ts"),
+        join(fixture, "scripts", "lib", "local-skill-manifest.ts"),
+      );
+
+      const runSync = () => spawnSync(
+        "bash",
+        [
+          "-c",
+          'SCRIPT_DIR="$1"; source scripts/tasks/sync-local-commands-skills.sh; run_sync_local_commands_skills',
+          "bash",
+          join(fixture, "scripts"),
+        ],
+        {
+          cwd: repoRoot,
+          encoding: "utf8",
+          env: syncEnv(home, stubBin),
+        },
+      );
+
+      const first = runSync();
+      if (first.status !== 0) {
+        throw new Error(`first sync failed\nstdout:\n${first.stdout}\nstderr:\n${first.stderr}`);
+      }
+
+      expect(existsSync(join(home, ".codex", "skills", "alpha", "SKILL.md"))).toBe(true);
+      expect(existsSync(join(home, ".codex", "skills", "beta", "SKILL.md"))).toBe(true);
+      expect(JSON.parse(readFileSync(join(home, ".intuitive-flow", "owned-root-skills.json"), "utf8"))).toEqual({
+        schemaVersion: 1,
+        rootSkills: ["alpha", "beta"],
+      });
+
+      writeFileSync(join(fixture, "scripts", "local-skill-manifest.txt"), "root-skill alpha\n");
+      rmSync(join(fixture, "skills", "beta"), { recursive: true, force: true });
+      mkdirSync(join(home, ".codex", "skills", "user-skill"), { recursive: true });
+      writeFileSync(join(home, ".codex", "skills", "user-skill", "SKILL.md"), "# User skill\n");
+
+      const second = runSync();
+      if (second.status !== 0) {
+        throw new Error(`second sync failed\nstdout:\n${second.stdout}\nstderr:\n${second.stderr}`);
+      }
+
+      expect(existsSync(join(home, ".codex", "skills", "alpha", "SKILL.md"))).toBe(true);
+      expect(existsSync(join(home, ".codex", "skills", "beta"))).toBe(false);
+      expect(existsSync(join(home, ".codex", "skills", "user-skill", "SKILL.md"))).toBe(true);
+      expect(JSON.parse(readFileSync(join(home, ".intuitive-flow", "owned-root-skills.json"), "utf8"))).toEqual({
+        schemaVersion: 1,
+        rootSkills: ["alpha"],
+      });
     } finally {
       rmSync(home, { recursive: true, force: true });
       rmSync(fixture, { recursive: true, force: true });

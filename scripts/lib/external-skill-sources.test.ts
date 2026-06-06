@@ -5,7 +5,7 @@ describe("external skill sources", () => {
   test("parses allowlisted and full external skill sources", () => {
     const manifest = parseExternalSkillSourcesText(`
       source anthropics anthropics/skills allowlist skill-creator mcp-builder pdf
-      source mattpocock https://github.com/mattpocock/skills all
+      source mattpocock https://github.com/mattpocock/skills allowlist diagnose tdd
     `);
 
     expect(findExternalSkillSource(manifest, "anthropics")).toEqual({
@@ -14,7 +14,12 @@ describe("external skill sources", () => {
       mode: "allowlist",
       skills: ["skill-creator", "mcp-builder", "pdf"],
     });
-    expect(findExternalSkillSource(manifest, "mattpocock").mode).toBe("all");
+    expect(findExternalSkillSource(manifest, "mattpocock")).toEqual({
+      label: "mattpocock",
+      repo: "https://github.com/mattpocock/skills",
+      mode: "allowlist",
+      skills: ["diagnose", "tdd"],
+    });
   });
 
   test("rejects unsafe or ambiguous external skill sources", () => {
