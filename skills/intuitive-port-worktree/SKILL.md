@@ -1,6 +1,7 @@
 ---
 name: intuitive-port-worktree
 description: Port changes from one git worktree or checkout into the default repository folder's current branch, then by default sync the result to the remote default branch when everything is clean. Use when the user asks to move, copy, transfer, transplant, cherry-pick, apply a patch, or port worktree changes into the main/default repo checkout without changing the target branch.
+disable-model-invocation: true
 ---
 
 # Intuitive Port Worktree

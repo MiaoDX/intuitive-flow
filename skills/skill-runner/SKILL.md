@@ -6,6 +6,7 @@ description: |
   $skill", "run X via $intuitive-flow", supervise a skill-driven task,
   keep the main session clean, evaluate the run, or improve custom skills after
   a real task reveals a reusable workflow defect.
+disable-model-invocation: true
 ---
 
 # Skill Runner

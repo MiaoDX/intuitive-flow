@@ -1,6 +1,6 @@
 # Agent Harness References
 
-Last reviewed: 2026-05-22
+Last reviewed: 2026-06-06
 
 This page is the human-facing source for external references that shape
 Intuitive Flow's agent harness: root instructions, layered local guidance,
@@ -22,9 +22,22 @@ this page should preserve the source and rationale.
   format, or generated-output rules.
 - Use skills for on-demand expertise. Repeated task workflows belong in skills
   so they do not bloat every session.
+- Keep skill activation precise. Put the concrete trigger in the first sentence
+  of `description`, add compact `when_to_use` examples only when they improve
+  selection, and avoid broad descriptions that make every task look relevant.
+- Treat `SKILL.md` as the entrypoint, not the whole manual. Store long
+  references, examples, templates, and deterministic scripts beside it and have
+  the skill load them only when needed.
+- Separate source layout from install/discovery layout. In this repo,
+  `skills/` remains the canonical source; sync scripts fan those skills out to
+  Claude Code, Codex, and shared agent install surfaces.
 - Treat third-party skills as supply-chain inputs. Make external sources,
   allowlists, and intentional full-source installs explicit before syncing them
   into user-level agent tooling.
+- Package shared multi-component capabilities as plugins. A standalone skill is
+  enough for one reusable workflow; use a plugin when distributing skills
+  together with subagents, hooks, MCP servers, binaries, settings, or other
+  agent capabilities.
 - Make improvement explicit. When a source changes how the harness should work,
   update this page, then update shared skill fragments or targeted skills.
 - Review the harness on a cadence. Do a meaningful review after major
@@ -59,6 +72,40 @@ Do not add task-specific preferences, product-specific style rules, or one-off
 agent mistakes as permanent skill policy. Prefer deleting, shortening, or moving
 instructions before adding new runtime rules.
 
+## Current Skill Authoring Baseline
+
+Use this baseline when creating or revising repo-owned skills:
+
+- `description` is the main selection surface. Start with the task, trigger, or
+  user phrase that should activate the skill; keep prose tight enough to fit
+  listing budgets.
+- Use `when_to_use` only for extra trigger examples or boundary cases. Do not
+  duplicate the description.
+- Use `disable-model-invocation: true` for side-effecting, deployment,
+  publishing, commit, messaging, or timing-sensitive workflows that should run
+  only after explicit user invocation.
+- Use path or scope gates where supported to keep automatic activation local to
+  relevant files or packages.
+- Keep `SKILL.md` short and progressive: route, invariants, key steps, stop
+  condition, and pointers to supporting files. Long source material belongs in
+  `references/`; reusable output shapes in `templates/`; deterministic
+  operations in `scripts/`.
+- Prefer scripts for repeatable transformations, validation, and data gathering.
+  Skill instructions should explain when and why to run the script, not
+  reimplement the script in prose.
+- Use isolated subagent or forked context for research-heavy, log-heavy, or
+  parallel verification skills when the host supports it and the task has a
+  clear standalone output. Do not preload large skills into subagents unless
+  that context is needed every time.
+- Treat tool preapproval as a convenience, not a security boundary.
+  `allowed-tools` can reduce prompts while a skill is active; blocking sensitive
+  actions still needs deny rules, hooks, sandboxing, or explicit review gates.
+- Keep side-effect and supply-chain trust visible. Third-party skills,
+  plugin-provided scripts, dynamic shell injection, MCP servers, and hook logic
+  should be reviewed before syncing into user-level surfaces.
+- Do not copy broad official best practices into runtime skills. Distill them
+  into the smallest local invariant, or keep them here as rationale.
+
 ## Official References
 
 | Source | What It Teaches This Repo |
@@ -67,18 +114,19 @@ instructions before adding new runtime rules.
 | [Claude Code best practices](https://code.claude.com/docs/en/best-practices) | Use `/init` as a starting point, keep `CLAUDE.md` useful for project memory, and prefer workflows that let Claude inspect the live codebase instead of relying on stale summaries. |
 | [Claude Code memory docs](https://code.claude.com/docs/en/memory) | `CLAUDE.md` files are loaded as project memory. Root and nested memory should be scoped so broad guidance stays broad and local conventions stay local. |
 | [Claude Code docs map](https://code.claude.com/docs/en/claude_code_docs_map) | Use the docs map as the canonical starting point when checking whether Claude Code feature guidance has moved or expanded. |
-| [Claude Code skills](https://code.claude.com/docs/en/skills) | Skills are the on-demand workflow layer; keep `SKILL.md` concise, use supporting files for reference/scripts/templates, and treat bundled `/run` and `/verify` as candidates for app-level validation rather than replacements for repo proof commands. |
+| [Claude Code skills](https://code.claude.com/docs/en/skills) | Skills are the on-demand workflow layer. Custom commands now share the skills path, `description` and optional `when_to_use` drive selection, side-effecting workflows can disable model invocation, supporting files carry long detail, and `context: fork` is available for isolated task skills. Treat bundled `/run` and `/verify` as app-level validation candidates, not replacements for repo proof commands. |
+| [Anthropic: Equipping agents for the real world with Agent Skills](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills) | Agent Skills are folder-based capabilities with instructions, scripts, and resources that load only when relevant. The Dec. 18, 2025 update introduced the open standard and organization-wide management, reinforcing this repo's progressive-disclosure and supply-chain review model. |
 | [Claude Code goals](https://code.claude.com/docs/en/goal) | Goal mode can keep a long session pointed at measurable completion criteria, but the repo still needs explicit source-of-truth gates and deterministic verification. For `intuitive-flow`, use goals on bounded worker sub-phases rather than the main supervision session. |
 | [Claude Code hooks](https://code.claude.com/docs/en/hooks) | Lifecycle automation belongs in hooks when it is deterministic and repeatable, especially formatting, generated-output checks, notification, and policy gates. |
 | [Claude Code subagents](https://code.claude.com/docs/en/sub-agents) | Use subagents for context-isolated work with clear ownership and handoff expectations; do not let agent fanout replace the main session's source-of-truth decisions. |
-| [Claude Code plugins](https://code.claude.com/docs/en/plugins) | Plugins are a distribution layer for skills, commands, hooks, agents, and MCP servers. Shared plugin adoption should be handled as harness packaging, not copied into runtime skill text. |
+| [Claude Code plugins](https://code.claude.com/docs/en/plugins) | Plugins are the distribution layer for skills, subagents, hooks, MCP servers, commands, binaries, and limited settings. Shared plugin adoption should be handled as harness packaging with trust review, not copied into runtime skill text. |
 | [Claude Help: CLAUDE.md and better prompts](https://support.claude.com/en/articles/14553240-give-claude-context-claude-md-and-better-prompts) | Project memory should brief a capable new teammate: what matters, what to avoid, where important pieces live, and how to start safely. |
 | [Claude blog: using CLAUDE.md files](https://claude.com/blog/using-claude-md-files) | Keep project guidance practical and repo-specific; let it capture conventions, repeated commands, and project context that should survive across sessions. |
 | [Codex best practices](https://developers.openai.com/codex/learn/best-practices) | Treat Codex as a coding agent that needs clear environment setup, precise task framing, and verification commands tied to the repo. |
 | [Codex AGENTS.md guide](https://developers.openai.com/codex/guides/agents-md) | `AGENTS.md` is Codex's project instruction surface. Keep it local, operational, and aligned with actual repo commands and constraints. |
 | [Codex advanced configuration](https://developers.openai.com/codex/config-advanced) | Advanced config such as project root markers and doc byte limits affects how Codex discovers and loads project guidance; repo harness design should account for those knobs. |
-| [Codex skills](https://developers.openai.com/codex/skills) | Skills are reusable workflow packages for Codex. Their descriptions control discovery within a limited listing budget, so trigger text should be specific and concise. |
-| [Codex plugins](https://developers.openai.com/codex/plugins) | Plugins package reusable agent capabilities. Prefer explicit source manifests and validation before syncing plugin or skill sources into local user-level tooling. |
+| [Codex skills](https://developers.openai.com/codex/skills) | Skills are reusable workflow packages for Codex. Their descriptions control discovery within a limited listing budget, so trigger text should be specific and concise; keep large references outside the entrypoint and use scripts for deterministic mechanics. |
+| [Codex plugins](https://developers.openai.com/codex/plugins) | Plugins package reusable agent capabilities beyond a single workflow. Prefer explicit source manifests, validation, and trust review before syncing plugin or skill sources into local user-level tooling. |
 | [Codex hooks](https://developers.openai.com/codex/hooks) | Hooks provide deterministic automation around agent lifecycle events; use them for repeatable checks rather than relying on prompt memory. |
 | [Codex subagents](https://developers.openai.com/codex/subagents) | Parallel subagents are useful for independent read-heavy or verification-heavy tasks, but write scopes need disjoint ownership and main-session integration. |
 | [Codex changelog](https://developers.openai.com/codex/changelog) | Re-check release notes after major CLI changes. Goal mode and skill/plugin behavior can shift normal workflow boundaries and should be tested before becoming default runtime rules. When goal mode is used in Codex, keep it worker-local unless a direct main-session task is tiny. |
@@ -105,12 +153,16 @@ When this page gains a source that changes repo practice:
    fragment, targeted skill, hook, script, MCP config, plugin, or human doc.
 3. Update `skills/**` only when the lesson changes runtime agent behavior, not
    merely how maintainers should review the skill.
-4. Keep external skill installs in `scripts/external-skill-sources.txt`; use
+4. For skill changes, keep the repo-owned source under `skills/`, then let the
+   sync pipeline project it into Claude Code, Codex, and shared install
+   surfaces. Do not change source layout merely because a host exposes another
+   discovery path.
+5. Keep external skill installs in `scripts/external-skill-sources.txt`; use
    `allowlist` when only specific skills are trusted, and `all` only when the
    full upstream source is intentionally accepted.
-5. Run `bun run check:skills` after skill or external-source edits.
-6. Run `bun run verify`.
-7. Update `STATUS.md` or `ARCHITECTURE.md` only when the repo's supported
+6. Run `bun run check:skills` after skill or external-source edits.
+7. Run `bun run verify`.
+8. Update `STATUS.md` or `ARCHITECTURE.md` only when the repo's supported
    commands, public contracts, or proof boundaries changed.
 
 ## Parked Questions
@@ -118,6 +170,9 @@ When this page gains a source that changes repo practice:
 - Which skill-quality evals should run against fixture repos before a release?
 - Which hook patterns are mature enough to install by default instead of only
   recommending in guidance?
+- Which skill frontmatter checks should `bun run check:skills` add next:
+  description budget parity with host listings, side-effect skill markers,
+  path-scope checks, or plugin-readiness checks?
 - Should `$intuitive-flow` workers use native goal mode by default after their
   bounded sub-phase prompt, or only when the user explicitly asks for it?
 - Should Claude `/run` and `/verify` become recommended app-level validation

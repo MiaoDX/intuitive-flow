@@ -99,6 +99,12 @@ which local reference to read next. Conditional detail belongs in one-level
 `references/` files, deterministic mechanics in `scripts/`, and reusable output
 shapes in `templates/`.
 
+This source layout is intentionally separate from host install and discovery
+layouts. `skills/` is the repo-owned source of truth; the sync pipeline projects
+those skills into Claude Code, Codex, MiMoCode, and shared agent install
+surfaces. Do not change the repo source tree solely because a host discovers
+skills under `.claude/skills`, `.codex/skills`, or `.agents/skills`.
+
 The install surface is controlled by `scripts/local-skill-manifest.txt`:
 
 - `root-skill` entries are repo-owned skills that should be installed or synced.

@@ -1,17 +1,19 @@
 ---
 name: "simplify"
-description: "Review changed code for reuse, quality, and efficiency. Fix any issues found."
+description: "Review changed code for reuse, quality, and efficiency. Report findings first; fix issues only when the user asks for fixes or has clearly authorized an implementation pass."
 metadata:
   short-description: "Review changed code for reuse, quality, and efficiency"
 ---
 
 <objective>
-Review all changed files for reuse, quality, and efficiency. Fix any issues found.
+Review all changed files for reuse, quality, and efficiency. Report findings
+first. Fix issues only when the user asks for fixes or has clearly authorized
+an implementation pass.
 
 Three-phase workflow:
 1. Identify changes via `git diff`
 2. Review through three lenses: reuse, quality, and efficiency
-3. Aggregate findings and fix each issue directly
+3. Aggregate findings, then either stop with the report or fix authorized issues
 
 Arguments:
 - Optional git ref or file path — scope the review (e.g., `$simplify src/auth/` or `$simplify HEAD~3`)
@@ -99,9 +101,14 @@ For each finding, provide:
 
 If no efficiency issues are found, record `NO_EFFICIENCY_ISSUES`.
 
-## Phase 3: Fix Issues
+## Phase 3: Report Or Fix Authorized Issues
 
-Parse findings from all three agents. For each finding:
+If the user has not asked for fixes or clearly authorized an implementation
+pass, stop after reporting the findings. Include the severity, suggested fix,
+and whether each issue is worth fixing now.
+
+When fixes are authorized, parse findings from all three agents. For each
+finding:
 
 1. Read the cited file at the relevant location
 2. Evaluate if the finding is valid (not a false positive)
@@ -109,7 +116,7 @@ Parse findings from all three agents. For each finding:
 4. If false positive or not worth addressing, note it and move on
 
 Severity handling:
-- MUST_FIX: Always fix
+- MUST_FIX: Fix when fixes are authorized; otherwise report as required follow-up
 - IMPROVE: Fix if it genuinely makes the code better
 - NITPICK: Skip unless user explicitly wants all fixes
 
