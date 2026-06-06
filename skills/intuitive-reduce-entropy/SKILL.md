@@ -1,27 +1,81 @@
 ---
 name: intuitive-reduce-entropy
 description: |
-  Periodically inspect a repository and recommend the highest-value entropy
-  reduction slice across agent guidance, human docs, tests, repo layout,
-  architecture depth, stale APIs, and cleanup gates. Use when the user says the
-  repo feels messy, asks what to clean next, wants to make an old repo easier
-  for humans and AI agents to work in, or wants maintenance suggestions without
-  already knowing the target seam. This is the small public entrypoint for repo
-  maintenance; it routes to specialist skills instead of making the user choose
-  them upfront.
+  Periodically inspect a repository and produce a ranked batch of high-value
+  entropy reduction candidates across agent guidance, human docs, tests, repo
+  layout, architecture depth, stale APIs, and cleanup gates. Use when the user
+  says the repo feels messy, asks what to clean next, wants to make an old repo
+  easier for humans and AI agents to work in, or wants maintenance suggestions
+  without already knowing the target seam. This is the small public entrypoint
+  for repo maintenance; it surfaces the serious group of cleanup opportunities
+  first, then routes accepted candidates to specialist skills.
 ---
 
 # Intuitive Reduce Entropy
 
 Use this skill as the maintenance entrypoint when the user does not already know
 which repo surface most needs cleanup. It diagnoses likely entropy sources,
-recommends one bounded slice, and routes to the specialist skill that owns that
-slice.
+recommends a ranked batch of bounded candidates, and routes accepted candidates
+to the specialist skill that owns each slice.
 
 The default goal is a repo where future agents can start quickly, humans can
 review current truth from a small doc surface, tests show real behavior, and
 the next meaningful task does not require rediscovering stale paths, bloated
 agent files, mixed doc tiers, or unclear cleanup targets.
+
+## Batch Discovery Default
+
+Default to a batch-first audit, not a single-point recommendation. When the
+user asks to "reduce entropy", "find cleanup", "make this repo easier to work
+in", or gives no target surface, inspect broadly enough to return the serious
+group of current candidates in one pass.
+
+The expected first output is a ranked batch of 3-7 candidates when that many
+pass the No-Change Outcome Rule. Use fewer only when the repo evidence only
+supports fewer real findings. Do not hide the second- and third-best candidates
+just because one candidate is clearly highest-value; showing the batch is what
+makes the pass useful for periodic maintenance.
+
+Each candidate should be decision-complete:
+
+```text
+Candidate N: <short target>
+Severity: <P0 | P1 | P2>
+Entropy source: <source>
+Why now: <repo evidence, not taste>
+Affected paths: <paths>
+Owner skill: <specialist or this skill>
+Zen hint: <clarity principle advanced>
+Pattern hint: <pattern fit, or direct cleanup is clearer>
+Suggested proof: <commands/searches>
+Execution risk: <safe | needs approval because ...>
+```
+
+Batch candidates should be related by maintenance intent, not necessarily by
+file path. A good batch might include one stale README source-of-truth issue,
+one false-green verification issue, and one confirmed leftover wrapper, because
+all three make the next human or agent less surprised. Keep speculative ideas
+out of the ranked batch and put them in `Parked items`.
+
+## Batch Execution Rule
+
+Discovery and execution have different boundaries:
+
+- Discovery should surface a ranked batch so the user does not need to ask many
+  times to learn what is wrong.
+- Execution should still apply one coherent slice at a time, with its own
+  accepted checklist and verification, unless the user explicitly asks for a
+  loop or multi-round cleanup.
+- If the user asks to "run a loop", "do the top N", "fix these", or otherwise
+  approves execution, create or update one loop gate such as
+  `docs/plans/refactor-reduce-entropy-loop.md`, list the accepted candidates,
+  then execute candidates in priority order while keeping each slice separately
+  verifiable.
+- Pause before broad file moves, deletes with uncertain consumers, public API
+  changes, external compatibility removal, paid/slow/local-provider gates, or
+  product-scope decisions even if they appear in the batch.
+- After each executed candidate, update the loop gate and continue only while
+  another accepted P0/P1/P2 candidate remains in scope.
 
 ## Zen Of Python Bias
 
@@ -41,8 +95,8 @@ and unsurprising for the next human or agent.
 - If the best slice is not obvious after inspection, say so and show the
   tradeoff instead of forcing artificial certainty.
 
-When presenting candidates, include a brief `Zen hint:` for the recommended
-slice that states which clarity principle the slice advances.
+When presenting candidates, include a brief `Zen hint:` for each ranked
+candidate that states which clarity principle the slice advances.
 
 ## Design Pattern Fit Bias
 
@@ -150,13 +204,14 @@ retrospectives, generated evidence, and proof artifacts.
 ## Bounded Proposal Rule
 
 For broad or ambiguous cleanup, audit first and stop after a decision-complete
-proposal. Do not move files, delete tests, rewrite guidance, or edit production
-code until the target slice, accepted checklist, evidence level, and stop
-condition are explicit.
+batch proposal. Do not move files, delete tests, rewrite guidance, or edit
+production code until the target slice or accepted loop batch, accepted
+checklist, evidence level, and stop condition are explicit.
 
 For a precise target where the user asks for implementation, apply one coherent
-vertical slice. Keep newly discovered unrelated ideas parked instead of letting
-the work expand by drift.
+vertical slice. For an approved loop, apply the accepted candidates one slice at
+a time. Keep newly discovered unrelated ideas parked instead of letting the work
+expand by drift.
 
 ## No-Change Outcome Rule
 
@@ -177,7 +232,7 @@ asking the user to proceed. The shape is:
 
 ```text
 Entropy source:
-Selected slice: none
+Selected candidates: none
 Why no change:
 Verification:
 Parked items:
@@ -335,34 +390,35 @@ Use this route unless the user already names a specific entropy source.
    verification command when two or more surfaces need inspection. For tiny
    repos or precise prompts, inspect the relevant surface directly.
 2. **Classify**: map observed friction to the entropy sources above.
-3. **Recommend**: present 2-4 candidate slices when the best path is not
-   obvious. Include one recommended slice first and attach a `Zen hint:` that
-   explains how it makes the repo more explicit, simple, canonical, or
-   unsurprising. For code or architecture slices, also attach a `Pattern hint:`
-   that names a likely design pattern fit or explicitly says direct cleanup is
-   clearer. If no candidate passes the No-Change Outcome Rule, report
-   `Selected slice: none` and stop.
+3. **Recommend batch**: present the ranked candidate batch by default, normally
+   3-7 candidates. Include a recommended execution order and attach `Zen hint:`,
+   `Pattern hint:`, affected paths, owner skill, proof commands, and execution
+   risk to each candidate. If only one candidate passes the No-Change Outcome
+   Rule, present a batch of one and briefly say why other observations were
+   parked. If no candidate passes, report `Selected candidates: none` and stop.
 4. **Architecture sequence**: when the best slice is architecture/deepening,
    public-contract cleanup, MCP/tool boundary cleanup, lifecycle gates, or an
    unclear target seam, run `$zoom-out` and `$plan-eng-review` before execution.
    If no target seam has been accepted after that, optionally route to
    `$improve-codebase-architecture` in report-only mode. Treat all discovery
-   output as candidate evidence, not execution approval, and stop for candidate
-   selection unless the user already accepted a candidate.
+   output as candidate evidence, not execution approval, and keep it in the
+   ranked batch unless the user already accepted the architecture candidate.
 5. **Gate**: if execution is requested, use `$intuitive-refactor` to create or
-   update one persistent maintenance gate, normally
-   `docs/plans/refactor-reduce-entropy-<target>.md` unless a better existing
-   plan owns the scope.
-6. **Route**: run the specialist owner for the accepted slice, or keep the slice
-   here only when it spans mixed repo surfaces without a narrower owner.
-7. **Verify and close**: run the repo's relevant checks, update the gate status,
-   and park remaining cross-seam ideas.
+   update one persistent maintenance gate for a single accepted target, normally
+   `docs/plans/refactor-reduce-entropy-<target>.md`; for an approved multi-round
+   cleanup, create or update a loop gate such as
+   `docs/plans/refactor-reduce-entropy-loop.md` with the accepted candidate list,
+   execution order, proof commands, and stop condition.
+6. **Route**: run the specialist owner for each accepted candidate, or keep the
+   slice here only when it spans mixed repo surfaces without a narrower owner.
+7. **Verify and close**: run the repo's relevant checks after each executed
+   candidate, update the gate status, and park remaining cross-seam ideas.
 
 Before routing to a specialist, produce a compact handoff packet so the next
 stage does not repeat the whole audit:
 
 ```text
-Selected slice:
+Accepted candidate:
 Entropy source:
 Zen hint:
 Pattern hint:
@@ -382,8 +438,8 @@ For long or stateful specialist execution, pass that packet through
 `skill-runner`/tmux and have the main session inspect `result.md`, `eval.md`,
 worker output, the actual diff, and verification before closeout.
 
-Run another slice only when the gate still has a concrete P0/P1/P2 item inside
-scope. Do not repeat just because more possible cleanup exists.
+Run another slice only when the accepted loop gate still has a concrete P0/P1/P2
+candidate inside scope. Do not repeat just because more possible cleanup exists.
 
 ## User Input Routing
 
@@ -408,24 +464,31 @@ If the user names a likely area, route directly:
 - "layout", "folders", "scripts", "examples", "repo structure" -> inspect the
   object first, then route through Layout Routing.
 
-If the user gives no area, do not guess silently. Return a short candidate list:
+If the user gives no area, do not guess silently. Return a ranked batch:
 
 ```text
-Recommended slice: <one option>
-Why: <repo evidence>
-Zen hint: <clarity principle advanced>
-Pattern hint: <pattern fit, or direct cleanup is clearer>
-Alternatives:
-- <option 2>
-- <option 3>
-Suggested proof: <commands/searches>
-Proceed with recommended slice?
+Recommended batch:
+1. <candidate> — <severity>, <owner>, <why now>
+2. <candidate> — <severity>, <owner>, <why now>
+3. <candidate> — <severity>, <owner>, <why now>
+
+Recommended execution order:
+- <candidate ids, with reason>
+
+Parked items:
+- <speculative or lower-value observations>
+
+Suggested proof:
+- <commands/searches>
+
+Proceed with candidate <N>, or run the top <N> as a loop?
 ```
 
 ## Decision Policy
 
-Auto-select a default only when repo evidence makes it low-risk and reversible.
-Pause for the user when a decision would materially change:
+Auto-select a default candidate order only when repo evidence makes it
+low-risk and reversible. Pause for the user when a decision would materially
+change:
 
 - runtime behavior or public APIs
 - externally documented command/import paths
@@ -441,16 +504,17 @@ mechanical defaults, not permission to cross these pause points silently.
 
 Stop when all of these are true:
 
-- the accepted maintenance gate is `DONE` or `PARK`, with remaining ideas
-  recorded
-- exactly one primary entropy slice was completed or explicitly parked
+- the accepted maintenance gate or loop gate is `DONE` or `PARK`, with
+  remaining ideas recorded
+- either a ranked candidate batch was delivered for selection, or the accepted
+  execution loop completed exactly the approved candidates
 - specialist skills were used for their owned surfaces instead of duplicating
   their full procedures here
 - verification commands pass, or skipped gates are documented with a concrete
   reason
 - the agent can state the next safe task without starting another broad cleanup
   sweep
-- no-change runs explicitly say `Selected slice: none` and do not create a
+- no-change runs explicitly say `Selected candidates: none` and do not create a
   gate, commit, or follow-up refactor proposal
 
 ## Report Format
@@ -459,7 +523,8 @@ End with:
 
 ```text
 Entropy source:
-Selected slice:
+Recommended batch:
+Accepted candidate or loop:
 Specialist owner:
 Gate:
 Zen hint:
@@ -475,7 +540,7 @@ For no-change runs, use:
 
 ```text
 Entropy source:
-Selected slice: none
+Selected candidates: none
 Why no change:
 Verification:
 Parked items:

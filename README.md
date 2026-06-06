@@ -36,13 +36,14 @@ The workflow keeps the user-facing choices small: use `office-hours` or
 `grill-me` for what to build, `$intuitive-flow` as the default build/change
 entrypoint,
 `$intuitive-refactor` to clean a known target, and
-`$intuitive-reduce-entropy` to find what repo maintenance would pay off most.
+`$intuitive-reduce-entropy` to surface the ranked batch of repo maintenance
+work that would pay off most.
 See [BELIEFS.md](BELIEFS.md) for the full doctrine.
 
 ## Start In A Repo
 
 In the target repo, give your AI agent the maintenance entrypoint and ask it to
-find the highest-value entropy reduction slice:
+find the ranked batch of high-value entropy reduction candidates:
 
 ```text
 Read this skill:
@@ -51,7 +52,7 @@ https://github.com/MiaoDX/intuitive-flow/blob/main/skills/intuitive-reduce-entro
 Then run:
 Use $intuitive-reduce-entropy to make this repo easier for humans and AI agents
 to work in. If agent guidance is the first entropy source, route to
-$intuitive-init. Start with a candidate list before applying changes.
+$intuitive-init. Start with a ranked candidate batch before applying changes.
 ```
 
 <p align="center">
@@ -76,7 +77,7 @@ Keep the public choice small:
 | **intuitive-flow** | Default build/change entrypoint; routes tiny concrete work directly, cleanup/refactor work to `intuitive-refactor`, and broad work through plan/review/execution |
 | **intuitive-preflight** | Turn a rough task, plan, issue, or approval into a preflight contract with context package, definition of done, verification, route, worker strategy, and main-session goal prompt |
 | **intuitive-refactor** | Directly clean a known module, seam, stale API, compatibility surface, code/package/module layout issue, or architecture target |
-| **intuitive-reduce-entropy** | Periodically inspect repo mess and recommend the highest-value maintenance slice; routes docs, agent guidance, tests, architecture discovery, and known code cleanup to the right specialist |
+| **intuitive-reduce-entropy** | Periodically inspect repo mess and produce a ranked batch of high-value maintenance candidates; routes accepted docs, agent guidance, tests, architecture discovery, and known code cleanup to the right specialist |
 | **intuitive-squash** | Compress noisy local agent history into a clean reviewable commit story |
 
 Specialist skills still exist for direct or routed use: `$intuitive-preflight`,

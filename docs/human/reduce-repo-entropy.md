@@ -10,9 +10,9 @@ database/schema migration unless you explicitly add that scope.
 ```text
 Use $intuitive-reduce-entropy for this repo.
 
-Goal: identify the highest-value entropy reduction slice that would make the
-repo easier for future AI agents and humans to work in without changing runtime
-behavior.
+Goal: identify the ranked batch of high-value entropy reduction candidates that
+would make the repo easier for future AI agents and humans to work in without
+changing runtime behavior.
 
 Start by classifying entropy sources:
 - agent guidance and harness drift
@@ -22,8 +22,18 @@ Start by classifying entropy sources:
 - open-ended architecture/deepening opportunities, shallow modules, or hard-to-test seams
 - known stale APIs, wrappers, compatibility shims, or module seams
 
-If one source is clearly highest-value, recommend that slice first.
-If not, present 2-4 candidate slices and ask me to choose.
+Present the serious group of current candidates in one pass, normally 3-7
+items. Rank them by severity, evidence, and future surprise reduction. If fewer
+than 3 candidates pass the bar, explain why the other observations are parked.
+
+For each candidate include:
+- severity
+- entropy source
+- affected paths
+- owner skill
+- why now
+- suggested proof
+- execution risk
 
 Route to the specialist owner after selection:
 - $intuitive-init for AGENTS.md, CLAUDE.md, docs/agents, hooks, MCP, or skills setup
@@ -47,13 +57,16 @@ Stop when the accepted checklist is green and remaining ideas are parked.
 
 ## Expected Outcome
 
-After a successful maintenance slice, the repo should have:
+After a successful maintenance pass, the repo should have:
 
-- one accepted entropy source selected and addressed, or explicitly parked
+- a ranked batch of credible entropy candidates, or an explicit no-change report
+- one accepted entropy source selected and addressed, an accepted top-N loop
+  completed, or all candidates explicitly parked
 - current human docs in `README.md`, `ARCHITECTURE.md`, `STATUS.md`, and
   `docs/human/**`
 - agent guidance that points at the right docs and commands without bloated
   root files
-- test or path cleanup completed only when selected as the highest-value slice
+- test or path cleanup completed only when selected in the accepted candidate
+  batch
 - verification results recorded, with any skipped local-only gates explained
 - remaining cleanup ideas parked instead of silently widening the scope
