@@ -14,23 +14,83 @@ the user explicitly confirms it.
 ## Inputs
 
 - Optional base ref from the user.
-- If no base is provided, use the merge base with the upstream branch, falling
-  back to `origin/main` or `origin/master`.
+- If no base is provided, discover the likely integration base from repo state
+  and confirm it before building the squash plan. Never silently fall back to
+  `origin/main` or `origin/master` just because those refs exist.
 - Treat the current branch only as the rewrite target.
+
+## Base Ref Discovery
+
+If the user gives a base ref, verify it exists and use the merge base with that
+ref.
+
+If no base is provided, inspect the repository before choosing:
+
+```bash
+git fetch --prune --all
+git branch --show-current
+git rev-parse --abbrev-ref --symbolic-full-name @{upstream}
+git remote show origin
+git for-each-ref --sort=-committerdate \
+  --format='%(refname:short) %(committerdate:short) %(subject)' \
+  refs/remotes/origin
+git branch -vv
+gh pr view --json baseRefName,headRefName,url
+```
+
+It is fine if `git fetch` or `gh pr view` is unavailable; continue with local
+refs and say which evidence is missing.
+
+Rank base candidates by evidence:
+
+1. The open PR base branch, when `gh pr view` finds one.
+2. A user-configured upstream only when it is clearly the integration branch,
+   not merely the current branch's remote push target.
+3. The remote default branch from `origin/HEAD` or `git remote show origin`,
+   unless it appears stale compared with another long-lived remote branch.
+4. Active long-lived remote branches such as `origin/dev`, `origin/develop`,
+   `origin/trunk`, release branches, or the most recently updated remote branch
+   that plausibly contains the branch point.
+5. `origin/main` or `origin/master` only after the checks above do not produce a
+   better candidate.
+
+For each plausible candidate, compare:
+
+```bash
+git merge-base HEAD <candidate>
+git rev-list --count "$(git merge-base HEAD <candidate>)"..HEAD
+git log -1 --format='%ci %s' <candidate>
+```
+
+If `origin/main` or `origin/master` is much older than another plausible
+long-lived branch, treat it as ambiguous or stale rather than as the default.
+
+Before commit analysis, show the detected candidates, the recommended base, and
+the reason. Ask the user to confirm the base when:
+
+- no single candidate is clearly strongest;
+- the best candidate is not the remote default branch;
+- the remote default branch looks stale;
+- the current branch's upstream is its own remote counterpart; or
+- using a different base would materially change the commit count.
+
+Ask: `Use <recommended-base> as the squash base, or should I use another ref?`
+Do not build the squash plan until the base is explicit or confirmed.
 
 ## Safety Protocol
 
-1. Check `git status --porcelain`.
-2. If the worktree is dirty, stash it with a timestamped name such as
+1. Resolve the base ref using the Base Ref Discovery rules.
+2. Check `git status --porcelain`.
+3. If the worktree is dirty, stash it with a timestamped name such as
    `intuitive-squash-temp-YYYYMMDD-HHMMSS`.
-3. Create a backup branch before rewriting:
+4. Create a backup branch before rewriting:
    `backup-before-intuitive-squash-YYYYMMDD-HHMMSS`.
-4. Tell the user the backup branch name.
-5. Analyze commits from base to `HEAD` in chronological order.
-6. Present squash plan options and ask for confirmation.
-7. Only after confirmation, run the history rewrite.
-8. Verify the final tree matches the backup branch.
-9. Restore any temporary stash.
+5. Tell the user the backup branch name.
+6. Analyze commits from base to `HEAD` in chronological order.
+7. Present squash plan options and ask for confirmation.
+8. Only after confirmation, run the history rewrite.
+9. Verify the final tree matches the backup branch.
+10. Restore any temporary stash.
 
 If verification fails, stop and restore from the backup branch.
 
@@ -108,7 +168,7 @@ the subject to explain itself, split it in the moderate plan.
 
 Before rewriting, show:
 
-- base ref and commit count
+- base ref, why it was chosen, alternatives considered, and commit count
 - backup branch name
 - proposed final commits, in order, for both `Aggressive` and `Moderate`
 - original commits included in each final commit
