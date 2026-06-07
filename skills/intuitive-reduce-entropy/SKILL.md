@@ -8,7 +8,8 @@ description: |
   easier for humans and AI agents to work in, or wants maintenance suggestions
   without already knowing the target seam. This is the small public entrypoint
   for repo maintenance; it surfaces the serious group of cleanup opportunities
-  first, then routes accepted candidates to specialist skills.
+  first, then routes accepted candidates to specialist skills. It must return a
+  no-change result instead of filling a requested count when only polish remains.
 ---
 
 # Intuitive Reduce Entropy
@@ -36,12 +37,13 @@ supports fewer real findings. Do not hide the second- and third-best candidates
 just because one candidate is clearly highest-value; showing the batch is what
 makes the pass useful for periodic maintenance.
 
-Each candidate should be decision-complete:
+Each candidate should be decision-complete and pass the materiality contract:
 
 ```text
 Candidate N: <short target>
 Severity: <P0 | P1 | P2>
 Entropy source: <source>
+Materiality: <false confidence | live source drift | stale surface | real workflow friction | recurring rediscovery>
 Why now: <repo evidence, not taste>
 Affected paths: <paths>
 Owner skill: <specialist or this skill>
@@ -68,19 +70,105 @@ Discovery and execution have different boundaries:
   loop or multi-round cleanup.
 - If the user asks to "run a loop", "do the top N", "do another N", "fix
   these", or otherwise approves execution, treat N as an upper bound, not a
-  quota. Create or update one loop gate such as
-  `docs/plans/refactor-reduce-entropy-loop.md`, list the accepted candidates
-  or audit budget, then execute only candidates that still pass the No-Change
-  Outcome Rule from the current repository state.
+  quota. Never fill unused slots with low-value work. Create or update one loop
+  gate such as `docs/plans/refactor-reduce-entropy-loop.md`, list the accepted
+  candidates or audit budget, run the deterministic materiality gate when the
+  bundled script is available, then execute only candidates that still pass the
+  No-Change Outcome Rule from the current repository state.
 - In a multi-round loop, every round starts with a fresh audit from current
   HEAD. Stop early when the best remaining observation is only small polish,
   optional wording, or a change that would make the user wonder why another
   commit was needed.
+- Before each additional group in a loop, run a saturation audit: name the next
+  candidate, its materiality reason, and why it still deserves a commit after
+  the previous groups. If that sentence is weak, stop with `Selected candidates:
+  none`.
 - Pause before broad file moves, deletes with uncertain consumers, public API
   changes, external compatibility removal, paid/slow/local-provider gates, or
   product-scope decisions even if they appear in the batch.
 - After each executed candidate, update the loop gate and continue only while
   another accepted P0/P1 or materially useful P2 candidate remains in scope.
+
+## Materiality Contract
+
+Treat a candidate as eligible only when it prevents future surprise in a way a
+reasonable maintainer would notice. At least one of these must be true:
+
+- **False confidence**: a gate, test, script, link check, build, or report can
+  pass while hiding a current broken or misleading state.
+- **Live source drift**: two current sources of truth disagree about a live
+  command, route, owner, public surface, or workflow.
+- **Stale surface**: a live API, wrapper, command, generated output, index, or
+  path remains reachable even though known in-repo consumers have moved.
+- **Real workflow friction**: a future human or agent following current docs,
+  commands, or scripts would likely hit an error, dead end, or rediscovery loop.
+- **Recurring rediscovery**: the repo repeatedly forces agents to infer the same
+  non-obvious rule because it is not encoded in docs, tests, gates, or structure.
+
+These are not eligible by themselves:
+
+- wording polish, punctuation, ordering, numbering, or formatting;
+- a tiny index or route tweak that is only nicer, not less misleading;
+- a test-only or documentation-only follow-up that merely supports a just-made
+  implementation change;
+- splitting helper tests, README notes, or report wording into their own
+  "group" after the behavioral slice has already been counted;
+- another possible refactor whose benefit is "cleaner" but not tied to a
+  current surprise, false-green, stale surface, or repeated rediscovery.
+
+Group supporting work with its parent slice. If a route parser changes, its
+regression test belongs to the route-parser candidate. If a gate is strengthened,
+the doc command update belongs to the gate candidate. Do not count supporting
+tests or docs as separate entropy groups unless they independently satisfy the
+eligible list above.
+
+### Loop Deterministic Gate
+
+When running an approved top-N loop, write the remaining accepted candidates to
+JSON and run [scripts/materiality-gate.mjs](scripts/materiality-gate.mjs) before
+executing the next group. Resolve the script relative to this `SKILL.md`, not
+relative to the target repository. In Codex that is usually:
+
+```bash
+node "$HOME/.codex/skills/intuitive-reduce-entropy/scripts/materiality-gate.mjs" candidates.json
+```
+
+When working inside this source repo, this equivalent path is also valid:
+
+```bash
+node skills/intuitive-reduce-entropy/scripts/materiality-gate.mjs candidates.json
+```
+
+The gate is intentionally small: it cannot replace engineering judgment, but it
+catches quota-filling, polish-only candidates, and supporting work counted as
+standalone groups. If Node or the bundled script is unavailable, apply the same
+candidate fields manually and explicitly say the deterministic gate was skipped.
+
+Example:
+
+```json
+{
+  "requested_groups": 5,
+  "candidates": [
+    {
+      "id": "link-placeholder-gate",
+      "title": "Reject placeholder links in scoped docs",
+      "severity": "P1",
+      "materiality": ["false_confidence"],
+      "evidence": ["link:check currently ignores [text](#) in scoped docs"]
+    }
+  ]
+}
+```
+
+Run from this source repo:
+
+```bash
+node skills/intuitive-reduce-entropy/scripts/materiality-gate.mjs candidates.json
+```
+
+If it returns `stop_recommended: true`, stop before the requested count is
+exhausted and report why the loop saturated.
 
 ## Zen Of Python Bias
 

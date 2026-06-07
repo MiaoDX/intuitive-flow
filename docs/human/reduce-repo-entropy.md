@@ -29,6 +29,31 @@ Treat "do another N" or "run the top N" as a maximum budget, not a requirement
 to manufacture N commits. On each fresh round, stop early with
 `Selected candidates: none` when only tiny polish remains.
 
+Only count a candidate when it has at least one materiality reason:
+- false confidence in a gate, test, script, report, or build
+- live source-of-truth drift
+- stale reachable surface after consumers moved
+- real workflow friction for a future human or agent
+- recurring rediscovery that should be encoded in docs, tests, gates, or structure
+
+Do not count wording polish, numbering, formatting, route/index niceties, or
+supporting tests/docs as their own group. Bundle supporting tests and docs with
+the behavior or gate change they protect. For approved top-N loops, write the
+remaining candidates to JSON and run the installed skill's materiality gate:
+
+```bash
+node "$HOME/.codex/skills/intuitive-reduce-entropy/scripts/materiality-gate.mjs" candidates.json
+```
+
+When working inside the `intuitive-flow` source repo, this path is equivalent:
+
+```bash
+node skills/intuitive-reduce-entropy/scripts/materiality-gate.mjs candidates.json
+```
+
+If it reports fewer eligible candidates than requested, stop early instead of
+filling the count.
+
 For each candidate include:
 - severity
 - entropy source
