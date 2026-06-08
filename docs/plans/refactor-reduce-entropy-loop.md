@@ -84,6 +84,10 @@ size as a maximum, not a quota.
 - [x] P1 false confidence: `bun run verify` did not run ShellCheck, so Bash
       orchestration scripts could carry ShellCheck error-level issues while the
       normal verifier stayed green.
+- [x] P1 live source drift: multiple reachable utilities wrote Codex hook
+      configuration, and `scripts/dev/tmux-richer.sh` replaced
+      `~/.codex/hooks.json` instead of preserving other hook owners such as
+      Agent Deck.
 
 ## Saturation Audit
 
@@ -123,7 +127,11 @@ Why no change:
   specialist issue-workflow utility rather than a primary planning/build
   entrypoint.
 - `bun run verify` now includes `bun run check:shell`, and ShellCheck
-  error-level validation passes for `scripts/**/*.sh` and `.githooks/pre-commit`.
+  error-level validation passes for `scripts/update.sh`, `scripts/**/*.sh`, and
+  `.githooks/pre-commit`.
+- Codex hook ownership is explicit: tmux-agent-status hooks merge into
+  `~/.codex/hooks.json` through a tested TypeScript helper, preserving existing
+  hook owners such as Agent Deck notify hooks.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
   runtime messages rather than current false confidence or live source drift.
@@ -269,3 +277,11 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   competing notice redirections, added `bun run check:shell` with
   `--severity=error`, wired it into `bun run verify`, and updated the human
   command/proof docs. Verified with `bun run check:shell` and `bun run verify`.
+- 2026-06-08: Selected Codex hook ownership drift as P1 live source drift and
+  workflow friction after `tmux-richer.sh` overwrote `~/.codex/hooks.json`
+  while Agent Deck also installs Codex notify hooks into that surface. Added
+  `scripts/lib/ensure-codex-hooks.ts` with preservation/idempotence tests,
+  changed `tmux-richer.sh` to merge tmux-agent-status hooks instead of writing
+  a heredoc, and documented the merged hook ownership contract. Verified with
+  `bun test scripts/lib/ensure-codex-hooks.test.ts`, `bun run check:shell`, and
+  `bun run verify`.

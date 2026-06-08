@@ -219,7 +219,7 @@ else
     task_skip "Codex config" "skipped because Global CLI tools failed"
 fi
 
-# Agent Deck installs Codex notify hooks, so run it after Codex hooks are enabled.
+# Agent Deck installs Codex notify hooks into the shared merged hook surface.
 if task_succeeded "Global CLI tools"; then
     task_run "Agent Deck" run_agent_deck
     task_await "Agent Deck"

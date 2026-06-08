@@ -85,55 +85,11 @@ bun "$REPO_SCRIPTS_DIR/lib/ensure-codex-config.ts" "$CODEX_CONFIG"
 echo "    Codex config ensured in ~/.codex/config.toml"
 echo "    Codex status line includes current-dir, git-branch, context-used, fast-mode, and thread-title"
 
-cat > "$CODEX_HOOKS" <<EOF
-{
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "startup|resume",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash $PLUGIN_DIR/hooks/codex-hook.sh SessionStart"
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash $PLUGIN_DIR/hooks/codex-hook.sh UserPromptSubmit"
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash $PLUGIN_DIR/hooks/codex-hook.sh PreToolUse"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash $PLUGIN_DIR/hooks/codex-hook.sh Stop"
-          }
-        ]
-      }
-    ]
-  }
-}
-EOF
-echo "    Codex hooks configured in ~/.codex/hooks.json"
+if [ -s "$CODEX_HOOKS" ]; then
+    cp "$CODEX_HOOKS" "$CODEX_HOOKS.bak.$(date +%s)"
+fi
+bun "$REPO_SCRIPTS_DIR/lib/ensure-codex-hooks.ts" "$CODEX_HOOKS" "$PLUGIN_DIR"
+echo "    Codex tmux-agent-status hooks merged into ~/.codex/hooks.json"
 
 # 6. Auto-install TPM plugins (replaces the manual "prefix + I" step)
 if [ -x "$TPM_DIR/bin/install_plugins" ]; then

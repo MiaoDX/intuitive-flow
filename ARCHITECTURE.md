@@ -184,7 +184,7 @@ The updater currently handles these phases:
 - GSD installation for Claude and Codex
 - MCP fetch setup
 - Claude plugin installation
-- Codex feature and status-line config
+- Codex feature, status-line config, and merged hook config
 - gstack state sync and vendored gstack setup
 - external skill source installation from `scripts/external-skill-sources.txt`
 - local command and root-skill sync
@@ -194,6 +194,11 @@ live under `scripts/tasks/`. Updater-only patch hooks live under
 `scripts/support/`. TypeScript helpers and their tests live under `scripts/lib/`.
 Local workstation utilities that are not part of the updater contract live under
 `scripts/dev/`.
+
+Codex hook writers must merge into `~/.codex/hooks.json` instead of replacing
+the file. `scripts/dev/tmux-richer.sh` uses `scripts/lib/ensure-codex-hooks.ts`
+to add tmux-agent-status lifecycle hooks while preserving other hook owners such
+as Agent Deck notify hooks.
 
 To add a new update phase, implement the phase in `scripts/tasks/`, source it
 from `scripts/update.sh`, schedule it with the task runner, and document any new
