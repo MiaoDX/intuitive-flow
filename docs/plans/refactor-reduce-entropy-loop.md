@@ -1,6 +1,6 @@
 ---
 refactor_scope: reduce-entropy-loop
-status: DONE
+status: CONTINUE
 accepted_severities:
   - P1
   - P2
@@ -11,7 +11,7 @@ last_verified: 2026-06-08
 
 ## Status
 
-DONE
+CONTINUE
 
 ## Target
 
@@ -121,6 +121,13 @@ size as a maximum, not a quota.
       completed turn when the goal's final message did not match the result
       template, and the finish evidence omitted Codex goal start/end/duration
       metadata that was already available in session JSONL.
+- [x] P2 live source drift: the default managed GStack standard surface pruned
+      `gstack-plan-eng-review` / `plan-eng-review` even though repo-owned
+      architecture routes require that review gate for architecture-shaped
+      refactors.
+- [ ] P2 false confidence: GitHub Actions pins Bun `1.3.6` while the local
+      runtime and lockfile type surface are `1.3.12` / `@types/bun@1.3.13`,
+      even though the human docs say CI and local `bun run verify` are aligned.
 
 ## Saturation Audit
 
@@ -185,7 +192,8 @@ Current state:
 - `multica-goal-tracker` Codex JSONL evidence now prefers the completed goal
   turn over later session turns and carries Codex goal start/end/duration into
   the rendered card, finish comment, and raw-output comment when available.
-- No current P0/P1/P2 candidate remains selected after the latest audit.
+- One current P2 candidate remains selected after the latest audit: align the
+  CI Bun runtime pin with the local runtime/package-manager surface.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
   runtime messages rather than current false confidence or live source drift.
@@ -198,6 +206,9 @@ Parked items:
   updater behavior change makes it material.
 - Broader qualitative skill evals remain parked until fixture evidence shows a
   recurring failure mode.
+- A stricter tmux-required verifier remains parked because `hasUsableTmux()`
+  returns true in the main checkout and `bun run verify` currently runs the
+  tmux-backed behavior tests instead of skipping them.
 
 ## Evidence Ladder
 
@@ -401,3 +412,15 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   start/end/duration metadata, rendered the timing in the evidence card and
   finish/raw-output comments, and covered template-shaped and non-template
   completion turns in `track_goal.test.ts`.
+- 2026-06-08: Reopened the loop from current `HEAD` for a saturation audit with
+  read-only doc, skill-routing, and verification subagents. Selected the GStack
+  plan-engineering review surface as P2 live source drift and real workflow
+  friction after the routing audit showed `$intuitive-reduce-entropy` and
+  `$intuitive-refactor` route architecture-shaped work through
+  `$plan-eng-review` / `$gstack-plan-eng-review`, while
+  `GSTACK_SKILL_SURFACE=standard` pruned those managed GStack wrappers.
+  Extended the default managed GStack surface to keep both Codex and Claude
+  plan-engineering review wrappers, updated the pruning regression test, and
+  documented the standard surface in `ARCHITECTURE.md`. Verified with
+  `bun test scripts/lib/managed-skill-state.test.ts`, `bun run check:skills`,
+  and `bun run check`.

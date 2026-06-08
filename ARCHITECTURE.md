@@ -157,11 +157,12 @@ GStack installation is upstream-owned but wrapped by this updater. After a
 successful GStack setup, the wrapper records generated Codex `gstack-*` skills in
 `~/.intuitive-flow/gstack-codex-skills.json` and Claude short-name wrappers in
 `~/.intuitive-flow/gstack-claude-skills.json`. The default
-`GSTACK_SKILL_SURFACE=standard` keeps the common browser, QA, review, ship,
-health, investigate, guard, scrape, and spec entrypoints. It prunes only stale
-symlinks or `SKILL.md` wrappers that point into the managed GStack checkout. Set
-`GSTACK_SKILL_SURFACE=full` to expose every upstream GStack skill. It does not
-infer ownership from plain directory names or delete unrelated user skills.
+`GSTACK_SKILL_SURFACE=standard` keeps the common browser, QA, review,
+plan-engineering review, ship, health, investigate, guard, scrape, and spec
+entrypoints. It prunes only stale symlinks or `SKILL.md` wrappers that point
+into the managed GStack checkout. Set `GSTACK_SKILL_SURFACE=full` to expose
+every upstream GStack skill. It does not infer ownership from plain directory
+names or delete unrelated user skills.
 
 To add a public skill, create `skills/<name>/SKILL.md`, add it to the manifest,
 update the live human docs that describe the public surface, refresh any

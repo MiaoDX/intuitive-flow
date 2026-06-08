@@ -67,50 +67,61 @@ describe("managed skill state", () => {
     const home = mkdtempSync(join(tmpdir(), "managed-skills-home-"));
     const repo = mkdtempSync(join(tmpdir(), "managed-skills-gstack-"));
     try {
-      for (const skillName of ["gstack-review", "gstack-benchmark", "gstack-qa"]) {
+      for (const skillName of ["gstack-review", "gstack-benchmark", "gstack-plan-eng-review", "gstack-qa"]) {
         mkdirSync(join(repo, ".agents", "skills", skillName), { recursive: true });
         writeFileSync(join(repo, ".agents", "skills", skillName, "SKILL.md"), `---\nname: ${skillName}\ndescription: ${skillName}.\n---\n`);
       }
-      for (const skillName of ["review", "benchmark", "qa"]) {
+      for (const skillName of ["review", "benchmark", "plan-eng-review", "qa"]) {
         mkdirSync(join(repo, skillName), { recursive: true });
         writeFileSync(join(repo, skillName, "SKILL.md"), `---\nname: ${skillName}\ndescription: ${skillName}.\n---\n`);
       }
       mkdirSync(join(home, ".intuitive-flow"), { recursive: true });
       writeFileSync(
         join(home, ".intuitive-flow", "gstack-codex-skills.json"),
-        JSON.stringify({ schemaVersion: 1, source: "garrytan/gstack", skills: ["gstack-review", "gstack-benchmark", "gstack-qa"] }),
+        JSON.stringify({
+          schemaVersion: 1,
+          source: "garrytan/gstack",
+          skills: ["gstack-review", "gstack-benchmark", "gstack-plan-eng-review", "gstack-qa"],
+        }),
       );
       writeFileSync(
         join(home, ".intuitive-flow", "gstack-claude-skills.json"),
-        JSON.stringify({ schemaVersion: 1, source: "garrytan/gstack", skills: ["review", "benchmark", "qa"] }),
+        JSON.stringify({ schemaVersion: 1, source: "garrytan/gstack", skills: ["review", "benchmark", "plan-eng-review", "qa"] }),
       );
       mkdirSync(join(home, ".codex", "skills"), { recursive: true });
       symlinkSync(join(repo, ".agents", "skills", "gstack-review"), join(home, ".codex", "skills", "gstack-review"));
       symlinkSync(join(repo, ".agents", "skills", "gstack-benchmark"), join(home, ".codex", "skills", "gstack-benchmark"));
+      symlinkSync(join(repo, ".agents", "skills", "gstack-plan-eng-review"), join(home, ".codex", "skills", "gstack-plan-eng-review"));
       symlinkSync(join(repo, ".agents", "skills", "gstack-qa"), join(home, ".codex", "skills", "gstack-qa"));
       mkdirSync(join(home, ".claude", "skills", "review"), { recursive: true });
       mkdirSync(join(home, ".claude", "skills", "benchmark"), { recursive: true });
+      mkdirSync(join(home, ".claude", "skills", "plan-eng-review"), { recursive: true });
       mkdirSync(join(home, ".claude", "skills", "qa"), { recursive: true });
       symlinkSync(join(repo, "review", "SKILL.md"), join(home, ".claude", "skills", "review", "SKILL.md"));
       symlinkSync(join(repo, "benchmark", "SKILL.md"), join(home, ".claude", "skills", "benchmark", "SKILL.md"));
+      symlinkSync(join(repo, "plan-eng-review", "SKILL.md"), join(home, ".claude", "skills", "plan-eng-review", "SKILL.md"));
       symlinkSync(join(repo, "qa", "SKILL.md"), join(home, ".claude", "skills", "qa", "SKILL.md"));
 
       const removed = syncGstackSkillState(repo, home);
 
       expect(removed).toBe(2);
       expect(existsSync(join(home, ".codex", "skills", "gstack-review", "SKILL.md"))).toBe(true);
+      expect(existsSync(join(home, ".codex", "skills", "gstack-plan-eng-review", "SKILL.md"))).toBe(true);
       expect(existsSync(join(home, ".codex", "skills", "gstack-qa", "SKILL.md"))).toBe(true);
       expect(existsSync(join(home, ".codex", "skills", "gstack-benchmark"))).toBe(false);
       expect(existsSync(join(home, ".claude", "skills", "review", "SKILL.md"))).toBe(true);
+      expect(existsSync(join(home, ".claude", "skills", "plan-eng-review", "SKILL.md"))).toBe(true);
       expect(existsSync(join(home, ".claude", "skills", "qa", "SKILL.md"))).toBe(true);
       expect(existsSync(join(home, ".claude", "skills", "benchmark"))).toBe(false);
       expect(JSON.parse(readFileSync(join(home, ".intuitive-flow", "gstack-codex-skills.json"), "utf8")).skills).toEqual([
+        "gstack-plan-eng-review",
         "gstack-qa",
         "gstack-review",
       ]);
       expect(JSON.parse(readFileSync(join(home, ".intuitive-flow", "gstack-claude-skills.json"), "utf8")).skills).toEqual([
         "_gstack-command",
         "gstack",
+        "plan-eng-review",
         "qa",
         "review",
       ]);
