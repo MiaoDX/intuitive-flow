@@ -3,6 +3,7 @@ refactor_scope: reduce-entropy-loop
 status: DONE
 accepted_severities:
   - P1
+  - P2
 last_verified: 2026-06-08
 ---
 
@@ -70,6 +71,9 @@ size as a maximum, not a quota.
       `$improve-codebase-architecture` as an optional architecture scanner, but
       some routing text omitted the install boundary even though the skill is
       not part of repo-owned or managed external manifests.
+- [x] P2 live source drift: loop gate frontmatter listed only P1 accepted
+      severities even though the loop target and completed checklist included
+      materially useful P2 candidates.
 
 ## Saturation Audit
 
@@ -100,6 +104,7 @@ Why no change:
   removal as a completed baseline correction, not an outstanding action item.
 - Architecture scanner routing consistently treats `improve-codebase-architecture`
   as host-installed optional extra discovery, not a default installed surface.
+- The loop gate frontmatter now matches the actual accepted P1/P2 scope.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
   runtime messages rather than current false confidence or live source drift.
@@ -219,3 +224,7 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   as external/installed-when-available while reduce-entropy prompt and routing
   text omitted that install boundary. Reworded reduce-entropy docs and skill
   routing to say host-installed optional scanner.
+- 2026-06-08: Selected reduce-entropy loop severity metadata drift as P2 live
+  source drift after the gate frontmatter listed only P1 even though the target
+  and selected candidates included materially useful P2 work. Added P2 to the
+  accepted severities.
