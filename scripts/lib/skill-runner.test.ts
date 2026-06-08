@@ -3,10 +3,11 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "no
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "bun:test";
+import { hasUsableTmux } from "./test-capabilities";
 
 const repoRoot = process.cwd();
 const runnerScript = join(repoRoot, "skills", "skill-runner", "scripts", "run_skill_runner.py");
-const hasTmux = spawnSync("tmux", ["-V"], { encoding: "utf8" }).status === 0;
+const hasTmux = hasUsableTmux();
 
 function runPython(body: string) {
   const script = `

@@ -3,9 +3,10 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "bun:test";
+import { hasUsableTmux } from "../lib/test-capabilities";
 
 const repoRoot = process.cwd();
-const hasTmux = spawnSync("tmux", ["-V"], { encoding: "utf8" }).status === 0;
+const hasTmux = hasUsableTmux();
 
 function runWatchdogScript(script: string, args: string[] = [], env: NodeJS.ProcessEnv = {}) {
   return spawnSync("bash", ["-c", script, "bash", ...args], {

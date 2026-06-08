@@ -32,7 +32,7 @@ size as a maximum, not a quota.
       listed `$intuitive-preflight` in its `Public Entry Model`, while
       `README.md`, `ARCHITECTURE.md`, and `STATUS.md` define preflight as a
       specialist or routed pre-execution contract skill.
-- [ ] P1 false-red verification: tmux-dependent tests gate on `tmux -V` even
+- [x] P1 false-red verification: tmux-dependent tests gate on `tmux -V` even
       though restricted agent environments can have the binary available while
       `tmux new-session` is not usable.
 - [x] P1 verification isolation: local skill sync tests stub `npx`, but still
@@ -115,3 +115,8 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   stubbing the expected `npm view <package> version` call next to the existing
   `npx` stub. Verified with
   `bun test scripts/lib/sync-local-commands-skills.test.ts`.
+- 2026-06-08: Centralized tmux test capability detection on a real detached
+  session probe instead of `tmux -V`, and added regression coverage for a host
+  where the binary exists but session creation fails. Verified with
+  `bun test scripts/lib/test-capabilities.test.ts scripts/lib/intuitive-flow-stop-gate.test.ts scripts/lib/skill-runner.test.ts scripts/dev/tmux-watchdog.test.ts`
+  and `bun run check`.

@@ -5,9 +5,10 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { describe, expect, test } from "bun:test";
 import { classifyStopGateCommandResult } from "./intuitive-flow-stop-gate";
+import { hasUsableTmux } from "./test-capabilities";
 
 const repoRoot = process.cwd();
-const hasTmux = spawnSync("tmux", ["-V"], { encoding: "utf8" }).status === 0;
+const hasTmux = hasUsableTmux();
 
 describe("intuitive-flow deterministic stop gates", () => {
   test("stops on a human-owned blocker", () => {
