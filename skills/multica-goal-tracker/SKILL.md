@@ -26,6 +26,16 @@ Prefer appending comments over rewriting issue descriptions. Only update the
 description when the user explicitly wants the issue top-level description
 cleaned up.
 
+All comments created by this skill use the current Multica user token, but they
+must begin with the visible marker:
+
+```markdown
+> Agent 提交：以下内容由 Agent 帮忙整理并提交，用于和人工手写评论区分。
+```
+
+Keep this marker as the first visible line on start, evidence-card upload, and
+finish details comments.
+
 ## Start Tracking
 
 Use this after the issue exists and contains the goal, or when the user gives
@@ -66,7 +76,7 @@ change.
 ## Finish Tracking
 
 Use this after the goal run is complete or after the user asks to preserve the
-state of a goal attempt on an existing issue. Do not create a new issue for this
+  state of a goal attempt on an existing issue. Do not create a new issue for this
 flow unless the user explicitly asks. Finish evidence must come from real
 session output: Multica execution run messages by default, a Codex JSONL
 session, a skill-runner run directory, or an explicit transcript via
@@ -89,25 +99,23 @@ The script:
   terminal goal back to the active goal objective; if it cannot match without
   guessing, it fails and asks for the exact `--goal`/`--goal-file`;
 - records this finish as one goal attempt with hidden structured metadata in the
-  finish comment;
+  finish details comment;
 - reads earlier tracker attempt metadata from issue comments and renders an
   issue-level card with cumulative duration, issue start/end, current attempt,
   and recent attempt timeline under `~/.cache/multica-goal-tracker/`;
 - uses Google Chrome headless to produce a PNG when available, with SVG
   fallback;
-- appends a Chinese finish/execution comment and attaches the rendered
-  evidence. `complete` attempts are labelled as completion records; `partial`,
-  `blocked`, and `failed` attempts are labelled as execution records so they do
-  not masquerade as finished work;
-- reads the Multica comment-add response and, when an image attachment URL is
-  returned, adds a child comment containing `![completion-card.png](...)` so the
-  card is displayed inline in the issue timeline. The CLI currently has no
-  standalone upload command and no comment update command, so this uses a reply
-  instead of editing the original finish comment;
-- appends another child comment with the real selected session attempt output
-  as a plain Markdown code block. This raw output is not rendered into an image
-  and is not summarized, so the issue keeps the actual attempt text alongside
-  the overview card.
+- posts a Chinese evidence-card upload comment with the rendered PNG/SVG
+  attached. This comment is the thread entry for the Agent-generated record;
+- reads the Multica comment-add response and posts one finish-details reply in
+  the same thread. When Multica returns an image attachment URL, the details
+  reply starts with `![completion-card.png](...)`, then a short overview, then
+  goal details, then the real selected session attempt output as a Markdown
+  code block. Keep this ordering as the default so reviewers can scan the
+  rendered card first and only read raw output when needed;
+- labels `complete` attempts as completion records; labels `partial`,
+  `blocked`, and `failed` attempts as execution records so they do not
+  masquerade as finished work.
 
 If the issue has no Multica run history, finish fails fast instead of creating a
 fake proof card. In that case pass a real Codex session JSONL for the finished
@@ -148,10 +156,47 @@ Then run `start` again with the follow-up goal and run `finish` again when that
 follow-up completes. The next finish will become attempt #2 and the card will
 show cumulative issue time across both attempts.
 
+## Final Review
+
+Use this when the human wants one final review thread for an issue that already
+has multiple goal attempts, especially when an earlier attempt was partial and a
+follow-up goal completed the issue. Do not hand-compose the comment. Put the
+attempt data in JSON and let the script own the format.
+
+```json
+[
+  {
+    "goal": "/goal ...",
+    "status": "partial",
+    "sessionFile": "/home/mi/.codex/sessions/...jsonl"
+  },
+  {
+    "goal": "/goal ...",
+    "status": "complete",
+    "sessionFile": "/home/mi/.codex/sessions/...jsonl"
+  }
+]
+```
+
+```bash
+bun skills/multica-goal-tracker/scripts/track_goal.ts \
+  final-review \
+  --issue MIA-40 \
+  --attempts-file /tmp/multica-goal-attempts.json
+```
+
+`final-review` renders one cumulative evidence card, posts it as the thread
+entry, then posts one details reply whose first content block is the inline PNG,
+followed by overview, timeline, details, and complete raw outputs for each
+attempt. The details reply stores metadata for every attempt, so later tracker
+runs can recover cumulative duration even if older Agent comments are cleaned
+up.
+
 ## Useful Options
 
 - `--goal "..."` supplies inline goal text.
 - `--goal-file -` reads the goal from stdin.
+- `--attempts-file -` reads `final-review` attempt JSON from stdin.
 - `--run-id <task-id>` uses a specific Multica execution run instead of the
   latest issue run.
 - `--session-file -` reads real session transcript/output from stdin.

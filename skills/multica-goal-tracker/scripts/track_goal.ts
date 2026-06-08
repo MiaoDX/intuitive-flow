@@ -76,6 +76,7 @@ type Options = {
   runId?: string;
   goal?: string;
   goalFile?: string;
+  attemptsFile?: string;
   sessionText?: string;
   sessionFile?: string;
   sessionDir?: string;
@@ -90,7 +91,24 @@ type Options = {
   workspaceId?: string;
 };
 
+type FinalReviewAttemptInput = {
+  goal?: string;
+  goalFile?: string;
+  status?: AttemptStatus;
+  sessionText?: string;
+  sessionFile?: string;
+  sessionDir?: string;
+  proof?: string;
+};
+
+type FinalReviewAttempt = {
+  summary: GoalSummary;
+  session: SessionEvidence;
+  record: GoalAttemptRecord;
+};
+
 const skillDir = dirname(dirname(new URL(import.meta.url).pathname));
+export const agentCommentBanner = "> Agent 提交：以下内容由 Agent 帮忙整理并提交，用于和人工手写评论区分。\n\n";
 
 function isAttemptStatus(value: string): value is AttemptStatus {
   return value === "complete" || value === "partial" || value === "blocked" || value === "failed";
@@ -100,11 +118,13 @@ function usage(): never {
   console.error(`Usage:
   track_goal.ts start --issue MIA-40 [--goal-file goal.txt] [--update-description] [--dry-run]
   track_goal.ts finish --issue MIA-40 [--run-id <task-id>] [--session-file transcript.txt] [--session-dir <skill-runner-dir>] [--dry-run]
+  track_goal.ts final-review --issue MIA-40 --attempts-file attempts.json [--dry-run]
   track_goal.ts summarize --goal-file goal.txt
 
 Options:
   --goal <text>             Inline goal text.
   --goal-file <path|- >     Read goal text from file or stdin.
+  --attempts-file <path|- > Read final-review attempts JSON from file or stdin.
   --run-id <task-id>        Use a specific Multica execution run.
   --session-text <text>     Inline real session transcript/output.
   --session-file <path|- >  Read real session transcript/output from file or stdin. Codex JSONL is reduced to real assistant output.
@@ -124,7 +144,7 @@ Options:
 
 function parseArgs(argv: string[]): Options {
   const command = argv.shift();
-  if (!command || !["start", "finish", "summarize"].includes(command)) usage();
+  if (!command || !["start", "finish", "final-review", "summarize"].includes(command)) usage();
 
   const opts: Options = { command, attemptStatus: "complete", allowManualSummary: false, updateDescription: false, dryRun: false };
   for (let i = 0; i < argv.length; i += 1) {
@@ -146,6 +166,9 @@ function parseArgs(argv: string[]): Options {
         break;
       case "--goal-file":
         opts.goalFile = next();
+        break;
+      case "--attempts-file":
+        opts.attemptsFile = next();
         break;
       case "--session-text":
         opts.sessionText = next();
@@ -201,6 +224,10 @@ function parseArgs(argv: string[]): Options {
 
   if (opts.command !== "summarize" && !opts.issue) {
     console.error("--issue is required");
+    usage();
+  }
+  if (opts.command === "final-review" && !opts.attemptsFile) {
+    console.error("--attempts-file is required for final-review");
     usage();
   }
   return opts;
@@ -759,6 +786,54 @@ function loadSessionEvidence(opts: Options, targetGoal?: string): SessionEvidenc
   );
 }
 
+function loadSessionEvidenceFromAttemptInput(input: FinalReviewAttemptInput, targetGoal: string, index: number): SessionEvidence {
+  if (input.sessionDir) {
+    return sessionEvidenceFromSkillRunnerDir(input.sessionDir, input.proof);
+  }
+  const sessionText = readInput(input.sessionText, input.sessionFile);
+  if (sessionText.trim()) {
+    return sessionEvidenceFromSessionText(input.sessionFile ? `file ${input.sessionFile}` : `inline final-review attempt #${index} session text`, sessionText, input.proof, targetGoal);
+  }
+  throw new Error(`final-review attempt #${index} requires sessionFile, sessionText, or sessionDir.`);
+}
+
+function parseFinalReviewAttemptInput(value: unknown, index: number): FinalReviewAttemptInput {
+  const record = asRecord(value);
+  if (!record) throw new Error(`final-review attempt #${index} must be an object.`);
+  const goal = textFromUnknown(record.goal) || undefined;
+  const goalFile = textFromUnknown(record.goalFile ?? record.goal_file) || undefined;
+  const statusText = textFromUnknown(record.status ?? record.attemptStatus ?? record.attempt_status) || "complete";
+  if (!isAttemptStatus(statusText)) {
+    throw new Error(`final-review attempt #${index} has invalid status '${statusText}'.`);
+  }
+  return {
+    goal,
+    goalFile,
+    status: statusText,
+    sessionText: textFromUnknown(record.sessionText ?? record.session_text) || undefined,
+    sessionFile: textFromUnknown(record.sessionFile ?? record.session_file) || undefined,
+    sessionDir: textFromUnknown(record.sessionDir ?? record.session_dir) || undefined,
+    proof: textFromUnknown(record.proof) || undefined,
+  };
+}
+
+function loadFinalReviewAttempts(opts: Options): FinalReviewAttempt[] {
+  const raw = readInput(undefined, opts.attemptsFile).trim();
+  if (!raw) throw new Error("--attempts-file was empty.");
+  const parsed = JSON.parse(raw) as unknown;
+  const values = Array.isArray(parsed) ? parsed : nestedArray(parsed, ["attempts", "items"]);
+  if (values.length === 0) throw new Error("--attempts-file must be a JSON array or an object with an attempts array.");
+
+  return values.map((value, index) => {
+    const input = parseFinalReviewAttemptInput(value, index + 1);
+    const goal = readInput(input.goal, input.goalFile);
+    const summary = summarizeGoal(goal);
+    const session = loadSessionEvidenceFromAttemptInput(input, summary.rawGoal, index + 1);
+    const record = buildAttemptRecord(summary, session, input.status ?? "complete", index + 1);
+    return { summary, session, record };
+  });
+}
+
 function getIssueComments(opts: Options): unknown[] {
   const out = runMultica(opts, ["issue", "comment", "list", opts.issue!, "--output", "json"]);
   return nestedArray(JSON.parse(out) as unknown, ["comments", "items", "threads", "data"]);
@@ -803,17 +878,54 @@ function parseAttemptRecord(value: unknown): GoalAttemptRecord | undefined {
 }
 
 export function attemptRecordFromCommentText(text: string): GoalAttemptRecord | undefined {
-  const idx = text.indexOf(attemptMetaPrefix);
-  if (idx < 0) return undefined;
-  const start = idx + attemptMetaPrefix.length;
-  const end = text.indexOf(attemptMetaSuffix, start);
-  if (end < 0) return undefined;
-  const first = parseAttemptRecordPayload(text.slice(start, end));
-  if (first) return first;
+  return attemptRecordsFromCommentText(text)[0];
+}
 
-  const lastEnd = text.lastIndexOf(attemptMetaSuffix);
-  if (lastEnd > end) return parseAttemptRecordPayload(text.slice(start, lastEnd));
-  return undefined;
+export function attemptRecordsFromCommentText(text: string): GoalAttemptRecord[] {
+  const records: GoalAttemptRecord[] = [];
+  let searchFrom = 0;
+  while (searchFrom < text.length) {
+    const idx = text.indexOf(attemptMetaPrefix, searchFrom);
+    if (idx < 0) break;
+    const start = idx + attemptMetaPrefix.length;
+    const end = text.indexOf(attemptMetaSuffix, start);
+    if (end < 0) break;
+    const record = parseAttemptRecordPayload(text.slice(start, end));
+    if (record) {
+      records.push(record);
+      searchFrom = end + attemptMetaSuffix.length;
+      continue;
+    }
+
+    const lastEnd = text.lastIndexOf(attemptMetaSuffix);
+    if (lastEnd > end) {
+      const legacyRecord = parseAttemptRecordPayload(text.slice(start, lastEnd));
+      if (legacyRecord) records.push(legacyRecord);
+    }
+    break;
+  }
+  return records;
+}
+
+export function attemptRecordsFromComments(comments: unknown[]): GoalAttemptRecord[] {
+  const records = comments.flatMap((comment) => attemptRecordsFromCommentText(textFromUnknown(comment)));
+  const deduped = new Map<string, GoalAttemptRecord>();
+  for (const record of records) {
+    const key = [
+      record.sequence,
+      record.status,
+      record.startedAt ?? "",
+      record.completedAt ?? "",
+      record.recordedAt,
+      record.goal,
+    ].join("\u0000");
+    deduped.set(key, record);
+  }
+  return [...deduped.values()].sort((a, b) => {
+    const bySequence = a.sequence - b.sequence;
+    if (bySequence !== 0) return bySequence;
+    return Date.parse(a.recordedAt) - Date.parse(b.recordedAt);
+  });
 }
 
 function parseAttemptRecordPayload(payload: string): GoalAttemptRecord | undefined {
@@ -828,20 +940,13 @@ function parseAttemptRecordPayload(payload: string): GoalAttemptRecord | undefin
   }
 }
 
-export function attemptRecordsFromComments(comments: unknown[]): GoalAttemptRecord[] {
-  return comments
-    .map((comment) => attemptRecordFromCommentText(textFromUnknown(comment)))
-    .filter((record): record is GoalAttemptRecord => Boolean(record))
-    .sort((a, b) => {
-      const bySequence = a.sequence - b.sequence;
-      if (bySequence !== 0) return bySequence;
-      return Date.parse(a.recordedAt) - Date.parse(b.recordedAt);
-    });
-}
-
 function encodeAttemptRecord(record: GoalAttemptRecord): string {
   const encoded = Buffer.from(JSON.stringify(record), "utf8").toString("base64");
   return `${attemptMetaPrefix}${encodedAttemptMetaPrefix}${encoded}${attemptMetaSuffix}`;
+}
+
+function encodeAttemptRecords(records: GoalAttemptRecord[]): string {
+  return records.map(encodeAttemptRecord).join("\n");
 }
 
 export function buildAttemptRecord(summary: GoalSummary, session: SessionEvidence, status: AttemptStatus, sequence: number): GoalAttemptRecord {
@@ -1019,7 +1124,7 @@ export function summarizeGoal(goal: string): GoalSummary {
 
 export function markdownForStart(summary: GoalSummary): string {
   const sources = summary.sources.length ? summary.sources.map((s) => `\`${s}\``).join(", ") : "未在 goal 中明确。";
-  return `<!-- multica-goal-tracker:start -->
+  return `${agentCommentBanner}<!-- multica-goal-tracker:start -->
 ## Goal 跟踪开始
 
 **目标:** ${summary.purpose}
@@ -1418,13 +1523,18 @@ export function markdownForFinish(
   attachment: string,
   attempt: GoalAttemptRecord,
   timeline: GoalTimeline,
+  imageUrl?: string,
 ): string {
   const title = attempt.status === "complete" ? "Goal 完成记录" : "Goal 执行记录";
   const outcomeLabel = attempt.status === "complete" ? "完成结果" : "执行结果";
   const evidenceKind = attempt.status === "complete" ? "完成卡片" : "执行卡片";
-  return `<!-- multica-goal-tracker:finish -->
-${encodeAttemptRecord(attempt)}
-## ${title}
+  const rawTitle = attempt.status === "complete" ? "真实 session 完成输出" : "真实 session 执行输出";
+  const imageBlock = imageUrl
+    ? `![completion-card.png](${imageUrl})\n\n`
+    : `**渲染卡片:** 已作为上一条评论的附件发布；Multica 未返回可内联的附件 URL。\n\n`;
+  return `${agentCommentBanner}<!-- multica-goal-tracker:finish -->
+${encodeAttemptRecords(timeline.attempts)}
+${imageBlock}## ${title}概览
 
 **Issue:** ${issue.identifier ?? issue.id ?? "unknown"}
 
@@ -1448,23 +1558,107 @@ ${encodeAttemptRecord(attempt)}
 
 **${outcomeLabel}:** ${session.outcome}
 
-**验证说明:** ${session.proofNote}
-
-**证据:** 已附加渲染后的${evidenceKind}；如果 Multica 返回附件 URL，脚本会自动追加一条内联图片回复。
-
 **Goal 目标:** ${summary.purpose}
+
+**证据:** 上方 PNG 是渲染后的${evidenceKind}；下方保留真实 session 输出，便于需要时核对原始结果。
+
+## Goal 详情
+
+**验证说明:** ${session.proofNote}
 
 **Goal 时间线:** 已累计 ${timeline.attempts.length} 次 goal attempt；卡片中展示最近的 attempt 和累计耗时。
 
-**Session 摘录:** 完整输出已在下方代码块评论中保留。
+本地证据文件: \`${attachment}\`
+
+## ${rawTitle}
+
+${markdownCodeBlock(session.rawOutput)}
+`;
+}
+
+export function markdownForEvidenceCardUpload(
+  issue: Issue,
+  attempt: GoalAttemptRecord,
+  timeline: GoalTimeline,
+): string {
+  const evidenceKind = attempt.status === "complete" ? "完成卡片" : "执行卡片";
+  return `${agentCommentBanner}<!-- multica-goal-tracker:evidence-card-upload -->
+## Goal ${evidenceKind}
+
+这条评论用于把渲染 PNG 贴到 issue 对话顶部，并作为本组 Agent 记录的线程入口。
+
+**Issue:** ${issue.identifier ?? issue.id ?? "unknown"}
+
+**本次 Goal:** #${attempt.sequence} / ${attempt.status}
+
+**Issue 累计耗时:** ${formatDuration(timeline.totalDurationMs)}
+
+下方回复包含概览、详情和真实 session 输出。
+`;
+}
+
+export function markdownForFinalReview(
+  issue: Issue,
+  attempts: FinalReviewAttempt[],
+  timeline: GoalTimeline,
+  attachment: string,
+  imageUrl?: string,
+): string {
+  const finalAttempt = attempts[attempts.length - 1];
+  if (!finalAttempt) throw new Error("final-review requires at least one attempt.");
+  const finalStatus = finalAttempt.record.status;
+  const firstSummary = attempts[0]?.summary;
+  const imageBlock = imageUrl
+    ? `![completion-card.png](${imageUrl})\n\n`
+    : `**渲染卡片:** 已作为上一条评论的附件发布；Multica 未返回可内联的附件 URL。\n\n`;
+  const attemptLines = attempts
+    .map(({ record, session }) => {
+      const timeRange = `${formatDateTime(record.startedAt)} - ${formatDateTime(record.completedAt)}`;
+      return `- #${record.sequence} / ${record.status} / ${formatDuration(record.durationMs)}：${truncate(record.purpose, 120)}；${truncate(session.outcome, 180)}（${timeRange}）`;
+    })
+    .join("\n");
+  const rawOutputs = attempts
+    .map(({ record, session }) => {
+      const title = record.status === "complete" ? "真实 session 完成输出" : "真实 session 执行输出";
+      return `### #${record.sequence} / ${record.status} ${title}\n\n**时间:** ${formatDateTime(record.startedAt)} - ${formatDateTime(record.completedAt)}，${formatDuration(record.durationMs)}\n\n${markdownCodeBlock(session.rawOutput)}`;
+    })
+    .join("\n\n");
+
+  return `${agentCommentBanner}<!-- multica-goal-tracker:final-review -->
+${encodeAttemptRecords(timeline.attempts)}
+${imageBlock}## Goal 最终汇总概览
+
+**Issue:** ${issue.identifier ?? issue.id ?? "unknown"}
+
+**最终状态:** ${issue.status ?? "unknown"} / ${finalStatus}
+
+**Goal 次数:** ${attempts.length}
+
+**累计耗时:** ${formatDuration(timeline.totalDurationMs)}
+
+**Issue 时间范围:** ${formatDateTime(timeline.startedAt)} - ${formatDateTime(timeline.completedAt)}
+
+**初始目标:** ${firstSummary?.purpose ?? "未知"}
+
+**最终结果:** ${finalAttempt.session.outcome}
+
+**证据:** 上方 PNG 是渲染后的最终汇总卡片；下方保留每次真实 session 输出，便于需要时核对原始结果。
+
+## Goal 时间线
+
+${attemptLines}
+
+## Goal 详情
 
 本地证据文件: \`${attachment}\`
+
+${rawOutputs}
 `;
 }
 
 export function markdownForRawSessionOutput(session: SessionEvidence, status: AttemptStatus = "complete"): string {
   const title = status === "complete" ? "真实 session 完成输出" : "真实 session 执行输出";
-  return `<!-- multica-goal-tracker:raw-session-output -->
+  return `${agentCommentBanner}<!-- multica-goal-tracker:raw-session-output -->
 ## ${title}
 
 **Session 来源:** ${session.source}
@@ -1480,7 +1674,7 @@ ${markdownCodeBlock(session.rawOutput)}
 }
 
 export function markdownForInlineImage(url: string): string {
-  return `<!-- multica-goal-tracker:evidence-image -->
+  return `${agentCommentBanner}<!-- multica-goal-tracker:evidence-image -->
 ![completion-card.png](${url})
 `;
 }
@@ -1512,7 +1706,7 @@ function findImageAttachmentUrl(value: unknown): string | undefined {
 export function imageAttachmentUrlFromCommentOutput(output: string): string | undefined {
   if (!output.trim()) return undefined;
   try {
-    return findImageAttachmentUrl(JSON.parse(output) as unknown);
+    return findImageAttachmentUrl(jsonFromCliOutput(output));
   } catch {
     return undefined;
   }
@@ -1521,7 +1715,7 @@ export function imageAttachmentUrlFromCommentOutput(output: string): string | un
 export function commentIdFromCommentOutput(output: string): string | undefined {
   if (!output.trim()) return undefined;
   try {
-    const parsed = JSON.parse(output) as unknown;
+    const parsed = jsonFromCliOutput(output);
     const record = asRecord(parsed);
     const id = record ? textFromUnknown(record.id) : "";
     if (id) return id;
@@ -1530,6 +1724,47 @@ export function commentIdFromCommentOutput(output: string): string | undefined {
   } catch {
     return undefined;
   }
+}
+
+function jsonFromCliOutput(output: string): unknown {
+  const trimmed = output.trim();
+  try {
+    return JSON.parse(trimmed) as unknown;
+  } catch {
+    // The Multica CLI can print progress lines before/after JSON even with
+    // --output json, especially when uploading attachments.
+  }
+
+  const start = trimmed.search(/[\[{]/);
+  if (start < 0) throw new Error("No JSON payload found in CLI output.");
+  const opener = trimmed[start];
+  const closer = opener === "{" ? "}" : "]";
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let i = start; i < trimmed.length; i += 1) {
+    const char = trimmed[i];
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (char === "\\") {
+        escaped = true;
+      } else if (char === "\"") {
+        inString = false;
+      }
+      continue;
+    }
+    if (char === "\"") {
+      inString = true;
+      continue;
+    }
+    if (char === opener) depth += 1;
+    if (char === closer) depth -= 1;
+    if (depth === 0) {
+      return JSON.parse(trimmed.slice(start, i + 1)) as unknown;
+    }
+  }
+  throw new Error("Unterminated JSON payload in CLI output.");
 }
 
 function writeTempMarkdown(dir: string, name: string, content: string): string {
@@ -1586,26 +1821,26 @@ function finish(opts: Options) {
   const attempt = buildAttemptRecord(summary, session, opts.attemptStatus, nextAttemptSequence(existingAttempts));
   const timeline = buildGoalTimeline([...existingAttempts, attempt]);
   const evidence = renderEvidence(issue, summary, session, timeline);
-  const comment = markdownForFinish(issue, summary, session, evidence.attachment, attempt, timeline);
+  const cardUploadComment = markdownForEvidenceCardUpload(issue, attempt, timeline);
 
   if (opts.dryRun) {
-    printDryRun("finish comment", comment, {
+    printDryRun("evidence card upload comment", cardUploadComment, {
       attachment: evidence.attachment,
       html: evidence.htmlPath,
       svg: evidence.svgPath,
     });
-    printDryRun("raw session output comment", markdownForRawSessionOutput(session, attempt.status));
+    printDryRun("finish details comment", markdownForFinish(issue, summary, session, evidence.attachment, attempt, timeline, "/uploads/workspaces/example/completion-card.png"));
     return;
   }
 
-  const commentFile = writeTempMarkdown(evidence.dir, "finish-comment.md", comment);
+  const cardUploadFile = writeTempMarkdown(evidence.dir, "evidence-card-upload.md", cardUploadComment);
   const addOutput = runMultica(opts, [
     "issue",
     "comment",
     "add",
     opts.issue!,
     "--content-file",
-    commentFile,
+    cardUploadFile,
     "--attachment",
     evidence.attachment,
     "--output",
@@ -1613,25 +1848,67 @@ function finish(opts: Options) {
   ]);
   const imageUrl = imageAttachmentUrlFromCommentOutput(addOutput);
   const parent = commentIdFromCommentOutput(addOutput);
-  if (imageUrl) {
-    const imageCommentFile = writeTempMarkdown(evidence.dir, "finish-image.md", markdownForInlineImage(imageUrl));
-    const args = ["issue", "comment", "add", opts.issue!, "--content-file", imageCommentFile, "--output", "json"];
-    if (parent) {
-      args.push("--parent", parent);
-    }
-    runMultica(opts, args);
-    console.log(`Posted inline evidence image: ${imageUrl}`);
-  } else {
-    console.warn("WARNING: Multica did not return an image attachment URL; evidence remains attached but not inline.");
+  if (!imageUrl) {
+    console.warn("WARNING: Multica did not return an image attachment URL; details comment will point to the attached evidence card instead of rendering it inline.");
   }
-  const rawOutputCommentFile = writeTempMarkdown(evidence.dir, "raw-session-output.md", markdownForRawSessionOutput(session, attempt.status));
-  const rawOutputArgs = ["issue", "comment", "add", opts.issue!, "--content-file", rawOutputCommentFile, "--output", "json"];
+  const detailsComment = markdownForFinish(issue, summary, session, evidence.attachment, attempt, timeline, imageUrl);
+  const detailsCommentFile = writeTempMarkdown(evidence.dir, "finish-details.md", detailsComment);
+  const detailsArgs = ["issue", "comment", "add", opts.issue!, "--content-file", detailsCommentFile, "--output", "json"];
   if (parent) {
-    rawOutputArgs.push("--parent", parent);
+    detailsArgs.push("--parent", parent);
   }
-  runMultica(opts, rawOutputArgs);
-  console.log("Posted raw session output.");
-  console.log(`Added tracker finish comment to ${issue.identifier ?? opts.issue}`);
+  runMultica(opts, detailsArgs);
+  if (imageUrl) console.log(`Posted inline evidence image in details comment: ${imageUrl}`);
+  console.log(`Added tracker finish thread to ${issue.identifier ?? opts.issue}`);
+  console.log(`Attached evidence: ${evidence.attachment}`);
+}
+
+function finalReview(opts: Options) {
+  const issue = getIssue(opts);
+  const attempts = loadFinalReviewAttempts(opts);
+  const timeline = buildGoalTimeline(attempts.map((attempt) => attempt.record));
+  const finalAttempt = attempts[attempts.length - 1];
+  if (!finalAttempt) throw new Error("final-review requires at least one attempt.");
+  const evidence = renderEvidence(issue, finalAttempt.summary, finalAttempt.session, timeline);
+  const cardUploadComment = markdownForEvidenceCardUpload(issue, finalAttempt.record, timeline);
+
+  if (opts.dryRun) {
+    printDryRun("final-review evidence card upload comment", cardUploadComment, {
+      attachment: evidence.attachment,
+      html: evidence.htmlPath,
+      svg: evidence.svgPath,
+    });
+    printDryRun("final-review details comment", markdownForFinalReview(issue, attempts, timeline, evidence.attachment, "/uploads/workspaces/example/completion-card.png"));
+    return;
+  }
+
+  const cardUploadFile = writeTempMarkdown(evidence.dir, "final-review-evidence-card-upload.md", cardUploadComment);
+  const addOutput = runMultica(opts, [
+    "issue",
+    "comment",
+    "add",
+    opts.issue!,
+    "--content-file",
+    cardUploadFile,
+    "--attachment",
+    evidence.attachment,
+    "--output",
+    "json",
+  ]);
+  const imageUrl = imageAttachmentUrlFromCommentOutput(addOutput);
+  const parent = commentIdFromCommentOutput(addOutput);
+  if (!imageUrl) {
+    console.warn("WARNING: Multica did not return an image attachment URL; final-review details will point to the attached evidence card instead of rendering it inline.");
+  }
+  const detailsComment = markdownForFinalReview(issue, attempts, timeline, evidence.attachment, imageUrl);
+  const detailsCommentFile = writeTempMarkdown(evidence.dir, "final-review-details.md", detailsComment);
+  const detailsArgs = ["issue", "comment", "add", opts.issue!, "--content-file", detailsCommentFile, "--output", "json"];
+  if (parent) {
+    detailsArgs.push("--parent", parent);
+  }
+  runMultica(opts, detailsArgs);
+  if (imageUrl) console.log(`Posted inline final-review evidence image in details comment: ${imageUrl}`);
+  console.log(`Added tracker final-review thread to ${issue.identifier ?? opts.issue}`);
   console.log(`Attached evidence: ${evidence.attachment}`);
 }
 
@@ -1646,6 +1923,7 @@ function main() {
   try {
     if (opts.command === "start") start(opts);
     if (opts.command === "finish") finish(opts);
+    if (opts.command === "final-review") finalReview(opts);
     if (opts.command === "summarize") summarize(opts);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

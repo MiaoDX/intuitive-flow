@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   commentIdFromCommentOutput,
+  agentCommentBanner,
   attemptRecordFromCommentText,
   attemptRecordsFromComments,
   buildAttemptRecord,
@@ -13,9 +14,12 @@ import {
   extractTrackedGoalFromComments,
   imageAttachmentUrlFromCommentOutput,
   markdownCodeBlock,
+  markdownForEvidenceCardUpload,
+  markdownForFinalReview,
   markdownForInlineImage,
   markdownForFinish,
   markdownForRawSessionOutput,
+  markdownForStart,
   nextAttemptSequence,
   normalizeLines,
   replaceMarkedBlock,
@@ -63,6 +67,19 @@ Later notes should not be treated as the active goal.
     expect(summary.route).toBe("$intuitive-flow");
     expect(summary.sources).toEqual(["docs/plans/refactor-sync.md"]);
     expect(summary.proof).toContain("验证 with bun run verify");
+  });
+
+  test("marks generated comments as agent-submitted", () => {
+    const summary = summarizeGoal("/goal fix the tracker\nRun bun run verify");
+    const session = sessionEvidenceFromTranscript("session file", "RESULT_STATUS: SUCCESS\nVerified.");
+    const attempt = buildAttemptRecord(summary, { ...session, durationMs: 10_000 }, "complete", 1);
+    const timeline = buildGoalTimeline([attempt]);
+
+    expect(markdownForStart(summary).startsWith(agentCommentBanner)).toBe(true);
+    expect(markdownForFinish({ identifier: "MIA-40", status: "done" }, summary, session, "/tmp/card.png", attempt, timeline).startsWith(agentCommentBanner)).toBe(true);
+    expect(markdownForEvidenceCardUpload({ identifier: "MIA-40", status: "done" }, attempt, timeline).startsWith(agentCommentBanner)).toBe(true);
+    expect(markdownForRawSessionOutput(session).startsWith(agentCommentBanner)).toBe(true);
+    expect(markdownForInlineImage("/uploads/workspaces/ws/card.png").startsWith(agentCommentBanner)).toBe(true);
   });
 
   test("normalizes real transcript evidence without inventing proof", () => {
@@ -453,7 +470,7 @@ Run bun run verify.
     expect(selectLatestRunId([{ id: "first" }, { id: "last" }])).toBe("last");
   });
 
-  test("keeps finish comment concise and points to the raw output comment", () => {
+  test("puts the rendered PNG and overview before details and raw output", () => {
     const summary = summarizeGoal("/goal fix the tracker\nRun bun run verify");
     const session = {
       source: "session file",
@@ -485,16 +502,75 @@ Run bun run verify.
       "/tmp/card.svg",
       attempt,
       timeline,
+      "/uploads/workspaces/ws/completion-card.png",
     );
 
-    expect(comment).toContain("## Goal 完成记录");
+    const imageIndex = comment.indexOf("![completion-card.png](/uploads/workspaces/ws/completion-card.png)");
+    const overviewIndex = comment.indexOf("## Goal 完成记录概览");
+    const detailsIndex = comment.indexOf("## Goal 详情");
+    const rawOutputIndex = comment.indexOf("## 真实 session 完成输出");
+
+    expect(imageIndex).toBeGreaterThan(-1);
+    expect(overviewIndex).toBeGreaterThan(imageIndex);
+    expect(detailsIndex).toBeGreaterThan(overviewIndex);
+    expect(rawOutputIndex).toBeGreaterThan(detailsIndex);
     expect(comment).toContain("multica-goal-tracker:attempt");
     expect(comment).toContain("**证据:**");
     expect(comment).toContain("**本次 Goal:** #2 / complete");
     expect(comment).toContain("**本次持续时间:** 9m 7s");
     expect(comment).toContain("**Issue 累计耗时:** 11m 7s");
-    expect(comment).toContain("完整输出已在下方代码块评论中保留");
-    expect(comment).not.toContain("inside fence");
+    expect(comment).toContain("下方保留真实 session 输出");
+    expect(comment).toContain("inside fence");
+    expect(markdownCodeBlock(session.rawOutput)).toContain("````text");
+  });
+
+  test("builds a top evidence card upload comment for the final thread", () => {
+    const summary = summarizeGoal("/goal fix the tracker\nRun bun run verify");
+    const session = sessionEvidenceFromTranscript("session file", "RESULT_STATUS: SUCCESS\nVerified.");
+    const attempt = buildAttemptRecord(summary, { ...session, durationMs: 10_000 }, "complete", 1);
+    const timeline = buildGoalTimeline([attempt]);
+    const comment = markdownForEvidenceCardUpload({ identifier: "MIA-40", status: "Done" }, attempt, timeline);
+
+    expect(comment).toContain("<!-- multica-goal-tracker:evidence-card-upload -->");
+    expect(comment).toContain("## Goal 完成卡片");
+    expect(comment).toContain("**本次 Goal:** #1 / complete");
+    expect(comment).toContain("**Issue 累计耗时:** 10s");
+    expect(comment).toContain("下方回复包含概览、详情和真实 session 输出。");
+  });
+
+  test("builds final-review with PNG first, overview second, raw outputs last", () => {
+    const firstSummary = summarizeGoal("/goal implement first slice via $intuitive-flow");
+    const secondSummary = summarizeGoal("/goal complete follow-up defaults via $intuitive-flow");
+    const firstSession = sessionEvidenceFromTranscript("first session", "RESULT_STATUS: PARTIAL\nFirst raw output.");
+    const secondSession = sessionEvidenceFromTranscript("second session", "RESULT_STATUS: SUCCESS\nSecond raw output.");
+    const first = buildAttemptRecord(firstSummary, { ...firstSession, durationMs: 60_000 }, "partial", 1);
+    const second = buildAttemptRecord(secondSummary, { ...secondSession, durationMs: 90_000 }, "complete", 2);
+    const attempts = [
+      { summary: firstSummary, session: firstSession, record: first },
+      { summary: secondSummary, session: secondSession, record: second },
+    ];
+    const timeline = buildGoalTimeline([first, second]);
+    const comment = markdownForFinalReview(
+      { identifier: "MIA-40", title: "Tracker", status: "done" },
+      attempts,
+      timeline,
+      "/tmp/card.png",
+      "/uploads/workspaces/ws/completion-card.png",
+    );
+
+    const imageIndex = comment.indexOf("![completion-card.png](/uploads/workspaces/ws/completion-card.png)");
+    const overviewIndex = comment.indexOf("## Goal 最终汇总概览");
+    const timelineIndex = comment.indexOf("## Goal 时间线");
+    const rawIndex = comment.indexOf("### #1 / partial 真实 session 执行输出");
+    expect(imageIndex).toBeGreaterThan(-1);
+    expect(overviewIndex).toBeGreaterThan(imageIndex);
+    expect(timelineIndex).toBeGreaterThan(overviewIndex);
+    expect(rawIndex).toBeGreaterThan(timelineIndex);
+    expect(comment).toContain("**Goal 次数:** 2");
+    expect(comment).toContain("**累计耗时:** 2m 30s");
+    expect(comment).toContain("First raw output.");
+    expect(comment).toContain("Second raw output.");
+    expect(buildGoalTimeline(attemptRecordsFromComments([{ content: comment }])).totalDurationMs).toBe(150_000);
   });
 
   test("preserves complete raw session output in a separate code block comment", () => {
@@ -559,6 +635,32 @@ Run bun run verify.
     expect(nextAttemptSequence([{ ...first, sequence: 3 }, { ...second, sequence: 5 }])).toBe(6);
   });
 
+  test("stores the full attempt timeline in each finish details comment", () => {
+    const summary = summarizeGoal("/goal implement first slice via $intuitive-flow");
+    const session = sessionEvidenceFromTranscript("session file", "Implemented.\nVerification passed.");
+    const first = buildAttemptRecord(summary, { ...session, durationMs: 60_000 }, "partial", 1);
+    const second = buildAttemptRecord(summary, { ...session, durationMs: 90_000 }, "complete", 2);
+    const latestComment = markdownForFinish(
+      { identifier: "MIA-41", status: "done" },
+      summary,
+      session,
+      "/tmp/card-2.png",
+      second,
+      buildGoalTimeline([first, second]),
+      "/uploads/workspaces/ws/completion-card.png",
+    );
+
+    const timelineFromLatestOnly = buildGoalTimeline(attemptRecordsFromComments([{ content: latestComment }]));
+    expect(timelineFromLatestOnly.attempts.map((attempt) => attempt.sequence)).toEqual([1, 2]);
+    expect(timelineFromLatestOnly.totalDurationMs).toBe(150_000);
+
+    const timelineWithDuplicateOldComment = buildGoalTimeline(
+      attemptRecordsFromComments([{ content: markdownForFinish({ identifier: "MIA-41", status: "done" }, summary, session, "/tmp/card-1.png", first, buildGoalTimeline([first])) }, { content: latestComment }]),
+    );
+    expect(timelineWithDuplicateOldComment.attempts.map((attempt) => attempt.sequence)).toEqual([1, 2]);
+    expect(timelineWithDuplicateOldComment.totalDurationMs).toBe(150_000);
+  });
+
   test("encodes attempt metadata so comment delimiters in session text do not break timeline parsing", () => {
     const summary = summarizeGoal("/goal fix marker --> handling via $intuitive-flow");
     const session = sessionEvidenceFromTranscript("session file", "RESULT_STATUS: SUCCESS\nOutput contained --> in a rendered snippet.");
@@ -598,13 +700,13 @@ Run bun run verify.
       buildGoalTimeline([attempt]),
     );
 
-    expect(comment).toContain("## Goal 执行记录");
+    expect(comment).toContain("## Goal 执行记录概览");
     expect(comment).toContain("**本次 Goal:** #1 / partial");
     expect(comment).toContain("**执行结果:**");
-    expect(comment).toContain("已附加渲染后的执行卡片");
+    expect(comment).toContain("上方 PNG 是渲染后的执行卡片");
     expect(comment).not.toContain("## Goal 完成记录");
     expect(comment).not.toContain("**完成结果:**");
-    expect(comment).not.toContain("已附加渲染后的完成卡片");
+    expect(comment).not.toContain("上方 PNG 是渲染后的完成卡片");
   });
 
   test("extracts image URL and comment ID from Multica comment add output", () => {
@@ -624,6 +726,24 @@ Run bun run verify.
     expect(markdownForInlineImage("/uploads/workspaces/ws/completion-card.png")).toContain(
       "![completion-card.png](/uploads/workspaces/ws/completion-card.png)",
     );
+  });
+
+  test("extracts image URL and comment ID from noisy Multica upload output", () => {
+    const output = `Uploaded /tmp/completion-card.png
+{
+  "id": "comment-1",
+  "attachments": [
+    {
+      "filename": "completion-card.png",
+      "content_type": "image/png",
+      "url": "/uploads/workspaces/ws/completion-card.png"
+    }
+  ]
+}
+Comment added to issue MIA-40.`;
+
+    expect(commentIdFromCommentOutput(output)).toBe("comment-1");
+    expect(imageAttachmentUrlFromCommentOutput(output)).toBe("/uploads/workspaces/ws/completion-card.png");
   });
 
   test("replaces only the marked summary block in descriptions", () => {
