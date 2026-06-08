@@ -410,8 +410,6 @@ Keep the user-facing choice small:
 - `$intuitive-flow` -> default build/change entrypoint; routes tiny concrete
   work directly, cleanup/refactor work to `$intuitive-refactor`, and broad work
   through durable Flow.
-- `$intuitive-preflight` -> turn a vague task, plan, issue, or approval request
-  into a preflight contract before implementation starts.
 - `$intuitive-refactor` -> clean a known module, seam, API, or architecture
   target.
 - `$intuitive-reduce-entropy` -> find what repo maintenance would pay off most
