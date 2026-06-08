@@ -146,6 +146,12 @@ export const pruneLegacyArtifacts = (
         removed += 1;
       }
     }
+
+    const mimocodeCommandPath = join(home, ".config", "mimocode", "command", `${skillName}.md`);
+    if (existsSync(mimocodeCommandPath)) {
+      rmSync(mimocodeCommandPath, { recursive: true, force: true });
+      removed += 1;
+    }
   }
 
   return removed;
@@ -241,14 +247,15 @@ const main = async () => {
       writeFileSync(join(tempHome, ".claude", "commands", "old.md"), "");
       mkdirSync(join(tempHome, ".config", "mimocode", "command"), { recursive: true });
       writeFileSync(join(tempHome, ".config", "mimocode", "command", "stale.md"), "");
+      writeFileSync(join(tempHome, ".config", "mimocode", "command", "old-skill.md"), "");
       mkdirSync(join(tempHome, ".intuitive-flow"), { recursive: true });
       writeFileSync(ownedRootSkillsStatePath(tempHome), JSON.stringify({ schemaVersion: 1, rootSkills: ["alpha", "removed-alpha"] }) + "\n");
       const removed = pruneLegacyArtifacts(manifest, tempHome);
       const removedOwned = pruneRemovedOwnedRootSkills(manifest, tempHome);
       recordOwnedRootSkills(manifest, tempHome);
       rmSync(tempHome, { recursive: true, force: true });
-      if (removed !== 3) {
-        throw new Error(`self-test expected 3 removals, got ${removed}`);
+      if (removed !== 4) {
+        throw new Error(`self-test expected 4 removals, got ${removed}`);
       }
       if (removedOwned !== 1) {
         throw new Error(`self-test expected 1 owned removal, got ${removedOwned}`);

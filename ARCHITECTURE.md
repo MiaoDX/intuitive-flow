@@ -113,8 +113,10 @@ skills under `.claude/skills`, `.codex/skills`, or `.agents/skills`.
 The install surface is controlled by `scripts/local-skill-manifest.txt`:
 
 - `root-skill` entries are repo-owned skills that should be installed or synced.
-- `legacy-skill` and `legacy-command` entries identify old local artifacts that
-  the updater may prune.
+- `legacy-skill` entries identify old repo-owned skill installs and their
+  generated MiMoCode command wrappers that the updater may prune.
+- `legacy-command` and `legacy-mimocode-command` entries identify old standalone
+  command files that the updater may prune.
 - The manifest check fails if a root skill exists but is not listed, or if the
   manifest lists a missing root skill.
 

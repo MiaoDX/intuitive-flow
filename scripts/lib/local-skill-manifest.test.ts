@@ -57,14 +57,16 @@ describe("local skill manifest", () => {
       writeFileSync(join(home, ".claude", "commands", "old.md"), "");
       mkdirSync(join(home, ".config", "mimocode", "command"), { recursive: true });
       writeFileSync(join(home, ".config", "mimocode", "command", "stale.md"), "");
+      writeFileSync(join(home, ".config", "mimocode", "command", "old-skill.md"), "");
       writeFileSync(join(home, ".config", "mimocode", "command", "keep.md"), "");
 
       const removed = pruneLegacyArtifacts(parseManifestText("legacy-skill old-skill\nlegacy-command old.md\nlegacy-mimocode-command stale.md\n"), home);
 
-      expect(removed).toBe(3);
+      expect(removed).toBe(4);
       expect(existsSync(join(home, ".codex", "skills", "old-skill"))).toBe(false);
       expect(existsSync(join(home, ".claude", "commands", "old.md"))).toBe(false);
       expect(existsSync(join(home, ".config", "mimocode", "command", "stale.md"))).toBe(false);
+      expect(existsSync(join(home, ".config", "mimocode", "command", "old-skill.md"))).toBe(false);
       expect(existsSync(join(home, ".config", "mimocode", "command", "keep.md"))).toBe(true);
       expect(existsSync(join(home, ".codex", "skills", "keep-skill"))).toBe(true);
     } finally {

@@ -58,6 +58,10 @@ size as a maximum, not a quota.
       `office-hours` or `grill-me` for big questions even though README,
       architecture, status, and installed repo-owned skills expose
       `$intuitive-flow` and `$intuitive-planning-loop` for that surface.
+- [x] P1 stale surface: retired repo-owned skills listed as `legacy-skill`
+      were pruned from Claude/Codex/shared skill install roots, but the
+      generated MiMoCode wrapper `~/.config/mimocode/command/<skill>.md` could
+      remain reachable after `scripts/update.sh`.
 
 ## Saturation Audit
 
@@ -82,6 +86,8 @@ Why no change:
 - Fuzzy idea routing and supporting doctrine no longer advertise `office-hours`
   or `grill-me` as default entrypoints when they are not part of the repo-owned
   or default managed skill surface.
+- `legacy-skill` pruning removes the same retired skill from Claude, Codex,
+  shared agent skills, and its generated MiMoCode wrapper.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
   runtime messages rather than current false confidence or live source drift.
@@ -182,3 +188,12 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   candidate as P1 live source drift and real workflow friction. Reworded
   `BELIEFS.md` to route ordinary idea shaping through `intuitive-flow` and
   scout-driven option critique through `intuitive-planning-loop`.
+- 2026-06-08: Selected legacy MiMoCode wrapper pruning as P1 stale surface and
+  false confidence after the skill-surface audit proved `legacy-skill`
+  artifacts were removed from skill install roots but not from the generated
+  MiMoCode command wrapper path. Extended `pruneLegacyArtifacts` so
+  `legacy-skill <name>` also removes
+  `~/.config/mimocode/command/<name>.md`, updated the self-test and
+  architecture contract, and verified with
+  `bun test scripts/lib/local-skill-manifest.test.ts scripts/lib/sync-local-commands-skills.test.ts`
+  plus the manifest helper self-test.
