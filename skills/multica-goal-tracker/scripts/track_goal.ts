@@ -336,6 +336,12 @@ type CodexCandidate = {
 type SessionTiming = Pick<SessionEvidence, "startedAt" | "completedAt" | "durationMs"> & {
   timestampMs?: number;
   turnId?: string;
+  objective?: string;
+};
+
+type SelectedCodexEvidence = {
+  candidate: CodexCandidate;
+  goal?: SessionTiming;
 };
 
 function isoFromEpochSeconds(value: unknown): string | undefined {
@@ -371,14 +377,51 @@ function isCompletionLikeMessage(message: string): boolean {
   return /RESULT_STATUS|^SUMMARY:|CHANGED_FILES:|VERIFICATION:|^Implemented\.|^Committed\b/im.test(message);
 }
 
-function selectCodexCandidate(candidates: CodexCandidate[], completeGoals: SessionTiming[]): CodexCandidate | undefined {
+function normalizedGoalMatchTokens(goal: string): string[] {
+  return normalizeLines(goal)
+    .join(" ")
+    .toLowerCase()
+    .replace(/[^a-z0-9_\-./$]+/g, " ")
+    .split(/\s+/)
+    .filter((token) => token.length > 1);
+}
+
+function goalSimilarityScore(targetGoal: string, candidateGoal: string): number {
+  const target = new Set(normalizedGoalMatchTokens(targetGoal));
+  const candidate = new Set(normalizedGoalMatchTokens(candidateGoal));
+  if (target.size === 0 || candidate.size === 0) return 0;
+
+  let overlap = 0;
+  for (const token of target) {
+    if (candidate.has(token)) overlap += 1;
+  }
+  const union = new Set([...target, ...candidate]).size;
+  return union === 0 ? 0 : overlap / union;
+}
+
+function selectCompletedGoal(completeGoals: SessionTiming[], targetGoal?: string): SessionTiming | undefined {
+  if (completeGoals.length === 0) return undefined;
+  if (!targetGoal?.trim()) return completeGoals[completeGoals.length - 1];
+
+  let best: { goal: SessionTiming; score: number } | undefined;
+  for (const goal of completeGoals) {
+    const score = goalSimilarityScore(targetGoal, goal.objective ?? "");
+    if (!best || score > best.score) {
+      best = { goal, score };
+    }
+  }
+
+  return best && best.score >= 0.45 ? best.goal : completeGoals[completeGoals.length - 1];
+}
+
+function selectCodexEvidence(candidates: CodexCandidate[], completeGoals: SessionTiming[], targetGoal?: string): SelectedCodexEvidence | undefined {
   if (candidates.length === 0) return undefined;
-  const goal = completeGoals[completeGoals.length - 1];
+  const goal = selectCompletedGoal(completeGoals, targetGoal);
   if (goal?.turnId) {
     const sameTurn = candidates.filter((candidate) => candidate.turnId === goal.turnId);
     const sameTurnCompletion = sameTurn.filter((candidate) => isCompletionLikeMessage(candidate.text));
-    if (sameTurnCompletion.length) return sameTurnCompletion[sameTurnCompletion.length - 1];
-    if (sameTurn.length) return sameTurn[sameTurn.length - 1];
+    if (sameTurnCompletion.length) return { candidate: sameTurnCompletion[sameTurnCompletion.length - 1], goal };
+    if (sameTurn.length) return { candidate: sameTurn[sameTurn.length - 1], goal };
   }
 
   if (goal?.completedAt) {
@@ -391,14 +434,25 @@ function selectCodexCandidate(candidates: CodexCandidate[], completeGoals: Sessi
           candidate.timestampMs <= completedMs + 5 * 60_000 &&
           isCompletionLikeMessage(candidate.text),
       );
-      if (nearby.length) return nearby[nearby.length - 1];
+      if (nearby.length) return { candidate: nearby[nearby.length - 1], goal };
     }
   }
 
-  return [...candidates].reverse().find((candidate) => isCompletionLikeMessage(candidate.text)) ?? candidates[candidates.length - 1];
+  const fallback = [...candidates].reverse().find((candidate) => isCompletionLikeMessage(candidate.text)) ?? candidates[candidates.length - 1];
+  return { candidate: fallback };
 }
 
-function nearestGoalTiming(completeGoals: SessionTiming[], selected?: CodexCandidate): SessionTiming {
+function nearestGoalTiming(completeGoals: SessionTiming[], selected?: CodexCandidate, preferredGoal?: SessionTiming): SessionTiming {
+  if (preferredGoal) {
+    return {
+      startedAt: preferredGoal.startedAt,
+      completedAt: preferredGoal.completedAt,
+      durationMs: preferredGoal.durationMs,
+      turnId: preferredGoal.turnId,
+      objective: preferredGoal.objective,
+    };
+  }
+
   if (completeGoals.length === 0) {
     return {
       startedAt: selected?.startedAt,
@@ -419,10 +473,18 @@ function nearestGoalTiming(completeGoals: SessionTiming[], selected?: CodexCandi
     return { startedAt: latest.startedAt, completedAt: latest.completedAt, durationMs: latest.durationMs };
   }
 
-  const selectedGoal =
-    [...completeGoals]
-      .reverse()
-      .find((goal) => goal.timestampMs === undefined || goal.timestampMs <= selected.timestampMs! + 30_000) ?? completeGoals[completeGoals.length - 1];
+  const selectedGoal = [...completeGoals].reverse().find((goal) => {
+    if (goal.timestampMs === undefined) return false;
+    return goal.timestampMs >= selected.timestampMs! - 60_000 && goal.timestampMs <= selected.timestampMs! + 5 * 60_000;
+  });
+  if (!selectedGoal) {
+    return {
+      startedAt: selected.startedAt,
+      completedAt: selected.completedAt,
+      durationMs: selected.durationMs,
+    };
+  }
+
   return {
     startedAt: selectedGoal.startedAt ?? selected?.startedAt,
     completedAt: selectedGoal.completedAt ?? selected?.completedAt,
@@ -458,7 +520,7 @@ function codexMessageText(value: unknown): string {
   return textFromUnknown(content);
 }
 
-export function evidenceFromCodexJsonl(raw: string): (SessionTiming & { transcript: string }) | undefined {
+export function evidenceFromCodexJsonl(raw: string, targetGoal?: string): (SessionTiming & { transcript: string }) | undefined {
   const candidates: CodexCandidate[] = [];
   const completeGoals: SessionTiming[] = [];
 
@@ -497,22 +559,23 @@ export function evidenceFromCodexJsonl(raw: string): (SessionTiming & { transcri
             durationMs: durationMsFromSeconds(goal.timeUsedSeconds),
             timestampMs,
             turnId: textFromUnknown(payload.turnId ?? payload.turn_id) || undefined,
+            objective: textFromUnknown(goal.objective),
           });
         }
       }
     }
   }
 
-  const selected = selectCodexCandidate(candidates.filter((candidate) => candidate.text.trim()), completeGoals);
+  const selected = selectCodexEvidence(candidates.filter((candidate) => candidate.text.trim()), completeGoals, targetGoal);
   if (!selected) return undefined;
   return {
-    transcript: selected.text.trim(),
-    ...nearestGoalTiming(completeGoals, selected),
+    transcript: selected.candidate.text.trim(),
+    ...nearestGoalTiming(completeGoals, selected.candidate, selected.goal),
   };
 }
 
-export function transcriptFromCodexJsonl(raw: string): string | undefined {
-  return evidenceFromCodexJsonl(raw)?.transcript;
+export function transcriptFromCodexJsonl(raw: string, targetGoal?: string): string | undefined {
+  return evidenceFromCodexJsonl(raw, targetGoal)?.transcript;
 }
 
 function looksLikeCodexJsonl(text: string): boolean {
@@ -526,9 +589,9 @@ function looksLikeCodexJsonl(text: string): boolean {
   });
 }
 
-export function sessionEvidenceFromSessionText(source: string, text: string, proofOverride?: string): SessionEvidence {
+export function sessionEvidenceFromSessionText(source: string, text: string, proofOverride?: string, targetGoal?: string): SessionEvidence {
   if (looksLikeCodexJsonl(text)) {
-    const codexEvidence = evidenceFromCodexJsonl(text);
+    const codexEvidence = evidenceFromCodexJsonl(text, targetGoal);
     if (codexEvidence) {
       return {
         ...sessionEvidenceFromTranscript(
@@ -586,14 +649,14 @@ function sessionEvidenceFromRun(opts: Options, runId: string, proofOverride?: st
   return { ...evidence, messageCount: messages.length };
 }
 
-function loadSessionEvidence(opts: Options): SessionEvidence {
+function loadSessionEvidence(opts: Options, targetGoal?: string): SessionEvidence {
   if (opts.sessionDir) {
     return sessionEvidenceFromSkillRunnerDir(opts.sessionDir, opts.proof);
   }
 
   const sessionText = readInput(opts.sessionText, opts.sessionFile);
   if (sessionText.trim()) {
-    return sessionEvidenceFromSessionText(opts.sessionFile ? `file ${opts.sessionFile}` : "inline session text", sessionText, opts.proof);
+    return sessionEvidenceFromSessionText(opts.sessionFile ? `file ${opts.sessionFile}` : "inline session text", sessionText, opts.proof, targetGoal);
   }
 
   const runId = getLatestRunId(opts);
@@ -1198,7 +1261,7 @@ function finish(opts: Options) {
   const issue = getIssue(opts);
   const goal = resolveGoal(opts, issue, true);
   const summary = summarizeGoal(goal);
-  const session = loadSessionEvidence(opts);
+  const session = loadSessionEvidence(opts, goal);
   const evidence = renderEvidence(issue, summary, session);
   const comment = markdownForFinish(issue, summary, session, evidence.attachment);
 

@@ -1,6 +1,6 @@
 ---
 refactor_scope: reduce-entropy-loop
-status: CONTINUE
+status: DONE
 accepted_severities:
   - P1
   - P2
@@ -11,7 +11,7 @@ last_verified: 2026-06-08
 
 ## Status
 
-CONTINUE
+DONE
 
 ## Target
 
@@ -128,7 +128,7 @@ size as a maximum, not a quota.
 - [x] P2 false confidence: GitHub Actions pins Bun `1.3.6` while the local
       runtime and lockfile type surface are `1.3.12` / `@types/bun@1.3.13`,
       even though the human docs say CI and local `bun run verify` are aligned.
-- [ ] P1 false confidence: `multica-goal-tracker` Codex JSONL evidence can
+- [x] P1 false confidence: `multica-goal-tracker` Codex JSONL evidence can
       choose the latest completed follow-up goal instead of the issue's tracked
       `/goal` when one session contains multiple completed goals.
 
@@ -198,9 +198,10 @@ Current state:
 - CI now installs Bun `1.3.12`, matching the `packageManager` pin in
   `package.json`; `bun run check:skills` fails if the workflow Bun pin drifts
   from the repo pin or if the repo pin is removed.
-- One current P1 candidate remains selected after the latest audit: make
-  Multica goal-tracker evidence match Codex completion timing to the tracked
-  issue goal when a session contains multiple completed goals.
+- `multica-goal-tracker` Codex JSONL evidence now matches completed goal
+  timing back to the issue's tracked `/goal` before falling back, and it does
+  not attach matched goal timing to unrelated fallback output.
+- No current P0/P1/P2 candidate remains selected after the latest audit.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
   runtime messages rather than current false confidence or live source drift.
@@ -440,3 +441,12 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   pin, and updated the human proof-boundary docs. Verified with
   `bun test scripts/lib/check-skills.test.ts`, `bun run check:skills`,
   `bun run check`, and `bun run verify`.
+- 2026-06-08: Selected Multica Codex goal matching as P1 false confidence after
+  the dirty-worktree audit showed a session with multiple completed goals could
+  choose the latest follow-up goal instead of the issue's tracked `/goal`.
+  Passed the tracked goal into Codex JSONL session evidence extraction, matched
+  completed goals by objective tokens before falling back to latest completion,
+  and ensured fallback output does not inherit unrelated matched-goal timing.
+  Documented the behavior in the skill and verified with
+  `bun test skills/multica-goal-tracker/scripts/track_goal.test.ts`,
+  `bun run check:skills`, `bun run check`, and `bun run verify`.

@@ -251,6 +251,109 @@ Later notes should not be treated as the active goal.
     expect(evidenceFromCodexJsonl(jsonl)?.transcript).toBe(goalOutput);
   });
 
+  test("matches Codex completion timing to the issue goal instead of the latest follow-up goal", () => {
+    const issueGoal = "/goal\n\nImpl docs/plans/refactor-g1-curobo-official-candidate-quality-policy.md via $intuitive-flow\n\nuse 8 cases visual harness to make sure no clear regression.";
+    const originalOutput = "Implemented.\nVerification:\n- first full goal passed.";
+    const followUpOutput = "Implemented.\nVerification:\n- follow-up tests passed.";
+    const jsonl = [
+      {
+        timestamp: "2026-06-03T02:55:19.000Z",
+        type: "event_msg",
+        payload: {
+          type: "thread_goal_updated",
+          turnId: "original-goal-turn",
+          goal: {
+            objective: "Impl docs/plans/refactor-g1-curobo-official-candidate-quality-policy.md via $intuitive-flow\n\nuse 8 cases visual harness to make sure no clear regression.",
+            status: "complete",
+            createdAt: 1780443862,
+            updatedAt: 1780445719,
+            timeUsedSeconds: 1856,
+          },
+        },
+      },
+      {
+        timestamp: "2026-06-03T02:55:31.000Z",
+        type: "event_msg",
+        payload: {
+          type: "agent_message",
+          turn_id: "original-goal-turn",
+          message: originalOutput,
+        },
+      },
+      {
+        timestamp: "2026-06-04T04:57:29.560Z",
+        type: "event_msg",
+        payload: {
+          type: "thread_goal_updated",
+          turnId: "follow-up-turn",
+          goal: {
+            objective: "LGTM, do these plz\n\nand if it is better, run needed tests, and prompt it to scripts/deploy_g1.py too, for both decoupled and sonic way",
+            status: "complete",
+            createdAt: 1780548502,
+            updatedAt: 1780549049,
+            timeUsedSeconds: 547,
+          },
+        },
+      },
+      {
+        timestamp: "2026-06-04T04:57:43.182Z",
+        type: "event_msg",
+        payload: {
+          type: "agent_message",
+          turn_id: "follow-up-turn",
+          message: followUpOutput,
+        },
+      },
+    ]
+      .map((value) => JSON.stringify(value))
+      .join("\n");
+
+    const evidence = evidenceFromCodexJsonl(jsonl, issueGoal);
+    expect(evidence?.transcript).toBe(originalOutput);
+    expect(evidence?.durationMs).toBe(1_856_000);
+
+    const sessionEvidence = sessionEvidenceFromSessionText("file session.jsonl", jsonl, undefined, issueGoal);
+    expect(sessionEvidence.rawOutput).toBe(originalOutput);
+    expect(sessionEvidence.durationMs).toBe(1_856_000);
+  });
+
+  test("does not attach matched goal timing to unrelated fallback output", () => {
+    const issueGoal = "/goal\n\nImplement the original planner refactor.";
+    const followUpOutput = "Implemented.\nVerification:\n- follow-up tests passed.";
+    const jsonl = [
+      {
+        timestamp: "2026-06-03T02:55:19.000Z",
+        type: "event_msg",
+        payload: {
+          type: "thread_goal_updated",
+          turnId: "original-goal-turn",
+          goal: {
+            objective: "Implement the original planner refactor.",
+            status: "complete",
+            createdAt: 1780443862,
+            updatedAt: 1780445719,
+            timeUsedSeconds: 1856,
+          },
+        },
+      },
+      {
+        timestamp: "2026-06-04T04:57:43.182Z",
+        type: "event_msg",
+        payload: {
+          type: "agent_message",
+          turn_id: "follow-up-turn",
+          message: followUpOutput,
+        },
+      },
+    ]
+      .map((value) => JSON.stringify(value))
+      .join("\n");
+
+    const evidence = evidenceFromCodexJsonl(jsonl, issueGoal);
+    expect(evidence?.transcript).toBe(followUpOutput);
+    expect(evidence?.durationMs).toBeUndefined();
+  });
+
   test("builds evidence from skill-runner result artifacts without terminal logs", () => {
     const dir = mkdtempSync(join(tmpdir(), "multica-goal-tracker-"));
     tempDirs.push(dir);

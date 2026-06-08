@@ -80,6 +80,9 @@ The script:
   back to the latest tracked start comment;
 - reads the latest Multica execution run via `multica issue runs` and
   `multica issue run-messages`;
+- when a Codex JSONL session contains multiple completed goals, matches the
+  completed goal back to the issue's `/goal` objective before falling back to
+  the latest completed goal;
 - renders a completion evidence card under `~/.cache/multica-goal-tracker/`;
 - uses Google Chrome headless to produce a PNG when available, with SVG
   fallback;
