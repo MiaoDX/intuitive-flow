@@ -151,6 +151,11 @@ size as a maximum, not a quota.
       plus a partial specialist list while the manifest installs additional
       direct-use specialists, making the public map look complete when it was
       not.
+- [x] P1 workflow friction: `multica-goal-tracker` final-review threads put the
+      rendered card at the thread top, but the top upload comment still lacked
+      issue status, attempt count, cumulative duration, and a concise attempt
+      summary, so reviewers had to open the child details reply before knowing
+      what work the evidence represented.
 
 ## Saturation Audit
 
@@ -240,6 +245,10 @@ Current state:
   the manifest and skill audit for the complete installed specialist surface,
   including worktree porting, Multica issue tracking, skill-runner, and
   simplify utilities.
+- `multica-goal-tracker` evidence-card upload comments now carry the same
+  issue-level work summary expected from the final-review thread entry:
+  status, attempt count, cumulative duration, brief conclusion, and attempt
+  timeline lines.
 - No current P0/P1/P2 candidate remains selected after the latest audit.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
@@ -528,3 +537,10 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   and status so the primary choice set remains small while the complete install
   list and skill role audit are discoverable. Verified with `bun run
   check:skills`.
+- 2026-06-08: Selected Multica top evidence-card summary as P1 workflow
+  friction after a verifier audit showed final-review threads had a reviewable
+  child details reply but the parent upload comment still looked like an
+  attachment placeholder. Added a compact issue work summary and attempt
+  timeline to the parent evidence-card comment. Verified with
+  `bun test skills/multica-goal-tracker/scripts/track_goal.test.ts`,
+  `bun run check`, and `bun run check:skills`.

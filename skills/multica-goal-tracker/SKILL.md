@@ -106,7 +106,11 @@ The script:
 - uses Google Chrome headless to produce a PNG when available, with SVG
   fallback;
 - posts a Chinese evidence-card upload comment with the rendered PNG/SVG
-  attached. This comment is the thread entry for the Agent-generated record;
+  attached. This parent comment is the thread entry for the Agent-generated
+  record and must include a short issue-level summary: issue status, goal count,
+  cumulative duration, what the issue tried, the current/final conclusion, and
+  a compact attempt list. Keep this summary scannable; full raw output belongs
+  in the details reply;
 - reads the Multica comment-add response and posts one finish-details reply in
   the same thread. When Multica returns an image attachment URL, the details
   reply starts with `![completion-card.png](...)`, then a short overview, then
@@ -186,11 +190,11 @@ bun skills/multica-goal-tracker/scripts/track_goal.ts \
 ```
 
 `final-review` renders one cumulative evidence card, posts it as the thread
-entry, then posts one details reply whose first content block is the inline PNG,
-followed by overview, timeline, details, and complete raw outputs for each
-attempt. The details reply stores metadata for every attempt, so later tracker
-runs can recover cumulative duration even if older Agent comments are cleaned
-up.
+entry with a short issue-level summary and compact attempt list, then posts one
+details reply whose first content block is the inline PNG, followed by overview,
+timeline, details, and complete raw outputs for each attempt. The details reply
+stores metadata for every attempt, so later tracker runs can recover cumulative
+duration even if older Agent comments are cleaned up.
 
 ## Useful Options
 

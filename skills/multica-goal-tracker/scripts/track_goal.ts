@@ -372,12 +372,25 @@ export function normalizeTranscript(text: string): string {
 
 export function pickOutcomeFromTranscript(transcript: string): string {
   const lines = transcript.split("\n").map((line) => line.trim()).filter(Boolean);
-  const resultIndex = [...lines].reverse().findIndex((line) => /RESULT_STATUS|SUCCESS|PARTIAL|BLOCKED|FAILED/i.test(line));
+  const isStatusLine = (line: string) =>
+    /RESULT_STATUS\s*[:=]|^(?:[-*]\s*)?Status\s*:\s*(?:SUCCESS|PARTIAL|BLOCKED|FAILED)\b/i.test(line);
+  const summaryStart = lines.findIndex((line) =>
+    /^(已完成|完成|done\.?$|completed\b|implemented\b|ran\b|decision\b|summary\b|结论[:：]|当前状态[:：])/i.test(line),
+  );
+  if (summaryStart >= 0) {
+    const start = summaryStart > 0 && isStatusLine(lines[summaryStart - 1] ?? "") ? summaryStart - 1 : summaryStart;
+    const window = lines.slice(start, summaryStart + 4);
+    const detailWindow = window.filter((line, index) => !(index === 0 && /^done\.?$/i.test(line)));
+    return truncate((detailWindow.length ? detailWindow : window).join(" "), 320);
+  }
+
+  const resultIndex = [...lines].reverse().findIndex(isStatusLine);
   if (resultIndex >= 0) {
     const realIndex = lines.length - 1 - resultIndex;
     return truncate(lines.slice(Math.max(0, realIndex - 2), realIndex + 3).join(" "), 260);
   }
-  return truncate(lines.slice(-5).join(" "), 260);
+
+  return truncate(lines.slice(0, 5).join(" "), 320);
 }
 
 export function sessionEvidenceFromTranscript(source: string, transcript: string, proofOverride?: string): SessionEvidence {
@@ -1210,6 +1223,60 @@ function formatDuration(durationMs?: number): string {
   return `${seconds}s`;
 }
 
+function statusLabel(status: AttemptStatus): string {
+  switch (status) {
+    case "complete":
+      return "完成";
+    case "partial":
+      return "部分完成";
+    case "blocked":
+      return "阻塞";
+    case "failed":
+      return "失败";
+  }
+}
+
+function attemptSummaryLine(record: GoalAttemptRecord): string {
+  const outcome = record.outcome ? `；${truncate(record.outcome, 150)}` : "";
+  return `- #${record.sequence} ${statusLabel(record.status)} / ${formatDuration(record.durationMs)}：${truncate(record.purpose, 110)}${outcome}`;
+}
+
+function attemptSummaryLines(records: GoalAttemptRecord[], maxLines = 6): string {
+  if (records.length === 0) return "- 未找到可汇总的 goal attempt。";
+  const sorted = [...records].sort((a, b) => a.sequence - b.sequence);
+  if (sorted.length <= maxLines) return sorted.map(attemptSummaryLine).join("\n");
+
+  const head = sorted.slice(0, 2).map(attemptSummaryLine);
+  const tail = sorted.slice(-(maxLines - 3)).map(attemptSummaryLine);
+  return [...head, `- ... 中间 ${sorted.length - head.length - tail.length} 次 attempt 见下方详情。`, ...tail].join("\n");
+}
+
+function markdownForIssueWorkSummary(issue: Issue, latestAttempt: GoalAttemptRecord, timeline: GoalTimeline): string {
+  const records = timeline.attempts.length ? timeline.attempts : [latestAttempt];
+  const firstAttempt = records[0] ?? latestAttempt;
+  const finalAttempt = records[records.length - 1] ?? latestAttempt;
+  const finalLabel = finalAttempt.status === "complete" ? "最终结论" : "当前结论";
+
+  return `**Issue:** ${issue.identifier ?? issue.id ?? "unknown"}
+
+**Issue 状态:** ${issue.status ?? "unknown"} / ${finalAttempt.status}
+
+**Goal 次数:** ${records.length}
+
+**累计耗时:** ${formatDuration(timeline.totalDurationMs)}
+
+**时间范围:** ${formatDateTime(timeline.startedAt)} - ${formatDateTime(timeline.completedAt)}
+
+## 简要总结
+
+围绕「${truncate(firstAttempt.purpose, 180)}」推进。${finalLabel}：${truncate(finalAttempt.outcome, 260)}
+
+## 尝试过程
+
+${attemptSummaryLines(records)}
+`;
+}
+
 function artifactDir(issue: Issue): string {
   const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\./g, "");
   const issueKey = issue.identifier ?? issue.id ?? "issue";
@@ -1585,15 +1652,11 @@ export function markdownForEvidenceCardUpload(
   return `${agentCommentBanner}<!-- multica-goal-tracker:evidence-card-upload -->
 ## Goal ${evidenceKind}
 
-这条评论用于把渲染 PNG 贴到 issue 对话顶部，并作为本组 Agent 记录的线程入口。
+${markdownForIssueWorkSummary(issue, attempt, timeline)}
 
-**Issue:** ${issue.identifier ?? issue.id ?? "unknown"}
+**最新 Goal:** #${attempt.sequence} / ${attempt.status}
 
-**本次 Goal:** #${attempt.sequence} / ${attempt.status}
-
-**Issue 累计耗时:** ${formatDuration(timeline.totalDurationMs)}
-
-下方回复包含概览、详情和真实 session 输出。
+**证据:** 本评论附件是渲染后的 ${evidenceKind}；下方回复包含内联 PNG、详情和真实 session 输出。
 `;
 }
 

@@ -98,6 +98,17 @@ Later notes should not be treated as the active goal.
     expect(evidence.excerpt).not.toContain("\u001b[32m");
   });
 
+  test("summarizes completion transcripts from their leading decision instead of trailing verification", () => {
+    const evidence = sessionEvidenceFromTranscript(
+      "session file /tmp/run.log",
+      "Completed the waist-range prior audit.\nDecision: no new default.\nEvidence summary:\n- active waist failed representative suite.\nVerification passed:\n- make docs-check\n- git diff --check\n",
+    );
+
+    expect(evidence.outcome).toContain("Completed the waist-range prior audit.");
+    expect(evidence.outcome).toContain("Decision: no new default.");
+    expect(evidence.outcome).not.toContain("git diff --check");
+  });
+
   test("extracts real assistant result output from Codex JSONL", () => {
     const jsonl = [
       {
@@ -533,9 +544,31 @@ Run bun run verify.
 
     expect(comment).toContain("<!-- multica-goal-tracker:evidence-card-upload -->");
     expect(comment).toContain("## Goal 完成卡片");
-    expect(comment).toContain("**本次 Goal:** #1 / complete");
-    expect(comment).toContain("**Issue 累计耗时:** 10s");
-    expect(comment).toContain("下方回复包含概览、详情和真实 session 输出。");
+    expect(comment).toContain("**最新 Goal:** #1 / complete");
+    expect(comment).toContain("**Goal 次数:** 1");
+    expect(comment).toContain("**累计耗时:** 10s");
+    expect(comment).toContain("## 简要总结");
+    expect(comment).toContain("围绕「修复 the tracker」推进");
+    expect(comment).toContain("## 尝试过程");
+    expect(comment).toContain("- #1 完成 / 10s：修复 the tracker");
+    expect(comment).toContain("下方回复包含内联 PNG、详情和真实 session 输出。");
+  });
+
+  test("summarizes multiple attempts in the top evidence card upload comment", () => {
+    const firstSummary = summarizeGoal("/goal implement first slice via $intuitive-flow");
+    const secondSummary = summarizeGoal("/goal complete follow-up defaults via $intuitive-flow");
+    const firstSession = sessionEvidenceFromTranscript("first session", "RESULT_STATUS: PARTIAL\nFirst raw output.");
+    const secondSession = sessionEvidenceFromTranscript("second session", "RESULT_STATUS: SUCCESS\nSecond raw output.");
+    const first = buildAttemptRecord(firstSummary, { ...firstSession, durationMs: 60_000 }, "partial", 1);
+    const second = buildAttemptRecord(secondSummary, { ...secondSession, durationMs: 90_000 }, "complete", 2);
+    const timeline = buildGoalTimeline([first, second]);
+    const comment = markdownForEvidenceCardUpload({ identifier: "MIA-40", status: "done" }, second, timeline);
+
+    expect(comment).toContain("**Goal 次数:** 2");
+    expect(comment).toContain("**Issue 状态:** done / complete");
+    expect(comment).toContain("最终结论：RESULT_STATUS: SUCCESS Second raw output.");
+    expect(comment).toContain("- #1 部分完成 / 1m 0s：实现 first slice");
+    expect(comment).toContain("- #2 完成 / 1m 30s：complete follow-up defaults");
   });
 
   test("builds final-review with PNG first, overview second, raw outputs last", () => {
