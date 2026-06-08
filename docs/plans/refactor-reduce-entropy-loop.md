@@ -1,6 +1,6 @@
 ---
 refactor_scope: reduce-entropy-loop
-status: CONTINUE
+status: DONE
 accepted_severities:
   - P1
 last_verified: 2026-06-08
@@ -10,7 +10,7 @@ last_verified: 2026-06-08
 
 ## Status
 
-CONTINUE
+DONE
 
 ## Target
 
@@ -49,7 +49,7 @@ size as a maximum, not a quota.
 
 ## Saturation Audit
 
-Selected candidates: pending fresh audit after the current slice.
+Selected candidates: none.
 
 Why no change:
 
@@ -59,6 +59,12 @@ Why no change:
 - The reduce-entropy skill's public entry model now matches the human docs:
   flow, refactor, reduce-entropy, and squash are the user-facing choices, while
   preflight remains a specialist pre-execution contract skill.
+- `BELIEFS.md` is consistently marked as supporting doctrine rather than the
+  active source for current commands, installed surfaces, or maintenance state.
+- `docs/human/skill-self-improvement-audit.md` covers every current root skill
+  listed in `scripts/local-skill-manifest.txt`.
+- Tests no longer depend on a live npm registry for local skill sync coverage,
+  and tmux-dependent tests skip when tmux cannot create a detached session.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
   runtime messages rather than current false confidence or live source drift.
@@ -133,3 +139,9 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   manifest, including `grill-with-docs-batch`, `intuitive-port-worktree`, and
   `intuitive-preflight`. Verified with targeted doc-tier searches,
   manifest-vs-audit coverage, and `bun run verify`.
+- 2026-06-08: Ran a fresh saturation audit from `HEAD`. Verified full local
+  proof with `bun run verify` (76 tests across 12 files), checked plan statuses,
+  confirmed root skill manifest coverage in the self-improvement audit, checked
+  `BELIEFS.md` tier wording, and reviewed noisy stale/legacy/skip search hits.
+  No remaining observation passed the materiality contract, so the loop is
+  closed with `Selected candidates: none`.
