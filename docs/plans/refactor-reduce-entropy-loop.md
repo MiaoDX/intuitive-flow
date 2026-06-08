@@ -77,6 +77,10 @@ size as a maximum, not a quota.
 - [x] P2 live source drift: `STATUS.md` remained marked last reviewed on
       2026-06-06 even though it was updated on 2026-06-08 for the current
       public skill surface.
+- [x] P1 false confidence: the new `multica-goal-tracker` root skill added a
+      public TypeScript script for goal extraction, issue comments, run
+      selection, and rendered completion evidence, but the normal proof boundary
+      did not run any skill-local behavior tests.
 
 ## Saturation Audit
 
@@ -110,6 +114,11 @@ Why no change:
 - The loop gate frontmatter now matches the actual accepted P1/P2 scope.
 - `STATUS.md` last-reviewed metadata matches the current 2026-06-08 public
   surface review.
+- The new `multica-goal-tracker` root skill is listed in the manifest,
+  included in TypeScript/test discovery, covered by focused skill-local tests,
+  and represented in the manifest-wide skill self-improvement audit as a
+  specialist issue-workflow utility rather than a primary planning/build
+  entrypoint.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
   runtime messages rather than current false confidence or live source drift.
@@ -236,3 +245,14 @@ already-covered work, or tiny niceties that would not prevent future surprise.
 - 2026-06-08: Selected `STATUS.md` last-reviewed drift as P2 live source drift
   after `git log -- STATUS.md` showed a 2026-06-08 public-surface update while
   the file still said it was last reviewed on 2026-06-06. Updated the date.
+- 2026-06-08: Reopened the loop from current worktree after a new
+  `multica-goal-tracker` root skill appeared in the manifest. The deterministic
+  materiality gate accepted the behavior-proof candidate as P1 false confidence
+  and real workflow friction. Added the skill-local tracker harness to normal
+  `bun run test` discovery, fixed the default `finish` path to reuse the latest
+  tracked start comment when the issue description has no goal, made run/comment
+  selection timestamp-aware when Multica returns timestamps, escaped code fences
+  in finish excerpts, and covered Codex JSONL plus skill-runner artifact
+  evidence inputs. Verified with
+  `bun test skills/multica-goal-tracker/scripts/track_goal.test.ts` and
+  `bun run verify` (76 tests across 12 files).

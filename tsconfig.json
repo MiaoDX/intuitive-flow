@@ -10,5 +10,5 @@
     "types": ["bun", "node"],
     "skipLibCheck": true
   },
-  "include": ["scripts/**/*.ts"]
+  "include": ["scripts/**/*.ts", "skills/**/*.ts"]
 }

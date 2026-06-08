@@ -1,0 +1,4 @@
+interface:
+  display_name: "Multica Goal Tracker"
+  short_description: "Track goal-driven Multica issues"
+  default_prompt: "Use $multica-goal-tracker to summarize a goal into a Multica issue and attach completion evidence."

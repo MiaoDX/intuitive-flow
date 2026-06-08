@@ -6,7 +6,7 @@
     "check:skills": "bun scripts/lib/check-skills.ts",
     "check": "tsc --noEmit",
     "setup:hooks": "bash scripts/dev/install-git-hooks.sh",
-    "test": "bun test scripts/**/*.test.ts",
+    "test": "bun test scripts/**/*.test.ts skills/**/*.test.ts",
     "verify": "bun run check:skills && bun run check && bun run test"
   },
   "devDependencies": {

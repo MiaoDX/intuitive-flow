@@ -10,6 +10,7 @@ root-skill intuitive-reduce-entropy
 root-skill intuitive-refactor
 root-skill intuitive-squash
 root-skill intuitive-tests
+root-skill multica-goal-tracker
 root-skill simplify
 root-skill skill-runner
 
