@@ -74,6 +74,9 @@ size as a maximum, not a quota.
 - [x] P2 live source drift: loop gate frontmatter listed only P1 accepted
       severities even though the loop target and completed checklist included
       materially useful P2 candidates.
+- [x] P2 live source drift: `STATUS.md` remained marked last reviewed on
+      2026-06-06 even though it was updated on 2026-06-08 for the current
+      public skill surface.
 
 ## Saturation Audit
 
@@ -105,6 +108,8 @@ Why no change:
 - Architecture scanner routing consistently treats `improve-codebase-architecture`
   as host-installed optional extra discovery, not a default installed surface.
 - The loop gate frontmatter now matches the actual accepted P1/P2 scope.
+- `STATUS.md` last-reviewed metadata matches the current 2026-06-08 public
+  surface review.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
   runtime messages rather than current false confidence or live source drift.
@@ -228,3 +233,6 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   source drift after the gate frontmatter listed only P1 even though the target
   and selected candidates included materially useful P2 work. Added P2 to the
   accepted severities.
+- 2026-06-08: Selected `STATUS.md` last-reviewed drift as P2 live source drift
+  after `git log -- STATUS.md` showed a 2026-06-08 public-surface update while
+  the file still said it was last reviewed on 2026-06-06. Updated the date.
