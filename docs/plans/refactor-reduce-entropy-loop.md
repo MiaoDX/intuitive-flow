@@ -100,6 +100,9 @@ size as a maximum, not a quota.
       synced `.claude/skills/*` directly through the skills CLI even though the
       current canonical repo-owned skill surface is `skills/*` plus
       `scripts/local-skill-manifest.txt`.
+- [x] P2 false confidence: GitHub Actions ran the default verifier without
+      explicitly installing `tmux`, while several tmux-backed behavior tests are
+      skipped when `hasUsableTmux()` cannot create a detached session.
 
 ## Saturation Audit
 
@@ -151,10 +154,12 @@ Current state:
 - The legacy `.claude/skills/*` sync path is removed; repo-local skill sync now
   ignores that host discovery layout and installs only manifest-owned
   `skills/*` entries.
-- The next current read-only audit candidates are the tmux-backed CI proof
-  dependency and the remaining `BELIEFS.md` human-surface wording check. The
-  loop remains `CONTINUE` until those candidates are executed, rejected by a
-  fresh materiality gate, or a saturation audit returns no material work.
+- GitHub Actions now installs `tmux` alongside ShellCheck before `bun run
+  verify`, so tmux-backed tests do not depend on unstated runner image contents.
+- The next current read-only audit candidate is the remaining `BELIEFS.md`
+  human-surface wording check. The loop remains `CONTINUE` until that candidate
+  is executed, rejected by a fresh materiality gate, or a saturation audit
+  returns no material work.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
   runtime messages rather than current false confidence or live source drift.
@@ -330,3 +335,9 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   added a regression test proving `.claude/skills/*` entries in a fixture are
   ignored while manifest-owned root skills still sync. Verified with
   `bun test scripts/lib/sync-local-commands-skills.test.ts`.
+- 2026-06-08: Selected the CI tmux proof dependency as P2 false confidence
+  after the verification audit showed GitHub Actions installed Bun and
+  ShellCheck but not `tmux`, while `bun run test` includes multiple
+  `skipIf(!hasTmux)` behavior tests. The deterministic materiality gate
+  accepted the candidate with one eligible group. Added `tmux` to the CI system
+  tool install step so CI proof strength does not depend on the base image.
