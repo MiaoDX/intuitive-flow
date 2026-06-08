@@ -43,6 +43,32 @@ export type SessionEvidence = {
   durationMs?: number;
 };
 
+export type AttemptStatus = "complete" | "partial" | "blocked" | "failed";
+
+export type GoalAttemptRecord = {
+  sequence: number;
+  status: AttemptStatus;
+  goal: string;
+  purpose: string;
+  route: string;
+  proof: string;
+  source: string;
+  outcome: string;
+  proofNote: string;
+  messageCount: number;
+  startedAt?: string;
+  completedAt?: string;
+  durationMs?: number;
+  recordedAt: string;
+};
+
+export type GoalTimeline = {
+  attempts: GoalAttemptRecord[];
+  totalDurationMs?: number;
+  startedAt?: string;
+  completedAt?: string;
+};
+
 type Options = {
   command: string;
   issue?: string;
@@ -55,6 +81,7 @@ type Options = {
   summary?: string;
   summaryFile?: string;
   proof?: string;
+  attemptStatus: AttemptStatus;
   allowManualSummary: boolean;
   updateDescription: boolean;
   dryRun: boolean;
@@ -63,6 +90,10 @@ type Options = {
 };
 
 const skillDir = dirname(dirname(new URL(import.meta.url).pathname));
+
+function isAttemptStatus(value: string): value is AttemptStatus {
+  return value === "complete" || value === "partial" || value === "blocked" || value === "failed";
+}
 
 function usage(): never {
   console.error(`Usage:
@@ -80,6 +111,7 @@ Options:
   --summary <text>          Manual finish summary, only with --allow-manual-summary.
   --summary-file <path|- >  Read manual finish summary, only with --allow-manual-summary.
   --proof <text>            Short verification/proof note for finish.
+  --attempt-status <status> Status for this goal attempt: complete, partial, blocked, failed. Default: complete.
   --allow-manual-summary    Permit manual summary fallback when no session history exists.
   --update-description      Insert/replace the tracker summary block in the issue description.
   --profile <name>          Forward a Multica profile.
@@ -93,7 +125,7 @@ function parseArgs(argv: string[]): Options {
   const command = argv.shift();
   if (!command || !["start", "finish", "summarize"].includes(command)) usage();
 
-  const opts: Options = { command, allowManualSummary: false, updateDescription: false, dryRun: false };
+  const opts: Options = { command, attemptStatus: "complete", allowManualSummary: false, updateDescription: false, dryRun: false };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     const next = () => {
@@ -132,6 +164,15 @@ function parseArgs(argv: string[]): Options {
       case "--proof":
         opts.proof = next();
         break;
+      case "--attempt-status": {
+        const value = next();
+        if (!isAttemptStatus(value)) {
+          console.error(`Invalid --attempt-status: ${value}`);
+          usage();
+        }
+        opts.attemptStatus = value;
+        break;
+      }
       case "--allow-manual-summary":
         opts.allowManualSummary = true;
         break;
@@ -344,6 +385,8 @@ type SelectedCodexEvidence = {
   goal?: SessionTiming;
 };
 
+class CodexGoalMatchError extends Error {}
+
 function isoFromEpochSeconds(value: unknown): string | undefined {
   if (typeof value !== "number" || !Number.isFinite(value)) return undefined;
   return new Date(value * 1000).toISOString();
@@ -401,7 +444,12 @@ function goalSimilarityScore(targetGoal: string, candidateGoal: string): number 
 
 function selectCompletedGoal(completeGoals: SessionTiming[], targetGoal?: string): SessionTiming | undefined {
   if (completeGoals.length === 0) return undefined;
-  if (!targetGoal?.trim()) return completeGoals[completeGoals.length - 1];
+  if (!targetGoal?.trim()) {
+    if (completeGoals.length === 1) return completeGoals[0];
+    throw new CodexGoalMatchError(
+      `Codex session contains ${completeGoals.length} completed goals. Pass --goal/--goal-file or add a tracker start comment so the skill can select the correct goal without guessing.`,
+    );
+  }
 
   let best: { goal: SessionTiming; score: number } | undefined;
   for (const goal of completeGoals) {
@@ -411,11 +459,20 @@ function selectCompletedGoal(completeGoals: SessionTiming[], targetGoal?: string
     }
   }
 
-  return best && best.score >= 0.45 ? best.goal : completeGoals[completeGoals.length - 1];
+  if (best && best.score >= 0.45) return best.goal;
+  throw new CodexGoalMatchError(
+    `No completed Codex goal matched the issue goal closely enough. Pass the exact follow-up goal with --goal/--goal-file or use the matching session file.`,
+  );
 }
 
 function selectCodexEvidence(candidates: CodexCandidate[], completeGoals: SessionTiming[], targetGoal?: string): SelectedCodexEvidence | undefined {
   if (candidates.length === 0) return undefined;
+  if (completeGoals.length === 0) {
+    const completion = [...candidates].reverse().find((candidate) => isCompletionLikeMessage(candidate.text));
+    if (completion) return { candidate: completion };
+    if (candidates.length === 1) return { candidate: candidates[0] };
+    throw new CodexGoalMatchError("Codex JSONL has multiple assistant outputs but no goal completion metadata; pass a session transcript with the exact completion output.");
+  }
   const goal = selectCompletedGoal(completeGoals, targetGoal);
   if (goal?.turnId) {
     const sameTurn = candidates.filter((candidate) => candidate.turnId === goal.turnId);
@@ -438,8 +495,18 @@ function selectCodexEvidence(candidates: CodexCandidate[], completeGoals: Sessio
     }
   }
 
-  const fallback = [...candidates].reverse().find((candidate) => isCompletionLikeMessage(candidate.text)) ?? candidates[candidates.length - 1];
-  return { candidate: fallback };
+  if (completeGoals.length > 1 || targetGoal?.trim()) {
+    throw new CodexGoalMatchError("Matched Codex goal did not have an assistant completion output in the same turn.");
+  }
+
+  const onlyGoal = completeGoals[0];
+  const sameTurn = onlyGoal?.turnId ? candidates.filter((candidate) => candidate.turnId === onlyGoal.turnId) : [];
+  if (sameTurn.length) return { candidate: sameTurn[sameTurn.length - 1], goal: onlyGoal };
+
+  const singleCandidate = candidates.length === 1 ? candidates[0] : undefined;
+  if (singleCandidate) return { candidate: singleCandidate, goal: onlyGoal };
+
+  throw new CodexGoalMatchError("Could not identify a real assistant completion output for the Codex goal.");
 }
 
 function nearestGoalTiming(completeGoals: SessionTiming[], selected?: CodexCandidate, preferredGoal?: SessionTiming): SessionTiming {
@@ -689,6 +756,114 @@ function getIssueComments(opts: Options): unknown[] {
   return nestedArray(JSON.parse(out) as unknown, ["comments", "items", "threads", "data"]);
 }
 
+const attemptMetaPrefix = "<!-- multica-goal-tracker:attempt ";
+const attemptMetaSuffix = " -->";
+
+function parseAttemptRecord(value: unknown): GoalAttemptRecord | undefined {
+  const record = asRecord(value);
+  if (!record) return undefined;
+  const status = textFromUnknown(record.status);
+  if (!isAttemptStatus(status)) return undefined;
+  const sequence = typeof record.sequence === "number" && Number.isFinite(record.sequence) ? Math.max(1, Math.round(record.sequence)) : 1;
+  const goal = textFromUnknown(record.goal);
+  const purpose = textFromUnknown(record.purpose);
+  const route = textFromUnknown(record.route);
+  const proof = textFromUnknown(record.proof);
+  const source = textFromUnknown(record.source);
+  const outcome = textFromUnknown(record.outcome);
+  const proofNote = textFromUnknown(record.proofNote);
+  const recordedAt = textFromUnknown(record.recordedAt) || new Date(0).toISOString();
+  const messageCount = typeof record.messageCount === "number" && Number.isFinite(record.messageCount) ? Math.max(0, Math.round(record.messageCount)) : 0;
+  const durationMs = typeof record.durationMs === "number" && Number.isFinite(record.durationMs) ? Math.max(0, Math.round(record.durationMs)) : undefined;
+  return {
+    sequence,
+    status,
+    goal,
+    purpose,
+    route,
+    proof,
+    source,
+    outcome,
+    proofNote,
+    messageCount,
+    startedAt: textFromUnknown(record.startedAt) || undefined,
+    completedAt: textFromUnknown(record.completedAt) || undefined,
+    durationMs,
+    recordedAt,
+  };
+}
+
+export function attemptRecordFromCommentText(text: string): GoalAttemptRecord | undefined {
+  const idx = text.indexOf(attemptMetaPrefix);
+  if (idx < 0) return undefined;
+  const start = idx + attemptMetaPrefix.length;
+  const end = text.indexOf(attemptMetaSuffix, start);
+  if (end < 0) return undefined;
+  try {
+    return parseAttemptRecord(JSON.parse(text.slice(start, end)) as unknown);
+  } catch {
+    return undefined;
+  }
+}
+
+export function attemptRecordsFromComments(comments: unknown[]): GoalAttemptRecord[] {
+  return comments
+    .map((comment) => attemptRecordFromCommentText(textFromUnknown(comment)))
+    .filter((record): record is GoalAttemptRecord => Boolean(record))
+    .sort((a, b) => {
+      const bySequence = a.sequence - b.sequence;
+      if (bySequence !== 0) return bySequence;
+      return Date.parse(a.recordedAt) - Date.parse(b.recordedAt);
+    });
+}
+
+function encodeAttemptRecord(record: GoalAttemptRecord): string {
+  return `${attemptMetaPrefix}${JSON.stringify(record)}${attemptMetaSuffix}`;
+}
+
+export function buildAttemptRecord(summary: GoalSummary, session: SessionEvidence, status: AttemptStatus, sequence: number): GoalAttemptRecord {
+  return {
+    sequence,
+    status,
+    goal: summary.rawGoal,
+    purpose: summary.purpose,
+    route: summary.route,
+    proof: summary.proof,
+    source: session.source,
+    outcome: session.outcome,
+    proofNote: session.proofNote,
+    messageCount: session.messageCount,
+    startedAt: session.startedAt,
+    completedAt: session.completedAt,
+    durationMs: session.durationMs,
+    recordedAt: new Date().toISOString(),
+  };
+}
+
+export function buildGoalTimeline(attempts: GoalAttemptRecord[]): GoalTimeline {
+  let totalDurationMs = 0;
+  let hasDuration = false;
+  let startedAt: string | undefined;
+  let completedAt: string | undefined;
+  for (const attempt of attempts) {
+    if (attempt.durationMs !== undefined && Number.isFinite(attempt.durationMs)) {
+      totalDurationMs += attempt.durationMs;
+      hasDuration = true;
+    }
+    if (attempt.startedAt && (!startedAt || Date.parse(attempt.startedAt) < Date.parse(startedAt))) {
+      startedAt = attempt.startedAt;
+    }
+    if (attempt.completedAt && (!completedAt || Date.parse(attempt.completedAt) > Date.parse(completedAt))) {
+      completedAt = attempt.completedAt;
+    }
+  }
+  return { attempts, totalDurationMs: hasDuration ? totalDurationMs : undefined, startedAt, completedAt };
+}
+
+export function nextAttemptSequence(attempts: GoalAttemptRecord[]): number {
+  return attempts.reduce((max, attempt) => Math.max(max, attempt.sequence), 0) + 1;
+}
+
 function stripCodeFenceNoise(text: string): string {
   return text
     .replace(/```[a-zA-Z0-9_-]*\n/g, "")
@@ -751,6 +926,20 @@ function resolveGoal(opts: Options, issue: Issue, allowTrackedComments: boolean)
   }
 
   return extractTrackedGoalFromComments(getIssueComments(opts));
+}
+
+function resolveFinishGoal(opts: Options, issue: Issue, comments: unknown[]): string {
+  const suppliedGoal = readInput(opts.goal, opts.goalFile);
+  if (suppliedGoal.trim()) {
+    return suppliedGoal;
+  }
+
+  const trackedGoal = extractTrackedGoalFromComments(comments);
+  if (trackedGoal) {
+    return trackedGoal;
+  }
+
+  return extractGoal(issue.description ?? "");
 }
 
 export function normalizeLines(goal: string): string[] {
@@ -908,7 +1097,7 @@ function compactSessionSource(source: string): string {
   return [prefix, compactPath].filter(Boolean).join(" ");
 }
 
-function renderEvidence(issue: Issue, summary: GoalSummary, session: SessionEvidence): RenderedEvidence {
+function renderEvidence(issue: Issue, summary: GoalSummary, session: SessionEvidence, timeline: GoalTimeline): RenderedEvidence {
   const dir = artifactDir(issue);
   mkdirSync(dir, { recursive: true });
   const htmlPath = join(dir, "completion-card.html");
@@ -918,6 +1107,22 @@ function renderEvidence(issue: Issue, summary: GoalSummary, session: SessionEvid
   const title = issue.title ?? "";
   const status = issue.status ?? "unknown";
   const source = compactSessionSource(session.source);
+  const currentAttempt = timeline.attempts[timeline.attempts.length - 1];
+  const timelineRows = timeline.attempts
+    .slice(-5)
+    .map((attempt) => {
+      const active = attempt.sequence === currentAttempt?.sequence ? " active" : "";
+      return `
+        <div class="attempt-row${active}">
+          <div class="attempt-index">#${attempt.sequence}</div>
+          <div class="attempt-main">
+            <div class="attempt-title">${htmlEscape(truncate(attempt.purpose, 92))}</div>
+            <div class="attempt-meta">${htmlEscape(attempt.status)} · ${htmlEscape(formatDuration(attempt.durationMs))} · ${htmlEscape(formatDateTime(attempt.completedAt))}</div>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
 
   const cardInner = `
     <div class="topline">
@@ -926,25 +1131,39 @@ function renderEvidence(issue: Issue, summary: GoalSummary, session: SessionEvid
     </div>
     <h1>${htmlEscape(truncate(title, 96))}</h1>
     <div class="body">
-      <section>
-        <div class="label">Goal 目标</div>
-        <p class="clamp-2">${htmlEscape(truncate(summary.purpose, 180))}</p>
+      <section class="overview">
+        <div>
+          <div class="label">累计耗时</div>
+          <p class="stat">${htmlEscape(formatDuration(timeline.totalDurationMs))}</p>
+        </div>
+        <div>
+          <div class="label">Goal 次数</div>
+          <p class="stat">${timeline.attempts.length}</p>
+        </div>
+        <div>
+          <div class="label">Issue 起止</div>
+          <p class="meta">${htmlEscape(formatDateTime(timeline.startedAt))} - ${htmlEscape(formatDateTime(timeline.completedAt))}</p>
+        </div>
       </section>
       <section>
-        <div class="label">完成结果</div>
-        <p class="clamp-3">${htmlEscape(truncate(session.outcome, 210))}</p>
+        <div class="label">当前 Goal 目标</div>
+        <p class="clamp-1">${htmlEscape(truncate(summary.purpose, 160))}</p>
+      </section>
+      <section>
+        <div class="label">当前结果</div>
+        <p class="clamp-2">${htmlEscape(truncate(session.outcome, 180))}</p>
       </section>
       <section class="timing">
         <div>
-          <div class="label">开始时间</div>
+          <div class="label">当前开始</div>
           <p class="meta">${htmlEscape(formatDateTime(session.startedAt))}</p>
         </div>
         <div>
-          <div class="label">结束时间</div>
+          <div class="label">当前结束</div>
           <p class="meta">${htmlEscape(formatDateTime(session.completedAt))}</p>
         </div>
         <div>
-          <div class="label">持续时间</div>
+          <div class="label">当前耗时</div>
           <p class="meta">${htmlEscape(formatDuration(session.durationMs))}</p>
         </div>
       </section>
@@ -960,7 +1179,11 @@ function renderEvidence(issue: Issue, summary: GoalSummary, session: SessionEvid
       </section>
       <section class="proof">
         <div class="label">验证说明</div>
-        <p class="clamp-4">${htmlEscape(truncate(session.proofNote, 280))}</p>
+        <p class="clamp-2">${htmlEscape(truncate(session.proofNote, 180))}</p>
+      </section>
+      <section class="timeline-list">
+        <div class="label">Goal 时间线</div>
+        <div class="attempts">${timelineRows}</div>
       </section>
     </div>
   `;
@@ -983,7 +1206,7 @@ function renderEvidence(issue: Issue, summary: GoalSummary, session: SessionEvid
     width: 1280px;
     height: 820px;
     margin: 40px 60px;
-    padding: 38px 52px;
+    padding: 32px 52px;
     background: #ffffff;
     border: 1px solid #d9dbd2;
     box-shadow: 0 28px 80px rgba(20, 24, 16, 0.16);
@@ -1002,8 +1225,8 @@ function renderEvidence(issue: Issue, summary: GoalSummary, session: SessionEvid
     text-transform: uppercase;
   }
   h1 {
-    margin: 22px 0 20px;
-    font-size: 48px;
+    margin: 18px 0 16px;
+    font-size: 44px;
     line-height: 1.06;
     letter-spacing: 0;
     max-width: 1100px;
@@ -1017,9 +1240,17 @@ function renderEvidence(issue: Issue, summary: GoalSummary, session: SessionEvid
     min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 10px;
   }
   section { margin: 0; }
+  .overview {
+    display: grid;
+    grid-template-columns: 0.85fr 0.6fr 1.55fr;
+    gap: 24px;
+    padding: 12px 18px;
+    border: 1px solid #dfe2d8;
+    background: #f7f8f4;
+  }
   .grid {
     display: grid;
     grid-template-columns: 1fr 1.4fr;
@@ -1032,21 +1263,26 @@ function renderEvidence(issue: Issue, summary: GoalSummary, session: SessionEvid
   }
   .label {
     color: #606656;
-    font-size: 19px;
+    font-size: 17px;
     font-weight: 720;
     letter-spacing: 0;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
   }
   p {
     margin: 0;
     color: #25291f;
-    font-size: 25px;
-    line-height: 1.2;
+    font-size: 23px;
+    line-height: 1.16;
     overflow-wrap: anywhere;
   }
   .meta {
-    font-size: 22px;
+    font-size: 20px;
     line-height: 1.15;
+  }
+  .stat {
+    font-size: 28px;
+    font-weight: 720;
+    line-height: 1.05;
   }
   .clamp-1,
   .clamp-2,
@@ -1061,7 +1297,47 @@ function renderEvidence(issue: Issue, summary: GoalSummary, session: SessionEvid
   .clamp-3 { -webkit-line-clamp: 3; }
   .clamp-4 { -webkit-line-clamp: 4; }
   .proof {
-    min-height: 126px;
+    min-height: 58px;
+  }
+  .timeline-list {
+    min-height: 122px;
+  }
+  .attempts {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .attempt-row {
+    display: grid;
+    grid-template-columns: 54px 1fr;
+    gap: 12px;
+    align-items: center;
+    min-height: 36px;
+    padding: 5px 10px;
+    border-left: 4px solid #b8bead;
+    background: #fafaf8;
+  }
+  .attempt-row.active {
+    border-left-color: #386641;
+    background: #f1f5ee;
+  }
+  .attempt-index {
+    color: #386641;
+    font-size: 17px;
+    font-weight: 720;
+  }
+  .attempt-title {
+    color: #25291f;
+    font-size: 17px;
+    line-height: 1.15;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .attempt-meta {
+    color: #606656;
+    font-size: 14px;
+    line-height: 1.15;
   }
 </style>
 </head>
@@ -1112,23 +1388,38 @@ export function markdownCodeBlock(value: string, info = "text"): string {
   return `${fence}${info}\n${value}\n${fence}`;
 }
 
-export function markdownForFinish(issue: Issue, summary: GoalSummary, session: SessionEvidence, attachment: string): string {
+export function markdownForFinish(
+  issue: Issue,
+  summary: GoalSummary,
+  session: SessionEvidence,
+  attachment: string,
+  attempt: GoalAttemptRecord,
+  timeline: GoalTimeline,
+): string {
+  const title = attempt.status === "complete" ? "Goal 完成记录" : "Goal 执行记录";
   return `<!-- multica-goal-tracker:finish -->
-## Goal 完成记录
+${encodeAttemptRecord(attempt)}
+## ${title}
 
 **Issue:** ${issue.identifier ?? issue.id ?? "unknown"}
 
 **状态:** ${issue.status ?? "unknown"}
 
+**本次 Goal:** #${attempt.sequence} / ${attempt.status}
+
 **Session 来源:** ${session.source}
 
 **消息数:** ${session.messageCount}
 
-**开始时间:** ${formatDateTime(session.startedAt)}
+**本次开始时间:** ${formatDateTime(session.startedAt)}
 
-**结束时间:** ${formatDateTime(session.completedAt)}
+**本次结束时间:** ${formatDateTime(session.completedAt)}
 
-**持续时间:** ${formatDuration(session.durationMs)}
+**本次持续时间:** ${formatDuration(session.durationMs)}
+
+**Issue 累计耗时:** ${formatDuration(timeline.totalDurationMs)}
+
+**Issue 时间范围:** ${formatDateTime(timeline.startedAt)} - ${formatDateTime(timeline.completedAt)}
 
 **完成结果:** ${session.outcome}
 
@@ -1137,6 +1428,8 @@ export function markdownForFinish(issue: Issue, summary: GoalSummary, session: S
 **证据:** 已附加渲染后的完成卡片；如果 Multica 返回附件 URL，脚本会自动追加一条内联图片回复。
 
 **Goal 目标:** ${summary.purpose}
+
+**Goal 时间线:** 已累计 ${timeline.attempts.length} 次 goal attempt；卡片中展示最近的 attempt 和累计耗时。
 
 **Session 摘录:** 完整输出已在下方代码块评论中保留。
 
@@ -1259,11 +1552,15 @@ function start(opts: Options) {
 
 function finish(opts: Options) {
   const issue = getIssue(opts);
-  const goal = resolveGoal(opts, issue, true);
+  const comments = getIssueComments(opts);
+  const goal = resolveFinishGoal(opts, issue, comments);
   const summary = summarizeGoal(goal);
   const session = loadSessionEvidence(opts, goal);
-  const evidence = renderEvidence(issue, summary, session);
-  const comment = markdownForFinish(issue, summary, session, evidence.attachment);
+  const existingAttempts = attemptRecordsFromComments(comments);
+  const attempt = buildAttemptRecord(summary, session, opts.attemptStatus, nextAttemptSequence(existingAttempts));
+  const timeline = buildGoalTimeline([...existingAttempts, attempt]);
+  const evidence = renderEvidence(issue, summary, session, timeline);
+  const comment = markdownForFinish(issue, summary, session, evidence.attachment, attempt, timeline);
 
   if (opts.dryRun) {
     printDryRun("finish comment", comment, {

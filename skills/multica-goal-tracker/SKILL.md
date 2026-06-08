@@ -17,7 +17,10 @@ Use this skill to keep Multica issues consistent when the human workflow is:
 2. Paste the `/goal` command that will drive a long `$intuitive-flow` or
    related skill run.
 3. After the run completes, attach concise completion evidence.
-4. Repeat on the same issue when a later goal extends or repairs the work.
+4. If the result is incomplete, keep the issue open and append the next goal as
+   another attempt on the same issue.
+5. Repeat until the issue-level outcome is complete. The tracker card shows the
+   per-goal attempt plus cumulative issue time.
 
 Prefer appending comments over rewriting issue descriptions. Only update the
 description when the user explicitly wants the issue top-level description
@@ -62,10 +65,11 @@ change.
 ## Finish Tracking
 
 Use this after the goal run is complete or after the user asks to preserve the
-completed state on an existing issue. Do not create a new issue for this flow
-unless the user explicitly asks. Finish evidence must come from real session
-output: Multica execution run messages by default, a Codex JSONL session, a
-skill-runner run directory, or an explicit transcript via `--session-file`.
+state of a goal attempt on an existing issue. Do not create a new issue for this
+flow unless the user explicitly asks. Finish evidence must come from real
+session output: Multica execution run messages by default, a Codex JSONL
+session, a skill-runner run directory, or an explicit transcript via
+`--session-file`.
 
 ```bash
 bun /home/mi/ws/intuitive-flow/skills/multica-goal-tracker/scripts/track_goal.ts \
@@ -76,17 +80,24 @@ bun /home/mi/ws/intuitive-flow/skills/multica-goal-tracker/scripts/track_goal.ts
 The script:
 
 - fetches the current issue status and title;
-- reuses the supplied goal, extracts it from the issue description, or falls
-  back to the latest tracked start comment;
+- reuses the supplied goal, otherwise uses the latest tracked start comment,
+  otherwise uses the initial `/goal` in the issue description;
 - reads the latest Multica execution run via `multica issue runs` and
   `multica issue run-messages`;
 - when a Codex JSONL session contains multiple completed goals, matches the
-  completed goal back to the issue's `/goal` objective before falling back to
-  the latest completed goal;
-- renders a completion evidence card under `~/.cache/multica-goal-tracker/`;
+  completed goal back to the active goal objective; if it cannot match without
+  guessing, it fails and asks for the exact `--goal`/`--goal-file`;
+- records this finish as one goal attempt with hidden structured metadata in the
+  finish comment;
+- reads earlier tracker attempt metadata from issue comments and renders an
+  issue-level card with cumulative duration, issue start/end, current attempt,
+  and recent attempt timeline under `~/.cache/multica-goal-tracker/`;
 - uses Google Chrome headless to produce a PNG when available, with SVG
   fallback;
-- appends a Chinese "Goal finish" comment and attaches the rendered evidence;
+- appends a Chinese finish/execution comment and attaches the rendered
+  evidence. `complete` attempts are labelled as completion records; `partial`,
+  `blocked`, and `failed` attempts are labelled as execution records so they do
+  not masquerade as finished work;
 - reads the Multica comment-add response and, when an image attachment URL is
   returned, adds a child comment containing `![completion-card.png](...)` so the
   card is displayed inline in the issue timeline. The CLI currently has no
@@ -121,10 +132,19 @@ bun /home/mi/ws/intuitive-flow/skills/multica-goal-tracker/scripts/track_goal.ts
 Use `--allow-manual-summary --summary "..."` only when the user explicitly
 accepts a manual fallback. Manual fallback is not a real session screenshot.
 
-If the first attempt was incomplete, do not label it as completion evidence.
-Attach it only as an incomplete attempt if the user asks for that history, then
-run `start` again with the follow-up goal and `finish` again when the follow-up
-goal is complete.
+If the first attempt was incomplete, preserve it as an incomplete attempt:
+
+```bash
+bun /home/mi/ws/intuitive-flow/skills/multica-goal-tracker/scripts/track_goal.ts \
+  finish \
+  --issue MIA-40 \
+  --session-file ~/.codex/sessions/...jsonl \
+  --attempt-status partial
+```
+
+Then run `start` again with the follow-up goal and run `finish` again when that
+follow-up completes. The next finish will become attempt #2 and the card will
+show cumulative issue time across both attempts.
 
 ## Useful Options
 
@@ -138,6 +158,9 @@ goal is complete.
 - `--summary-file -` reads manual finish summary from stdin, only with
   `--allow-manual-summary`.
 - `--proof "..."` adds short verification notes to the finish card/comment.
+- `--attempt-status complete|partial|blocked|failed` marks the current goal
+  attempt. The default is `complete`; use `partial` when the session produced
+  useful progress but did not satisfy the issue yet.
 - `--allow-manual-summary` permits manual summary fallback when no session
   history exists.
 - `--profile <name>` forwards a Multica profile.

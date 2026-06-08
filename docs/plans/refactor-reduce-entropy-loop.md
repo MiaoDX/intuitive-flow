@@ -131,6 +131,10 @@ size as a maximum, not a quota.
 - [x] P1 false confidence: `multica-goal-tracker` Codex JSONL evidence can
       choose the latest completed follow-up goal instead of the issue's tracked
       `/goal` when one session contains multiple completed goals.
+- [x] P1 workflow friction: `multica-goal-tracker` finish evidence treated each
+      run as a standalone completion and did not preserve an issue-level
+      attempt timeline, so partial or follow-up goal runs could be misread as
+      final completion evidence and cumulative issue effort was lost.
 
 ## Saturation Audit
 
@@ -201,6 +205,11 @@ Current state:
 - `multica-goal-tracker` Codex JSONL evidence now matches completed goal
   timing back to the issue's tracked `/goal` before falling back, and it does
   not attach matched goal timing to unrelated fallback output.
+- `multica-goal-tracker` finish evidence now records hidden structured attempt
+  metadata, labels non-complete attempts as execution records rather than
+  completion records, derives the next attempt number from the highest existing
+  sequence, and renders an issue-level attempt timeline with cumulative
+  duration.
 - No current P0/P1/P2 candidate remains selected after the latest audit.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
@@ -448,5 +457,14 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   completed goals by objective tokens before falling back to latest completion,
   and ensured fallback output does not inherit unrelated matched-goal timing.
   Documented the behavior in the skill and verified with
+  `bun test skills/multica-goal-tracker/scripts/track_goal.test.ts`,
+  `bun run check:skills`, `bun run check`, and `bun run verify`.
+- 2026-06-08: Selected Multica attempt timeline preservation as P1 workflow
+  friction and false confidence after the dirty-worktree audit showed repeated
+  goal attempts on the same issue could be flattened into standalone finish
+  comments, and incomplete attempts could be labelled like completion evidence.
+  Added structured hidden attempt metadata, cumulative timeline rendering,
+  `--attempt-status` documentation, non-complete execution-record labels, and a
+  max-sequence next attempt rule. Verified with
   `bun test skills/multica-goal-tracker/scripts/track_goal.test.ts`,
   `bun run check:skills`, `bun run check`, and `bun run verify`.

@@ -4,6 +4,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   commentIdFromCommentOutput,
+  attemptRecordFromCommentText,
+  attemptRecordsFromComments,
+  buildAttemptRecord,
+  buildGoalTimeline,
   evidenceFromCodexJsonl,
   extractGoal,
   extractTrackedGoalFromComments,
@@ -12,6 +16,7 @@ import {
   markdownForInlineImage,
   markdownForFinish,
   markdownForRawSessionOutput,
+  nextAttemptSequence,
   normalizeLines,
   replaceMarkedBlock,
   selectLatestRunId,
@@ -317,7 +322,7 @@ Later notes should not be treated as the active goal.
     expect(sessionEvidence.durationMs).toBe(1_856_000);
   });
 
-  test("does not attach matched goal timing to unrelated fallback output", () => {
+  test("fails instead of attaching matched goal timing to unrelated fallback output", () => {
     const issueGoal = "/goal\n\nImplement the original planner refactor.";
     const followUpOutput = "Implemented.\nVerification:\n- follow-up tests passed.";
     const jsonl = [
@@ -349,9 +354,7 @@ Later notes should not be treated as the active goal.
       .map((value) => JSON.stringify(value))
       .join("\n");
 
-    const evidence = evidenceFromCodexJsonl(jsonl, issueGoal);
-    expect(evidence?.transcript).toBe(followUpOutput);
-    expect(evidence?.durationMs).toBeUndefined();
+    expect(() => evidenceFromCodexJsonl(jsonl, issueGoal)).toThrow("assistant completion output");
   });
 
   test("builds evidence from skill-runner result artifacts without terminal logs", () => {
@@ -414,26 +417,44 @@ Run bun run verify.
 
   test("keeps finish comment concise and points to the raw output comment", () => {
     const summary = summarizeGoal("/goal fix the tracker\nRun bun run verify");
+    const session = {
+      source: "session file",
+      outcome: "RESULT_STATUS: SUCCESS",
+      proofNote: "Verified with bun run verify.",
+      excerpt: "Generated markdown:\n```text\ninside fence\n```",
+      rawOutput: "Generated markdown:\n```text\ninside fence\n```",
+      messageCount: 3,
+      startedAt: "2026-06-04T04:48:22.000Z",
+      completedAt: "2026-06-04T04:57:29.000Z",
+      durationMs: 547000,
+    };
+    const attempt = buildAttemptRecord(summary, session, "complete", 2);
+    const timeline = buildGoalTimeline([
+      {
+        ...attempt,
+        sequence: 1,
+        purpose: "初始 goal",
+        durationMs: 120000,
+        startedAt: "2026-06-04T04:40:00.000Z",
+        completedAt: "2026-06-04T04:42:00.000Z",
+      },
+      attempt,
+    ]);
     const comment = markdownForFinish(
       { identifier: "MIA-40", title: "Tracker", status: "Done" },
       summary,
-      {
-        source: "session file",
-        outcome: "RESULT_STATUS: SUCCESS",
-        proofNote: "Verified with bun run verify.",
-        excerpt: "Generated markdown:\n```text\ninside fence\n```",
-        rawOutput: "Generated markdown:\n```text\ninside fence\n```",
-        messageCount: 3,
-        startedAt: "2026-06-04T04:48:22.000Z",
-        completedAt: "2026-06-04T04:57:29.000Z",
-        durationMs: 547000,
-      },
+      session,
       "/tmp/card.svg",
+      attempt,
+      timeline,
     );
 
     expect(comment).toContain("## Goal 完成记录");
+    expect(comment).toContain("multica-goal-tracker:attempt");
     expect(comment).toContain("**证据:**");
-    expect(comment).toContain("**持续时间:** 9m 7s");
+    expect(comment).toContain("**本次 Goal:** #2 / complete");
+    expect(comment).toContain("**本次持续时间:** 9m 7s");
+    expect(comment).toContain("**Issue 累计耗时:** 11m 7s");
     expect(comment).toContain("完整输出已在下方代码块评论中保留");
     expect(comment).not.toContain("inside fence");
   });
@@ -455,6 +476,53 @@ Run bun run verify.
     expect(comment).toContain(raw);
     expect(comment).not.toContain("\\`\\`\\`");
     expect(markdownCodeBlock(raw)).toContain("````text");
+  });
+
+  test("extracts attempt records from finish comments and accumulates duration", () => {
+    const summary = summarizeGoal("/goal implement first slice via $intuitive-flow");
+    const session = sessionEvidenceFromTranscript("session file", "Implemented.\nVerification passed.");
+    const first = buildAttemptRecord(summary, { ...session, durationMs: 60_000 }, "partial", 1);
+    const second = buildAttemptRecord(summary, { ...session, durationMs: 90_000 }, "complete", 2);
+    const firstComment = markdownForFinish(
+      { identifier: "MIA-41", status: "done" },
+      summary,
+      session,
+      "/tmp/card-1.png",
+      first,
+      buildGoalTimeline([first]),
+    );
+    const secondComment = markdownForFinish(
+      { identifier: "MIA-41", status: "done" },
+      summary,
+      session,
+      "/tmp/card-2.png",
+      second,
+      buildGoalTimeline([first, second]),
+    );
+
+    expect(attemptRecordFromCommentText(firstComment)?.status).toBe("partial");
+    const timeline = buildGoalTimeline(attemptRecordsFromComments([{ content: firstComment }, { content: secondComment }]));
+    expect(timeline.attempts).toHaveLength(2);
+    expect(timeline.totalDurationMs).toBe(150_000);
+    expect(nextAttemptSequence([{ ...first, sequence: 3 }, { ...second, sequence: 5 }])).toBe(6);
+  });
+
+  test("labels incomplete attempts as execution records instead of completion records", () => {
+    const summary = summarizeGoal("/goal investigate a partial run via $intuitive-flow");
+    const session = sessionEvidenceFromTranscript("session file", "RESULT_STATUS: PARTIAL\nVerification incomplete.");
+    const attempt = buildAttemptRecord(summary, session, "partial", 1);
+    const comment = markdownForFinish(
+      { identifier: "MIA-42", status: "In Progress" },
+      summary,
+      session,
+      "/tmp/card.png",
+      attempt,
+      buildGoalTimeline([attempt]),
+    );
+
+    expect(comment).toContain("## Goal 执行记录");
+    expect(comment).toContain("**本次 Goal:** #1 / partial");
+    expect(comment).not.toContain("## Goal 完成记录");
   });
 
   test("extracts image URL and comment ID from Multica comment add output", () => {
