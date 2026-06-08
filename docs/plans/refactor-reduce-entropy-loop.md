@@ -50,6 +50,10 @@ size as a maximum, not a quota.
       added to the manifest and README primary table, but architecture, status,
       reduce-entropy routing guidance, and the manifest-wide skill audit still
       described the older public skill surface.
+- [x] P1 live source drift: fuzzy idea routing still named `office-hours` and
+      `grill-me`, but the default installed surfaces expose the repo-owned
+      planning loop and `grill-with-docs` semantics rather than those entrypoint
+      names.
 
 ## Saturation Audit
 
@@ -71,6 +75,9 @@ Why no change:
   listed in `scripts/local-skill-manifest.txt`.
 - Tests no longer depend on a live npm registry for local skill sync coverage,
   and tmux-dependent tests skip when tmux cannot create a detached session.
+- Fuzzy idea routing no longer advertises `office-hours` or `grill-me` as
+  default entrypoints when they are not part of the repo-owned or default
+  managed skill surface.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
   runtime messages rather than current false confidence or live source drift.
@@ -157,3 +164,10 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   friction. Aligned `ARCHITECTURE.md`, `STATUS.md`, the reduce-entropy public
   entry model, the manifest-wide skill audit, and the public-skill addition
   checklist around the new primary planning entrypoint.
+- 2026-06-08: Selected fuzzy idea routing drift as P1 live source drift after
+  the post-commit skill-surface audit found `office-hours` and `grill-me`
+  references unsupported by the default installed surfaces. Reworded README and
+  `$intuitive-flow` planning references to route through inline flow shaping,
+  `$intuitive-planning-loop`, and `grill-with-docs` semantics instead.
+  Verified no repo-owned `office-hours` / `grill-me` references remain and
+  `bun run verify` passes.

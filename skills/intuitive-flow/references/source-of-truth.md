@@ -86,7 +86,7 @@ other workflow's name.
 Artifact rules:
 
 - `docs/plans/<slug>.md` pre-plans may be produced inline by this skill.
-- Matt Pocock discussion skills such as `grill-me` shape decisions through
+- Discussion skills such as `grill-with-docs` shape decisions through
   questions; the current agent still writes the plan unless a writing skill is
   invoked.
 - ADRs are not default outputs of this skill. Create/update ADRs only when an

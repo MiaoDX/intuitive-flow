@@ -32,10 +32,9 @@ what good means, and what must not break.
 evidence, retrospectives, scratch work, and low-level churn. Humans can inspect
 it when something is risky or broken. They should not have to live there.
 
-The workflow keeps the user-facing choices small: use `office-hours` or
-`grill-me` for what to build, `$intuitive-flow` as the default build/change
-entrypoint, `$intuitive-refactor` to clean a known target,
-`$intuitive-reduce-entropy` to surface repo maintenance candidates,
+The workflow keeps the user-facing choices small: use `$intuitive-flow` for
+default shaping/build/change routing, `$intuitive-refactor` to clean a known
+target, `$intuitive-reduce-entropy` to surface repo maintenance candidates,
 `$intuitive-planning-loop` to let scouts refine contested plans before one
 review packet, and `$intuitive-squash` before branch handoff.
 See [BELIEFS.md](BELIEFS.md) for the supporting doctrine behind the workflow;

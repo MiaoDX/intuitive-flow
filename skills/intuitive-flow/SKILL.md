@@ -231,9 +231,10 @@ Stop gate: <repo command/artifact that decides complete | blocked | continue, or
 Stop/continue point: <where work pauses or what will run now>
 ```
 
-Name plausible but skipped stages such as `grill-me`, `office-hours`,
-`autoplan`, `to-issues`, GSD handoff, `simplify`, or verification. This makes
-shortcuts visible without turning every task into a ceremony.
+Name plausible but skipped stages such as `$intuitive-planning-loop`,
+`grill-with-docs`, `autoplan`, `to-issues`, GSD handoff, `simplify`, or
+verification. This makes shortcuts visible without turning every task into a
+ceremony.
 
 ## Stable Entry Router
 
@@ -268,7 +269,7 @@ and run the shortest safe route.
 
 | Current state | Default route | Reference |
 | --- | --- | --- |
-| Fuzzy idea | `grill-me` or auto-guided shaping -> `docs/plans/<slug>.md`; add `office-hours` when product/wedge/demand is unclear | `plan-intake-and-autoplan.md` |
+| Fuzzy idea | direct `$intuitive-flow` shaping or auto-guided shaping -> `docs/plans/<slug>.md`; use `$intuitive-planning-loop` when scoped planning scouts should critique options before user review | `plan-intake-and-autoplan.md` |
 | Draft plan exists | single plan-file intake if needed -> `gstack-autoplan docs/plans/<slug>.md` -> reconcile accepted decisions into the plan | `plan-intake-and-autoplan.md` |
 | Reviewed plan, not under GSD | pass `autoplan` precheck -> optional `to-issues` -> `gsd-plan-phase --prd` or manifest + `gsd-ingest-docs` then `gsd-plan-phase` | `gsd-handoff.md` |
 | Committed GSD phase | `gsd-execute-phase <phase>` -> `simplify <changed-scope>` -> `gsd-verify-work <phase>` -> final `$intuitive-doc` doc-alignment sub-phase when significant human truth may have changed | `gsd-handoff.md` |

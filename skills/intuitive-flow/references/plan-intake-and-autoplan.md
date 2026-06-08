@@ -23,8 +23,11 @@ B. Auto-guided route (experimental) - I auto-accept obvious defaults, save those
 
 Mode rules:
 
-- Direct route when the user asks for direct/manual shaping, `grill-me`, or
-  `office-hours`.
+- Direct route when the user asks for direct/manual shaping, asks to discuss the
+  idea plainly, or names `$grill-with-docs` style questioning.
+- `$intuitive-planning-loop` when the user asks agents to align first, run
+  reduce-entropy plus grill-batch critique, compare plans, or return one judged
+  review packet.
 - Auto-guided route when the user asks for auto mode, says to make the
   decisions, or asks to move fast.
 - Direct route when no preference is stated.
@@ -33,12 +36,14 @@ Mode rules:
 Default paths:
 
 ```text
-direct: grill-me -> docs/plans/<slug>.md
+direct: inline intuitive-flow shaping -> docs/plans/<slug>.md
+planning loop: intuitive-planning-loop -> review packet -> docs/plans/<slug>.md after approval
 auto-guided: intuitive-flow auto-guided shaping -> docs/plans/<slug>.md
 ```
 
-Use `office-hours` instead of or after `grill-me` when the question is product
-direction, wedge, audience, demand, or "is this worth building?"
+If the question is product direction, wedge, audience, demand, or "is this worth
+building?", keep it in direct shaping unless an optional product-discovery skill
+is explicitly installed and invoked.
 
 Stop after the plan doc unless the user explicitly asks to continue.
 
@@ -46,8 +51,8 @@ Stop after the plan doc unless the user explicitly asks to continue.
 
 Use auto-guided shaping only before `docs/plans/<slug>.md` exists and only when
 the user chose or clearly requested it. It may borrow the question style of
-`grill-me` and `office-hours`, but label the work as inline `intuitive-flow`
-unless those workflows actually ran.
+`grill-with-docs`, but label the work as inline `intuitive-flow` unless that
+workflow actually ran.
 
 Decision classes:
 
