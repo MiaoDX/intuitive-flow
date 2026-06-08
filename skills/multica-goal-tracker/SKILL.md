@@ -102,21 +102,22 @@ The script:
   finish details comment;
 - reads earlier tracker attempt metadata from issue comments and renders an
   issue-level card with cumulative duration, issue start/end, current attempt,
-  and recent attempt timeline under `~/.cache/multica-goal-tracker/`;
+  and the full attempt timeline under `~/.cache/multica-goal-tracker/`. The
+  card height is content-driven so goal rows and outcomes are not cut off;
 - uses Google Chrome headless to produce a PNG when available, with SVG
   fallback;
-- posts a Chinese evidence-card upload comment with the rendered PNG/SVG
-  attached. This parent comment is the thread entry for the Agent-generated
-  record and must include a short issue-level summary: issue status, goal count,
-  cumulative duration, what the issue tried, the current/final conclusion, and
-  a compact attempt list. Keep this summary scannable; full raw output belongs
-  in the details reply;
+- uploads the rendered PNG when possible, then posts a Chinese evidence-card
+  parent comment whose final block is `![completion-card.png](...)`. This
+  parent comment is the thread entry for the Agent-generated record and must
+  include a short issue-level summary: issue status, goal count, cumulative
+  duration, what the issue tried, the current/final conclusion, and a compact
+  attempt list. Keep this summary scannable; full raw output belongs in the
+  details reply;
 - reads the Multica comment-add response and posts one finish-details reply in
-  the same thread. When Multica returns an image attachment URL, the details
-  reply starts with `![completion-card.png](...)`, then a short overview, then
+  the same thread. The details reply is text-only by default: a short overview,
   goal details, then the real selected session attempt output as a Markdown
-  code block. Keep this ordering as the default so reviewers can scan the
-  rendered card first and only read raw output when needed;
+  code block. Reviewers should be able to read only the parent comment for the
+  issue summary and card, then open the child reply only for deeper evidence;
 - labels `complete` attempts as completion records; labels `partial`,
   `blocked`, and `failed` attempts as execution records so they do not
   masquerade as finished work.
@@ -190,11 +191,11 @@ bun skills/multica-goal-tracker/scripts/track_goal.ts \
 ```
 
 `final-review` renders one cumulative evidence card, posts it as the thread
-entry with a short issue-level summary and compact attempt list, then posts one
-details reply whose first content block is the inline PNG, followed by overview,
-timeline, details, and complete raw outputs for each attempt. The details reply
-stores metadata for every attempt, so later tracker runs can recover cumulative
-duration even if older Agent comments are cleaned up.
+entry with a short issue-level summary, compact attempt list, and inline PNG at
+the end of that parent comment, then posts one text-only details reply with
+overview, timeline, details, and complete raw outputs for each attempt. The
+details reply stores metadata for every attempt, so later tracker runs can
+recover cumulative duration even if older Agent comments are cleaned up.
 
 ## Useful Options
 

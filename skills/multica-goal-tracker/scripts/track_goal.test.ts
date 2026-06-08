@@ -481,7 +481,7 @@ Run bun run verify.
     expect(selectLatestRunId([{ id: "first" }, { id: "last" }])).toBe("last");
   });
 
-  test("puts the rendered PNG and overview before details and raw output", () => {
+  test("keeps detail comments textual with overview before raw output", () => {
     const summary = summarizeGoal("/goal fix the tracker\nRun bun run verify");
     const session = {
       source: "session file",
@@ -513,16 +513,14 @@ Run bun run verify.
       "/tmp/card.svg",
       attempt,
       timeline,
-      "/uploads/workspaces/ws/completion-card.png",
     );
 
-    const imageIndex = comment.indexOf("![completion-card.png](/uploads/workspaces/ws/completion-card.png)");
     const overviewIndex = comment.indexOf("## Goal 完成记录概览");
     const detailsIndex = comment.indexOf("## Goal 详情");
     const rawOutputIndex = comment.indexOf("## 真实 session 完成输出");
 
-    expect(imageIndex).toBeGreaterThan(-1);
-    expect(overviewIndex).toBeGreaterThan(imageIndex);
+    expect(comment).not.toContain("![completion-card.png]");
+    expect(overviewIndex).toBeGreaterThan(-1);
     expect(detailsIndex).toBeGreaterThan(overviewIndex);
     expect(rawOutputIndex).toBeGreaterThan(detailsIndex);
     expect(comment).toContain("multica-goal-tracker:attempt");
@@ -530,17 +528,22 @@ Run bun run verify.
     expect(comment).toContain("**本次 Goal:** #2 / complete");
     expect(comment).toContain("**本次持续时间:** 9m 7s");
     expect(comment).toContain("**Issue 累计耗时:** 11m 7s");
-    expect(comment).toContain("下方保留真实 session 输出");
+    expect(comment).toContain("父评论末尾的 PNG");
     expect(comment).toContain("inside fence");
     expect(markdownCodeBlock(session.rawOutput)).toContain("````text");
   });
 
-  test("builds a top evidence card upload comment for the final thread", () => {
+  test("builds a top evidence card comment with summary and image at the end", () => {
     const summary = summarizeGoal("/goal fix the tracker\nRun bun run verify");
     const session = sessionEvidenceFromTranscript("session file", "RESULT_STATUS: SUCCESS\nVerified.");
     const attempt = buildAttemptRecord(summary, { ...session, durationMs: 10_000 }, "complete", 1);
     const timeline = buildGoalTimeline([attempt]);
-    const comment = markdownForEvidenceCardUpload({ identifier: "MIA-40", status: "Done" }, attempt, timeline);
+    const comment = markdownForEvidenceCardUpload(
+      { identifier: "MIA-40", status: "Done" },
+      attempt,
+      timeline,
+      "/uploads/workspaces/ws/completion-card.png",
+    );
 
     expect(comment).toContain("<!-- multica-goal-tracker:evidence-card-upload -->");
     expect(comment).toContain("## Goal 完成卡片");
@@ -551,7 +554,12 @@ Run bun run verify.
     expect(comment).toContain("围绕「修复 the tracker」推进");
     expect(comment).toContain("## 尝试过程");
     expect(comment).toContain("- #1 完成 / 10s：修复 the tracker");
-    expect(comment).toContain("下方回复包含内联 PNG、详情和真实 session 输出。");
+    expect(comment).toContain("下方回复只保留详情和真实 session 输出。");
+    const summaryIndex = comment.indexOf("## 简要总结");
+    const attemptsIndex = comment.indexOf("## 尝试过程");
+    const imageIndex = comment.indexOf("![completion-card.png](/uploads/workspaces/ws/completion-card.png)");
+    expect(imageIndex).toBeGreaterThan(attemptsIndex);
+    expect(attemptsIndex).toBeGreaterThan(summaryIndex);
   });
 
   test("summarizes multiple attempts in the top evidence card upload comment", () => {
@@ -571,7 +579,7 @@ Run bun run verify.
     expect(comment).toContain("- #2 完成 / 1m 30s：complete follow-up defaults");
   });
 
-  test("builds final-review with PNG first, overview second, raw outputs last", () => {
+  test("builds final-review details with overview first and raw outputs last", () => {
     const firstSummary = summarizeGoal("/goal implement first slice via $intuitive-flow");
     const secondSummary = summarizeGoal("/goal complete follow-up defaults via $intuitive-flow");
     const firstSession = sessionEvidenceFromTranscript("first session", "RESULT_STATUS: PARTIAL\nFirst raw output.");
@@ -588,15 +596,13 @@ Run bun run verify.
       attempts,
       timeline,
       "/tmp/card.png",
-      "/uploads/workspaces/ws/completion-card.png",
     );
 
-    const imageIndex = comment.indexOf("![completion-card.png](/uploads/workspaces/ws/completion-card.png)");
     const overviewIndex = comment.indexOf("## Goal 最终汇总概览");
     const timelineIndex = comment.indexOf("## Goal 时间线");
     const rawIndex = comment.indexOf("### #1 / partial 真实 session 执行输出");
-    expect(imageIndex).toBeGreaterThan(-1);
-    expect(overviewIndex).toBeGreaterThan(imageIndex);
+    expect(comment).not.toContain("![completion-card.png]");
+    expect(overviewIndex).toBeGreaterThan(-1);
     expect(timelineIndex).toBeGreaterThan(overviewIndex);
     expect(rawIndex).toBeGreaterThan(timelineIndex);
     expect(comment).toContain("**Goal 次数:** 2");
@@ -680,7 +686,6 @@ Run bun run verify.
       "/tmp/card-2.png",
       second,
       buildGoalTimeline([first, second]),
-      "/uploads/workspaces/ws/completion-card.png",
     );
 
     const timelineFromLatestOnly = buildGoalTimeline(attemptRecordsFromComments([{ content: latestComment }]));
@@ -736,10 +741,10 @@ Run bun run verify.
     expect(comment).toContain("## Goal 执行记录概览");
     expect(comment).toContain("**本次 Goal:** #1 / partial");
     expect(comment).toContain("**执行结果:**");
-    expect(comment).toContain("上方 PNG 是渲染后的执行卡片");
+    expect(comment).toContain("父评论末尾的 PNG 是渲染后的执行卡片");
     expect(comment).not.toContain("## Goal 完成记录");
     expect(comment).not.toContain("**完成结果:**");
-    expect(comment).not.toContain("上方 PNG 是渲染后的完成卡片");
+    expect(comment).not.toContain("父评论末尾的 PNG 是渲染后的完成卡片");
   });
 
   test("extracts image URL and comment ID from Multica comment add output", () => {

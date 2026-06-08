@@ -156,6 +156,11 @@ size as a maximum, not a quota.
       issue status, attempt count, cumulative duration, and a concise attempt
       summary, so reviewers had to open the child details reply before knowing
       what work the evidence represented.
+- [x] P1 false confidence: `multica-goal-tracker` evidence cards still used a
+      fixed-height, clamped layout and pushed inline card visibility into the
+      child details reply, so long issue titles, attempt outcomes, or more than
+      five attempts could be hidden while the parent thread looked like the
+      reviewable evidence record.
 
 ## Saturation Audit
 
@@ -249,6 +254,10 @@ Current state:
   issue-level work summary expected from the final-review thread entry:
   status, attempt count, cumulative duration, brief conclusion, and attempt
   timeline lines.
+- `multica-goal-tracker` rendered evidence cards now use content-driven height,
+  show the full attempt timeline with outcomes, and put the inline rendered card
+  at the end of the parent evidence comment when upload succeeds; upload
+  failures fall back to the existing attachment path.
 - No current P0/P1/P2 candidate remains selected after the latest audit.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
@@ -544,3 +553,13 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   timeline to the parent evidence-card comment. Verified with
   `bun test skills/multica-goal-tracker/scripts/track_goal.test.ts`,
   `bun run check`, and `bun run check:skills`.
+- 2026-06-08: Selected Multica evidence-card rendering and thread placement as
+  P1 false confidence and workflow friction after the materiality gate accepted
+  that fixed-height cards could clip long summaries or attempt histories while
+  the parent evidence comment still did not own the visible rendered card.
+  Made card height content-driven, rendered every attempt row with its outcome,
+  uploaded the rendered image directly when Multica config is available, moved
+  inline image markdown to the parent evidence comment, and kept failed uploads
+  on the existing attachment fallback path. Verified with
+  `bun test skills/multica-goal-tracker/scripts/track_goal.test.ts`,
+  `bun run check`, and `bun run verify`.
