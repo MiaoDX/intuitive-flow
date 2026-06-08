@@ -7,7 +7,7 @@
     "check:shell": "shellcheck --severity=error scripts/update.sh scripts/**/*.sh .githooks/pre-commit",
     "check": "tsc --noEmit",
     "setup:hooks": "bash scripts/dev/install-git-hooks.sh",
-    "test": "bun test scripts/**/*.test.ts skills/**/*.test.ts",
+    "test": "bun test ./scripts ./skills",
     "verify": "bun run check:skills && bun run check:shell && bun run check && bun run test"
   },
   "devDependencies": {

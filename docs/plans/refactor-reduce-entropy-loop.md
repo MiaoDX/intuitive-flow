@@ -107,6 +107,11 @@ size as a maximum, not a quota.
       `tests and harnesses` as part of the human surface, while the live human
       docs define the authoritative human surface as `README.md`,
       `ARCHITECTURE.md`, `STATUS.md`, and `docs/human/**`.
+- [x] P1 false confidence: `package.json` used shell-expanded
+      `skills/**/*.test.ts` in the default test command, but Bash did not
+      expand that glob in this checkout, so skill-local tests such as
+      `skills/multica-goal-tracker/scripts/track_goal.test.ts` were omitted
+      from `bun run test` and `bun run verify`.
 
 ## Saturation Audit
 
@@ -162,6 +167,9 @@ Current state:
   verify`, so tmux-backed tests do not depend on unstated runner image contents.
 - `BELIEFS.md` now treats layout choices, tests, and harness quality as human
   responsibilities rather than extra source-of-truth surfaces.
+- `bun run test` now asks Bun to discover tests recursively under the
+  repo-owned `./scripts` and `./skills` directories, so nested skill-local tests
+  are included without relying on Bash `globstar`.
 - No current P0/P1/P2 candidate remains selected after the latest audit; the
   next step is a fresh saturation audit from the current worktree.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
@@ -353,3 +361,11 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   the candidate with one eligible group. Reworded `BELIEFS.md` so layout
   choices, tests, and harness quality remain human-owned responsibilities
   without becoming extra source-of-truth surfaces.
+- 2026-06-08: Selected the skill-local test glob as P1 false confidence after
+  `printf '<%s>\n' scripts/**/*.test.ts skills/**/*.test.ts` showed Bash left
+  `skills/**/*.test.ts` as a literal argument and `bun run test` omitted
+  `skills/multica-goal-tracker/scripts/track_goal.test.ts`. The deterministic
+  materiality gate accepted the candidate with one eligible group. Changed the
+  default test command to `bun test ./scripts ./skills`, which lets Bun
+  recursively discover tests under repo-owned script and skill directories
+  without entering `vendor/**`.
