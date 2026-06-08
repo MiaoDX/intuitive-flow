@@ -407,6 +407,10 @@ function durationMsFromSeconds(value: unknown): number | undefined {
   return Math.max(0, Math.round(value * 1000));
 }
 
+function isCodexTerminalGoalStatus(value: string): boolean {
+  return value === "complete" || value === "blocked" || value === "failed" || value === "partial";
+}
+
 function timingFromCompletedTask(payload: JsonRecord, timestampMs?: number): SessionTiming {
   const completedAt = isoFromEpochSeconds(payload.completed_at) ?? (timestampMs !== undefined ? new Date(timestampMs).toISOString() : undefined);
   const durationMs = typeof payload.duration_ms === "number" && Number.isFinite(payload.duration_ms) ? Math.max(0, Math.round(payload.duration_ms)) : undefined;
@@ -443,17 +447,17 @@ function goalSimilarityScore(targetGoal: string, candidateGoal: string): number 
   return union === 0 ? 0 : overlap / union;
 }
 
-function selectCompletedGoal(completeGoals: SessionTiming[], targetGoal?: string): SessionTiming | undefined {
-  if (completeGoals.length === 0) return undefined;
+function selectTerminalGoal(terminalGoals: SessionTiming[], targetGoal?: string): SessionTiming | undefined {
+  if (terminalGoals.length === 0) return undefined;
   if (!targetGoal?.trim()) {
-    if (completeGoals.length === 1) return completeGoals[0];
+    if (terminalGoals.length === 1) return terminalGoals[0];
     throw new CodexGoalMatchError(
-      `Codex session contains ${completeGoals.length} completed goals. Pass --goal/--goal-file or add a tracker start comment so the skill can select the correct goal without guessing.`,
+      `Codex session contains ${terminalGoals.length} terminal goals. Pass --goal/--goal-file or add a tracker start comment so the skill can select the correct goal without guessing.`,
     );
   }
 
   let best: { goal: SessionTiming; score: number } | undefined;
-  for (const goal of completeGoals) {
+  for (const goal of terminalGoals) {
     const score = goalSimilarityScore(targetGoal, goal.objective ?? "");
     if (!best || score > best.score) {
       best = { goal, score };
@@ -462,20 +466,21 @@ function selectCompletedGoal(completeGoals: SessionTiming[], targetGoal?: string
 
   if (best && best.score >= 0.45) return best.goal;
   throw new CodexGoalMatchError(
-    `No completed Codex goal matched the issue goal closely enough. Pass the exact follow-up goal with --goal/--goal-file or use the matching session file.`,
+    `No terminal Codex goal matched the issue goal closely enough. Pass the exact follow-up goal with --goal/--goal-file or use the matching session file.`,
   );
 }
 
-function selectCodexEvidence(candidates: CodexCandidate[], completeGoals: SessionTiming[], targetGoal?: string): SelectedCodexEvidence | undefined {
+function selectCodexEvidence(candidates: CodexCandidate[], terminalGoals: SessionTiming[], targetGoal?: string): SelectedCodexEvidence | undefined {
   if (candidates.length === 0) return undefined;
-  if (completeGoals.length === 0) {
+  if (terminalGoals.length === 0) {
     const completion = [...candidates].reverse().find((candidate) => isCompletionLikeMessage(candidate.text));
     if (completion) return { candidate: completion };
     if (candidates.length === 1) return { candidate: candidates[0] };
-    throw new CodexGoalMatchError("Codex JSONL has multiple assistant outputs but no goal completion metadata; pass a session transcript with the exact completion output.");
+    throw new CodexGoalMatchError("Codex JSONL has multiple assistant outputs but no terminal goal metadata; pass a session transcript with the exact attempt output.");
   }
-  const goal = selectCompletedGoal(completeGoals, targetGoal);
-  if (goal?.turnId) {
+  const goal = selectTerminalGoal(terminalGoals, targetGoal);
+  if (!goal) return undefined;
+  if (goal.turnId) {
     const sameTurn = candidates.filter((candidate) => candidate.turnId === goal.turnId);
     const sameTurnCompletion = sameTurn.filter((candidate) => isCompletionLikeMessage(candidate.text));
     if (sameTurnCompletion.length) return { candidate: sameTurnCompletion[sameTurnCompletion.length - 1], goal };
@@ -496,21 +501,21 @@ function selectCodexEvidence(candidates: CodexCandidate[], completeGoals: Sessio
     }
   }
 
-  if (completeGoals.length > 1 || targetGoal?.trim()) {
-    throw new CodexGoalMatchError("Matched Codex goal did not have an assistant completion output in the same turn.");
+  if (terminalGoals.length > 1 || targetGoal?.trim()) {
+    throw new CodexGoalMatchError("Matched Codex goal did not have an assistant attempt output in the same turn.");
   }
 
-  const onlyGoal = completeGoals[0];
-  const sameTurn = onlyGoal?.turnId ? candidates.filter((candidate) => candidate.turnId === onlyGoal.turnId) : [];
+  const onlyGoal = terminalGoals[0];
+  const sameTurn = onlyGoal.turnId ? candidates.filter((candidate) => candidate.turnId === onlyGoal.turnId) : [];
   if (sameTurn.length) return { candidate: sameTurn[sameTurn.length - 1], goal: onlyGoal };
 
   const singleCandidate = candidates.length === 1 ? candidates[0] : undefined;
   if (singleCandidate) return { candidate: singleCandidate, goal: onlyGoal };
 
-  throw new CodexGoalMatchError("Could not identify a real assistant completion output for the Codex goal.");
+  throw new CodexGoalMatchError("Could not identify a real assistant attempt output for the Codex goal.");
 }
 
-function nearestGoalTiming(completeGoals: SessionTiming[], selected?: CodexCandidate, preferredGoal?: SessionTiming): SessionTiming {
+function nearestGoalTiming(terminalGoals: SessionTiming[], selected?: CodexCandidate, preferredGoal?: SessionTiming): SessionTiming {
   if (preferredGoal) {
     return {
       startedAt: preferredGoal.startedAt,
@@ -521,7 +526,7 @@ function nearestGoalTiming(completeGoals: SessionTiming[], selected?: CodexCandi
     };
   }
 
-  if (completeGoals.length === 0) {
+  if (terminalGoals.length === 0) {
     return {
       startedAt: selected?.startedAt,
       completedAt: selected?.completedAt,
@@ -530,18 +535,18 @@ function nearestGoalTiming(completeGoals: SessionTiming[], selected?: CodexCandi
   }
 
   if (selected?.turnId) {
-    const sameTurn = [...completeGoals].reverse().find((goal) => goal.turnId === selected.turnId);
+    const sameTurn = [...terminalGoals].reverse().find((goal) => goal.turnId === selected.turnId);
     if (sameTurn) {
       return { startedAt: sameTurn.startedAt, completedAt: sameTurn.completedAt, durationMs: sameTurn.durationMs };
     }
   }
 
   if (selected?.timestampMs === undefined) {
-    const latest = completeGoals[completeGoals.length - 1];
+    const latest = terminalGoals[terminalGoals.length - 1];
     return { startedAt: latest.startedAt, completedAt: latest.completedAt, durationMs: latest.durationMs };
   }
 
-  const selectedGoal = [...completeGoals].reverse().find((goal) => {
+  const selectedGoal = [...terminalGoals].reverse().find((goal) => {
     if (goal.timestampMs === undefined) return false;
     return goal.timestampMs >= selected.timestampMs! - 60_000 && goal.timestampMs <= selected.timestampMs! + 5 * 60_000;
   });
@@ -590,7 +595,7 @@ function codexMessageText(value: unknown): string {
 
 export function evidenceFromCodexJsonl(raw: string, targetGoal?: string): (SessionTiming & { transcript: string }) | undefined {
   const candidates: CodexCandidate[] = [];
-  const completeGoals: SessionTiming[] = [];
+  const terminalGoals: SessionTiming[] = [];
 
   for (const line of raw.split(/\r?\n/)) {
     const parsed = maybeParseJsonLine(line.trim());
@@ -620,8 +625,10 @@ export function evidenceFromCodexJsonl(raw: string, targetGoal?: string): (Sessi
       }
       if (payload.type === "thread_goal_updated") {
         const goal = asRecord(payload.goal);
-        if (goal?.status === "complete") {
-          completeGoals.push({
+        if (!goal) continue;
+        const status = textFromUnknown(goal.status);
+        if (isCodexTerminalGoalStatus(status)) {
+          terminalGoals.push({
             startedAt: isoFromEpochSeconds(goal.createdAt),
             completedAt: isoFromEpochSeconds(goal.updatedAt),
             durationMs: durationMsFromSeconds(goal.timeUsedSeconds),
@@ -634,11 +641,11 @@ export function evidenceFromCodexJsonl(raw: string, targetGoal?: string): (Sessi
     }
   }
 
-  const selected = selectCodexEvidence(candidates.filter((candidate) => candidate.text.trim()), completeGoals, targetGoal);
+  const selected = selectCodexEvidence(candidates.filter((candidate) => candidate.text.trim()), terminalGoals, targetGoal);
   if (!selected) return undefined;
   return {
     transcript: selected.candidate.text.trim(),
-    ...nearestGoalTiming(completeGoals, selected.candidate, selected.goal),
+    ...nearestGoalTiming(terminalGoals, selected.candidate, selected.goal),
   };
 }
 
@@ -1413,6 +1420,8 @@ export function markdownForFinish(
   timeline: GoalTimeline,
 ): string {
   const title = attempt.status === "complete" ? "Goal 完成记录" : "Goal 执行记录";
+  const outcomeLabel = attempt.status === "complete" ? "完成结果" : "执行结果";
+  const evidenceKind = attempt.status === "complete" ? "完成卡片" : "执行卡片";
   return `<!-- multica-goal-tracker:finish -->
 ${encodeAttemptRecord(attempt)}
 ## ${title}
@@ -1437,11 +1446,11 @@ ${encodeAttemptRecord(attempt)}
 
 **Issue 时间范围:** ${formatDateTime(timeline.startedAt)} - ${formatDateTime(timeline.completedAt)}
 
-**完成结果:** ${session.outcome}
+**${outcomeLabel}:** ${session.outcome}
 
 **验证说明:** ${session.proofNote}
 
-**证据:** 已附加渲染后的完成卡片；如果 Multica 返回附件 URL，脚本会自动追加一条内联图片回复。
+**证据:** 已附加渲染后的${evidenceKind}；如果 Multica 返回附件 URL，脚本会自动追加一条内联图片回复。
 
 **Goal 目标:** ${summary.purpose}
 
@@ -1453,9 +1462,10 @@ ${encodeAttemptRecord(attempt)}
 `;
 }
 
-export function markdownForRawSessionOutput(session: SessionEvidence): string {
+export function markdownForRawSessionOutput(session: SessionEvidence, status: AttemptStatus = "complete"): string {
+  const title = status === "complete" ? "真实 session 完成输出" : "真实 session 执行输出";
   return `<!-- multica-goal-tracker:raw-session-output -->
-## 真实 session 完成输出
+## ${title}
 
 **Session 来源:** ${session.source}
 
@@ -1584,7 +1594,7 @@ function finish(opts: Options) {
       html: evidence.htmlPath,
       svg: evidence.svgPath,
     });
-    printDryRun("raw session output comment", markdownForRawSessionOutput(session));
+    printDryRun("raw session output comment", markdownForRawSessionOutput(session, attempt.status));
     return;
   }
 
@@ -1614,13 +1624,13 @@ function finish(opts: Options) {
   } else {
     console.warn("WARNING: Multica did not return an image attachment URL; evidence remains attached but not inline.");
   }
-  const rawOutputCommentFile = writeTempMarkdown(evidence.dir, "raw-session-output.md", markdownForRawSessionOutput(session));
+  const rawOutputCommentFile = writeTempMarkdown(evidence.dir, "raw-session-output.md", markdownForRawSessionOutput(session, attempt.status));
   const rawOutputArgs = ["issue", "comment", "add", opts.issue!, "--content-file", rawOutputCommentFile, "--output", "json"];
   if (parent) {
     rawOutputArgs.push("--parent", parent);
   }
   runMultica(opts, rawOutputArgs);
-  console.log("Posted raw session completion output.");
+  console.log("Posted raw session output.");
   console.log(`Added tracker finish comment to ${issue.identifier ?? opts.issue}`);
   console.log(`Attached evidence: ${evidence.attachment}`);
 }

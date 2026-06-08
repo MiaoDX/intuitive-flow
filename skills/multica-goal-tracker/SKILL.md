@@ -85,8 +85,8 @@ The script:
   otherwise uses the initial `/goal` in the issue description;
 - reads the latest Multica execution run via `multica issue runs` and
   `multica issue run-messages`;
-- when a Codex JSONL session contains multiple completed goals, matches the
-  completed goal back to the active goal objective; if it cannot match without
+- when a Codex JSONL session contains multiple terminal goals, matches the
+  terminal goal back to the active goal objective; if it cannot match without
   guessing, it fails and asks for the exact `--goal`/`--goal-file`;
 - records this finish as one goal attempt with hidden structured metadata in the
   finish comment;
@@ -104,13 +104,14 @@ The script:
   card is displayed inline in the issue timeline. The CLI currently has no
   standalone upload command and no comment update command, so this uses a reply
   instead of editing the original finish comment;
-- appends another child comment with the real selected session completion output
+- appends another child comment with the real selected session attempt output
   as a plain Markdown code block. This raw output is not rendered into an image
-  and is not summarized, so the issue keeps the actual completion text alongside
+  and is not summarized, so the issue keeps the actual attempt text alongside
   the overview card.
 
 If the issue has no Multica run history, finish fails fast instead of creating a
-fake proof card. In that case pass a real completed Codex session JSONL:
+fake proof card. In that case pass a real Codex session JSONL for the finished
+attempt:
 
 ```bash
 bun skills/multica-goal-tracker/scripts/track_goal.ts \

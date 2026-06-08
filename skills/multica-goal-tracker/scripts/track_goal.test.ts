@@ -170,6 +170,44 @@ Later notes should not be treated as the active goal.
     expect(evidence.durationMs).toBe(547000);
   });
 
+  test("extracts goal timing from blocked Codex JSONL terminal metadata", () => {
+    const finalMessage = "RESULT_STATUS: BLOCKED\nNeed external input.";
+    const jsonl = [
+      {
+        timestamp: "2026-06-04T05:10:00.000Z",
+        type: "event_msg",
+        payload: {
+          type: "thread_goal_updated",
+          turnId: "blocked-turn",
+          goal: {
+            status: "blocked",
+            objective: "Investigate the blocked tracker run.",
+            createdAt: 1780549500,
+            updatedAt: 1780549800,
+            timeUsedSeconds: 300,
+          },
+        },
+      },
+      {
+        timestamp: "2026-06-04T05:10:02.000Z",
+        type: "event_msg",
+        payload: {
+          type: "agent_message",
+          turn_id: "blocked-turn",
+          message: finalMessage,
+        },
+      },
+    ]
+      .map((value) => JSON.stringify(value))
+      .join("\n");
+
+    const evidence = evidenceFromCodexJsonl(jsonl, "/goal Investigate the blocked tracker run.");
+    expect(evidence?.transcript).toBe(finalMessage);
+    expect(evidence?.startedAt).toBe("2026-06-04T05:05:00.000Z");
+    expect(evidence?.completedAt).toBe("2026-06-04T05:10:00.000Z");
+    expect(evidence?.durationMs).toBe(300_000);
+  });
+
   test("prefers the completed goal turn over later Codex session turns", () => {
     const goalOutput = "Implemented.\nVerification:\n- focused tests passed.";
     const laterOutput = "Committed the intended changes:\n`abc123 later commit`";
@@ -354,7 +392,7 @@ Later notes should not be treated as the active goal.
       .map((value) => JSON.stringify(value))
       .join("\n");
 
-    expect(() => evidenceFromCodexJsonl(jsonl, issueGoal)).toThrow("assistant completion output");
+    expect(() => evidenceFromCodexJsonl(jsonl, issueGoal)).toThrow("assistant attempt output");
   });
 
   test("builds evidence from skill-runner result artifacts without terminal logs", () => {
@@ -478,6 +516,20 @@ Run bun run verify.
     expect(markdownCodeBlock(raw)).toContain("````text");
   });
 
+  test("labels non-complete raw session output as execution output", () => {
+    const comment = markdownForRawSessionOutput({
+      source: "codex session file",
+      outcome: "RESULT_STATUS: BLOCKED",
+      proofNote: "blocked on external input",
+      excerpt: "Need input.",
+      rawOutput: "RESULT_STATUS: BLOCKED\nNeed input.",
+      messageCount: 2,
+    }, "blocked");
+
+    expect(comment).toContain("## 真实 session 执行输出");
+    expect(comment).not.toContain("## 真实 session 完成输出");
+  });
+
   test("extracts attempt records from finish comments and accumulates duration", () => {
     const summary = summarizeGoal("/goal implement first slice via $intuitive-flow");
     const session = sessionEvidenceFromTranscript("session file", "Implemented.\nVerification passed.");
@@ -548,7 +600,11 @@ Run bun run verify.
 
     expect(comment).toContain("## Goal 执行记录");
     expect(comment).toContain("**本次 Goal:** #1 / partial");
+    expect(comment).toContain("**执行结果:**");
+    expect(comment).toContain("已附加渲染后的执行卡片");
     expect(comment).not.toContain("## Goal 完成记录");
+    expect(comment).not.toContain("**完成结果:**");
+    expect(comment).not.toContain("已附加渲染后的完成卡片");
   });
 
   test("extracts image URL and comment ID from Multica comment add output", () => {

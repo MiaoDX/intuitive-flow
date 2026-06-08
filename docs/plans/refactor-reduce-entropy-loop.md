@@ -143,6 +143,10 @@ size as a maximum, not a quota.
       this checkout's absolute path, so the installed portable skill could give
       dead commands for the documented `~/intuitive-flow` clone path or any
       other checkout location.
+- [x] P1 false confidence: `multica-goal-tracker` accepted partial, blocked,
+      and failed attempts but still labelled raw session child comments as
+      completion output and only preserved Codex goal timing for `complete`
+      goal metadata.
 
 ## Saturation Audit
 
@@ -224,6 +228,10 @@ Current state:
 - `multica-goal-tracker` command examples now run from the Intuitive Flow
   checkout root with relative script paths, and `bun run check:skills` rejects
   the previously leaked machine-local checkout path in skill Markdown.
+- `multica-goal-tracker` now treats Codex `complete`, `partial`, `blocked`, and
+  `failed` goal updates as terminal attempt timing metadata, and non-complete
+  attempts use execution wording in both finish comments and raw session child
+  comments.
 - No current P0/P1/P2 candidate remains selected after the latest audit.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
@@ -497,3 +505,11 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   against the leaked machine-local path. Verified with
   `bun test scripts/lib/check-skills.test.ts`, `bun run check:skills`, and
   `bun run check`.
+- 2026-06-08: Selected Multica terminal-attempt semantics as P1 false
+  confidence after the tracker audit showed non-complete attempts could still
+  be presented as completion output and blocked/failed Codex goal timing was
+  dropped. Extended Codex JSONL timing extraction to terminal statuses,
+  switched non-complete comments and raw-output child comments to execution
+  wording, and updated the skill docs. Verified with
+  `bun test skills/multica-goal-tracker/scripts/track_goal.test.ts`,
+  `bun run check:skills`, and `bun run check`.
