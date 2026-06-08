@@ -88,6 +88,9 @@ size as a maximum, not a quota.
       configuration, and `scripts/dev/tmux-richer.sh` replaced
       `~/.codex/hooks.json` instead of preserving other hook owners such as
       Agent Deck.
+- [x] P1 false confidence: the GitHub Actions verifier ran `bun run verify`
+      after the ShellCheck gate was added, but did not explicitly install the
+      ShellCheck binary.
 
 ## Saturation Audit
 
@@ -132,6 +135,8 @@ Why no change:
 - Codex hook ownership is explicit: tmux-agent-status hooks merge into
   `~/.codex/hooks.json` through a tested TypeScript helper, preserving existing
   hook owners such as Agent Deck notify hooks.
+- GitHub Actions installs ShellCheck before running `bun run verify`, so the CI
+  proof boundary has the same tool dependency as the local verifier.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
   runtime messages rather than current false confidence or live source drift.
@@ -285,3 +290,8 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   a heredoc, and documented the merged hook ownership contract. Verified with
   `bun test scripts/lib/ensure-codex-hooks.test.ts`, `bun run check:shell`, and
   `bun run verify`.
+- 2026-06-08: Selected CI ShellCheck provisioning as P1 false confidence after
+  the clean-worktree audit showed `.github/workflows/verify.yml` still ran
+  `bun run verify` without explicitly installing ShellCheck. Added an
+  `apt-get install shellcheck` workflow step and verified the local full proof
+  remains green with `bun run verify`.
