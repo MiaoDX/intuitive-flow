@@ -198,6 +198,30 @@ Later notes should not be treated as the active goal.
     expect(evidence.durationMs).toBe(547000);
   });
 
+  test("uses explicit goal accounting from Codex task output when terminal goal metadata is absent", () => {
+    const finalMessage = "Goal is complete. Final goal accounting: 5717 seconds elapsed; no token budget was set.\n\nVerification passed.";
+    const jsonl = [
+      {
+        timestamp: "2026-05-09T08:43:23.899Z",
+        type: "event_msg",
+        payload: {
+          type: "task_complete",
+          last_agent_message: finalMessage,
+          completed_at: 1778316203,
+          duration_ms: 215310,
+        },
+      },
+    ]
+      .map((value) => JSON.stringify(value))
+      .join("\n");
+
+    const evidence = evidenceFromCodexJsonl(jsonl);
+    expect(evidence?.transcript).toBe(finalMessage);
+    expect(evidence?.startedAt).toBe("2026-05-09T07:08:06.000Z");
+    expect(evidence?.completedAt).toBe("2026-05-09T08:43:23.000Z");
+    expect(evidence?.durationMs).toBe(5_717_000);
+  });
+
   test("extracts goal timing from blocked Codex JSONL terminal metadata", () => {
     const finalMessage = "RESULT_STATUS: BLOCKED\nNeed external input.";
     const jsonl = [

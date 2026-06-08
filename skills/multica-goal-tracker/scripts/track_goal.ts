@@ -508,6 +508,22 @@ function timingFromCompletedTask(payload: JsonRecord, timestampMs?: number): Ses
   return { startedAt, completedAt, durationMs };
 }
 
+function goalAccountingDurationMs(message: string): number | undefined {
+  const match = message.match(/(?:final\s+)?goal accounting:\s*(?:time used\s*)?`?([0-9]+(?:\.[0-9]+)?)`?\s*(?:seconds?|secs?|s)\b/i);
+  if (!match) return undefined;
+  const seconds = Number.parseFloat(match[1]);
+  if (!Number.isFinite(seconds) || seconds < 0) return undefined;
+  return Math.round(seconds * 1000);
+}
+
+function timingWithMessageAccounting(timing: SessionTiming, message: string, timestampMs?: number): SessionTiming {
+  const durationMs = goalAccountingDurationMs(message);
+  if (durationMs === undefined) return timing;
+  const completedAt = timing.completedAt ?? (timestampMs !== undefined ? new Date(timestampMs).toISOString() : undefined);
+  const startedAt = completedAt ? new Date(new Date(completedAt).getTime() - durationMs).toISOString() : timing.startedAt;
+  return { ...timing, startedAt, completedAt, durationMs };
+}
+
 function isCompletionLikeMessage(message: string): boolean {
   return /RESULT_STATUS|^SUMMARY:|CHANGED_FILES:|VERIFICATION:|^Implemented\.|^Committed\b/im.test(message);
 }
@@ -708,7 +724,9 @@ export function evidenceFromCodexJsonl(raw: string, targetGoal?: string): (Sessi
       }
       if (payload.type === "task_complete") {
         const message = textFromUnknown(payload.last_agent_message).trim();
-        if (message) candidates.push({ text: message, timestampMs, turnId, ...timingFromCompletedTask(payload, timestampMs) });
+        if (message) {
+          candidates.push({ text: message, timestampMs, turnId, ...timingWithMessageAccounting(timingFromCompletedTask(payload, timestampMs), message, timestampMs) });
+        }
       }
       if (payload.type === "thread_goal_updated") {
         const goal = asRecord(payload.goal);
