@@ -24,6 +24,10 @@ size as a maximum, not a quota.
       reference coverage, but only validated links in each `SKILL.md` entrypoint.
       Links from `references/` or `templates/` Markdown files could drift while
       the normal proof boundary stayed green.
+- [x] P1 live source drift: `README.md` listed `$intuitive-preflight` as a
+      primary skill row while `ARCHITECTURE.md` and `STATUS.md` define the small
+      public surface as flow, refactor, reduce-entropy, and squash, with
+      preflight as a routed specialist/pre-execution contract skill.
 
 ## Evidence Ladder
 
@@ -52,3 +56,9 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   Markdown links in all skill Markdown files.
 - 2026-06-08: Verified with `bun test scripts/lib/check-skills.test.ts`,
   `bun run check:skills`, and `bun run verify`: 74 tests passed across 11 files.
+- 2026-06-08: Selected the README primary skill surface drift as P1 live source
+  drift and real workflow friction. The deterministic materiality gate accepted
+  it with one eligible candidate and no warnings.
+- 2026-06-08: Removed `$intuitive-preflight` from the README primary skill table
+  while keeping it in the specialist/direct-use paragraph, matching
+  `ARCHITECTURE.md` and `STATUS.md`.
