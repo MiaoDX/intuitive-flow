@@ -103,6 +103,10 @@ size as a maximum, not a quota.
 - [x] P2 false confidence: GitHub Actions ran the default verifier without
       explicitly installing `tmux`, while several tmux-backed behavior tests are
       skipped when `hasUsableTmux()` cannot create a detached session.
+- [x] P2 live source drift: `BELIEFS.md` listed `layout` and
+      `tests and harnesses` as part of the human surface, while the live human
+      docs define the authoritative human surface as `README.md`,
+      `ARCHITECTURE.md`, `STATUS.md`, and `docs/human/**`.
 
 ## Saturation Audit
 
@@ -156,10 +160,10 @@ Current state:
   `skills/*` entries.
 - GitHub Actions now installs `tmux` alongside ShellCheck before `bun run
   verify`, so tmux-backed tests do not depend on unstated runner image contents.
-- The next current read-only audit candidate is the remaining `BELIEFS.md`
-  human-surface wording check. The loop remains `CONTINUE` until that candidate
-  is executed, rejected by a fresh materiality gate, or a saturation audit
-  returns no material work.
+- `BELIEFS.md` now treats layout choices, tests, and harness quality as human
+  responsibilities rather than extra source-of-truth surfaces.
+- No current P0/P1/P2 candidate remains selected after the latest audit; the
+  next step is a fresh saturation audit from the current worktree.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
   runtime messages rather than current false confidence or live source drift.
@@ -341,3 +345,11 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   `skipIf(!hasTmux)` behavior tests. The deterministic materiality gate
   accepted the candidate with one eligible group. Added `tmux` to the CI system
   tool install step so CI proof strength does not depend on the base image.
+- 2026-06-08: Selected `BELIEFS.md` human-surface wording as P2 live source
+  drift and recurring rediscovery after the doc audit showed the doctrine file
+  listed layout/tests/harnesses as human surface entries while README,
+  architecture, status, and the human-doc index define the authoritative
+  surface as the four doc roots. The deterministic materiality gate accepted
+  the candidate with one eligible group. Reworded `BELIEFS.md` so layout
+  choices, tests, and harness quality remain human-owned responsibilities
+  without becoming extra source-of-truth surfaces.

@@ -15,8 +15,9 @@ The human surface is small:
 - `ARCHITECTURE.md`
 - `STATUS.md`
 - `docs/human/**`
-- layout
-- tests and harnesses
+
+Humans also own taste, layout choices, tests, and harness quality. Those are
+project responsibilities, not extra source-of-truth surfaces.
 
 The agent surface is everything else:
 
