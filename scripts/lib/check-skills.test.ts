@@ -76,6 +76,21 @@ describe("skill checker", () => {
     });
   });
 
+  test("rejects machine-local checkout paths in skill markdown", async () => {
+    await withTempProject((root) => {
+      writeFixtureFile(root, "scripts/local-skill-manifest.txt", "root-skill alpha\n");
+      writeFixtureFile(
+        root,
+        "skills/alpha/SKILL.md",
+        "---\nname: alpha\ndescription: Alpha.\n---\n\nRun `bun /home/mi/ws/intuitive-flow/skills/alpha/scripts/run.ts`.\n",
+      );
+
+      expect(checkSkills(optionsFor(root))).toContain(
+        "machine-local checkout path in canonical skill file: skills/alpha/SKILL.md",
+      );
+    });
+  });
+
   test("rejects missing local links from skill reference files", async () => {
     await withTempProject((root) => {
       writeFixtureFile(root, "scripts/local-skill-manifest.txt", "root-skill alpha\n");

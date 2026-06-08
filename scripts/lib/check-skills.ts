@@ -102,6 +102,7 @@ const normalizeMention = (mention: string): string =>
 const skillRelativePath = (path: string): string => normalize(path).replace(/\\/g, "/");
 
 const isMarkdownFile = (file: string): boolean => file.endsWith(".md");
+const localCheckoutPathPattern = /\/home\/mi\/ws\/intuitive-flow\b/;
 
 const localResourceMentions = (text: string, sourceFile: string): ResourceMention[] => {
   const mentions = new Map<string, ResourceMention>();
@@ -167,6 +168,9 @@ const checkSkill = (skillsRoot: string, skillName: string): string[] => {
     const fileText = readFileSync(filePath, "utf8");
     if (fileText.includes("{{>")) {
       errors.push(`template include left in canonical skill file: skills/${skillName}/${file}`);
+    }
+    if (isMarkdownFile(file) && localCheckoutPathPattern.test(fileText)) {
+      errors.push(`machine-local checkout path in canonical skill file: skills/${skillName}/${file}`);
     }
 
     if (isMarkdownFile(file)) {

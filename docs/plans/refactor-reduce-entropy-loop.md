@@ -139,6 +139,10 @@ size as a maximum, not a quota.
       metadata as raw JSON inside an HTML comment, so real goal or session text
       containing the comment terminator could break timeline parsing and lose
       cumulative attempt evidence.
+- [x] P1 workflow friction: `multica-goal-tracker` command examples hard-coded
+      this checkout's absolute path, so the installed portable skill could give
+      dead commands for the documented `~/intuitive-flow` clone path or any
+      other checkout location.
 
 ## Saturation Audit
 
@@ -217,6 +221,9 @@ Current state:
 - `multica-goal-tracker` attempt metadata is now versioned and base64 encoded
   inside the hidden comment marker, with legacy raw-JSON metadata still readable
   so older finish comments continue to contribute to the timeline.
+- `multica-goal-tracker` command examples now run from the Intuitive Flow
+  checkout root with relative script paths, and `bun run check:skills` rejects
+  the previously leaked machine-local checkout path in skill Markdown.
 - No current P0/P1/P2 candidate remains selected after the latest audit.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
@@ -482,3 +489,11 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   goal/session text. Verified with
   `bun test skills/multica-goal-tracker/scripts/track_goal.test.ts`,
   `bun run check`, and `bun run verify`.
+- 2026-06-08: Selected portable Multica tracker command examples as P1 workflow
+  friction after the docs/skills audit showed installed skill examples
+  hard-coded `/home/mi/ws/intuitive-flow`, conflicting with the documented clone
+  path and any non-local checkout. Replaced examples with checkout-root-relative
+  `bun skills/.../track_goal.ts` commands and added a skill-check regression
+  against the leaked machine-local path. Verified with
+  `bun test scripts/lib/check-skills.test.ts`, `bun run check:skills`, and
+  `bun run check`.

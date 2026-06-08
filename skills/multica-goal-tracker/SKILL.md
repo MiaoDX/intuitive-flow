@@ -29,10 +29,11 @@ cleaned up.
 ## Start Tracking
 
 Use this after the issue exists and contains the goal, or when the user gives
-you the goal text directly.
+you the goal text directly. Run the command from the Intuitive Flow checkout
+root so the script path stays portable across clone locations.
 
 ```bash
-bun /home/mi/ws/intuitive-flow/skills/multica-goal-tracker/scripts/track_goal.ts \
+bun skills/multica-goal-tracker/scripts/track_goal.ts \
   start \
   --issue MIA-40
 ```
@@ -40,7 +41,7 @@ bun /home/mi/ws/intuitive-flow/skills/multica-goal-tracker/scripts/track_goal.ts
 If the goal is not already in the issue description:
 
 ```bash
-bun /home/mi/ws/intuitive-flow/skills/multica-goal-tracker/scripts/track_goal.ts \
+bun skills/multica-goal-tracker/scripts/track_goal.ts \
   start \
   --issue MIA-40 \
   --goal-file /tmp/goal.txt
@@ -72,7 +73,7 @@ session, a skill-runner run directory, or an explicit transcript via
 `--session-file`.
 
 ```bash
-bun /home/mi/ws/intuitive-flow/skills/multica-goal-tracker/scripts/track_goal.ts \
+bun skills/multica-goal-tracker/scripts/track_goal.ts \
   finish \
   --issue MIA-40
 ```
@@ -112,7 +113,7 @@ If the issue has no Multica run history, finish fails fast instead of creating a
 fake proof card. In that case pass a real completed Codex session JSONL:
 
 ```bash
-bun /home/mi/ws/intuitive-flow/skills/multica-goal-tracker/scripts/track_goal.ts \
+bun skills/multica-goal-tracker/scripts/track_goal.ts \
   finish \
   --issue MIA-40 \
   --session-file ~/.codex/sessions/2026/06/04/rollout-....jsonl
@@ -123,7 +124,7 @@ Or pass a real skill-runner run directory. This uses `result.md`, `eval.md`,
 `terminal.log` output.
 
 ```bash
-bun /home/mi/ws/intuitive-flow/skills/multica-goal-tracker/scripts/track_goal.ts \
+bun skills/multica-goal-tracker/scripts/track_goal.ts \
   finish \
   --issue MIA-40 \
   --session-dir ~/.cache/skill-runner/runs/<run-dir>
@@ -135,7 +136,7 @@ accepts a manual fallback. Manual fallback is not a real session screenshot.
 If the first attempt was incomplete, preserve it as an incomplete attempt:
 
 ```bash
-bun /home/mi/ws/intuitive-flow/skills/multica-goal-tracker/scripts/track_goal.ts \
+bun skills/multica-goal-tracker/scripts/track_goal.ts \
   finish \
   --issue MIA-40 \
   --session-file ~/.codex/sessions/...jsonl \
