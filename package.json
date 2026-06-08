@@ -2,6 +2,7 @@
   "name": "intuitive-flow",
   "version": "0.2.0",
   "private": true,
+  "packageManager": "bun@1.3.12",
   "scripts": {
     "check:skills": "bun scripts/lib/check-skills.ts",
     "check:shell": "shellcheck --severity=error scripts/update.sh scripts/**/*.sh .githooks/pre-commit",

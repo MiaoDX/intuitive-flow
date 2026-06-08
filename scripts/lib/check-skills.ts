@@ -10,6 +10,8 @@ export type SkillCheckOptions = {
   manifestPath: string;
   deprecatedSourceRoot: string;
   externalSkillSourcesPath?: string;
+  packageJsonPath?: string;
+  githubVerifyWorkflowPath?: string;
 };
 
 const defaultOptions = (): SkillCheckOptions => ({
@@ -17,6 +19,8 @@ const defaultOptions = (): SkillCheckOptions => ({
   manifestPath: join(process.cwd(), "scripts", "local-skill-manifest.txt"),
   deprecatedSourceRoot: join(process.cwd(), "skills-src"),
   externalSkillSourcesPath: join(process.cwd(), "scripts", "external-skill-sources.txt"),
+  packageJsonPath: join(process.cwd(), "package.json"),
+  githubVerifyWorkflowPath: join(process.cwd(), ".github", "workflows", "verify.yml"),
 });
 
 const sortedDirEntries = (dir: string) => readdirSync(dir).sort((a, b) => a.localeCompare(b));
@@ -177,6 +181,51 @@ const checkSkill = (skillsRoot: string, skillName: string): string[] => {
   return errors;
 };
 
+const packageManagerBunVersion = (packageJsonPath: string): string | undefined => {
+  try {
+    const parsed = JSON.parse(readFileSync(packageJsonPath, "utf8")) as { packageManager?: unknown };
+    if (typeof parsed.packageManager !== "string") {
+      return undefined;
+    }
+
+    const match = /^bun@(.+)$/.exec(parsed.packageManager.trim());
+    return match?.[1];
+  } catch {
+    return undefined;
+  }
+};
+
+const githubActionsBunVersion = (workflowPath: string): string | undefined => {
+  try {
+    const text = readFileSync(workflowPath, "utf8");
+    const match = /^\s*bun-version:\s*["']?([^"'\s#]+)["']?\s*$/m.exec(text);
+    return match?.[1];
+  } catch {
+    return undefined;
+  }
+};
+
+const checkToolingVersions = (options: SkillCheckOptions): string[] => {
+  const errors: string[] = [];
+  if (!options.packageJsonPath || !options.githubVerifyWorkflowPath) {
+    return errors;
+  }
+
+  const packageBunVersion = packageManagerBunVersion(options.packageJsonPath);
+  const workflowBunVersion = githubActionsBunVersion(options.githubVerifyWorkflowPath);
+  if (!packageBunVersion && workflowBunVersion) {
+    errors.push(
+      `GitHub Actions pins Bun ${workflowBunVersion} but package.json does not declare packageManager: bun@<version>`,
+    );
+  } else if (packageBunVersion && workflowBunVersion && packageBunVersion !== workflowBunVersion) {
+    errors.push(
+      `GitHub Actions Bun version drift: package.json packageManager pins bun@${packageBunVersion} but .github/workflows/verify.yml uses bun-version ${workflowBunVersion}`,
+    );
+  }
+
+  return errors;
+};
+
 export const checkSkills = (options = defaultOptions()): string[] => {
   const errors: string[] = [];
 
@@ -208,6 +257,8 @@ export const checkSkills = (options = defaultOptions()): string[] => {
   for (const skillName of skillNames(options.skillsRoot)) {
     errors.push(...checkSkill(options.skillsRoot, skillName));
   }
+
+  errors.push(...checkToolingVersions(options));
 
   return errors;
 };

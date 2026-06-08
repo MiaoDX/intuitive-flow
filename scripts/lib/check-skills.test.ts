@@ -106,4 +106,50 @@ describe("skill checker", () => {
       expect(errors).toContain("unsupported external skill repo on line 1: https://example.com/demo");
     });
   });
+
+  test("rejects GitHub Actions Bun pins that drift from packageManager", async () => {
+    await withTempProject((root) => {
+      writeFixtureFile(root, "scripts/local-skill-manifest.txt", "root-skill alpha\n");
+      writeFixtureFile(root, "skills/alpha/SKILL.md", "---\nname: alpha\ndescription: Alpha.\n---\n");
+      writeFixtureFile(root, "package.json", JSON.stringify({ name: "fixture", packageManager: "bun@1.3.12" }));
+      writeFixtureFile(
+        root,
+        ".github/workflows/verify.yml",
+        "steps:\n  - uses: oven-sh/setup-bun@v2\n    with:\n      bun-version: 1.3.6\n",
+      );
+
+      const errors = checkSkills({
+        ...optionsFor(root),
+        packageJsonPath: join(root, "package.json"),
+        githubVerifyWorkflowPath: join(root, ".github", "workflows", "verify.yml"),
+      });
+
+      expect(errors).toContain(
+        "GitHub Actions Bun version drift: package.json packageManager pins bun@1.3.12 but .github/workflows/verify.yml uses bun-version 1.3.6",
+      );
+    });
+  });
+
+  test("requires packageManager when GitHub Actions pins Bun", async () => {
+    await withTempProject((root) => {
+      writeFixtureFile(root, "scripts/local-skill-manifest.txt", "root-skill alpha\n");
+      writeFixtureFile(root, "skills/alpha/SKILL.md", "---\nname: alpha\ndescription: Alpha.\n---\n");
+      writeFixtureFile(root, "package.json", JSON.stringify({ name: "fixture" }));
+      writeFixtureFile(
+        root,
+        ".github/workflows/verify.yml",
+        "steps:\n  - uses: oven-sh/setup-bun@v2\n    with:\n      bun-version: 1.3.12\n",
+      );
+
+      const errors = checkSkills({
+        ...optionsFor(root),
+        packageJsonPath: join(root, "package.json"),
+        githubVerifyWorkflowPath: join(root, ".github", "workflows", "verify.yml"),
+      });
+
+      expect(errors).toContain(
+        "GitHub Actions pins Bun 1.3.12 but package.json does not declare packageManager: bun@<version>",
+      );
+    });
+  });
 });

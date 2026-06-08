@@ -216,7 +216,7 @@ bun run setup:hooks
 The pre-commit hook delegates to `scripts/dev/pre-commit.sh` and runs
 `bun run check:skills`. This catches missing manifest entries, stale generated
 include syntax, invalid frontmatter, broken local skill resource references, and
-deprecated `skills-src/` files before commit without making every commit run the
+GitHub Actions Bun pin drift before commit without making every commit run the
 full TypeScript and test proof.
 
 ## Codex Adapter Contract
@@ -243,15 +243,18 @@ The basic local proof command is:
 bun run verify
 ```
 
-That validates repo-owned skill structure and external skill source manifests,
-runs ShellCheck error-level checks for Bash orchestration scripts, runs
-TypeScript checking, and runs Bun tests. GitHub Actions mirrors the same proof in
+That validates repo-owned skill structure, external skill source manifests,
+local skill resource references, and Bun toolchain pin alignment, runs
+ShellCheck error-level checks for Bash orchestration scripts, runs TypeScript
+checking, and runs Bun tests. GitHub Actions mirrors the same proof in
 `.github/workflows/verify.yml`, so broken skill manifests, frontmatter, resource
-references, or deprecated `skills-src/` files fail CI.
+references, deprecated `skills-src/` files, or CI/local Bun version drift fail
+CI.
 
 At the moment, the test suite covers the local skill manifest parser, root-skill
 manifest checks, direct skill validation, deprecated source rejection, resource
-reference checks, external skill source validation, and pruning of
+reference checks, external skill source validation, GitHub Actions Bun pin
+alignment, and pruning of
 manifest-owned legacy artifacts, stale previously owned root skills, stale
 managed external skills, stale managed GStack skill links, default GStack
 surface pruning, and installer wrapper calls that enforce managed state.

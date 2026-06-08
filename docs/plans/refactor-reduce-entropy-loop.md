@@ -125,9 +125,12 @@ size as a maximum, not a quota.
       `gstack-plan-eng-review` / `plan-eng-review` even though repo-owned
       architecture routes require that review gate for architecture-shaped
       refactors.
-- [ ] P2 false confidence: GitHub Actions pins Bun `1.3.6` while the local
+- [x] P2 false confidence: GitHub Actions pins Bun `1.3.6` while the local
       runtime and lockfile type surface are `1.3.12` / `@types/bun@1.3.13`,
       even though the human docs say CI and local `bun run verify` are aligned.
+- [ ] P1 false confidence: `multica-goal-tracker` Codex JSONL evidence can
+      choose the latest completed follow-up goal instead of the issue's tracked
+      `/goal` when one session contains multiple completed goals.
 
 ## Saturation Audit
 
@@ -192,8 +195,12 @@ Current state:
 - `multica-goal-tracker` Codex JSONL evidence now prefers the completed goal
   turn over later session turns and carries Codex goal start/end/duration into
   the rendered card, finish comment, and raw-output comment when available.
-- One current P2 candidate remains selected after the latest audit: align the
-  CI Bun runtime pin with the local runtime/package-manager surface.
+- CI now installs Bun `1.3.12`, matching the `packageManager` pin in
+  `package.json`; `bun run check:skills` fails if the workflow Bun pin drifts
+  from the repo pin or if the repo pin is removed.
+- One current P1 candidate remains selected after the latest audit: make
+  Multica goal-tracker evidence match Codex completion timing to the tracked
+  issue goal when a session contains multiple completed goals.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
   runtime messages rather than current false confidence or live source drift.
@@ -424,3 +431,12 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   documented the standard surface in `ARCHITECTURE.md`. Verified with
   `bun test scripts/lib/managed-skill-state.test.ts`, `bun run check:skills`,
   and `bun run check`.
+- 2026-06-08: Selected CI/local Bun runtime drift as P2 false confidence after
+  the verification audit showed `.github/workflows/verify.yml` pinned
+  `bun-version: 1.3.6` while the local runtime was `1.3.12` and `bun.lock`
+  resolved `@types/bun@1.3.13`. Added `packageManager: bun@1.3.12` as the repo
+  toolchain source, updated the GitHub Actions setup pin to `1.3.12`, extended
+  `bun run check:skills` to fail on CI/local Bun pin drift or a missing repo
+  pin, and updated the human proof-boundary docs. Verified with
+  `bun test scripts/lib/check-skills.test.ts`, `bun run check:skills`,
+  `bun run check`, and `bun run verify`.
