@@ -79,8 +79,12 @@ are expected.
 The primary user-facing skills are `$intuitive-flow`, `$intuitive-refactor`,
 `$intuitive-reduce-entropy`, `$intuitive-planning-loop`, and
 `$intuitive-squash`. Specialist skills such as `$intuitive-preflight`,
-`$intuitive-doc`, `$intuitive-init`, and `$intuitive-tests` remain available for
-direct or routed use, but are not the default choice a user must make up front.
+`$intuitive-doc`, `$intuitive-init`, `$intuitive-tests`,
+`$intuitive-port-worktree`, `$multica-goal-tracker`, `$skill-runner`, and
+`$simplify` remain available for direct or routed use, but are not the default
+choice a user must make up front. `scripts/local-skill-manifest.txt` is the
+complete install list; `docs/human/skill-self-improvement-audit.md` records the
+human-facing role of each installed root skill.
 `$intuitive-preflight` owns approval-ready preflight contracts before a plan or
 vague task starts: context package, scope, non-goals, definition of done,
 verification, route, worker strategy, and main-session `/goal` wording. Open-ended architecture

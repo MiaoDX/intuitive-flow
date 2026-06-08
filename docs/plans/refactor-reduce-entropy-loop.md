@@ -147,6 +147,10 @@ size as a maximum, not a quota.
       and failed attempts but still labelled raw session child comments as
       completion output and only preserved Codex goal timing for `complete`
       goal metadata.
+- [x] P2 workflow friction: README and architecture described primary skills
+      plus a partial specialist list while the manifest installs additional
+      direct-use specialists, making the public map look complete when it was
+      not.
 
 ## Saturation Audit
 
@@ -232,6 +236,10 @@ Current state:
   `failed` goal updates as terminal attempt timing metadata, and non-complete
   attempts use execution wording in both finish comments and raw session child
   comments.
+- The human docs now keep the primary choice set small while pointing humans to
+  the manifest and skill audit for the complete installed specialist surface,
+  including worktree porting, Multica issue tracking, skill-runner, and
+  simplify utilities.
 - No current P0/P1/P2 candidate remains selected after the latest audit.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
@@ -513,3 +521,10 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   wording, and updated the skill docs. Verified with
   `bun test skills/multica-goal-tracker/scripts/track_goal.test.ts`,
   `bun run check:skills`, and `bun run check`.
+- 2026-06-08: Selected installed specialist discoverability as P2 workflow
+  friction after the docs/skills audit showed README and architecture named a
+  partial specialist list while `scripts/local-skill-manifest.txt` installs
+  additional direct-use repo-owned specialists. Clarified README, architecture,
+  and status so the primary choice set remains small while the complete install
+  list and skill role audit are discoverable. Verified with `bun run
+  check:skills`.

@@ -52,8 +52,9 @@ The current maintenance focus is keeping the repo dogfoodable:
   external Claude Code, Codex, AGENTS.md, and field-practice lessons before
   turning those lessons into skill rules
 - keep the user-facing skill surface small: flow, refactor, reduce-entropy,
-  planning-loop, and squash; route doc/init/tests and architecture discovery as
-  specialist skills
+  planning-loop, and squash; route or directly invoke specialists from the
+  manifest as needed, with docs/init/tests/preflight/worktree-porting/issue
+  tracking/skill-runner utilities kept out of the primary choice set
 - keep root skills listed in `scripts/local-skill-manifest.txt`
 - keep external skill installs explicit in `scripts/external-skill-sources.txt`
 - keep installed global skill surfaces pruned by owner state: Intuitive root

@@ -80,9 +80,13 @@ Keep the public choice small:
 | **intuitive-planning-loop** | Bounded autonomous planning loop: scouts run reduce-entropy and grill-batch style critique, while the main session judges scope and returns one review packet |
 | **intuitive-squash** | Compress noisy local agent history into a clean reviewable commit story |
 
-Specialist skills still exist for direct or routed use: `$intuitive-preflight`,
-`$intuitive-doc`, `$intuitive-init`, `$intuitive-tests`, and architecture discovery via
-`improve-codebase-architecture` when that external skill is installed.
+Common routed specialists include `$intuitive-preflight`, `$intuitive-doc`,
+`$intuitive-init`, and `$intuitive-tests`; direct-use utilities such as
+`$intuitive-port-worktree`, `$multica-goal-tracker`, `$skill-runner`, and
+`$simplify` are installed too. The full repo-owned install list lives in
+`scripts/local-skill-manifest.txt`, with the human-facing role audit in
+`docs/human/skill-self-improvement-audit.md`. Architecture discovery may route
+through `improve-codebase-architecture` when that external skill is installed.
 
 ## Human Docs
 
