@@ -35,7 +35,7 @@ size as a maximum, not a quota.
 - [ ] P1 false-red verification: tmux-dependent tests gate on `tmux -V` even
       though restricted agent environments can have the binary available while
       `tmux new-session` is not usable.
-- [ ] P1 verification isolation: local skill sync tests stub `npx`, but still
+- [x] P1 verification isolation: local skill sync tests stub `npx`, but still
       call the real npm registry through `select_npm_registry`, so unit-style
       verification can hang or fail on network availability instead of code
       behavior.
@@ -111,3 +111,7 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   Verified with `bun run check:skills` and targeted source-of-truth search.
 - 2026-06-08: Selected two remaining P1 verification candidates for later
   slices: tmux capability gating and local skill sync test registry isolation.
+- 2026-06-08: Isolated local skill sync tests from live npm registry probes by
+  stubbing the expected `npm view <package> version` call next to the existing
+  `npx` stub. Verified with
+  `bun test scripts/lib/sync-local-commands-skills.test.ts`.

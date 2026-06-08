@@ -16,12 +16,28 @@ import { parseManifestText } from "./local-skill-manifest";
 
 const repoRoot = process.cwd();
 
-const createNpxStub = (home: string) => {
+const createCliStubs = (home: string) => {
   const stubBin = join(home, "stub-bin");
+  const npmPath = join(stubBin, "npm");
+  const npmLog = join(home, "npm.log");
   const npxPath = join(stubBin, "npx");
   const npxLog = join(home, "npx.log");
 
   mkdirSync(stubBin, { recursive: true });
+  writeFileSync(
+    npmPath,
+    `#!/bin/bash
+printf '%s\\n' "$*" >> "${npmLog}"
+
+if [ "$1" = "view" ] && [ "$3" = "version" ]; then
+  printf '0.0.0-test\\n'
+  exit 0
+fi
+
+echo "unexpected npm call: $*" >&2
+exit 1
+`,
+  );
   writeFileSync(
     npxPath,
     `#!/bin/bash
@@ -29,9 +45,10 @@ printf '%s\\n' "$*" >> "${npxLog}"
 exit 0
 `,
   );
+  chmodSync(npmPath, 0o755);
   chmodSync(npxPath, 0o755);
 
-  return { npxLog, stubBin };
+  return { npmLog, npxLog, stubBin };
 };
 
 const syncEnv = (home: string, stubBin: string) => ({
@@ -45,7 +62,7 @@ describe("local command and skill sync task", () => {
     const home = mkdtempSync(join(tmpdir(), "sync-skills-home-"));
     try {
       mkdirSync(join(home, ".codex", "skills"), { recursive: true });
-      const { npxLog, stubBin } = createNpxStub(home);
+      const { npmLog, npxLog, stubBin } = createCliStubs(home);
       const manifest = parseManifestText(await Bun.file(join(repoRoot, "scripts", "local-skill-manifest.txt")).text());
 
       const result = spawnSync("bash", ["scripts/tasks/sync-local-commands-skills.sh"], {
@@ -59,6 +76,8 @@ describe("local command and skill sync task", () => {
       }
 
       expect(manifest.rootSkills.length).toBeGreaterThan(0);
+      const npmCalls = await Bun.file(npmLog).text();
+      expect(npmCalls).toContain("view skills version");
       const npxCalls = await Bun.file(npxLog).text();
       for (const skillName of manifest.rootSkills) {
         expect(existsSync(join(home, ".codex", "skills", skillName, "SKILL.md"))).toBe(true);
@@ -86,7 +105,7 @@ describe("local command and skill sync task", () => {
     const home = mkdtempSync(join(tmpdir(), "sync-skills-drift-home-"));
     const fixture = mkdtempSync(join(tmpdir(), "sync-skills-project-"));
     try {
-      const { stubBin } = createNpxStub(home);
+      const { stubBin } = createCliStubs(home);
       mkdirSync(join(fixture, "scripts", "lib"), { recursive: true });
       mkdirSync(join(fixture, "skills", "listed"), { recursive: true });
       mkdirSync(join(fixture, "skills", "unlisted"), { recursive: true });
@@ -125,7 +144,7 @@ describe("local command and skill sync task", () => {
     const home = mkdtempSync(join(tmpdir(), "sync-skills-owned-home-"));
     const fixture = mkdtempSync(join(tmpdir(), "sync-skills-project-"));
     try {
-      const { stubBin } = createNpxStub(home);
+      const { stubBin } = createCliStubs(home);
       mkdirSync(join(home, ".codex", "skills"), { recursive: true });
       mkdirSync(join(fixture, "scripts", "lib"), { recursive: true });
       mkdirSync(join(fixture, "skills", "alpha"), { recursive: true });
