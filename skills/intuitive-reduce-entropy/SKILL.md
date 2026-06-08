@@ -45,6 +45,8 @@ Severity: <P0 | P1 | P2>
 Entropy source: <source>
 Materiality: <false confidence | live source drift | stale surface | real workflow friction | recurring rediscovery>
 Why now: <repo evidence, not taste>
+Impact radius: <repo-wide | workflow | module | single-file>
+Maintainer test: <one sentence explaining why this deserves review now>
 Affected paths: <paths>
 Owner skill: <specialist or this skill>
 Zen hint: <clarity principle advanced>
@@ -79,6 +81,12 @@ Discovery and execution have different boundaries:
   HEAD. Stop early when the best remaining observation is only small polish,
   optional wording, or a change that would make the user wonder why another
   commit was needed.
+- Treat open-ended prompts such as "continue until no more entropy remains",
+  "keep reducing entropy", or `/goal` loops as saturation-sensitive. Do not
+  turn them into a search for every possible cleanup commit. After the first
+  strong batch is exhausted, stop unless the next candidate would still look
+  worthwhile in a maintainer's review queue without referencing "consistency",
+  "cleanup", or "nice to have" as the main justification.
 - Before each additional group in a loop, run a saturation audit: name the next
   candidate, its materiality reason, and why it still deserves a commit after
   the previous groups. If that sentence is weak, stop with `Selected candidates:
@@ -122,6 +130,25 @@ the doc command update belongs to the gate candidate. Do not count supporting
 tests or docs as separate entropy groups unless they independently satisfy the
 eligible list above.
 
+### Commit-Worthiness Gate
+
+Materiality alone is not enough for an autonomous loop. A candidate also needs
+enough impact to justify a standalone commit:
+
+- `P0` and `P1` candidates are usually commit-worthy when they have current repo
+  evidence and bounded risk.
+- `P2` candidates are eligible only when they remove recurring rediscovery,
+  unblock a real workflow, or are bundled with a higher-impact parent slice.
+- Reject isolated P2 work whose main scope is a single-file metadata correction,
+  starter template polish, route/index neatness, wording alignment, small date
+  or status text cleanup, or a gate extension that only protects the change just
+  made.
+- A P2 candidate must include `Impact radius:` and `Maintainer test:`. If the
+  maintainer test cannot explain the review value in one sentence without
+  relying on "consistency" or "cleanup", park it.
+- Prefer one no-change report with parked observations over a series of tiny
+  commits. The skill succeeds when it stops correctly.
+
 ### Loop Deterministic Gate
 
 When running an approved top-N loop, write the remaining accepted candidates to
@@ -155,6 +182,8 @@ Example:
       "title": "Reject placeholder links in scoped docs",
       "severity": "P1",
       "materiality": ["false_confidence"],
+      "impact_radius": "workflow",
+      "maintainer_test": "The docs gate can pass while publishing placeholder links, so reviewers need this protection before trusting link checks.",
       "evidence": ["link:check currently ignores [text](#) in scoped docs"]
     }
   ]
@@ -322,6 +351,10 @@ After inspection, recommend no change when the remaining observations are only:
 - a tiny route, copy, formatting, or index tweak whose main value is aesthetic
   neatness rather than preventing rediscovery, false confidence, or real
   operational confusion.
+- an isolated P2 issue with single-file impact, no recurring evidence, or no
+  maintainer-test sentence that would justify a standalone review;
+- a newly discovered micro-fix after several successful loop rounds, unless it
+  is bundled with an already accepted higher-impact slice.
 
 When no candidate passes that bar, stop with a no-change report instead of
 asking the user to proceed. The shape is:

@@ -6,6 +6,7 @@ type MaterialityGateResult = {
   ok: boolean;
   stop_recommended: boolean;
   quota_saturated: boolean;
+  open_ended_loop: boolean;
   eligible_count: number;
   rejected_count: number;
   errors: string[];
@@ -26,7 +27,11 @@ describe("reduce entropy materiality gate", () => {
       candidates: [
         {
           id: "placeholder-link-gate",
+          severity: "P1",
           materiality: ["false confidence"],
+          impact_radius: "workflow",
+          maintainer_test:
+            "The docs gate can pass while publishing placeholder links, so reviewers need this protection before trusting link checks.",
           evidence: ["link-check ignores scoped [text](#) links"],
         },
       ],
@@ -46,7 +51,10 @@ describe("reduce entropy materiality gate", () => {
       candidates: [
         {
           id: "renumber-screenshot-checklist",
+          severity: "P2",
           materiality: ["numbering"],
+          impact_radius: "single_file",
+          maintainer_test: "Small cleanup for consistency.",
           evidence: ["duplicate heading number"],
         },
       ],
@@ -65,6 +73,7 @@ describe("reduce entropy materiality gate", () => {
       candidates: [
         {
           id: "route-helper-tests",
+          severity: "P2",
           parent_candidate: "route-helper-behavior",
           materiality: ["test_only_support"],
           evidence: ["covers route helper after implementation"],
@@ -84,7 +93,11 @@ describe("reduce entropy materiality gate", () => {
       candidates: [
         {
           id: "build-gate-false-green",
+          severity: "P1",
           materiality: ["false_confidence"],
+          impact_radius: "workflow",
+          maintainer_test:
+            "The verification command can skip link-checks, so reviewers need this gate before trusting build status.",
           evidence: ["build:all skips link-check"],
         },
       ],
@@ -94,5 +107,32 @@ describe("reduce entropy materiality gate", () => {
     expect(result.eligible_count).toBe(1);
     expect(result.quota_saturated).toBe(true);
     expect(result.warnings.join("\n")).toContain("treat the request as a maximum");
+  });
+
+  test("rejects isolated low-impact P2 work in open-ended loops", async () => {
+    const { evaluate } = await loadGate();
+
+    const result = evaluate({
+      open_ended_loop: true,
+      requested_groups: 3,
+      candidates: [
+        {
+          id: "template-date-note",
+          severity: "P2",
+          materiality: ["real_workflow_friction"],
+          impact_radius: "single_file",
+          maintainer_test: "Small cleanup for consistency.",
+          work_type: "metadata_consistency",
+          evidence: ["one template has an outdated status date"],
+        },
+      ],
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.open_ended_loop).toBe(true);
+    expect(result.stop_recommended).toBe(true);
+    expect(result.eligible_count).toBe(0);
+    expect(result.errors.join("\n")).toContain("isolated low-impact P2 work should be parked or bundled");
+    expect(result.errors.join("\n")).toContain("weak cleanup language");
   });
 });
