@@ -96,6 +96,10 @@ size as a maximum, not a quota.
       `bun run verify` proof boundary only exercised `run_skill_runner.py` and
       could miss summarizer argument parsing, artifact parsing, or JSON output
       drift.
+- [x] P2 stale surface: `scripts/tasks/sync-local-commands-skills.sh` still
+      synced `.claude/skills/*` directly through the skills CLI even though the
+      current canonical repo-owned skill surface is `skills/*` plus
+      `scripts/local-skill-manifest.txt`.
 
 ## Saturation Audit
 
@@ -144,10 +148,13 @@ Current state:
   proof boundary has the same tool dependency as the local verifier.
 - The documented `skill-runner` summarizer command is now exercised by the
   default Bun test suite with a CLI smoke over real run artifacts.
-- The next current read-only audit candidate is the legacy `.claude/skills/*`
-  sync path in `scripts/tasks/sync-local-commands-skills.sh`; the loop remains
-  `CONTINUE` until that candidate is executed or rejected by a fresh materiality
-  gate.
+- The legacy `.claude/skills/*` sync path is removed; repo-local skill sync now
+  ignores that host discovery layout and installs only manifest-owned
+  `skills/*` entries.
+- The next current read-only audit candidates are the tmux-backed CI proof
+  dependency and the remaining `BELIEFS.md` human-surface wording check. The
+  loop remains `CONTINUE` until those candidates are executed, rejected by a
+  fresh materiality gate, or a saturation audit returns no material work.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
   runtime messages rather than current false confidence or live source drift.
@@ -315,3 +322,11 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   artifacts and asserts status, worker mismatch, skill review, skills, and
   owned paths. Verified with `bun test scripts/lib/skill-runner.test.ts` and
   `bun run verify` (80 tests across 13 files).
+- 2026-06-08: Selected the legacy `.claude/skills/*` sync branch as P2 stale
+  surface and false confidence after the skill-surface audit showed the current
+  repo has no `.claude/skills` source while `check:skills` only validates
+  `skills/*` and the manifest. The deterministic materiality gate accepted the
+  candidate with one eligible group. Removed the legacy direct sync branch and
+  added a regression test proving `.claude/skills/*` entries in a fixture are
+  ignored while manifest-owned root skills still sync. Verified with
+  `bun test scripts/lib/sync-local-commands-skills.test.ts`.

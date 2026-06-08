@@ -140,6 +140,53 @@ describe("local command and skill sync task", () => {
     }
   });
 
+  test("ignores legacy .claude/skills entries outside the root manifest", () => {
+    const home = mkdtempSync(join(tmpdir(), "sync-skills-legacy-claude-home-"));
+    const fixture = mkdtempSync(join(tmpdir(), "sync-skills-project-"));
+    try {
+      const { npxLog, stubBin } = createCliStubs(home);
+      mkdirSync(join(home, ".codex", "skills"), { recursive: true });
+      mkdirSync(join(fixture, "scripts", "lib"), { recursive: true });
+      mkdirSync(join(fixture, "skills", "alpha"), { recursive: true });
+      mkdirSync(join(fixture, ".claude", "skills", "legacy-local"), { recursive: true });
+      writeFileSync(join(fixture, "scripts", "local-skill-manifest.txt"), "root-skill alpha\n");
+      writeFileSync(join(fixture, "skills", "alpha", "SKILL.md"), "---\nname: alpha\ndescription: Alpha skill.\n---\n");
+      writeFileSync(join(fixture, ".claude", "skills", "legacy-local", "SKILL.md"), "---\nname: legacy-local\ndescription: Legacy local skill.\n---\n");
+      copyFileSync(
+        join(repoRoot, "scripts", "lib", "local-skill-manifest.ts"),
+        join(fixture, "scripts", "lib", "local-skill-manifest.ts"),
+      );
+
+      const result = spawnSync(
+        "bash",
+        [
+          "-c",
+          'SCRIPT_DIR="$1"; source scripts/tasks/sync-local-commands-skills.sh; run_sync_local_commands_skills',
+          "bash",
+          join(fixture, "scripts"),
+        ],
+        {
+          cwd: repoRoot,
+          encoding: "utf8",
+          env: syncEnv(home, stubBin),
+        },
+      );
+
+      if (result.status !== 0) {
+        throw new Error(`sync failed\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`);
+      }
+
+      const npxCalls = readFileSync(npxLog, "utf8");
+      expect(npxCalls).toContain(join(fixture, "skills", "alpha"));
+      expect(npxCalls).not.toContain("legacy-local");
+      expect(existsSync(join(home, ".codex", "skills", "alpha", "SKILL.md"))).toBe(true);
+      expect(existsSync(join(home, ".codex", "skills", "legacy-local"))).toBe(false);
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+      rmSync(fixture, { recursive: true, force: true });
+    }
+  });
+
   test("records owned root skills and prunes only previously owned removals", () => {
     const home = mkdtempSync(join(tmpdir(), "sync-skills-owned-home-"));
     const fixture = mkdtempSync(join(tmpdir(), "sync-skills-project-"));

@@ -101,32 +101,6 @@ run_sync_local_commands_skills() {
         echo "  ✓ $synced local command(s) → ~/.claude/commands/"
     fi
 
-    # ── Sync local .claude/skills/* to ~/.agents/skills/ via npx skills ─
-    local skills_src="$project_dir/.claude/skills"
-    if [ -d "$skills_src" ]; then
-        local skills_synced=0
-        local skills_registry
-        skills_registry=$(select_npm_registry "Skills CLI" skills) || return 1
-        for skill_dir in "$skills_src"/*; do
-            [ -d "$skill_dir" ] || continue
-            [ -f "$skill_dir/SKILL.md" ] || continue
-
-            local skill_name
-            skill_name=$(basename "$skill_dir")
-
-            task_notice "Repo-local commands & skills: syncing local skill $skill_name to Codex"
-            if npx --registry="$skills_registry" -y skills add "$skill_dir" -g -y -a codex >/dev/null 2>&1 </dev/null; then
-                skills_synced=$((skills_synced + 1))
-                echo "  synced skill: $skill_name"
-            else
-                echo "  ! failed to sync skill: $skill_name"
-            fi
-        done
-        if [ "$skills_synced" -gt 0 ]; then
-            echo "  ✓ $skills_synced local skill(s) → ~/.agents/skills/ (via skills CLI)"
-        fi
-    fi
-
     # ── Sync local skills/* (repo root) to Claude Code + Codex ─
     local root_skills_src="$project_dir/skills"
     if [ -d "$root_skills_src" ]; then
