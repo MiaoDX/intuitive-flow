@@ -78,6 +78,7 @@ Keep the public choice small:
 | **intuitive-flow** | Default build/change entrypoint; routes tiny concrete work directly, cleanup/refactor work to `intuitive-refactor`, and broad work through plan/review/execution |
 | **intuitive-refactor** | Directly clean a known module, seam, stale API, compatibility surface, code/package/module layout issue, or architecture target |
 | **intuitive-reduce-entropy** | Periodically inspect repo mess and produce a ranked batch of high-value maintenance candidates; routes accepted docs, agent guidance, tests, architecture discovery, and known code cleanup to the right specialist |
+| **intuitive-planning-loop** | Bounded autonomous planning loop: scouts run reduce-entropy and grill-batch style critique, while the main session judges scope and returns one review packet |
 | **intuitive-squash** | Compress noisy local agent history into a clean reviewable commit story |
 
 Specialist skills still exist for direct or routed use: `$intuitive-preflight`,
