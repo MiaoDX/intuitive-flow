@@ -19,10 +19,10 @@ prompt. For a fresh Codex or Claude Code session that should compare
 The lens mostly changes where maintenance knowledge lives. It should not become
 always-loaded runtime text inside task skills.
 
-Immediate correction:
+Completed baseline correction:
 
-- Remove the runtime `Skill Self-Improvement Rule` block from generated
-  `intuitive-*` skills.
+- Runtime `Skill Self-Improvement Rule` blocks are absent from repo-owned
+  skills.
 - Keep the WHY / WHAT / HOW lens in human docs.
 - Use this audit as the baseline for later skill-specific cleanup.
 

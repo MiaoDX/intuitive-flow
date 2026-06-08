@@ -62,6 +62,10 @@ size as a maximum, not a quota.
       were pruned from Claude/Codex/shared skill install roots, but the
       generated MiMoCode wrapper `~/.config/mimocode/command/<skill>.md` could
       remain reachable after `scripts/update.sh`.
+- [x] P2 recurring rediscovery: `docs/human/skill-self-improvement-audit.md`
+      still presented removal of runtime `Skill Self-Improvement Rule` blocks
+      as an immediate correction even though the runtime blocks were already
+      absent from repo-owned skills.
 
 ## Saturation Audit
 
@@ -88,6 +92,8 @@ Why no change:
   or default managed skill surface.
 - `legacy-skill` pruning removes the same retired skill from Claude, Codex,
   shared agent skills, and its generated MiMoCode wrapper.
+- The skill self-improvement audit now marks the runtime self-improvement block
+  removal as a completed baseline correction, not an outstanding action item.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
   runtime messages rather than current false confidence or live source drift.
@@ -197,3 +203,8 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   architecture contract, and verified with
   `bun test scripts/lib/local-skill-manifest.test.ts scripts/lib/sync-local-commands-skills.test.ts`
   plus the manifest helper self-test.
+- 2026-06-08: Selected the completed self-improvement audit correction as P2
+  recurring rediscovery and false confidence after `rg` showed the
+  `Skill Self-Improvement Rule` block existed only in the audit text, not in
+  repo-owned runtime skills. Reworded the human audit so the correction is a
+  completed baseline result rather than an outstanding action item.
