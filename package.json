@@ -4,10 +4,11 @@
   "private": true,
   "scripts": {
     "check:skills": "bun scripts/lib/check-skills.ts",
+    "check:shell": "shellcheck --severity=error scripts/**/*.sh .githooks/pre-commit",
     "check": "tsc --noEmit",
     "setup:hooks": "bash scripts/dev/install-git-hooks.sh",
     "test": "bun test scripts/**/*.test.ts skills/**/*.test.ts",
-    "verify": "bun run check:skills && bun run check && bun run test"
+    "verify": "bun run check:skills && bun run check:shell && bun run check && bun run test"
   },
   "devDependencies": {
     "@types/bun": "^1.3.4",

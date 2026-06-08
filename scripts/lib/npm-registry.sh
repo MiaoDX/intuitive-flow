@@ -10,7 +10,7 @@ npm_registry_notice() {
     if declare -F task_notice >/dev/null 2>&1; then
         task_notice "$message"
     elif [[ "${TASK_NOTICE_FD:-}" =~ ^[0-9]+$ ]]; then
-        printf '  → %s\n' "$message" >&"$TASK_NOTICE_FD" 2>/dev/null || true
+        { printf '  → %s\n' "$message" >&"$TASK_NOTICE_FD"; } 2>/dev/null || true
     fi
 }
 

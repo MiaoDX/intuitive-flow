@@ -104,6 +104,7 @@ promotes them.
 | Script | Purpose |
 | --- | --- |
 | `bun run check:skills` | Validate repo-owned skills, manifest coverage, external skill sources, frontmatter, and local resource links |
+| `bun run check:shell` | Run ShellCheck error-level validation for Bash orchestration scripts and the Git hook entrypoint |
 | `bun run setup:hooks` | Configure this checkout to use repo-owned Git hooks from `.githooks/` |
 | `scripts/update.sh` | Install or update agent surfaces, skills, commands, GSD, and gstack |
 | `scripts/dev/*.sh` | Local developer utilities for tmux and workstation sessions |

@@ -62,8 +62,8 @@ The current maintenance focus is keeping the repo dogfoodable:
 - keep local hooks enabled with `bun run setup:hooks` so skill structure,
   manifest coverage, and local resource references are checked before commit
 - keep CI and local `bun run verify` aligned
-- keep Bash as the orchestration layer and Bun TypeScript as the structured
-  validation layer
+- keep Bash as the ShellCheck-gated orchestration layer and Bun TypeScript as
+  the structured validation layer
 - keep stable updater entrypoints at `scripts/update.sh` and put local helpers
   under `scripts/dev/` or `scripts/support/`
 - verify changes with `bun run verify`

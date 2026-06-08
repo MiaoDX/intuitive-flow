@@ -81,6 +81,9 @@ size as a maximum, not a quota.
       public TypeScript script for goal extraction, issue comments, run
       selection, and rendered completion evidence, but the normal proof boundary
       did not run any skill-local behavior tests.
+- [x] P1 false confidence: `bun run verify` did not run ShellCheck, so Bash
+      orchestration scripts could carry ShellCheck error-level issues while the
+      normal verifier stayed green.
 
 ## Saturation Audit
 
@@ -119,6 +122,8 @@ Why no change:
   and represented in the manifest-wide skill self-improvement audit as a
   specialist issue-workflow utility rather than a primary planning/build
   entrypoint.
+- `bun run verify` now includes `bun run check:shell`, and ShellCheck
+  error-level validation passes for `scripts/**/*.sh` and `.githooks/pre-commit`.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
   runtime messages rather than current false confidence or live source drift.
@@ -138,6 +143,7 @@ Parked items:
   `node skills/intuitive-reduce-entropy/scripts/materiality-gate.mjs <candidate.json>`
 - Narrow proof: `bun test scripts/lib/check-skills.test.ts`
 - Contract proof: `bun run check:skills`
+- Shell proof: `bun run check:shell`
 - Full proof: `bun run verify`
 
 ## Stop Condition
@@ -256,3 +262,10 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   evidence inputs. Verified with
   `bun test skills/multica-goal-tracker/scripts/track_goal.test.ts` and
   `bun run verify` (76 tests across 12 files).
+- 2026-06-08: Selected ShellCheck proof boundary as P1 false confidence after
+  `bun run verify` passed but
+  `shellcheck scripts/**/*.sh .githooks/pre-commit` failed with SC2261 in
+  `scripts/lib/npm-registry.sh` and `scripts/lib/task-runner.sh`. Fixed the
+  competing notice redirections, added `bun run check:shell` with
+  `--severity=error`, wired it into `bun run verify`, and updated the human
+  command/proof docs. Verified with `bun run check:shell` and `bun run verify`.

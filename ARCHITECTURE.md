@@ -238,7 +238,8 @@ bun run verify
 ```
 
 That validates repo-owned skill structure and external skill source manifests,
-runs TypeScript checking, and runs Bun tests. GitHub Actions mirrors the same proof in
+runs ShellCheck error-level checks for Bash orchestration scripts, runs
+TypeScript checking, and runs Bun tests. GitHub Actions mirrors the same proof in
 `.github/workflows/verify.yml`, so broken skill manifests, frontmatter, resource
 references, or deprecated `skills-src/` files fail CI.
 

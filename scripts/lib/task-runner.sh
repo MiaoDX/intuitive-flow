@@ -52,7 +52,7 @@ task_notice() {
     local message="$*"
 
     if [[ "${TASK_NOTICE_FD:-}" =~ ^[0-9]+$ ]]; then
-        printf '  %s→%s %s\n' "$_TR_COLOR_BLUE" "$_TR_COLOR_RESET" "$message" >&"$TASK_NOTICE_FD" 2>/dev/null || true
+        { printf '  %s→%s %s\n' "$_TR_COLOR_BLUE" "$_TR_COLOR_RESET" "$message" >&"$TASK_NOTICE_FD"; } 2>/dev/null || true
     fi
 }
 
