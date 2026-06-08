@@ -244,6 +244,7 @@ for agent in claude-code codex; do
     n="External skills: anthropics -> $agent"; task_run "$n" run_skills_anthro "$agent"; task_await "$n"
     n="External skills: codex -> $agent"; task_run "$n" run_skills_codex "$agent"; task_await "$n"
     n="External skills: mattpocock -> $agent"; task_run "$n" run_skills_mattpocock "$agent"; task_await "$n"
+    n="External skills: taste-skill -> $agent"; task_run "$n" run_skills_taste_skill "$agent"; task_await "$n"
 done
 
 # Local command/skill sync also writes to ~/.codex/skills. Run it last so local

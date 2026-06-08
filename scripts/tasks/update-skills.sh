@@ -78,3 +78,7 @@ run_skills_codex() {
 run_skills_mattpocock() {
     _run_external_skills "$1" "mattpocock"
 }
+
+run_skills_taste_skill() {
+    _run_external_skills "$1" "taste-skill"
+}

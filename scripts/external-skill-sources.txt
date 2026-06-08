@@ -10,3 +10,4 @@
 source anthropics anthropics/skills allowlist skill-creator mcp-builder pdf xlsx docx
 source codex skills-directory/skill-codex all
 source mattpocock https://github.com/mattpocock/skills allowlist diagnose grill-with-docs handoff tdd zoom-out
+source taste-skill https://github.com/Leonxlnx/taste-skill all
