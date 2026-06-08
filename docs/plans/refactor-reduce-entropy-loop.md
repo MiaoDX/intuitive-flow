@@ -112,6 +112,10 @@ size as a maximum, not a quota.
       expand that glob in this checkout, so skill-local tests such as
       `skills/multica-goal-tracker/scripts/track_goal.test.ts` were omitted
       from `bun run test` and `bun run verify`.
+- [x] P1 workflow friction: `multica-goal-tracker` finish evidence attached a
+      rendered completion card, but did not make the card visible inline when
+      Multica returned an attachment URL and did not preserve the real selected
+      session completion output as a first-class issue comment.
 
 ## Saturation Audit
 
@@ -170,6 +174,9 @@ Current state:
 - `bun run test` now asks Bun to discover tests recursively under the
   repo-owned `./scripts` and `./skills` directories, so nested skill-local tests
   are included without relying on Bash `globstar`.
+- `multica-goal-tracker` finish comments now keep the overview card, an inline
+  image reply when Multica returns an attachment URL, and the raw selected
+  session output as a separate code-block child comment.
 - No current P0/P1/P2 candidate remains selected after the latest audit; the
   next step is a fresh saturation audit from the current worktree.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
@@ -369,3 +376,13 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   default test command to `bun test ./scripts ./skills`, which lets Bun
   recursively discover tests under repo-owned script and skill directories
   without entering `vendor/**`.
+- 2026-06-08: Selected the Multica finish evidence completeness slice as P1
+  workflow friction and false confidence after the current dirty worktree showed
+  the tracker could attach a rendered card without making it inline-visible and
+  could summarize completion without preserving the exact selected session
+  output in the issue timeline. The deterministic materiality gate accepted the
+  candidate with one eligible group. Updated generated tracker text to Chinese,
+  added inline image child comments when Multica returns an attachment URL, kept
+  raw completion output in a separate Markdown code-block child comment,
+  tightened card layout, and covered the behavior in the skill-local tracker
+  tests.

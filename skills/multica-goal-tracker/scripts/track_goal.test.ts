@@ -3,9 +3,14 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
+  commentIdFromCommentOutput,
   extractGoal,
   extractTrackedGoalFromComments,
+  imageAttachmentUrlFromCommentOutput,
+  markdownCodeBlock,
+  markdownForInlineImage,
   markdownForFinish,
+  markdownForRawSessionOutput,
   normalizeLines,
   replaceMarkedBlock,
   selectLatestRunId,
@@ -48,10 +53,10 @@ Later notes should not be treated as the active goal.
     );
 
     expect(normalizeLines(summary.rawGoal)[0]).toBe("fix the broken sync path with $intuitive-flow");
-    expect(summary.purpose).toBe("Fix the broken sync path with $intuitive-flow");
+    expect(summary.purpose).toBe("修复 the broken sync path with $intuitive-flow");
     expect(summary.route).toBe("$intuitive-flow");
     expect(summary.sources).toEqual(["docs/plans/refactor-sync.md"]);
-    expect(summary.proof).toContain("Verify with bun run verify");
+    expect(summary.proof).toContain("验证 with bun run verify");
   });
 
   test("normalizes real transcript evidence without inventing proof", () => {
@@ -66,6 +71,7 @@ Later notes should not be treated as the active goal.
     expect(evidence.outcome).toContain("RESULT_STATUS: SUCCESS");
     expect(evidence.proofNote).toBe("Verified with bun run verify.");
     expect(evidence.excerpt).toContain("Ran bun run verify");
+    expect(evidence.rawOutput).toContain("Committed abc123");
     expect(evidence.excerpt).not.toContain("\u001b[32m");
   });
 
@@ -100,7 +106,7 @@ Later notes should not be treated as the active goal.
 
     const evidence = sessionEvidenceFromSessionText("file session.jsonl", jsonl);
     expect(evidence.source).toBe("codex session file session.jsonl");
-    expect(evidence.proofNote).toBe("Extracted from real Codex session assistant output.");
+    expect(evidence.proofNote).toBe("从真实 Codex session assistant 输出中提取。");
     expect(evidence.excerpt).toContain("SUMMARY: Added canonical metrics.");
     expect(evidence.excerpt).not.toContain("Working note");
   });
@@ -163,7 +169,7 @@ Run bun run verify.
     expect(selectLatestRunId([{ id: "first" }, { id: "last" }])).toBe("last");
   });
 
-  test("escapes code fences in finish comment excerpts", () => {
+  test("keeps finish comment concise and points to the raw output comment", () => {
     const summary = summarizeGoal("/goal fix the tracker\nRun bun run verify");
     const comment = markdownForFinish(
       { identifier: "MIA-40", title: "Tracker", status: "Done" },
@@ -173,14 +179,52 @@ Run bun run verify.
         outcome: "RESULT_STATUS: SUCCESS",
         proofNote: "Verified with bun run verify.",
         excerpt: "Generated markdown:\n```text\ninside fence\n```",
+        rawOutput: "Generated markdown:\n```text\ninside fence\n```",
         messageCount: 3,
       },
       "/tmp/card.svg",
     );
 
-    const fenceCount = comment.match(/```/g)?.length ?? 0;
-    expect(fenceCount).toBe(2);
-    expect(comment).toContain("\\`\\`\\`text");
+    expect(comment).toContain("## Goal 完成记录");
+    expect(comment).toContain("**证据:**");
+    expect(comment).toContain("完整输出已在下方代码块评论中保留");
+    expect(comment).not.toContain("inside fence");
+  });
+
+  test("preserves complete raw session output in a separate code block comment", () => {
+    const raw = "Line 1\n```text\ninside fence\n```\nLine after fence";
+    const comment = markdownForRawSessionOutput({
+      source: "codex session file",
+      outcome: "RESULT_STATUS: SUCCESS",
+      proofNote: "real session",
+      excerpt: "Line 1",
+      rawOutput: raw,
+      messageCount: 5,
+    });
+
+    expect(comment).toContain("## 真实 session 完成输出");
+    expect(comment).toContain(raw);
+    expect(comment).not.toContain("\\`\\`\\`");
+    expect(markdownCodeBlock(raw)).toContain("````text");
+  });
+
+  test("extracts image URL and comment ID from Multica comment add output", () => {
+    const output = JSON.stringify({
+      id: "comment-1",
+      attachments: [
+        {
+          filename: "completion-card.png",
+          content_type: "image/png",
+          url: "/uploads/workspaces/ws/completion-card.png",
+        },
+      ],
+    });
+
+    expect(commentIdFromCommentOutput(output)).toBe("comment-1");
+    expect(imageAttachmentUrlFromCommentOutput(output)).toBe("/uploads/workspaces/ws/completion-card.png");
+    expect(markdownForInlineImage("/uploads/workspaces/ws/completion-card.png")).toContain(
+      "![completion-card.png](/uploads/workspaces/ws/completion-card.png)",
+    );
   });
 
   test("replaces only the marked summary block in descriptions", () => {

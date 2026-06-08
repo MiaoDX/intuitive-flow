@@ -36,6 +36,7 @@ export type SessionEvidence = {
   outcome: string;
   proofNote: string;
   excerpt: string;
+  rawOutput: string;
   messageCount: number;
 };
 
@@ -313,8 +314,9 @@ export function sessionEvidenceFromTranscript(source: string, transcript: string
   return {
     source,
     outcome: pickOutcomeFromTranscript(normalized),
-    proofNote: proofOverride || "Derived from real session transcript/output.",
+    proofNote: proofOverride || "来自真实 session transcript/output。",
     excerpt: truncate(normalized.slice(Math.max(0, normalized.length - 1800)), 900),
+    rawOutput: normalized,
     messageCount: normalized.split("\n").length,
   };
 }
@@ -402,7 +404,7 @@ export function sessionEvidenceFromSessionText(source: string, text: string, pro
   if (looksLikeCodexJsonl(text)) {
     const transcript = transcriptFromCodexJsonl(text);
     if (transcript) {
-      return sessionEvidenceFromTranscript(`codex session ${source}`, transcript, proofOverride || "Extracted from real Codex session assistant output.");
+      return sessionEvidenceFromTranscript(`codex session ${source}`, transcript, proofOverride || "从真实 Codex session assistant 输出中提取。");
     }
   }
   return sessionEvidenceFromTranscript(source, text, proofOverride);
@@ -430,7 +432,7 @@ export function transcriptFromSkillRunnerDir(dir: string): string {
 
 export function sessionEvidenceFromSkillRunnerDir(dir: string, proofOverride?: string): SessionEvidence {
   const transcript = transcriptFromSkillRunnerDir(dir);
-  return sessionEvidenceFromTranscript(`skill-runner dir ${dir}`, transcript, proofOverride || "Extracted from real skill-runner result/eval artifacts.");
+  return sessionEvidenceFromTranscript(`skill-runner dir ${dir}`, transcript, proofOverride || "从真实 skill-runner result/eval artifacts 中提取。");
 }
 
 function sessionEvidenceFromRun(opts: Options, runId: string, proofOverride?: string): SessionEvidence {
@@ -474,6 +476,7 @@ function loadSessionEvidence(opts: Options): SessionEvidence {
       outcome: manual,
       proofNote: opts.proof || "Manual summary fallback explicitly allowed.",
       excerpt: manual,
+      rawOutput: manual,
       messageCount: 0,
     };
   }
@@ -563,11 +566,20 @@ export function normalizeLines(goal: string): string[] {
 
 export function sentenceCaseAction(line: string): string {
   return line
-    .replace(/^impl\b/i, "Implement")
-    .replace(/^execute\b/i, "Execute")
-    .replace(/^fix\b/i, "Fix")
-    .replace(/^refactor\b/i, "Refactor")
-    .replace(/^run\b/i, "Run")
+    .replace(/^impl(?:ement)?\b/i, "实现")
+    .replace(/^execute\b/i, "执行")
+    .replace(/^fix\b/i, "修复")
+    .replace(/^refactor\b/i, "重构")
+    .replace(/^remove\b/i, "移除")
+    .replace(/^add\b/i, "添加")
+    .replace(/^create\b/i, "创建")
+    .replace(/^build\b/i, "构建")
+    .replace(/^run\b/i, "运行")
+    .replace(/^audit\b/i, "审计")
+    .replace(/^migrate\b/i, "迁移")
+    .replace(/^cleanup\b|^clean up\b/i, "清理")
+    .replace(/^verify\b/i, "验证")
+    .replace(/^use\b/i, "使用")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -578,7 +590,7 @@ export function summarizeGoal(goal: string): GoalSummary {
   if (!rawGoal) throw new Error("No goal text found. Pass --goal or --goal-file.");
 
   const routeTokens = [...new Set([...rawGoal.matchAll(/\$[a-z][a-z0-9-]*/g)].map((m) => m[0]))];
-  const route = routeTokens.length ? routeTokens.join(", ") : "manual goal";
+  const route = routeTokens.length ? routeTokens.join(", ") : "手动 goal";
   const sources = [...new Set([...rawGoal.matchAll(/(?:^|\s)((?:\.?\/)?(?:docs|\.planning|tasks|specs|tests|src|scripts|packages|server|web)\/[^\s`'")]+)/g)].map((m) => m[1]))];
 
   const proofLines = lines.filter((line) =>
@@ -587,28 +599,28 @@ export function summarizeGoal(goal: string): GoalSummary {
   const actionLine =
     lines.find((line) => /\b(impl|implement|execute|fix|refactor|remove|add|create|build|run|audit|migrate|cleanup|clean up)\b/i.test(line)) ??
     lines[0] ??
-    "Complete the requested goal";
+    "完成请求的 goal";
 
   const purpose = sentenceCaseAction(actionLine.replace(/\s+via\s+\$[a-z0-9-]+/gi, ""));
-  const proof = proofLines.length ? proofLines.map(sentenceCaseAction).join(" ") : "Use the goal's stated verification or definition of done.";
+  const proof = proofLines.length ? proofLines.map(sentenceCaseAction).join(" ") : "使用 goal 中声明的验证方式或完成定义。";
 
   return { purpose, route, sources, proof, rawGoal };
 }
 
 export function markdownForStart(summary: GoalSummary): string {
-  const sources = summary.sources.length ? summary.sources.map((s) => `\`${s}\``).join(", ") : "Not explicit in goal.";
+  const sources = summary.sources.length ? summary.sources.map((s) => `\`${s}\``).join(", ") : "未在 goal 中明确。";
   return `<!-- multica-goal-tracker:start -->
-## Tracked goal start
+## Goal 跟踪开始
 
-**Purpose:** ${summary.purpose}
+**目标:** ${summary.purpose}
 
-**Route:** ${summary.route}
+**执行入口:** ${summary.route}
 
-**Source artifacts:** ${sources}
+**来源材料:** ${sources}
 
-**Expected proof:** ${summary.proof}
+**预期验证:** ${summary.proof}
 
-**Goal command:**
+**Goal 命令:**
 
 \`\`\`text
 ${summary.rawGoal}
@@ -617,17 +629,17 @@ ${summary.rawGoal}
 }
 
 export function summaryBlock(summary: GoalSummary): string {
-  const sources = summary.sources.length ? summary.sources.map((s) => `\`${s}\``).join(", ") : "Not explicit in goal.";
+  const sources = summary.sources.length ? summary.sources.map((s) => `\`${s}\``).join(", ") : "未在 goal 中明确。";
   return `<!-- multica-goal-tracker:summary:start -->
-## Goal Summary
+## Goal 摘要
 
-**Purpose:** ${summary.purpose}
+**目标:** ${summary.purpose}
 
-**Route:** ${summary.route}
+**执行入口:** ${summary.route}
 
-**Source artifacts:** ${sources}
+**来源材料:** ${sources}
 
-**Expected proof:** ${summary.proof}
+**预期验证:** ${summary.proof}
 <!-- multica-goal-tracker:summary:end -->`;
 }
 
@@ -663,16 +675,25 @@ function artifactDir(issue: Issue): string {
   return join(homedir(), ".cache", "multica-goal-tracker", issueKey, `${stamp}-${process.pid}`);
 }
 
+function compactSessionSource(source: string): string {
+  const pathMatch = source.match(/(\/[^\s]+)$/);
+  if (!pathMatch) return source;
+  const path = pathMatch[1];
+  const prefix = source.slice(0, source.length - path.length).trim();
+  const compactPath = path.split("/").filter(Boolean).slice(-4).join("/");
+  return [prefix, compactPath].filter(Boolean).join(" ");
+}
+
 function renderEvidence(issue: Issue, summary: GoalSummary, session: SessionEvidence): RenderedEvidence {
   const dir = artifactDir(issue);
   mkdirSync(dir, { recursive: true });
   const htmlPath = join(dir, "completion-card.html");
   const svgPath = join(dir, "completion-card.svg");
   const pngPath = join(dir, "completion-card.png");
-  const timestamp = new Date().toLocaleString("sv-SE", { timeZoneName: "short" });
   const issueKey = issue.identifier ?? issue.id ?? "Issue";
   const title = issue.title ?? "";
   const status = issue.status ?? "unknown";
+  const source = compactSessionSource(session.source);
 
   const cardInner = `
     <div class="topline">
@@ -680,29 +701,30 @@ function renderEvidence(issue: Issue, summary: GoalSummary, session: SessionEvid
       <span>${htmlEscape(status)}</span>
     </div>
     <h1>${htmlEscape(truncate(title, 96))}</h1>
-    <section>
-      <div class="label">Goal purpose</div>
-      <p>${htmlEscape(truncate(summary.purpose, 210))}</p>
-    </section>
-    <section>
-      <div class="label">Outcome</div>
-      <p>${htmlEscape(truncate(session.outcome, 240))}</p>
-    </section>
-    <section class="grid">
-      <div>
-        <div class="label">Route</div>
-        <p>${htmlEscape(summary.route)}</p>
-      </div>
-      <div>
-        <div class="label">Session source</div>
-        <p>${htmlEscape(truncate(session.source, 180))}</p>
-      </div>
-    </section>
-    <section>
-      <div class="label">Proof note</div>
-      <p>${htmlEscape(truncate(session.proofNote, 200))}</p>
-    </section>
-    <footer>Rendered by multica-goal-tracker at ${htmlEscape(timestamp)} · messages: ${session.messageCount}</footer>
+    <div class="body">
+      <section>
+        <div class="label">Goal 目标</div>
+        <p class="clamp-2">${htmlEscape(truncate(summary.purpose, 180))}</p>
+      </section>
+      <section>
+        <div class="label">完成结果</div>
+        <p class="clamp-3">${htmlEscape(truncate(session.outcome, 210))}</p>
+      </section>
+      <section class="grid">
+        <div>
+          <div class="label">执行入口</div>
+          <p class="clamp-1">${htmlEscape(summary.route)}</p>
+        </div>
+        <div>
+          <div class="label">Session 来源</div>
+          <p class="clamp-2">${htmlEscape(truncate(source, 130))}</p>
+        </div>
+      </section>
+      <section class="proof">
+        <div class="label">验证说明</div>
+        <p class="clamp-4">${htmlEscape(truncate(session.proofNote, 280))}</p>
+      </section>
+    </div>
   `;
 
   const html = `<!doctype html>
@@ -720,13 +742,16 @@ function renderEvidence(issue: Issue, summary: GoalSummary, session: SessionEvid
     color: #151712;
   }
   .card {
-    width: 1240px;
-    height: 780px;
-    margin: 60px 80px;
-    padding: 46px 64px;
+    width: 1280px;
+    height: 820px;
+    margin: 40px 60px;
+    padding: 38px 52px;
     background: #ffffff;
     border: 1px solid #d9dbd2;
     box-shadow: 0 28px 80px rgba(20, 24, 16, 0.16);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
   .topline {
     display: flex;
@@ -739,13 +764,24 @@ function renderEvidence(issue: Issue, summary: GoalSummary, session: SessionEvid
     text-transform: uppercase;
   }
   h1 {
-    margin: 26px 0 28px;
-    font-size: 50px;
+    margin: 22px 0 20px;
+    font-size: 48px;
     line-height: 1.06;
     letter-spacing: 0;
     max-width: 1100px;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
   }
-  section { margin: 18px 0; }
+  .body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  section { margin: 0; }
   .grid {
     display: grid;
     grid-template-columns: 1fr 1.4fr;
@@ -753,24 +789,32 @@ function renderEvidence(issue: Issue, summary: GoalSummary, session: SessionEvid
   }
   .label {
     color: #606656;
-    font-size: 20px;
+    font-size: 19px;
     font-weight: 720;
     letter-spacing: 0;
-    margin-bottom: 8px;
-    text-transform: uppercase;
+    margin-bottom: 6px;
   }
   p {
     margin: 0;
     color: #25291f;
-    font-size: 28px;
-    line-height: 1.22;
+    font-size: 25px;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
   }
-  footer {
-    margin-top: 22px;
-    padding-top: 16px;
-    border-top: 1px solid #e1e3dc;
-    color: #73786b;
-    font-size: 22px;
+  .clamp-1,
+  .clamp-2,
+  .clamp-3,
+  .clamp-4 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .clamp-1 { -webkit-line-clamp: 1; }
+  .clamp-2 { -webkit-line-clamp: 2; }
+  .clamp-3 { -webkit-line-clamp: 3; }
+  .clamp-4 { -webkit-line-clamp: 4; }
+  .proof {
+    min-height: 126px;
   }
 </style>
 </head>
@@ -815,34 +859,99 @@ export function markdownFenceText(value: string): string {
   return value.replace(/```/g, "\\`\\`\\`");
 }
 
+export function markdownCodeBlock(value: string, info = "text"): string {
+  const longest = Math.max(0, ...[...value.matchAll(/`+/g)].map((match) => match[0].length));
+  const fence = "`".repeat(Math.max(3, longest + 1));
+  return `${fence}${info}\n${value}\n${fence}`;
+}
+
 export function markdownForFinish(issue: Issue, summary: GoalSummary, session: SessionEvidence, attachment: string): string {
   return `<!-- multica-goal-tracker:finish -->
-## Tracked goal finish
+## Goal 完成记录
 
 **Issue:** ${issue.identifier ?? issue.id ?? "unknown"}
 
-**Status:** ${issue.status ?? "unknown"}
+**状态:** ${issue.status ?? "unknown"}
 
-**Session source:** ${session.source}
+**Session 来源:** ${session.source}
 
-**Message count:** ${session.messageCount}
+**消息数:** ${session.messageCount}
 
-**Outcome:** ${session.outcome}
+**完成结果:** ${session.outcome}
 
-**Proof note:** ${session.proofNote}
+**验证说明:** ${session.proofNote}
 
-**Evidence:** attached rendered completion card.
+**证据:** 已附加渲染后的完成卡片；如果 Multica 返回附件 URL，脚本会自动追加一条内联图片回复。
 
-**Goal purpose:** ${summary.purpose}
+**Goal 目标:** ${summary.purpose}
 
-**Session excerpt:**
+**Session 摘录:** 完整输出已在下方代码块评论中保留。
 
-\`\`\`text
-${markdownFenceText(session.excerpt)}
-\`\`\`
-
-Local evidence artifact: \`${attachment}\`
+本地证据文件: \`${attachment}\`
 `;
+}
+
+export function markdownForRawSessionOutput(session: SessionEvidence): string {
+  return `<!-- multica-goal-tracker:raw-session-output -->
+## 真实 session 完成输出
+
+**Session 来源:** ${session.source}
+
+${markdownCodeBlock(session.rawOutput)}
+`;
+}
+
+export function markdownForInlineImage(url: string): string {
+  return `<!-- multica-goal-tracker:evidence-image -->
+![completion-card.png](${url})
+`;
+}
+
+function findImageAttachmentUrl(value: unknown): string | undefined {
+  const record = asRecord(value);
+  if (record) {
+    const contentType = textFromUnknown(record.content_type ?? record.contentType);
+    const filename = textFromUnknown(record.filename ?? record.name);
+    const url = textFromUnknown(record.url ?? record.download_url ?? record.downloadUrl);
+    if (url && (/^image\//i.test(contentType) || /\.(png|jpe?g|webp|gif|svg)$/i.test(filename || url))) {
+      return url;
+    }
+    for (const child of Object.values(record)) {
+      const found = findImageAttachmentUrl(child);
+      if (found) return found;
+    }
+    return undefined;
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = findImageAttachmentUrl(item);
+      if (found) return found;
+    }
+  }
+  return undefined;
+}
+
+export function imageAttachmentUrlFromCommentOutput(output: string): string | undefined {
+  if (!output.trim()) return undefined;
+  try {
+    return findImageAttachmentUrl(JSON.parse(output) as unknown);
+  } catch {
+    return undefined;
+  }
+}
+
+export function commentIdFromCommentOutput(output: string): string | undefined {
+  if (!output.trim()) return undefined;
+  try {
+    const parsed = JSON.parse(output) as unknown;
+    const record = asRecord(parsed);
+    const id = record ? textFromUnknown(record.id) : "";
+    if (id) return id;
+    const nested = record ? asRecord(record.comment ?? record.data) : undefined;
+    return nested ? textFromUnknown(nested.id) || undefined : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function writeTempMarkdown(dir: string, name: string, content: string): string {
@@ -903,11 +1012,12 @@ function finish(opts: Options) {
       html: evidence.htmlPath,
       svg: evidence.svgPath,
     });
+    printDryRun("raw session output comment", markdownForRawSessionOutput(session));
     return;
   }
 
   const commentFile = writeTempMarkdown(evidence.dir, "finish-comment.md", comment);
-  runMultica(opts, [
+  const addOutput = runMultica(opts, [
     "issue",
     "comment",
     "add",
@@ -919,6 +1029,26 @@ function finish(opts: Options) {
     "--output",
     "json",
   ]);
+  const imageUrl = imageAttachmentUrlFromCommentOutput(addOutput);
+  const parent = commentIdFromCommentOutput(addOutput);
+  if (imageUrl) {
+    const imageCommentFile = writeTempMarkdown(evidence.dir, "finish-image.md", markdownForInlineImage(imageUrl));
+    const args = ["issue", "comment", "add", opts.issue!, "--content-file", imageCommentFile, "--output", "json"];
+    if (parent) {
+      args.push("--parent", parent);
+    }
+    runMultica(opts, args);
+    console.log(`Posted inline evidence image: ${imageUrl}`);
+  } else {
+    console.warn("WARNING: Multica did not return an image attachment URL; evidence remains attached but not inline.");
+  }
+  const rawOutputCommentFile = writeTempMarkdown(evidence.dir, "raw-session-output.md", markdownForRawSessionOutput(session));
+  const rawOutputArgs = ["issue", "comment", "add", opts.issue!, "--content-file", rawOutputCommentFile, "--output", "json"];
+  if (parent) {
+    rawOutputArgs.push("--parent", parent);
+  }
+  runMultica(opts, rawOutputArgs);
+  console.log("Posted raw session completion output.");
   console.log(`Added tracker finish comment to ${issue.identifier ?? opts.issue}`);
   console.log(`Attached evidence: ${evidence.attachment}`);
 }

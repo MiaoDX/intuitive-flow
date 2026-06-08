@@ -47,9 +47,10 @@ The script:
 
 - fetches the issue via `multica issue get`;
 - extracts the first fenced or visible `/goal` block when no goal is supplied;
-- summarizes the goal into a short purpose, route, source artifacts, and proof
-  expectation;
-- appends a normalized "Tracked goal start" comment with the original goal.
+- summarizes the goal into a short Chinese purpose, route, source artifacts, and
+  proof expectation;
+- appends a normalized Chinese "Goal tracking start" comment with the original
+  goal.
 
 Pass `--update-description` only when the user asks to normalize the issue
 description itself. The script inserts or replaces a marked summary block and
@@ -82,7 +83,16 @@ The script:
 - renders a completion evidence card under `~/.cache/multica-goal-tracker/`;
 - uses Google Chrome headless to produce a PNG when available, with SVG
   fallback;
-- appends a "Tracked goal finish" comment and attaches the rendered evidence.
+- appends a Chinese "Goal finish" comment and attaches the rendered evidence;
+- reads the Multica comment-add response and, when an image attachment URL is
+  returned, adds a child comment containing `![completion-card.png](...)` so the
+  card is displayed inline in the issue timeline. The CLI currently has no
+  standalone upload command and no comment update command, so this uses a reply
+  instead of editing the original finish comment;
+- appends another child comment with the real selected session completion output
+  as a plain Markdown code block. This raw output is not rendered into an image
+  and is not summarized, so the issue keeps the actual completion text alongside
+  the overview card.
 
 If the issue has no Multica run history, finish fails fast instead of creating a
 fake proof card. In that case pass a real completed Codex session JSONL:
@@ -134,6 +144,6 @@ goal is complete.
 
 ## Style
 
-Keep summaries short. The issue should answer "what is this goal trying to
-accomplish?" without becoming a plan document. Preserve the raw `/goal` block
-because it is the execution provenance.
+Default generated issue text to Chinese. Keep summaries short. The issue should
+answer "what is this goal trying to accomplish?" without becoming a plan
+document. Preserve the raw `/goal` block because it is the execution provenance.
