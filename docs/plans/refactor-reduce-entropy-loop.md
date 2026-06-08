@@ -116,6 +116,11 @@ size as a maximum, not a quota.
       rendered completion card, but did not make the card visible inline when
       Multica returned an attachment URL and did not preserve the real selected
       session completion output as a first-class issue comment.
+- [x] P1 false confidence: `multica-goal-tracker` Codex JSONL completion
+      extraction could prefer a later commit-summary turn over the goal's
+      completed turn when the goal's final message did not match the result
+      template, and the finish evidence omitted Codex goal start/end/duration
+      metadata that was already available in session JSONL.
 
 ## Saturation Audit
 
@@ -177,8 +182,11 @@ Current state:
 - `multica-goal-tracker` finish comments now keep the overview card, an inline
   image reply when Multica returns an attachment URL, and the raw selected
   session output as a separate code-block child comment.
-- No current P0/P1/P2 candidate remains selected after the latest audit; the
-  next step is a fresh saturation audit from the current worktree.
+- `multica-goal-tracker` Codex JSONL evidence now prefers the completed goal
+  turn over later session turns and carries Codex goal start/end/duration into
+  the rendered card, finish comment, and raw-output comment when available.
+- The next step is a fresh saturation audit from the current worktree after the
+  tracker timing slice.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
   runtime messages rather than current false confidence or live source drift.
@@ -386,3 +394,11 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   raw completion output in a separate Markdown code-block child comment,
   tightened card layout, and covered the behavior in the skill-local tracker
   tests.
+- 2026-06-08: Selected the Codex JSONL goal-timing evidence slice as P1 false
+  confidence after manual review of the dirty tracker diff showed completion
+  evidence could select a later completion-shaped turn after the goal had
+  already completed, especially when the goal's own final message was not
+  template-shaped. Preserved the completed goal turn first, extracted Codex goal
+  start/end/duration metadata, rendered the timing in the evidence card and
+  finish/raw-output comments, and covered template-shaped and non-template
+  completion turns in `track_goal.test.ts`.

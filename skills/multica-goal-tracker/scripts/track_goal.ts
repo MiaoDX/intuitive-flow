@@ -38,6 +38,9 @@ export type SessionEvidence = {
   excerpt: string;
   rawOutput: string;
   messageCount: number;
+  startedAt?: string;
+  completedAt?: string;
+  durationMs?: number;
 };
 
 type Options = {
@@ -321,6 +324,112 @@ export function sessionEvidenceFromTranscript(source: string, transcript: string
   };
 }
 
+type CodexCandidate = {
+  text: string;
+  timestampMs?: number;
+  startedAt?: string;
+  completedAt?: string;
+  durationMs?: number;
+  turnId?: string;
+};
+
+type SessionTiming = Pick<SessionEvidence, "startedAt" | "completedAt" | "durationMs"> & {
+  timestampMs?: number;
+  turnId?: string;
+};
+
+function isoFromEpochSeconds(value: unknown): string | undefined {
+  if (typeof value !== "number" || !Number.isFinite(value)) return undefined;
+  return new Date(value * 1000).toISOString();
+}
+
+function timestampMsFromRecord(value: unknown): number | undefined {
+  const record = asRecord(value);
+  if (!record) return undefined;
+  const timestamp = record.timestamp;
+  if (typeof timestamp !== "string") return undefined;
+  const parsed = Date.parse(timestamp);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function durationMsFromSeconds(value: unknown): number | undefined {
+  if (typeof value !== "number" || !Number.isFinite(value)) return undefined;
+  return Math.max(0, Math.round(value * 1000));
+}
+
+function timingFromCompletedTask(payload: JsonRecord, timestampMs?: number): SessionTiming {
+  const completedAt = isoFromEpochSeconds(payload.completed_at) ?? (timestampMs !== undefined ? new Date(timestampMs).toISOString() : undefined);
+  const durationMs = typeof payload.duration_ms === "number" && Number.isFinite(payload.duration_ms) ? Math.max(0, Math.round(payload.duration_ms)) : undefined;
+  const startedAt =
+    completedAt && durationMs !== undefined
+      ? new Date(new Date(completedAt).getTime() - durationMs).toISOString()
+      : undefined;
+  return { startedAt, completedAt, durationMs };
+}
+
+function isCompletionLikeMessage(message: string): boolean {
+  return /RESULT_STATUS|^SUMMARY:|CHANGED_FILES:|VERIFICATION:|^Implemented\.|^Committed\b/im.test(message);
+}
+
+function selectCodexCandidate(candidates: CodexCandidate[], completeGoals: SessionTiming[]): CodexCandidate | undefined {
+  if (candidates.length === 0) return undefined;
+  const goal = completeGoals[completeGoals.length - 1];
+  if (goal?.turnId) {
+    const sameTurn = candidates.filter((candidate) => candidate.turnId === goal.turnId);
+    const sameTurnCompletion = sameTurn.filter((candidate) => isCompletionLikeMessage(candidate.text));
+    if (sameTurnCompletion.length) return sameTurnCompletion[sameTurnCompletion.length - 1];
+    if (sameTurn.length) return sameTurn[sameTurn.length - 1];
+  }
+
+  if (goal?.completedAt) {
+    const completedMs = Date.parse(goal.completedAt);
+    if (Number.isFinite(completedMs)) {
+      const nearby = candidates.filter(
+        (candidate) =>
+          candidate.timestampMs !== undefined &&
+          candidate.timestampMs >= completedMs - 60_000 &&
+          candidate.timestampMs <= completedMs + 5 * 60_000 &&
+          isCompletionLikeMessage(candidate.text),
+      );
+      if (nearby.length) return nearby[nearby.length - 1];
+    }
+  }
+
+  return [...candidates].reverse().find((candidate) => isCompletionLikeMessage(candidate.text)) ?? candidates[candidates.length - 1];
+}
+
+function nearestGoalTiming(completeGoals: SessionTiming[], selected?: CodexCandidate): SessionTiming {
+  if (completeGoals.length === 0) {
+    return {
+      startedAt: selected?.startedAt,
+      completedAt: selected?.completedAt,
+      durationMs: selected?.durationMs,
+    };
+  }
+
+  if (selected?.turnId) {
+    const sameTurn = [...completeGoals].reverse().find((goal) => goal.turnId === selected.turnId);
+    if (sameTurn) {
+      return { startedAt: sameTurn.startedAt, completedAt: sameTurn.completedAt, durationMs: sameTurn.durationMs };
+    }
+  }
+
+  if (selected?.timestampMs === undefined) {
+    const latest = completeGoals[completeGoals.length - 1];
+    return { startedAt: latest.startedAt, completedAt: latest.completedAt, durationMs: latest.durationMs };
+  }
+
+  const selectedGoal =
+    [...completeGoals]
+      .reverse()
+      .find((goal) => goal.timestampMs === undefined || goal.timestampMs <= selected.timestampMs! + 30_000) ?? completeGoals[completeGoals.length - 1];
+  return {
+    startedAt: selectedGoal.startedAt ?? selected?.startedAt,
+    completedAt: selectedGoal.completedAt ?? selected?.completedAt,
+    durationMs: selectedGoal.durationMs ?? selected?.durationMs,
+  };
+}
+
 function maybeParseJsonLine(line: string): JsonRecord | undefined {
   try {
     return asRecord(JSON.parse(line) as unknown);
@@ -349,9 +458,9 @@ function codexMessageText(value: unknown): string {
   return textFromUnknown(content);
 }
 
-export function transcriptFromCodexJsonl(raw: string): string | undefined {
-  const assistantMessages: string[] = [];
-  const taskMessages: string[] = [];
+export function evidenceFromCodexJsonl(raw: string): (SessionTiming & { transcript: string }) | undefined {
+  const candidates: CodexCandidate[] = [];
+  const completeGoals: SessionTiming[] = [];
 
   for (const line of raw.split(/\r?\n/)) {
     const parsed = maybeParseJsonLine(line.trim());
@@ -360,33 +469,50 @@ export function transcriptFromCodexJsonl(raw: string): string | undefined {
     const type = parsed.type;
     const payload = asRecord(parsed.payload);
     if (!payload) continue;
+    const timestampMs = timestampMsFromRecord(parsed);
+    const turnId = textFromUnknown(payload.turn_id ?? payload.turnId) || undefined;
 
     if (type === "response_item") {
       if (payload.type !== "message" || payload.role !== "assistant") continue;
       const text = codexMessageText(payload).trim();
-      if (text) assistantMessages.push(text);
+      if (text) candidates.push({ text, timestampMs });
       continue;
     }
 
     if (type === "event_msg") {
       if (payload.type === "agent_message") {
         const message = textFromUnknown(payload.message).trim();
-        if (message) assistantMessages.push(message);
+        if (message) candidates.push({ text: message, timestampMs, turnId });
       }
       if (payload.type === "task_complete") {
         const message = textFromUnknown(payload.last_agent_message).trim();
-        if (message) taskMessages.push(message);
+        if (message) candidates.push({ text: message, timestampMs, turnId, ...timingFromCompletedTask(payload, timestampMs) });
+      }
+      if (payload.type === "thread_goal_updated") {
+        const goal = asRecord(payload.goal);
+        if (goal?.status === "complete") {
+          completeGoals.push({
+            startedAt: isoFromEpochSeconds(goal.createdAt),
+            completedAt: isoFromEpochSeconds(goal.updatedAt),
+            durationMs: durationMsFromSeconds(goal.timeUsedSeconds),
+            timestampMs,
+            turnId: textFromUnknown(payload.turnId ?? payload.turn_id) || undefined,
+          });
+        }
       }
     }
   }
 
-  const candidates = [...assistantMessages, ...taskMessages].filter(Boolean);
-  if (candidates.length === 0) return undefined;
-  const final =
-    [...candidates]
-      .reverse()
-      .find((message) => /RESULT_STATUS|^SUMMARY:|CHANGED_FILES:|VERIFICATION:/im.test(message)) ?? candidates[candidates.length - 1];
-  return final.trim();
+  const selected = selectCodexCandidate(candidates.filter((candidate) => candidate.text.trim()), completeGoals);
+  if (!selected) return undefined;
+  return {
+    transcript: selected.text.trim(),
+    ...nearestGoalTiming(completeGoals, selected),
+  };
+}
+
+export function transcriptFromCodexJsonl(raw: string): string | undefined {
+  return evidenceFromCodexJsonl(raw)?.transcript;
 }
 
 function looksLikeCodexJsonl(text: string): boolean {
@@ -402,9 +528,18 @@ function looksLikeCodexJsonl(text: string): boolean {
 
 export function sessionEvidenceFromSessionText(source: string, text: string, proofOverride?: string): SessionEvidence {
   if (looksLikeCodexJsonl(text)) {
-    const transcript = transcriptFromCodexJsonl(text);
-    if (transcript) {
-      return sessionEvidenceFromTranscript(`codex session ${source}`, transcript, proofOverride || "从真实 Codex session assistant 输出中提取。");
+    const codexEvidence = evidenceFromCodexJsonl(text);
+    if (codexEvidence) {
+      return {
+        ...sessionEvidenceFromTranscript(
+          `codex session ${source}`,
+          codexEvidence.transcript,
+          proofOverride || "从真实 Codex session assistant 输出中提取。",
+        ),
+        startedAt: codexEvidence.startedAt,
+        completedAt: codexEvidence.completedAt,
+        durationMs: codexEvidence.durationMs,
+      };
     }
   }
   return sessionEvidenceFromTranscript(source, text, proofOverride);
@@ -669,6 +804,32 @@ function truncate(value: string, max: number): string {
   return `${normalized.slice(0, Math.max(0, max - 1)).trim()}...`;
 }
 
+function formatDateTime(value?: string): string {
+  if (!value) return "未知";
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return value;
+  return new Intl.DateTimeFormat("zh-CN", {
+    timeZone: "Asia/Shanghai",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).format(date);
+}
+
+function formatDuration(durationMs?: number): string {
+  if (durationMs === undefined || !Number.isFinite(durationMs)) return "未知";
+  const totalSeconds = Math.max(0, Math.round(durationMs / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
+}
+
 function artifactDir(issue: Issue): string {
   const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\./g, "");
   const issueKey = issue.identifier ?? issue.id ?? "issue";
@@ -709,6 +870,20 @@ function renderEvidence(issue: Issue, summary: GoalSummary, session: SessionEvid
       <section>
         <div class="label">完成结果</div>
         <p class="clamp-3">${htmlEscape(truncate(session.outcome, 210))}</p>
+      </section>
+      <section class="timing">
+        <div>
+          <div class="label">开始时间</div>
+          <p class="meta">${htmlEscape(formatDateTime(session.startedAt))}</p>
+        </div>
+        <div>
+          <div class="label">结束时间</div>
+          <p class="meta">${htmlEscape(formatDateTime(session.completedAt))}</p>
+        </div>
+        <div>
+          <div class="label">持续时间</div>
+          <p class="meta">${htmlEscape(formatDuration(session.durationMs))}</p>
+        </div>
       </section>
       <section class="grid">
         <div>
@@ -787,6 +962,11 @@ function renderEvidence(issue: Issue, summary: GoalSummary, session: SessionEvid
     grid-template-columns: 1fr 1.4fr;
     gap: 40px;
   }
+  .timing {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
   .label {
     color: #606656;
     font-size: 19px;
@@ -800,6 +980,10 @@ function renderEvidence(issue: Issue, summary: GoalSummary, session: SessionEvid
     font-size: 25px;
     line-height: 1.2;
     overflow-wrap: anywhere;
+  }
+  .meta {
+    font-size: 22px;
+    line-height: 1.15;
   }
   .clamp-1,
   .clamp-2,
@@ -877,6 +1061,12 @@ export function markdownForFinish(issue: Issue, summary: GoalSummary, session: S
 
 **消息数:** ${session.messageCount}
 
+**开始时间:** ${formatDateTime(session.startedAt)}
+
+**结束时间:** ${formatDateTime(session.completedAt)}
+
+**持续时间:** ${formatDuration(session.durationMs)}
+
 **完成结果:** ${session.outcome}
 
 **验证说明:** ${session.proofNote}
@@ -896,6 +1086,12 @@ export function markdownForRawSessionOutput(session: SessionEvidence): string {
 ## 真实 session 完成输出
 
 **Session 来源:** ${session.source}
+
+**开始时间:** ${formatDateTime(session.startedAt)}
+
+**结束时间:** ${formatDateTime(session.completedAt)}
+
+**持续时间:** ${formatDuration(session.durationMs)}
 
 ${markdownCodeBlock(session.rawOutput)}
 `;

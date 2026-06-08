@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   commentIdFromCommentOutput,
+  evidenceFromCodexJsonl,
   extractGoal,
   extractTrackedGoalFromComments,
   imageAttachmentUrlFromCommentOutput,
@@ -111,6 +112,145 @@ Later notes should not be treated as the active goal.
     expect(evidence.excerpt).not.toContain("Working note");
   });
 
+  test("extracts goal timing from Codex JSONL completion metadata", () => {
+    const finalMessage = "Implemented.\nVerification:\n- tests passed.";
+    const jsonl = [
+      {
+        timestamp: "2026-06-04T04:57:29.560Z",
+        type: "event_msg",
+        payload: {
+          type: "thread_goal_updated",
+          turnId: "goal-turn",
+          goal: {
+            status: "complete",
+            createdAt: 1780548502,
+            updatedAt: 1780549049,
+            timeUsedSeconds: 547,
+          },
+        },
+      },
+      {
+        timestamp: "2026-06-04T04:57:43.182Z",
+        type: "event_msg",
+        payload: {
+          type: "agent_message",
+          turn_id: "goal-turn",
+          message: finalMessage,
+        },
+      },
+      {
+        timestamp: "2026-06-04T04:57:43.292Z",
+        type: "event_msg",
+        payload: {
+          type: "task_complete",
+          turn_id: "goal-turn",
+          last_agent_message: finalMessage,
+          completed_at: 1780549063,
+          duration_ms: 561085,
+        },
+      },
+    ]
+      .map((value) => JSON.stringify(value))
+      .join("\n");
+
+    const codexEvidence = evidenceFromCodexJsonl(jsonl);
+    expect(codexEvidence?.transcript).toBe(finalMessage);
+    expect(codexEvidence?.startedAt).toBe("2026-06-04T04:48:22.000Z");
+    expect(codexEvidence?.completedAt).toBe("2026-06-04T04:57:29.000Z");
+    expect(codexEvidence?.durationMs).toBe(547000);
+
+    const evidence = sessionEvidenceFromSessionText("file session.jsonl", jsonl);
+    expect(evidence.startedAt).toBe("2026-06-04T04:48:22.000Z");
+    expect(evidence.completedAt).toBe("2026-06-04T04:57:29.000Z");
+    expect(evidence.durationMs).toBe(547000);
+  });
+
+  test("prefers the completed goal turn over later Codex session turns", () => {
+    const goalOutput = "Implemented.\nVerification:\n- focused tests passed.";
+    const laterOutput = "Committed the intended changes:\n`abc123 later commit`";
+    const jsonl = [
+      {
+        timestamp: "2026-06-04T04:57:29.560Z",
+        type: "event_msg",
+        payload: {
+          type: "thread_goal_updated",
+          turnId: "goal-turn",
+          goal: {
+            status: "complete",
+            createdAt: 1780548502,
+            updatedAt: 1780549049,
+            timeUsedSeconds: 547,
+          },
+        },
+      },
+      {
+        timestamp: "2026-06-04T04:57:43.182Z",
+        type: "event_msg",
+        payload: {
+          type: "agent_message",
+          turn_id: "goal-turn",
+          message: goalOutput,
+        },
+      },
+      {
+        timestamp: "2026-06-04T05:00:20.017Z",
+        type: "event_msg",
+        payload: {
+          type: "agent_message",
+          turn_id: "commit-turn",
+          message: laterOutput,
+        },
+      },
+    ]
+      .map((value) => JSON.stringify(value))
+      .join("\n");
+
+    expect(evidenceFromCodexJsonl(jsonl)?.transcript).toBe(goalOutput);
+  });
+
+  test("keeps a completed goal turn even when the message is not template-shaped", () => {
+    const goalOutput = "完成了，验证通过。";
+    const laterOutput = "Committed the intended changes:\n`abc123 later commit`";
+    const jsonl = [
+      {
+        timestamp: "2026-06-04T04:57:29.560Z",
+        type: "event_msg",
+        payload: {
+          type: "thread_goal_updated",
+          turnId: "goal-turn",
+          goal: {
+            status: "complete",
+            createdAt: 1780548502,
+            updatedAt: 1780549049,
+            timeUsedSeconds: 547,
+          },
+        },
+      },
+      {
+        timestamp: "2026-06-04T04:57:43.182Z",
+        type: "event_msg",
+        payload: {
+          type: "agent_message",
+          turn_id: "goal-turn",
+          message: goalOutput,
+        },
+      },
+      {
+        timestamp: "2026-06-04T05:00:20.017Z",
+        type: "event_msg",
+        payload: {
+          type: "agent_message",
+          turn_id: "commit-turn",
+          message: laterOutput,
+        },
+      },
+    ]
+      .map((value) => JSON.stringify(value))
+      .join("\n");
+
+    expect(evidenceFromCodexJsonl(jsonl)?.transcript).toBe(goalOutput);
+  });
+
   test("builds evidence from skill-runner result artifacts without terminal logs", () => {
     const dir = mkdtempSync(join(tmpdir(), "multica-goal-tracker-"));
     tempDirs.push(dir);
@@ -181,12 +321,16 @@ Run bun run verify.
         excerpt: "Generated markdown:\n```text\ninside fence\n```",
         rawOutput: "Generated markdown:\n```text\ninside fence\n```",
         messageCount: 3,
+        startedAt: "2026-06-04T04:48:22.000Z",
+        completedAt: "2026-06-04T04:57:29.000Z",
+        durationMs: 547000,
       },
       "/tmp/card.svg",
     );
 
     expect(comment).toContain("## Goal 完成记录");
     expect(comment).toContain("**证据:**");
+    expect(comment).toContain("**持续时间:** 9m 7s");
     expect(comment).toContain("完整输出已在下方代码块评论中保留");
     expect(comment).not.toContain("inside fence");
   });
@@ -200,9 +344,11 @@ Run bun run verify.
       excerpt: "Line 1",
       rawOutput: raw,
       messageCount: 5,
+      durationMs: 61_000,
     });
 
     expect(comment).toContain("## 真实 session 完成输出");
+    expect(comment).toContain("**持续时间:** 1m 1s");
     expect(comment).toContain(raw);
     expect(comment).not.toContain("\\`\\`\\`");
     expect(markdownCodeBlock(raw)).toContain("````text");
