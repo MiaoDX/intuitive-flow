@@ -1,6 +1,6 @@
 ---
 refactor_scope: reduce-entropy-loop
-status: CONTINUE
+status: DONE
 accepted_severities:
   - P1
   - P2
@@ -11,7 +11,7 @@ last_verified: 2026-06-08
 
 ## Status
 
-CONTINUE
+DONE
 
 ## Target
 
@@ -124,7 +124,7 @@ size as a maximum, not a quota.
 
 ## Saturation Audit
 
-Selected candidates remain: yes.
+Selected candidates: none.
 
 Current state:
 
@@ -185,8 +185,7 @@ Current state:
 - `multica-goal-tracker` Codex JSONL evidence now prefers the completed goal
   turn over later session turns and carries Codex goal start/end/duration into
   the rendered card, finish comment, and raw-output comment when available.
-- The next step is a fresh saturation audit from the current worktree after the
-  tracker timing slice.
+- No current P0/P1/P2 candidate remains selected after the latest audit.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
   runtime messages rather than current false confidence or live source drift.
