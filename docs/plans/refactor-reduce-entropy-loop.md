@@ -54,6 +54,10 @@ size as a maximum, not a quota.
       `grill-me`, but the default installed surfaces expose the repo-owned
       planning loop and `grill-with-docs` semantics rather than those entrypoint
       names.
+- [x] P1 live source drift: `BELIEFS.md` still told humans to use
+      `office-hours` or `grill-me` for big questions even though README,
+      architecture, status, and installed repo-owned skills expose
+      `$intuitive-flow` and `$intuitive-planning-loop` for that surface.
 
 ## Saturation Audit
 
@@ -75,9 +79,9 @@ Why no change:
   listed in `scripts/local-skill-manifest.txt`.
 - Tests no longer depend on a live npm registry for local skill sync coverage,
   and tmux-dependent tests skip when tmux cannot create a detached session.
-- Fuzzy idea routing no longer advertises `office-hours` or `grill-me` as
-  default entrypoints when they are not part of the repo-owned or default
-  managed skill surface.
+- Fuzzy idea routing and supporting doctrine no longer advertise `office-hours`
+  or `grill-me` as default entrypoints when they are not part of the repo-owned
+  or default managed skill surface.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
   runtime messages rather than current false confidence or live source drift.
@@ -171,3 +175,10 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   `$intuitive-planning-loop`, and `grill-with-docs` semantics instead.
   Verified no repo-owned `office-hours` / `grill-me` references remain and
   `bun run verify` passes.
+- 2026-06-08: Reopened the loop from current `HEAD` after `BELIEFS.md` still
+  pointed big-question doctrine at `office-hours` and `grill-me`, while the
+  current public surface exposes `$intuitive-flow` and
+  `$intuitive-planning-loop`. The deterministic materiality gate accepted the
+  candidate as P1 live source drift and real workflow friction. Reworded
+  `BELIEFS.md` to route ordinary idea shaping through `intuitive-flow` and
+  scout-driven option critique through `intuitive-planning-loop`.

@@ -53,7 +53,9 @@ Spend human attention on what matters:
 - what good means
 - what must not break
 
-Use `office-hours` or `grill-me` for that. Everything else should be cheap.
+Use `intuitive-flow` for ordinary idea shaping, or `intuitive-planning-loop`
+when the question needs scouts to challenge options before one review packet.
+Everything else should be cheap.
 
 ## Default Loops
 
