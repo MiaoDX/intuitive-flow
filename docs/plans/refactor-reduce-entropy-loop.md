@@ -1,6 +1,6 @@
 ---
 refactor_scope: reduce-entropy-loop
-status: DONE
+status: CONTINUE
 accepted_severities:
   - P1
   - P2
@@ -11,7 +11,7 @@ last_verified: 2026-06-08
 
 ## Status
 
-DONE
+CONTINUE
 
 ## Target
 
@@ -91,12 +91,17 @@ size as a maximum, not a quota.
 - [x] P1 false confidence: the GitHub Actions verifier ran `bun run verify`
       after the ShellCheck gate was added, but did not explicitly install the
       ShellCheck binary.
+- [x] P1 false confidence: `skills/skill-runner/SKILL.md` documented the
+      `summarize_skill_runner_runs.py` batch-review command, but the normal
+      `bun run verify` proof boundary only exercised `run_skill_runner.py` and
+      could miss summarizer argument parsing, artifact parsing, or JSON output
+      drift.
 
 ## Saturation Audit
 
-Selected candidates: none.
+Selected candidates remain: yes.
 
-Why no change:
+Current state:
 
 - `bun run verify` passes from current HEAD.
 - The repo-owned skill manifest matches the live `skills/*/SKILL.md` surface.
@@ -137,6 +142,12 @@ Why no change:
   hook owners such as Agent Deck notify hooks.
 - GitHub Actions installs ShellCheck before running `bun run verify`, so the CI
   proof boundary has the same tool dependency as the local verifier.
+- The documented `skill-runner` summarizer command is now exercised by the
+  default Bun test suite with a CLI smoke over real run artifacts.
+- The next current read-only audit candidate is the legacy `.claude/skills/*`
+  sync path in `scripts/tasks/sync-local-commands-skills.sh`; the loop remains
+  `CONTINUE` until that candidate is executed or rejected by a fresh materiality
+  gate.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
   runtime messages rather than current false confidence or live source drift.
@@ -295,3 +306,12 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   `bun run verify` without explicitly installing ShellCheck. Added an
   `apt-get install shellcheck` workflow step and verified the local full proof
   remains green with `bun run verify`.
+- 2026-06-08: Reopened the loop from current `HEAD` after read-only
+  verification and skill-surface audits. Selected the documented skill-runner
+  summarizer proof gap as P1 false confidence and real workflow friction. The
+  deterministic materiality gate accepted the candidate with one eligible
+  group. Added a default `bun run test` smoke that executes
+  `summarize_skill_runner_runs.py --run-root <temp> --json` against minimal run
+  artifacts and asserts status, worker mismatch, skill review, skills, and
+  owned paths. Verified with `bun test scripts/lib/skill-runner.test.ts` and
+  `bun run verify` (80 tests across 13 files).

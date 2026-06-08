@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "bun:test";
@@ -7,6 +7,7 @@ import { hasUsableTmux } from "./test-capabilities";
 
 const repoRoot = process.cwd();
 const runnerScript = join(repoRoot, "skills", "skill-runner", "scripts", "run_skill_runner.py");
+const summarizerScript = join(repoRoot, "skills", "skill-runner", "scripts", "summarize_skill_runner_runs.py");
 const hasTmux = hasUsableTmux();
 
 function runPython(body: string) {
@@ -79,6 +80,75 @@ print(json.dumps({"prompt": prompt}))
     expect(output.prompt).toContain("Useful evidence");
     expect(output.prompt).toContain("Do not inspect unless needed");
     expect(output.prompt).toContain("If the prompt lacks required context");
+  });
+
+  test("summarizer CLI reports run status, worker result, and review recommendation", () => {
+    const runRoot = mkdtempSync(join(tmpdir(), "skill-runner-summary-root-"));
+    const runDir = join(runRoot, "20260608-120000-0000");
+    try {
+      mkdirSync(runDir);
+      writeFileSync(
+        join(runDir, "result.md"),
+        [
+          "# Skill Runner Result",
+          "",
+          "- Status: DETACHED",
+          "- Reason: worker kept running after supervisor exit",
+          "",
+        ].join("\n"),
+      );
+      writeFileSync(
+        join(runDir, "last-message.md"),
+        [
+          "RESULT_STATUS: SUCCESS",
+          "SUMMARY: worker finished after detach",
+          "",
+        ].join("\n"),
+      );
+      writeFileSync(
+        join(runDir, "skill-review.md"),
+        [
+          "# Skill Review",
+          "",
+          "## Recommendation",
+          "",
+          "NO_SKILL_CHANGE: behavior was correct.",
+          "",
+          "## Notes",
+          "",
+        ].join("\n"),
+      );
+      writeFileSync(
+        join(runDir, "run.json"),
+        JSON.stringify({ skills: ["intuitive-flow"], owned_paths: ["skills/intuitive-flow"] }, null, 2) + "\n",
+      );
+
+      const result = spawnSync("python3", [summarizerScript, "--run-root", runRoot, "--json"], {
+        cwd: repoRoot,
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          PYTHONDONTWRITEBYTECODE: "1",
+        },
+      });
+
+      if (result.status !== 0) {
+        throw new Error(`summarizer failed\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`);
+      }
+
+      const rows = JSON.parse(result.stdout);
+      expect(rows).toHaveLength(1);
+      expect(rows[0].run).toBe("20260608-120000-0000");
+      expect(rows[0].status).toBe("DETACHED");
+      expect(rows[0].reason).toBe("worker kept running after supervisor exit");
+      expect(rows[0].worker_status).toBe("SUCCESS");
+      expect(rows[0].status_mismatch).toBe(true);
+      expect(rows[0].skill_review).toBe("NO_SKILL_CHANGE: behavior was correct.");
+      expect(rows[0].skills).toEqual(["intuitive-flow"]);
+      expect(rows[0].owned_paths).toEqual(["skills/intuitive-flow"]);
+    } finally {
+      rmSync(runRoot, { recursive: true, force: true });
+    }
   });
 
   test("detects Codex bwrap sandbox failures reported in last-message", () => {
