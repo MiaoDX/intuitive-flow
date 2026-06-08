@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { Buffer } from "node:buffer";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -758,6 +759,7 @@ function getIssueComments(opts: Options): unknown[] {
 
 const attemptMetaPrefix = "<!-- multica-goal-tracker:attempt ";
 const attemptMetaSuffix = " -->";
+const encodedAttemptMetaPrefix = "v1:";
 
 function parseAttemptRecord(value: unknown): GoalAttemptRecord | undefined {
   const record = asRecord(value);
@@ -799,8 +801,21 @@ export function attemptRecordFromCommentText(text: string): GoalAttemptRecord | 
   const start = idx + attemptMetaPrefix.length;
   const end = text.indexOf(attemptMetaSuffix, start);
   if (end < 0) return undefined;
+  const first = parseAttemptRecordPayload(text.slice(start, end));
+  if (first) return first;
+
+  const lastEnd = text.lastIndexOf(attemptMetaSuffix);
+  if (lastEnd > end) return parseAttemptRecordPayload(text.slice(start, lastEnd));
+  return undefined;
+}
+
+function parseAttemptRecordPayload(payload: string): GoalAttemptRecord | undefined {
   try {
-    return parseAttemptRecord(JSON.parse(text.slice(start, end)) as unknown);
+    const trimmed = payload.trim();
+    const rawJson = trimmed.startsWith(encodedAttemptMetaPrefix)
+      ? Buffer.from(trimmed.slice(encodedAttemptMetaPrefix.length), "base64").toString("utf8")
+      : trimmed;
+    return parseAttemptRecord(JSON.parse(rawJson) as unknown);
   } catch {
     return undefined;
   }
@@ -818,7 +833,8 @@ export function attemptRecordsFromComments(comments: unknown[]): GoalAttemptReco
 }
 
 function encodeAttemptRecord(record: GoalAttemptRecord): string {
-  return `${attemptMetaPrefix}${JSON.stringify(record)}${attemptMetaSuffix}`;
+  const encoded = Buffer.from(JSON.stringify(record), "utf8").toString("base64");
+  return `${attemptMetaPrefix}${encodedAttemptMetaPrefix}${encoded}${attemptMetaSuffix}`;
 }
 
 export function buildAttemptRecord(summary: GoalSummary, session: SessionEvidence, status: AttemptStatus, sequence: number): GoalAttemptRecord {

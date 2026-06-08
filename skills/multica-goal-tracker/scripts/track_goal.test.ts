@@ -507,6 +507,32 @@ Run bun run verify.
     expect(nextAttemptSequence([{ ...first, sequence: 3 }, { ...second, sequence: 5 }])).toBe(6);
   });
 
+  test("encodes attempt metadata so comment delimiters in session text do not break timeline parsing", () => {
+    const summary = summarizeGoal("/goal fix marker --> handling via $intuitive-flow");
+    const session = sessionEvidenceFromTranscript("session file", "RESULT_STATUS: SUCCESS\nOutput contained --> in a rendered snippet.");
+    const attempt = buildAttemptRecord(summary, session, "complete", 1);
+    const comment = markdownForFinish(
+      { identifier: "MIA-43", status: "Done" },
+      summary,
+      session,
+      "/tmp/card.png",
+      attempt,
+      buildGoalTimeline([attempt]),
+    );
+
+    expect(comment).toContain("multica-goal-tracker:attempt v1:");
+    expect(attemptRecordFromCommentText(comment)?.goal).toBe(summary.rawGoal);
+    expect(attemptRecordsFromComments([{ content: comment }])).toHaveLength(1);
+  });
+
+  test("continues reading legacy raw-json attempt metadata", () => {
+    const legacyComment = `<!-- multica-goal-tracker:finish -->
+<!-- multica-goal-tracker:attempt {"sequence":4,"status":"complete","goal":"old goal","purpose":"old purpose","route":"manual","proof":"proof","source":"source","outcome":"ok","proofNote":"real","messageCount":1,"recordedAt":"2026-06-08T00:00:00.000Z"} -->
+## Goal 完成记录`;
+
+    expect(attemptRecordFromCommentText(legacyComment)?.sequence).toBe(4);
+  });
+
   test("labels incomplete attempts as execution records instead of completion records", () => {
     const summary = summarizeGoal("/goal investigate a partial run via $intuitive-flow");
     const session = sessionEvidenceFromTranscript("session file", "RESULT_STATUS: PARTIAL\nVerification incomplete.");

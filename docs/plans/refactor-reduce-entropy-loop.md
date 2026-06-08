@@ -135,6 +135,10 @@ size as a maximum, not a quota.
       run as a standalone completion and did not preserve an issue-level
       attempt timeline, so partial or follow-up goal runs could be misread as
       final completion evidence and cumulative issue effort was lost.
+- [x] P1 false confidence: `multica-goal-tracker` stored structured attempt
+      metadata as raw JSON inside an HTML comment, so real goal or session text
+      containing the comment terminator could break timeline parsing and lose
+      cumulative attempt evidence.
 
 ## Saturation Audit
 
@@ -210,6 +214,9 @@ Current state:
   completion records, derives the next attempt number from the highest existing
   sequence, and renders an issue-level attempt timeline with cumulative
   duration.
+- `multica-goal-tracker` attempt metadata is now versioned and base64 encoded
+  inside the hidden comment marker, with legacy raw-JSON metadata still readable
+  so older finish comments continue to contribute to the timeline.
 - No current P0/P1/P2 candidate remains selected after the latest audit.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
@@ -468,3 +475,10 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   max-sequence next attempt rule. Verified with
   `bun test skills/multica-goal-tracker/scripts/track_goal.test.ts`,
   `bun run check:skills`, `bun run check`, and `bun run verify`.
+- 2026-06-08: Selected Multica attempt metadata encoding as P1 false confidence
+  after a saturation audit showed the new hidden attempt JSON lived inside an
+  HTML comment delimiter. Encoded attempt metadata as `v1:` base64, retained
+  legacy raw-JSON parsing, and added regression coverage for `-->` in real
+  goal/session text. Verified with
+  `bun test skills/multica-goal-tracker/scripts/track_goal.test.ts`,
+  `bun run check`, and `bun run verify`.
