@@ -414,6 +414,8 @@ Keep the user-facing choice small:
   target.
 - `$intuitive-reduce-entropy` -> find what repo maintenance would pay off most
   now.
+- `$intuitive-planning-loop` -> run bounded autonomous planning scouts before a
+  single user review packet.
 - `$intuitive-squash` -> clean local agent commit history before handoff.
 
 Specialist skills still exist, but the user should not need to pick one before

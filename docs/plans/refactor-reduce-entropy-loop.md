@@ -46,6 +46,10 @@ size as a maximum, not a quota.
 - [x] P2 stale audit coverage: `docs/human/skill-self-improvement-audit.md`
       claimed to cover every repo-owned root skill, but its table missed newer
       root skills from `scripts/local-skill-manifest.txt`.
+- [x] P1 live source drift: a new `intuitive-planning-loop` root skill was
+      added to the manifest and README primary table, but architecture, status,
+      reduce-entropy routing guidance, and the manifest-wide skill audit still
+      described the older public skill surface.
 
 ## Saturation Audit
 
@@ -55,10 +59,12 @@ Why no change:
 
 - `bun run verify` passes from current HEAD.
 - The repo-owned skill manifest matches the live `skills/*/SKILL.md` surface.
-- Human docs now agree on the small public skill surface and specialist routing.
+- Human docs now agree on the small public skill surface and specialist routing,
+  including `intuitive-planning-loop` as the bounded autonomous planning
+  entrypoint.
 - The reduce-entropy skill's public entry model now matches the human docs:
-  flow, refactor, reduce-entropy, and squash are the user-facing choices, while
-  preflight remains a specialist pre-execution contract skill.
+  flow, refactor, reduce-entropy, planning-loop, and squash are the user-facing
+  choices, while preflight remains a specialist pre-execution contract skill.
 - `BELIEFS.md` is consistently marked as supporting doctrine rather than the
   active source for current commands, installed surfaces, or maintenance state.
 - `docs/human/skill-self-improvement-audit.md` covers every current root skill
@@ -145,3 +151,9 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   `BELIEFS.md` tier wording, and reviewed noisy stale/legacy/skip search hits.
   No remaining observation passed the materiality contract, so the loop is
   closed with `Selected candidates: none`.
+- 2026-06-08: Reopened the loop from current `HEAD` after a new
+  `intuitive-planning-loop` root skill appeared in the manifest and README.
+  Selected public skill surface drift as P1 live source drift and real workflow
+  friction. Aligned `ARCHITECTURE.md`, `STATUS.md`, the reduce-entropy public
+  entry model, the manifest-wide skill audit, and the public-skill addition
+  checklist around the new primary planning entrypoint.

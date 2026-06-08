@@ -51,8 +51,9 @@ The current maintenance focus is keeping the repo dogfoodable:
 - keep `docs/human/agent-harness-references.md` as the source ledger for
   external Claude Code, Codex, AGENTS.md, and field-practice lessons before
   turning those lessons into skill rules
-- keep the user-facing skill surface small: flow, refactor, reduce-entropy, and
-  squash; route doc/init/tests and architecture discovery as specialist skills
+- keep the user-facing skill surface small: flow, refactor, reduce-entropy,
+  planning-loop, and squash; route doc/init/tests and architecture discovery as
+  specialist skills
 - keep root skills listed in `scripts/local-skill-manifest.txt`
 - keep external skill installs explicit in `scripts/external-skill-sources.txt`
 - keep installed global skill surfaces pruned by owner state: Intuitive root

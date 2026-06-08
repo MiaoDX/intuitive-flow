@@ -34,10 +34,10 @@ it when something is risky or broken. They should not have to live there.
 
 The workflow keeps the user-facing choices small: use `office-hours` or
 `grill-me` for what to build, `$intuitive-flow` as the default build/change
-entrypoint,
-`$intuitive-refactor` to clean a known target, and
-`$intuitive-reduce-entropy` to surface the ranked batch of repo maintenance
-work that would pay off most.
+entrypoint, `$intuitive-refactor` to clean a known target,
+`$intuitive-reduce-entropy` to surface repo maintenance candidates,
+`$intuitive-planning-loop` to let scouts refine contested plans before one
+review packet, and `$intuitive-squash` before branch handoff.
 See [BELIEFS.md](BELIEFS.md) for the supporting doctrine behind the workflow;
 current project truth stays in the small human surface above.
 

@@ -77,10 +77,10 @@ describe when it activates, how it should run, and what output or side effects
 are expected.
 
 The primary user-facing skills are `$intuitive-flow`, `$intuitive-refactor`,
-and `$intuitive-reduce-entropy`, with `$intuitive-squash` as a handoff utility.
-Specialist skills such as `$intuitive-preflight`, `$intuitive-doc`,
-`$intuitive-init`, and `$intuitive-tests` remain available for direct or routed
-use, but are not the default choice a user must make up front.
+`$intuitive-reduce-entropy`, `$intuitive-planning-loop`, and
+`$intuitive-squash`. Specialist skills such as `$intuitive-preflight`,
+`$intuitive-doc`, `$intuitive-init`, and `$intuitive-tests` remain available for
+direct or routed use, but are not the default choice a user must make up front.
 `$intuitive-preflight` owns approval-ready preflight contracts before a plan or
 vague task starts: context package, scope, non-goals, definition of done,
 verification, route, worker strategy, and main-session `/goal` wording. Open-ended architecture
@@ -162,9 +162,10 @@ symlinks or `SKILL.md` wrappers that point into the managed GStack checkout. Set
 infer ownership from plain directory names or delete unrelated user skills.
 
 To add a public skill, create `skills/<name>/SKILL.md`, add it to the manifest,
-update `README.md` if it belongs in the preferred skill list, and run
-`bun run verify`. If the change is based on external agent-harness guidance,
-record the source and distilled lesson in
+update the live human docs that describe the public surface, refresh any
+current skill audit that claims manifest-wide coverage, and run `bun run
+verify`. If the change is based on external agent-harness guidance, record the
+source and distilled lesson in
 `docs/human/agent-harness-references.md` before spreading the rule into skills.
 
 ## Update Pipeline Contract
