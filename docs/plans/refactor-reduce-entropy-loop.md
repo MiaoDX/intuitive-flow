@@ -66,6 +66,10 @@ size as a maximum, not a quota.
       still presented removal of runtime `Skill Self-Improvement Rule` blocks
       as an immediate correction even though the runtime blocks were already
       absent from repo-owned skills.
+- [x] P2 workflow friction: reduce-entropy routing mentioned
+      `$improve-codebase-architecture` as an optional architecture scanner, but
+      some routing text omitted the install boundary even though the skill is
+      not part of repo-owned or managed external manifests.
 
 ## Saturation Audit
 
@@ -94,6 +98,8 @@ Why no change:
   shared agent skills, and its generated MiMoCode wrapper.
 - The skill self-improvement audit now marks the runtime self-improvement block
   removal as a completed baseline correction, not an outstanding action item.
+- Architecture scanner routing consistently treats `improve-codebase-architecture`
+  as host-installed optional extra discovery, not a default installed surface.
 - Remaining `stale`, `legacy`, `skip`, and `compatibility` search hits are
   intentional policy text, tests, fixtures, completed plan history, or updater
   runtime messages rather than current false confidence or live source drift.
@@ -208,3 +214,8 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   `Skill Self-Improvement Rule` block existed only in the audit text, not in
   repo-owned runtime skills. Reworded the human audit so the correction is a
   completed baseline result rather than an outstanding action item.
+- 2026-06-08: Selected optional architecture scanner routing as P2 workflow
+  friction after README and architecture described `improve-codebase-architecture`
+  as external/installed-when-available while reduce-entropy prompt and routing
+  text omitted that install boundary. Reworded reduce-entropy docs and skill
+  routing to say host-installed optional scanner.
