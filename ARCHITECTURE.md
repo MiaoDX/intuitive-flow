@@ -9,7 +9,8 @@ MCP fetch tooling, and related skill sources.
 
 ```text
 human docs
-  README.md, BELIEFS.md, ARCHITECTURE.md, STATUS.md, docs/human/**
+  README.md, ARCHITECTURE.md, STATUS.md, docs/human/**
+  supporting doctrine: BELIEFS.md
         |
         v
 agent guidance
@@ -54,6 +55,10 @@ Everything else is lower tier by default. `docs/assets/**` supports root docs,
 `docs/release-notes/**` is generated or historical analysis, `vendor/**` is
 external tooling, and planning or execution artifacts are evidence unless a
 human doc promotes them.
+
+`BELIEFS.md` is supporting doctrine: it explains the philosophy behind the
+workflow, but it is not the active source for current commands, installed
+surfaces, or maintenance state.
 
 ## Agent Guidance Contract
 

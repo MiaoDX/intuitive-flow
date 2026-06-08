@@ -1,12 +1,13 @@
 # Skill Self-Improvement Audit
 
-Last reviewed: 2026-05-17
+Last reviewed: 2026-06-08
 
 This audit applies the self-improvement lens from
-[`agent-harness-references.md`](agent-harness-references.md) to every
-repo-owned root skill. The goal is not to paste a maintenance prompt into every
-skill. The goal is to find which skill texts should become smaller, clearer, or
-better routed across docs, scripts, hooks, tests, and skills.
+[`agent-harness-references.md`](agent-harness-references.md) to every current
+repo-owned root skill listed in `scripts/local-skill-manifest.txt`. The goal is
+not to paste a maintenance prompt into every skill. The goal is to find which
+skill texts should become smaller, clearer, or better routed across docs,
+scripts, hooks, tests, and skills.
 
 Scope: this is a dated baseline audit result, not the recurring research
 prompt. For a fresh Codex or Claude Code session that should compare
@@ -29,9 +30,12 @@ Immediate correction:
 
 | Skill | WHY Clarity | WHAT Boundary | HOW / Stop Condition | Recommendation |
 | --- | --- | --- | --- | --- |
+| `grill-with-docs-batch` | Strong: improves decision quality before implementation. | Strong: owns batched plan/domain grilling and stops when docs already answer the durable questions. | Strong: decision-impact test and convergence rules are explicit. | Keep as a specialist discussion skill; no runtime self-improvement block. |
 | `intuitive-doc` | Strong: keep human docs current and small. | Strong: owns human-facing docs and boundary drift, skips agent files by default. | Strong: audit/update/guard modes and claim verification are clear. | No runtime self-improvement block. Later slim examples if the doc keeps growing. |
 | `intuitive-flow` | Strong but broad: routes fuzzy ideas to verified work. | Medium: owns staging and handoffs, but the file is long because it encodes many downstream gates. | Strong: checkpoints and routing are explicit. | Candidate for future extraction into smaller references or subflow docs, but do not add meta text. |
 | `intuitive-init` | Strong after harness refresh: builds repo-local agent harness. | Strong: owns `AGENTS.md`, `CLAUDE.md`, `docs/agents/**`, init discovery, hooks, skills, and MCP routing. | Strong: modes and stop conditions are explicit. | Specialist skill; route from reduce-entropy when agent guidance is the issue. |
+| `intuitive-port-worktree` | Strong: move worktree changes without switching the target branch. | Strong: owns porting/cherry-pick/patch transfer only. | Strong: source/target discovery, payload selection, and safety gates are explicit. | Keep as a specialist handoff utility; no meta text needed. |
+| `intuitive-preflight` | Strong: make vague execution intent approval-ready before implementation. | Strong: owns context package, scope, non-goals, acceptance, verification, route, and goal wording. | Strong: draft contract and approval boundary are explicit. | Specialist skill; route from flow or direct use before vague execution. |
 | `intuitive-reduce-entropy` | Strong: periodic repo maintenance when the user does not know the target. | Strong: owns entropy diagnosis and routes to doc/init/tests/refactor instead of forcing the user to choose first. | Strong: candidate list, gate, route, verify, and park. | Primary maintenance entrypoint. |
 | `intuitive-refactor` | Strong: bound aggressive cleanup. | Strong: owns scope gates, severities, evidence, parked ideas. | Strong: persistent gate and ladder are clear. | No immediate change. |
 | `intuitive-squash` | Strong: rewrite noisy agent history safely. | Strong: owns commit grouping and safety protocol only. | Strong: explicit confirmation and verify commands. | No immediate change. |

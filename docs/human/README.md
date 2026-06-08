@@ -27,6 +27,12 @@ Human-authoritative:
 - root `README.md`, `ARCHITECTURE.md`, and `STATUS.md`
 - files under `docs/human/**`
 
+Supporting doctrine:
+
+- root `BELIEFS.md` explains the philosophy behind the workflow, but active
+  commands, installed surfaces, and maintenance state belong in the
+  human-authoritative set above.
+
 Evidence or history:
 
 - `docs/release-notes/**`

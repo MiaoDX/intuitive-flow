@@ -39,6 +39,13 @@ size as a maximum, not a quota.
       call the real npm registry through `select_npm_registry`, so unit-style
       verification can hang or fail on network availability instead of code
       behavior.
+- [x] P2 human-doc tier drift: `BELIEFS.md` was linked as doctrine and included
+      in the architecture system map while the active human truth set excluded
+      it, forcing future maintainers to rediscover whether it carried current
+      commands or only philosophy.
+- [x] P2 stale audit coverage: `docs/human/skill-self-improvement-audit.md`
+      claimed to cover every repo-owned root skill, but its table missed newer
+      root skills from `scripts/local-skill-manifest.txt`.
 
 ## Saturation Audit
 
@@ -120,3 +127,9 @@ already-covered work, or tiny niceties that would not prevent future surprise.
   where the binary exists but session creation fails. Verified with
   `bun test scripts/lib/test-capabilities.test.ts scripts/lib/intuitive-flow-stop-gate.test.ts scripts/lib/skill-runner.test.ts scripts/dev/tmux-watchdog.test.ts`
   and `bun run check`.
+- 2026-06-08: Clarified `BELIEFS.md` as supporting doctrine rather than the
+  active source for current commands, installed surfaces, or maintenance state.
+  Refreshed the skill self-improvement audit to cover the current root-skill
+  manifest, including `grill-with-docs-batch`, `intuitive-port-worktree`, and
+  `intuitive-preflight`. Verified with targeted doc-tier searches,
+  manifest-vs-audit coverage, and `bun run verify`.

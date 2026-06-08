@@ -38,7 +38,8 @@ entrypoint,
 `$intuitive-refactor` to clean a known target, and
 `$intuitive-reduce-entropy` to surface the ranked batch of repo maintenance
 work that would pay off most.
-See [BELIEFS.md](BELIEFS.md) for the full doctrine.
+See [BELIEFS.md](BELIEFS.md) for the supporting doctrine behind the workflow;
+current project truth stays in the small human surface above.
 
 ## Start In A Repo
 
