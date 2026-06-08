@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join, normalize } from "node:path";
 import { checkExternalSkillSourcesText } from "./external-skill-sources";
 import { checkRootSkills, parseManifestText } from "./local-skill-manifest";
 
@@ -82,14 +82,37 @@ const blockValue = (frontmatterText: string, key: string): string => {
   return body.join("\n").trim();
 };
 
-const normalizeMention = (mention: string): string =>
-  mention.replace(/[),.;:]+$/g, "").replace(/^["'`]+|["'`]+$/g, "");
+type ResourceMention = {
+  displayPath: string;
+  resolvedPath: string;
+};
 
-const localResourceMentions = (text: string): string[] => {
-  const mentions = new Set<string>();
-  const resourcePattern = /\b(?:references|templates)\/[A-Za-z0-9._/-]+/g;
+const stripMarkdownTargetSuffix = (target: string): string =>
+  target.split("#", 1)[0]?.split("?", 1)[0] ?? "";
+
+const normalizeMention = (mention: string): string =>
+  stripMarkdownTargetSuffix(mention)
+    .replace(/[),.;:]+$/g, "")
+    .replace(/^["'`]+|["'`]+$/g, "");
+
+const skillRelativePath = (path: string): string => normalize(path).replace(/\\/g, "/");
+
+const isMarkdownFile = (file: string): boolean => file.endsWith(".md");
+
+const localResourceMentions = (text: string, sourceFile: string): ResourceMention[] => {
+  const mentions = new Map<string, ResourceMention>();
+  const addMention = (displayPath: string, resolvedPath = displayPath) => {
+    if (displayPath === "") {
+      return;
+    }
+
+    mentions.set(`${displayPath}:${resolvedPath}`, { displayPath, resolvedPath });
+  };
+
+  const resourcePattern = /\b(?:references|templates)\/[A-Za-z0-9._/-]+\.[A-Za-z0-9]+/g;
   for (const match of text.matchAll(resourcePattern)) {
-    mentions.add(normalizeMention(match[0]));
+    const mention = normalizeMention(match[0]);
+    addMention(mention);
   }
   const markdownLinkPattern = /\[[^\]]*]\(([^)]+)\)/g;
   for (const match of text.matchAll(markdownLinkPattern)) {
@@ -101,10 +124,15 @@ const localResourceMentions = (text: string): string[] => {
       !target.startsWith("https://") &&
       !target.startsWith("/")
     ) {
-      mentions.add(normalizeMention(target));
+      const mention = normalizeMention(target);
+      if (mention === "" || /^[A-Za-z][A-Za-z0-9+.-]*:/.test(mention)) {
+        continue;
+      }
+      const resolvedPath = skillRelativePath(join(dirname(sourceFile), mention));
+      addMention(resolvedPath, resolvedPath);
     }
   }
-  return [...mentions].sort((a, b) => a.localeCompare(b));
+  return [...mentions.values()].sort((a, b) => a.displayPath.localeCompare(b.displayPath));
 };
 
 const checkSkill = (skillsRoot: string, skillName: string): string[] => {
@@ -136,11 +164,13 @@ const checkSkill = (skillsRoot: string, skillName: string): string[] => {
     if (fileText.includes("{{>")) {
       errors.push(`template include left in canonical skill file: skills/${skillName}/${file}`);
     }
-  }
 
-  for (const mention of localResourceMentions(text)) {
-    if (!existsSync(join(skillDir, mention))) {
-      errors.push(`missing referenced skill resource in skills/${skillName}/SKILL.md: ${mention}`);
+    if (isMarkdownFile(file)) {
+      for (const mention of localResourceMentions(fileText, file)) {
+        if (!existsSync(join(skillDir, mention.resolvedPath))) {
+          errors.push(`missing referenced skill resource in skills/${skillName}/${file}: ${mention.displayPath}`);
+        }
+      }
     }
   }
 

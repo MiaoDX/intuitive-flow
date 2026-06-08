@@ -76,6 +76,22 @@ describe("skill checker", () => {
     });
   });
 
+  test("rejects missing local links from skill reference files", async () => {
+    await withTempProject((root) => {
+      writeFixtureFile(root, "scripts/local-skill-manifest.txt", "root-skill alpha\n");
+      writeFixtureFile(
+        root,
+        "skills/alpha/SKILL.md",
+        "---\nname: alpha\ndescription: Alpha.\n---\n\nRead `references/guide.md`.\n",
+      );
+      writeFixtureFile(root, "skills/alpha/references/guide.md", "See [missing](missing.md).\n");
+
+      expect(checkSkills(optionsFor(root))).toContain(
+        "missing referenced skill resource in skills/alpha/references/guide.md: references/missing.md",
+      );
+    });
+  });
+
   test("validates external skill source manifests when configured", async () => {
     await withTempProject((root) => {
       writeFixtureFile(root, "scripts/local-skill-manifest.txt", "root-skill alpha\n");
