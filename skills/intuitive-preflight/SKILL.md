@@ -5,7 +5,7 @@ description: |
   approval-ready preflight contract before implementation starts. Use when the
   user wants prompt preflight, clearer scope, non-goals, context package,
   acceptance criteria, definition of done, verification, stop gates,
-  main-session /goal wording, or skill-runner worker prompts for an
+  the exact execution command, or skill-runner worker prompts for an
   intuitive-flow run. This skill does not execute; it produces the contract
   that $intuitive-flow or a main-session goal can execute after approval.
 ---
@@ -25,7 +25,8 @@ implementation step.
   plans, issues, logs, artifacts, commands, and known non-sources
 - deciding the likely route: direct, `$intuitive-refactor`, durable
   `$intuitive-flow`, or `skill-runner`
-- naming the main-session `/goal` prompt for long-running supervised work
+- naming the exact `/goal execute ... with intuitive-flow` command for
+  long-running supervised work
 - defining worker prompts and worker-local goals when a bounded worker is useful
 - identifying missing user-owned decisions before execution
 
@@ -63,21 +64,28 @@ mark when to revisit it.
 Preflight must include every verification gate needed to make the success claim
 honest.
 
-Default to requiring all relevant repo-local deterministic tests, focused
-contract tests, lint/type checks, and manual or local live proof gates that
-validate changed behavior. Do not omit a gate merely because it is local-only,
+Default to requiring all relevant validation layers for the changed behavior:
+static/lint/type checks, unit tests, focused contract tests, integration tests,
+and manual or local live proof gates when the behavior depends on an agent
+pipeline, provider route, simulator, Docker service, hardware, UI interaction,
+or other runtime boundary. Do not omit a gate merely because it is local-only,
 credentialed, Docker-backed, provider-backed, slow, hardware-dependent, or
 requires a real simulator. Instead classify it explicitly:
 
 - required deterministic gate;
+- required integration gate;
 - required local/live acceptance gate;
-- optional exploratory gate;
-- skipped/deferred gate with reason and consequence.
+- required manual acceptance gate;
+- optional exploratory gate.
 
-If a required local/live gate cannot run in the current environment, the
-contract must say whether the outcome is `PARTIAL`,
-`BLOCKED_NEEDS_DECISION`, or delegated local validation. It must not mark full
-`SUCCESS` without that gate.
+Required integration, local/live, and manual acceptance gates are completion
+gates, not decoration. If a required gate validates the changed behavior and
+cannot run in the current environment, default to
+`BLOCKED_NEEDS_LOCAL_VALIDATION` rather than `PARTIAL`; the work may produce an
+intermediate branch, but it is not complete, merge-ready, or no-regression until
+the required gate passes. Use `INTERMEDIATE_ONLY` only when the user explicitly
+asks for or approves an incomplete checkpoint, and state the missing proof and
+why it blocks full success.
 
 Preflight itself does not execute tests. It records the gates that execution
 must run or explicitly report as unavailable.
@@ -87,7 +95,7 @@ must run or explicitly report as unavailable.
 Return this shape. Keep it compact enough for the user to approve in one pass.
 
 ```text
-Preflight status: DRAFT | BLOCKED_NEEDS_DECISION
+Preflight status: DRAFT | BLOCKED_NEEDS_DECISION | BLOCKED_NEEDS_LOCAL_VALIDATION
 Task source: <user prompt | plan path | issue | mixed>
 Canonical source: <docs/plans/... | issue URL | conversation only>
 Route: <main direct | $intuitive-refactor | durable $intuitive-flow | skill-runner worker>
@@ -112,10 +120,12 @@ Context package:
 Definition of Done / acceptance criteria:
 - SUCCESS only if:
   - <observable proof>
-- PARTIAL if:
-  - <useful but incomplete proof>
 - BLOCKED_NEEDS_DECISION if:
   - <decision or external gate>
+- BLOCKED_NEEDS_LOCAL_VALIDATION if:
+  - <required integration/local/live/manual proof cannot run in this environment>
+- INTERMEDIATE_ONLY if explicitly approved:
+  - <useful but incomplete checkpoint, not complete/merge-ready/no-regression>
 - Must not regress:
   - <existing behavior or contract>
 
@@ -127,10 +137,6 @@ Execution surface:
 - Worker: <none | skill-runner scope>
 - Worker-local goal: <none | exact bounded goal>
 
-Main-session /goal prompt:
-<include exact prompt text, starting with "/goal", that keeps the main session
-as root supervisor and uses $intuitive-flow for route control>
-
 To execute:
  /goal execute <canonical source> with intuitive-flow
 
@@ -140,7 +146,7 @@ execution from the main session, use the exact `To execute` command above;
 otherwise request edits.
 ```
 
-The main-session `/goal` prompt should normally be the compact durable command:
+The `To execute` command should normally be the compact durable command:
 
 ```text
 /goal execute <canonical source> with intuitive-flow
