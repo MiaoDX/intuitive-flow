@@ -75,6 +75,8 @@ export type GoalTimeline = {
 type Options = {
   command: string;
   issue?: string;
+  preflightText?: string;
+  preflightFile?: string;
   runId?: string;
   goal?: string;
   goalFile?: string;
@@ -87,8 +89,16 @@ type Options = {
   proof?: string;
   attemptStatus: AttemptStatus;
   allowManualSummary: boolean;
+  allowDuplicate: boolean;
   updateDescription: boolean;
   dryRun: boolean;
+  title?: string;
+  issueStatus?: string;
+  priority?: string;
+  parent?: string;
+  project?: string;
+  assignee?: string;
+  assigneeId?: string;
   profile?: string;
   workspaceId?: string;
 };
@@ -109,6 +119,17 @@ type FinalReviewAttempt = {
   record: GoalAttemptRecord;
 };
 
+export type PreflightContract = {
+  raw: string;
+  status?: string;
+  taskSource?: string;
+  canonicalSource?: string;
+  route?: string;
+  goal?: string;
+  goalCommand: string;
+  title: string;
+};
+
 const skillDir = dirname(dirname(new URL(import.meta.url).pathname));
 export const agentCommentBanner = "> Agent 提交：以下内容由 Agent 帮忙整理并提交，用于和人工手写评论区分。\n\n";
 
@@ -118,12 +139,16 @@ function isAttemptStatus(value: string): value is AttemptStatus {
 
 function usage(): never {
   console.error(`Usage:
+  track_goal.ts create-from-preflight --preflight-file preflight.md [--title "..."] [--dry-run]
   track_goal.ts start --issue MIA-40 [--goal-file goal.txt] [--update-description] [--dry-run]
   track_goal.ts finish --issue MIA-40 [--run-id <task-id>] [--session-file transcript.txt] [--session-dir <skill-runner-dir>] [--dry-run]
   track_goal.ts final-review --issue MIA-40 --attempts-file attempts.json [--dry-run]
   track_goal.ts summarize --goal-file goal.txt
 
 Options:
+  --preflight-text <text>   Inline intuitive-preflight contract for create-from-preflight.
+  --preflight-file <path|- > Read intuitive-preflight contract for create-from-preflight.
+  --title <text>            Override generated issue title for create-from-preflight.
   --goal <text>             Inline goal text.
   --goal-file <path|- >     Read goal text from file or stdin.
   --attempts-file <path|- > Read final-review attempts JSON from file or stdin.
@@ -136,7 +161,14 @@ Options:
   --proof <text>            Short verification/proof note for finish.
   --attempt-status <status> Status for this goal attempt: complete, partial, blocked, failed. Default: complete.
   --allow-manual-summary    Permit manual summary fallback when no session history exists.
+  --allow-duplicate         Forward to multica issue create for create-from-preflight.
   --update-description      Insert/replace the tracker summary block in the issue description.
+  --status <status>         Initial issue status for create-from-preflight.
+  --priority <priority>     Initial issue priority for create-from-preflight.
+  --parent <issue-id>       Parent issue for create-from-preflight.
+  --project <project-id>    Project id for create-from-preflight.
+  --assignee <name>         Assignee for create-from-preflight.
+  --assignee-id <uuid>      Assignee id for create-from-preflight.
   --profile <name>          Forward a Multica profile.
   --workspace-id <id>       Forward a Multica workspace id or slug.
   --dry-run                 Print and render locally without writing to Multica.
@@ -146,9 +178,9 @@ Options:
 
 function parseArgs(argv: string[]): Options {
   const command = argv.shift();
-  if (!command || !["start", "finish", "final-review", "summarize"].includes(command)) usage();
+  if (!command || !["create-from-preflight", "start", "finish", "final-review", "summarize"].includes(command)) usage();
 
-  const opts: Options = { command, attemptStatus: "complete", allowManualSummary: false, updateDescription: false, dryRun: false };
+  const opts: Options = { command, attemptStatus: "complete", allowManualSummary: false, allowDuplicate: false, updateDescription: false, dryRun: false };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     const next = () => {
@@ -160,8 +192,17 @@ function parseArgs(argv: string[]): Options {
       case "--issue":
         opts.issue = next();
         break;
+      case "--preflight-text":
+        opts.preflightText = next();
+        break;
+      case "--preflight-file":
+        opts.preflightFile = next();
+        break;
       case "--run-id":
         opts.runId = next();
+        break;
+      case "--title":
+        opts.title = next();
         break;
       case "--goal":
         opts.goal = next();
@@ -202,8 +243,29 @@ function parseArgs(argv: string[]): Options {
       case "--allow-manual-summary":
         opts.allowManualSummary = true;
         break;
+      case "--allow-duplicate":
+        opts.allowDuplicate = true;
+        break;
       case "--update-description":
         opts.updateDescription = true;
+        break;
+      case "--status":
+        opts.issueStatus = next();
+        break;
+      case "--priority":
+        opts.priority = next();
+        break;
+      case "--parent":
+        opts.parent = next();
+        break;
+      case "--project":
+        opts.project = next();
+        break;
+      case "--assignee":
+        opts.assignee = next();
+        break;
+      case "--assignee-id":
+        opts.assigneeId = next();
         break;
       case "--dry-run":
         opts.dryRun = true;
@@ -224,8 +286,12 @@ function parseArgs(argv: string[]): Options {
     }
   }
 
-  if (opts.command !== "summarize" && !opts.issue) {
+  if (!["summarize", "create-from-preflight"].includes(opts.command) && !opts.issue) {
     console.error("--issue is required");
+    usage();
+  }
+  if (opts.command === "create-from-preflight" && !opts.preflightFile && !opts.preflightText) {
+    console.error("--preflight-file or --preflight-text is required for create-from-preflight");
     usage();
   }
   if (opts.command === "final-review" && !opts.attemptsFile) {
@@ -309,6 +375,17 @@ async function uploadEvidenceImage(opts: Options, filePath: string): Promise<{ i
 function getIssue(opts: Options): Issue {
   const out = runMultica(opts, ["issue", "get", opts.issue!, "--output", "json"]);
   return JSON.parse(out) as Issue;
+}
+
+function issueIdentifierFromCreateOutput(output: string): string | undefined {
+  const parsed = jsonFromCliOutput(output);
+  const record = asRecord(parsed);
+  if (!record) return undefined;
+  return textFromUnknown(record.identifier ?? record.key ?? record.id) || undefined;
+}
+
+function withIssue(opts: Options, issue: string): Options {
+  return { ...opts, issue };
 }
 
 function asRecord(value: unknown): JsonRecord | undefined {
@@ -1183,7 +1260,11 @@ export function summarizeGoal(goal: string): GoalSummary {
   if (!rawGoal) throw new Error("No goal text found. Pass --goal or --goal-file.");
 
   const routeTokens = [...new Set([...rawGoal.matchAll(/\$[a-z][a-z0-9-]*/g)].map((m) => m[0]))];
-  const route = routeTokens.length ? routeTokens.join(", ") : "手动 goal";
+  for (const match of rawGoal.matchAll(/\b(?:via|with)\s+([a-z][a-z0-9-]*)\b/gi)) {
+    const token = match[1].toLowerCase();
+    if (token.includes("-")) routeTokens.push(`$${token}`);
+  }
+  const route = routeTokens.length ? [...new Set(routeTokens)].join(", ") : "手动 goal";
   const sources = [...new Set([...rawGoal.matchAll(/(?:^|\s)((?:\.?\/)?(?:docs|\.planning|tasks|specs|tests|src|scripts|packages|server|web)\/[^\s`'")]+)/g)].map((m) => m[1]))];
 
   const proofLines = lines.filter((line) =>
@@ -1242,6 +1323,133 @@ export function replaceMarkedBlock(existing: string, block: string): string {
   const re = new RegExp(`${escapeRegExp(start)}[\\s\\S]*?${escapeRegExp(end)}`);
   if (re.test(existing)) return existing.replace(re, block);
   return `${block}\n\n${existing}`.trim();
+}
+
+function preflightField(raw: string, label: string): string {
+  const lines = raw.split(/\r?\n/);
+  const escaped = escapeRegExp(label);
+  const start = lines.findIndex((line) => new RegExp(`^${escaped}\\s*:\\s*`, "i").test(line.trim()));
+  if (start < 0) return "";
+
+  const first = lines[start].replace(new RegExp(`^${escaped}\\s*:\\s*`, "i"), "").trim();
+  const values = first ? [first] : [];
+  for (let i = start + 1; i < lines.length; i += 1) {
+    const line = lines[i];
+    if (/^[A-Z][A-Za-z /-]{1,80}\s*:/.test(line.trim())) break;
+    if (/^Approval gate\s*:/.test(line.trim())) break;
+    values.push(line);
+  }
+  return values.join("\n").trim();
+}
+
+function fencedBlockAfterHeading(raw: string, heading: string): string {
+  const headingIndex = raw.search(new RegExp(`^${escapeRegExp(heading)}\\s*:`, "im"));
+  if (headingIndex < 0) return "";
+  const after = raw.slice(headingIndex);
+  const fence = after.match(/```[a-zA-Z0-9_-]*\n([\s\S]*?)```/);
+  return fence ? fence[1].trim() : "";
+}
+
+export function extractGoalFromPreflight(raw: string): string {
+  const explicitGoal = fencedBlockAfterHeading(raw, "Main-session /goal prompt");
+  if (explicitGoal && /\/goal\b/.test(explicitGoal)) return explicitGoal;
+
+  const mainGoal = preflightField(raw, "Main-session /goal prompt");
+  if (mainGoal) {
+    const goal = extractGoal(mainGoal);
+    if (goal) return goal;
+    const line = mainGoal.split(/\r?\n/).map((value) => value.trim()).find((value) => /^\/goal\b/i.test(value));
+    if (line) return line;
+  }
+
+  const toExecute = preflightField(raw, "To execute");
+  if (toExecute) {
+    const goal = extractGoal(toExecute);
+    if (goal) return goal;
+    const line = toExecute.split(/\r?\n/).map((value) => value.trim()).find((value) => /^\/goal\b/i.test(value));
+    if (line) return line;
+  }
+
+  const canonical = preflightField(raw, "Canonical source");
+  if (canonical) return `/goal execute ${canonical.split(/\r?\n/)[0].trim()} with intuitive-flow`;
+  return "";
+}
+
+function titleFromCanonicalSource(canonicalSource: string): string {
+  const value = canonicalSource.split(/\r?\n/)[0].trim();
+  const pathMatch = value.match(/(?:^|\s)((?:docs|\.planning|tasks|specs)\/[^\s`'")]+)/);
+  const source = pathMatch ? pathMatch[1] : value;
+  const base = source.split("/").pop()?.replace(/\.[a-z0-9]+$/i, "") ?? source;
+  return base
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function titleFromGoalSummary(summary: GoalSummary): string {
+  const source = summary.sources[0];
+  if (source) return titleFromCanonicalSource(source);
+  return truncate(summary.purpose.replace(/^\S+\s+/, ""), 80) || truncate(summary.purpose, 80) || "Tracked Goal";
+}
+
+export function parsePreflightContract(raw: string, titleOverride?: string): PreflightContract {
+  const normalized = raw.trim();
+  if (!normalized) throw new Error("Preflight input was empty.");
+  const status = preflightField(normalized, "Preflight status");
+  if (/BLOCKED_NEEDS_DECISION/i.test(status)) {
+    throw new Error("Preflight status is BLOCKED_NEEDS_DECISION; approve or revise the contract before creating a tracked issue.");
+  }
+  const goalCommand = extractGoalFromPreflight(normalized);
+  if (!goalCommand) {
+    throw new Error("No /goal command found in preflight. Include Main-session /goal prompt or To execute.");
+  }
+  const summary = summarizeGoal(goalCommand);
+  const canonicalSource = preflightField(normalized, "Canonical source");
+  const title = titleOverride?.trim() || (canonicalSource ? titleFromCanonicalSource(canonicalSource) : titleFromGoalSummary(summary));
+  return {
+    raw: normalized,
+    status: status || undefined,
+    taskSource: preflightField(normalized, "Task source") || undefined,
+    canonicalSource: canonicalSource || undefined,
+    route: preflightField(normalized, "Route") || undefined,
+    goal: preflightField(normalized, "Goal") || undefined,
+    goalCommand: summary.rawGoal,
+    title: title || "Tracked Goal",
+  };
+}
+
+export function markdownForPreflightIssueDescription(contract: PreflightContract, summary: GoalSummary): string {
+  const sources = summary.sources.length ? summary.sources.map((s) => `\`${s}\``).join(", ") : "未在 goal 中明确。";
+  return `${agentCommentBanner}<!-- multica-goal-tracker:preflight-issue:v1 -->
+## Preflight 跟踪 Issue
+
+**目标:** ${summary.purpose}
+
+**执行入口:** ${summary.route}
+
+**Canonical source:** ${contract.canonicalSource || "未明确。"}
+
+**Task source:** ${contract.taskSource || "未明确。"}
+
+**Route:** ${contract.route || "未明确。"}
+
+**来源材料:** ${sources}
+
+**预期验证:** ${summary.proof}
+
+## Goal 命令
+
+\`\`\`text
+${summary.rawGoal}
+\`\`\`
+
+## Preflight Contract
+
+\`\`\`text
+${contract.raw}
+\`\`\`
+`;
 }
 
 function escapeRegExp(value: string): string {
@@ -1931,6 +2139,57 @@ function printDryRun(kind: string, content: string, extra: Record<string, string
   console.log(content);
 }
 
+function createFromPreflight(opts: Options) {
+  const preflight = readInput(opts.preflightText, opts.preflightFile);
+  const contract = parsePreflightContract(preflight, opts.title);
+  const summary = summarizeGoal(contract.goalCommand);
+  const description = markdownForPreflightIssueDescription(contract, summary);
+  const startComment = markdownForStart(summary);
+
+  if (opts.dryRun) {
+    printDryRun("issue create", description, {
+      title: contract.title,
+      status: opts.issueStatus ?? "default",
+      priority: opts.priority ?? "default",
+      parent: opts.parent ?? "",
+      project: opts.project ?? "",
+      assignee: opts.assignee ?? opts.assigneeId ?? "",
+      allowDuplicate: String(opts.allowDuplicate),
+    });
+    printDryRun("start comment", startComment);
+    return;
+  }
+
+  const dir = artifactDir({ identifier: "preflight" });
+  const descriptionFile = writeTempMarkdown(dir, "preflight-issue-description.md", description);
+  const args = [
+    "issue",
+    "create",
+    "--title",
+    contract.title,
+    "--description-file",
+    descriptionFile,
+    "--output",
+    "json",
+  ];
+  if (opts.issueStatus) args.push("--status", opts.issueStatus);
+  if (opts.priority) args.push("--priority", opts.priority);
+  if (opts.parent) args.push("--parent", opts.parent);
+  if (opts.project) args.push("--project", opts.project);
+  if (opts.assignee) args.push("--assignee", opts.assignee);
+  if (opts.assigneeId) args.push("--assignee-id", opts.assigneeId);
+  if (opts.allowDuplicate) args.push("--allow-duplicate");
+
+  const out = runMultica(opts, args);
+  const issue = issueIdentifierFromCreateOutput(out);
+  if (!issue) {
+    throw new Error("Could not read created issue identifier from multica issue create output.");
+  }
+
+  start(withIssue({ ...opts, goal: contract.goalCommand, goalFile: undefined, updateDescription: false }, issue));
+  console.log(`Created tracked preflight issue ${issue}`);
+}
+
 function start(opts: Options) {
   const issue = getIssue(opts);
   const goal = resolveGoal(opts, issue, false);
@@ -2075,6 +2334,7 @@ function summarize(opts: Options) {
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
   try {
+    if (opts.command === "create-from-preflight") createFromPreflight(opts);
     if (opts.command === "start") start(opts);
     if (opts.command === "finish") await finish(opts);
     if (opts.command === "final-review") await finalReview(opts);

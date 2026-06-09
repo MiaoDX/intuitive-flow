@@ -11,6 +11,7 @@ import {
   buildGoalTimeline,
   evidenceFromCodexJsonl,
   extractGoal,
+  extractGoalFromPreflight,
   extractTrackedGoalFromComments,
   imageAttachmentUrlFromCommentOutput,
   markdownCodeBlock,
@@ -18,10 +19,12 @@ import {
   markdownForFinalReview,
   markdownForInlineImage,
   markdownForFinish,
+  markdownForPreflightIssueDescription,
   markdownForRawSessionOutput,
   markdownForStart,
   nextAttemptSequence,
   normalizeLines,
+  parsePreflightContract,
   replaceMarkedBlock,
   selectLatestRunId,
   sessionEvidenceFromSessionText,
@@ -57,6 +60,74 @@ Later notes should not be treated as the active goal.
     );
   });
 
+  test("extracts the executable goal from an intuitive-preflight contract", () => {
+    const preflight = `
+Preflight status: DRAFT
+Task source: user prompt
+Canonical source: docs/plans/refactor-api.md
+Route: durable $intuitive-flow
+
+Goal:
+Refactor the API boundary.
+
+Context package:
+- Historical example:
+
+\`\`\`text
+/goal this old embedded example must not win
+\`\`\`
+
+Main-session /goal prompt:
+/goal execute docs/plans/refactor-api.md with intuitive-flow
+
+To execute:
+ /goal execute docs/plans/refactor-api.md with intuitive-flow
+`;
+
+    expect(extractGoalFromPreflight(preflight)).toBe("/goal execute docs/plans/refactor-api.md with intuitive-flow");
+  });
+
+  test("parses preflight contracts into issue title, goal, and preserved description", () => {
+    const preflight = `
+Preflight status: DRAFT
+Task source: plan path
+Canonical source: docs/plans/refactor-g1-visual-metric-contract.md
+Route: durable $intuitive-flow
+
+Goal:
+Align G1 visual metrics.
+
+To execute:
+ /goal execute docs/plans/refactor-g1-visual-metric-contract.md with intuitive-flow
+
+Approval gate:
+Reply LGTM.
+`;
+
+    const contract = parsePreflightContract(preflight);
+    const summary = summarizeGoal(contract.goalCommand);
+    const description = markdownForPreflightIssueDescription(contract, summary);
+
+    expect(contract.title).toBe("Refactor G1 Visual Metric Contract");
+    expect(contract.goalCommand).toBe("/goal execute docs/plans/refactor-g1-visual-metric-contract.md with intuitive-flow");
+    expect(description).toContain("<!-- multica-goal-tracker:preflight-issue:v1 -->");
+    expect(description).toContain("## Goal 命令");
+    expect(description).toContain("/goal execute docs/plans/refactor-g1-visual-metric-contract.md with intuitive-flow");
+    expect(description).toContain("## Preflight Contract");
+    expect(description).toContain("Preflight status: DRAFT");
+  });
+
+  test("does not create a contract from blocked preflight", () => {
+    expect(() =>
+      parsePreflightContract(`
+Preflight status: BLOCKED_NEEDS_DECISION
+Canonical source: docs/plans/refactor-api.md
+To execute:
+ /goal execute docs/plans/refactor-api.md with intuitive-flow
+`),
+    ).toThrow("BLOCKED_NEEDS_DECISION");
+  });
+
   test("keeps inline /goal action text when summarizing", () => {
     const summary = summarizeGoal(
       "/goal fix the broken sync path with $intuitive-flow\nVerify with bun run verify\nSource: docs/plans/refactor-sync.md",
@@ -67,6 +138,12 @@ Later notes should not be treated as the active goal.
     expect(summary.route).toBe("$intuitive-flow");
     expect(summary.sources).toEqual(["docs/plans/refactor-sync.md"]);
     expect(summary.proof).toContain("验证 with bun run verify");
+  });
+
+  test("recognizes compact preflight route wording without a dollar prefix", () => {
+    const summary = summarizeGoal("/goal execute docs/plans/refactor-demo.md with intuitive-flow");
+
+    expect(summary.route).toBe("$intuitive-flow");
   });
 
   test("marks generated comments as agent-submitted", () => {

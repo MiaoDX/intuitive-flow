@@ -22,6 +22,11 @@ Use this skill to keep Multica issues consistent when the human workflow is:
 5. Repeat until the issue-level outcome is complete. The tracker card shows the
    per-goal attempt plus cumulative issue time.
 
+The skill can also create the Multica issue from an approved
+`$intuitive-preflight` contract. That path records planning provenance and the
+exact executable `/goal`, then immediately appends the normalized tracker start
+comment. It does not execute the goal and does not create finish evidence.
+
 Prefer appending comments over rewriting issue descriptions. Only update the
 description when the user explicitly wants the issue top-level description
 cleaned up.
@@ -35,6 +40,52 @@ must begin with the visible marker:
 
 Keep this marker as the first visible line on start, evidence-card upload, and
 finish details comments.
+
+## Create From Preflight
+
+Use this after an `$intuitive-preflight` contract is approved and before the
+goal is executed. The preflight must be `DRAFT`/approved, not
+`BLOCKED_NEEDS_DECISION`, and it must contain either `Main-session /goal prompt`
+or `To execute` with the executable `/goal`.
+
+```bash
+bun skills/multica-goal-tracker/scripts/track_goal.ts \
+  create-from-preflight \
+  --preflight-file /tmp/preflight.md
+```
+
+The script:
+
+- parses the preflight contract;
+- extracts the exact `/goal` from `Main-session /goal prompt` or `To execute`;
+- generates a concise issue title from the canonical source unless `--title` is
+  supplied;
+- creates a Multica issue whose description contains the tracker marker, goal
+  summary, exact `/goal`, and full preflight contract;
+- appends the normal `multica-goal-tracker:start` comment to the created issue.
+
+Use `--dry-run` first when validating a new preflight shape:
+
+```bash
+bun skills/multica-goal-tracker/scripts/track_goal.ts \
+  create-from-preflight \
+  --preflight-file /tmp/preflight.md \
+  --dry-run
+```
+
+Useful create options:
+
+- `--title "..."` overrides the generated issue title.
+- `--status`, `--priority`, `--parent`, `--project`, `--assignee`, and
+  `--assignee-id` are forwarded to `multica issue create`.
+- `--allow-duplicate` is forwarded to `multica issue create`. Leave it off by
+  default so Multica can stop active duplicate issues.
+
+Do not use `create-from-preflight` for conversation-only work unless the
+preflight body contains the full approved contract; otherwise context
+compression can erase the issue's source of truth. Do not treat the created
+issue or start comment as completion evidence. Finish evidence still must come
+from a real run/session as described below.
 
 ## Start Tracking
 
