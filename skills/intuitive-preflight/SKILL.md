@@ -58,6 +58,30 @@ Ask only for hard-stop decisions. If the missing detail is mechanical,
 low-risk, reversible, and implied by repo conventions, make it an assumption and
 mark when to revisit it.
 
+## Verification Completeness Rule
+
+Preflight must include every verification gate needed to make the success claim
+honest.
+
+Default to requiring all relevant repo-local deterministic tests, focused
+contract tests, lint/type checks, and manual or local live proof gates that
+validate changed behavior. Do not omit a gate merely because it is local-only,
+credentialed, Docker-backed, provider-backed, slow, hardware-dependent, or
+requires a real simulator. Instead classify it explicitly:
+
+- required deterministic gate;
+- required local/live acceptance gate;
+- optional exploratory gate;
+- skipped/deferred gate with reason and consequence.
+
+If a required local/live gate cannot run in the current environment, the
+contract must say whether the outcome is `PARTIAL`,
+`BLOCKED_NEEDS_DECISION`, or delegated local validation. It must not mark full
+`SUCCESS` without that gate.
+
+Preflight itself does not execute tests. It records the gates that execution
+must run or explicitly report as unavailable.
+
 ## Output
 
 Return this shape. Keep it compact enough for the user to approve in one pass.
