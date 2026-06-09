@@ -64,21 +64,18 @@ use this runner as the isolation backend for stateful, interactive, or
 long-running skill work. The main session should stay responsible for route
 decisions, source-of-truth edits, integration, and final verification.
 
-Default split:
-
-| Work type | Preferred path |
-| --- | --- |
-| Read-heavy independent probes | native subagents, not tmux |
-| Bounded disjoint edits | native worker subagents or one runner worker |
-| Autoplan, GSD, broad refactor, or specialist pipelines | this runner |
-| Multiple mutating streams in one worktree | avoid unless ownership is disjoint |
+Codex delegation policy lives in
+[references/codex-delegation.md](references/codex-delegation.md). In short:
+keep tiny work in the main session, use this runner or explicit tmux-backed
+`codex exec` workers for isolated sub-phases, and do not use native Codex
+subagents by default. Claude Code native subagents are separate and may be used
+on stable hosts with clear ownership.
 
 Do not assume a separate git worktree for runner jobs. Many target repos have
 large dependencies or heavyweight setup, so organize work to be safe in the
 current worktree by default.
 
-Use the current CLI/model defaults for normal runner jobs. Prefer smaller or
-quicker models only for clearly easy native subagent probes; the runner script
+Use the current CLI/model defaults for normal runner jobs. The runner script
 does not currently orchestrate model selection. Leave multi-run fan-out/fan-in
 for a later runner feature after real tasks prove the need.
 

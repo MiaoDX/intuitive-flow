@@ -58,6 +58,61 @@ const syncEnv = (home: string, stubBin: string) => ({
 });
 
 describe("local command and skill sync task", () => {
+  test("renders Codex command adapters without native spawn_agent fanout", () => {
+    const home = mkdtempSync(join(tmpdir(), "sync-command-adapter-home-"));
+    const fixture = mkdtempSync(join(tmpdir(), "sync-command-adapter-project-"));
+    try {
+      const { stubBin } = createCliStubs(home);
+      mkdirSync(join(home, ".codex", "skills"), { recursive: true });
+      mkdirSync(join(fixture, ".claude", "commands"), { recursive: true });
+      mkdirSync(join(fixture, "scripts", "lib"), { recursive: true });
+      writeFileSync(join(fixture, "scripts", "local-skill-manifest.txt"), "");
+      writeFileSync(
+        join(fixture, ".claude", "commands", "sample.md"),
+        [
+          "---",
+          "description: Sample command.",
+          "---",
+          "",
+          "Use Task(subagent_type=\"worker\", prompt=\"do work\") when useful.",
+          "",
+        ].join("\n"),
+      );
+      copyFileSync(
+        join(repoRoot, "scripts", "lib", "local-skill-manifest.ts"),
+        join(fixture, "scripts", "lib", "local-skill-manifest.ts"),
+      );
+
+      const result = spawnSync(
+        "bash",
+        [
+          "-c",
+          'SCRIPT_DIR="$1"; source scripts/tasks/sync-local-commands-skills.sh; run_sync_local_commands_skills',
+          "bash",
+          join(fixture, "scripts"),
+        ],
+        {
+          cwd: repoRoot,
+          encoding: "utf8",
+          env: syncEnv(home, stubBin),
+        },
+      );
+
+      if (result.status !== 0) {
+        throw new Error(`sync failed\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`);
+      }
+
+      const skillText = readFileSync(join(home, ".codex", "skills", "sample", "SKILL.md"), "utf8");
+      expect(skillText).toContain("skill-runner/references/codex-delegation.md");
+      expect(skillText).toContain("do not use native subagents by default");
+      expect(skillText).not.toContain("spawn_agent(agent_type=");
+      expect(skillText).not.toContain("collect agent IDs");
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+      rmSync(fixture, { recursive: true, force: true });
+    }
+  });
+
   test("syncs manifest-owned root skills into a temp Codex skills directory", async () => {
     const home = mkdtempSync(join(tmpdir(), "sync-skills-home-"));
     try {

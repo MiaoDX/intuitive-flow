@@ -41,12 +41,12 @@ rationale during a confirmed durable run. Stop only for competing phase matches,
 more than one new phase, conflicting locked docs, or a local-dev/destructive
 gate.
 
-Use main-session read-only probes to find the route on Codex. Use native
-read-only probes only on stable/non-Codex hosts, or when the user explicitly
-asks for Codex subagents after revalidation. For durable multi-stage runs, run
-stateful GSD ingest or plan generation through `skill-runner`/tmux by default
-so the main session remains clean for supervision. The main session inspects
-created or updated `.planning/` artifacts before continuing.
+Use main-session read-only probes to find the route on Codex. Follow
+`$skill-runner`'s Codex delegation policy for any worker handoff. For durable
+multi-stage runs, run stateful GSD ingest or plan generation through
+`skill-runner`/tmux by default so the main session remains clean for
+supervision. The main session inspects created or updated `.planning/`
+artifacts before continuing.
 
 This is a real handoff only if the named GSD skill is invoked and its workflow
 is followed. If you only recommend the step, say no GSD artifact was generated.
@@ -80,11 +80,9 @@ gsd-verify-work <phase>
 ```
 
 For committed phase execution, prefer `skill-runner`/tmux around each stateful
-GSD execution or verification sub-phase. On Codex, keep bounded disjoint
-implementation or diagnosis slices in `skill-runner`/tmux workers unless native
-subagents have been revalidated on the installed release. On stable/non-Codex
-hosts, native worker subagents are acceptable when file ownership is explicit
-and the main session owns integration.
+GSD execution or verification sub-phase. Follow `$skill-runner`'s Codex
+delegation policy for Codex worker selection. The main session owns integration
+and must verify any worker output before continuing.
 
 For phase execution that changes local code, carry the commit rhythm into the
 runner/worker instructions: after each coherent implementation slice and

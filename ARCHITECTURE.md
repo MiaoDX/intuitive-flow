@@ -233,8 +233,13 @@ The adapter contract translates:
 
 - Claude `AskUserQuestion` prompts into Codex `request_user_input` calls when
   available.
-- Claude `Task(...)` calls into Codex `spawn_agent` calls.
+- Claude `Task(...)` references into Codex-safe worker guidance: inline for
+  tiny work, or `$skill-runner` / tmux-backed `codex exec` for isolated worker
+  phases. It does not map tasks to Codex `spawn_agent`.
 - Claude command arguments into skill invocation arguments.
+
+Codex native subagents are disabled by default for this harness; see
+`skills/skill-runner/references/codex-delegation.md`.
 
 Root skills under `skills/` are copied directly into `~/.codex/skills/` and
 installed for Claude Code through the skills CLI.

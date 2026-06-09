@@ -9,16 +9,18 @@
 
 ## Delegation And Verification
 
-- Default to parallel delegation for independent, read-heavy, or verification-heavy subtasks.
+- See `skills/skill-runner/references/codex-delegation.md` before choosing a Codex delegation surface.
+- Default to parallel delegation for independent, read-heavy, or verification-heavy subtasks, but do not use Codex native subagents by default.
 - Keep the main thread focused on requirements, architecture decisions, integration, and final synthesis.
 - Delegate when a task has 2+ independent workstreams, requires reading many files, logs, or test outputs, or when verification can run in parallel with implementation.
 - Return summaries to the main thread, not raw notes or long log dumps.
-- Use subagents aggressively for independent exploration, review, and verification work.
-- Prefer 2-4 subagents by default. Scale up only for clearly partitioned work.
-- Match subagent model strength to task complexity rather than defaulting everything to the highest-cost model.
-- This repo often runs through an API relay with a single allowed model; default subagents to the main session model, and only override the model after confirming the target ID is actually available.
+- On Codex, use main-session probes or `$skill-runner` / tmux-backed `codex exec` workers instead of `spawn_agent` or native subagents until local revalidation proves the installed release is stable.
+- On Claude Code, native subagents remain acceptable when the host supports them reliably and file ownership is explicit.
+- Prefer 2-4 delegated workers by default. Scale up only for clearly partitioned work.
+- Match worker model strength to task complexity rather than defaulting everything to the highest-cost model.
+- This repo often runs through an API relay with a single allowed model; default Codex workers to the main session model, and only override the model after confirming the target ID is actually available.
 - For concurrent edits, assign disjoint ownership and avoid overlapping write scopes.
-- Do not wait idly for subagents if non-overlapping local work is available.
+- Do not wait idly for delegated workers if non-overlapping local work is available.
 - Do not mark work complete without verification. Run relevant tests, inspect logs, or otherwise demonstrate correctness.
 
 ## Development And Testing
@@ -72,6 +74,6 @@
 ## Agent Notes
 
 - This file is the source of truth for shared agent rules. `CLAUDE.md` consumes it via `@AGENTS.md` and only owns Claude-specific additions; keep all operative shared rules here because Codex does not transclude other files.
-- Move reusable workflows to skills, scripts, or subagents instead of expanding this file.
+- Move reusable workflows to skills, scripts, tmux workers, or Claude Code subagents instead of expanding this file.
 - If a workflow must be enforced deterministically, prefer hooks or scripts over prose in this file.
 - Codex commits: include `Co-authored-by: Codex <codex@users.noreply.github.com>` trailer.

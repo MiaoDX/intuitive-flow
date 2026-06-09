@@ -41,6 +41,26 @@ const mergeStatusItems = (existingItems: string[]) => {
   return merged;
 };
 
+const ensureTableKey = (lines: string[], tableName: string, key: string, value: string) => {
+  const bounds = findTableBounds(lines, tableName);
+  if (!bounds) {
+    if (lines.length > 0 && lines.at(-1) !== "") {
+      lines.push("");
+    }
+    lines.push(`[${tableName}]`, `${key} = ${value}`);
+    return;
+  }
+
+  for (let i = bounds.start + 1; i < bounds.end; i += 1) {
+    if (new RegExp(`^\\s*${key}\\s*=`).test(lines[i] ?? "")) {
+      lines[i] = `${key} = ${value}`;
+      return;
+    }
+  }
+
+  lines.splice(bounds.start + 1, 0, `${key} = ${value}`);
+};
+
 const findTableBounds = (lines: string[], tableName: string) => {
   const header = `[${tableName}]`;
   const start = lines.findIndex((line) => line.trim() === header);
@@ -61,6 +81,8 @@ const findTableBounds = (lines: string[], tableName: string) => {
 
 export const ensureCodexConfigText = (original: string) => {
   const lines = original === "" ? [] : original.split(/\r?\n/);
+
+  ensureTableKey(lines, "features", "multi_agent", "false");
 
   const tuiBounds = findTableBounds(lines, "tui");
   if (!tuiBounds) {

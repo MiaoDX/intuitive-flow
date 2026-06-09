@@ -379,20 +379,10 @@ Keep the main session as the coordinator, decision point, and canonical
 artifact editor. Use delegation to keep route evidence, worker logs, and
 implementation detail out of the main context when the work naturally separates.
 
-Default matrix:
-
-| Work type | Default executor |
-| --- | --- |
-| Read-heavy independent probes | native subagents |
-| Verification-heavy log or test-output inspection | native subagents |
-| Bounded disjoint edits | native worker subagents |
-| Stateful, interactive, or long-running skill pipelines | `skill-runner` / tmux |
-| Canonical source-of-truth edits and route decisions | main session |
-
-Use native subagents by default when there are two or more independent
-read-heavy, verification-heavy, or safely partitioned edit workstreams. For
-mutating native workers, assign disjoint file or path ownership before launch
-and require a compact handoff back to the main session.
+Follow `$skill-runner`'s Codex delegation policy. On Codex, keep tiny probes in
+the main session and use `skill-runner`/tmux only when isolation is worth it;
+do not use native Codex subagents by default. On stable non-Codex hosts, native
+subagents are acceptable for independent probes or explicitly disjoint edits.
 
 Use `skill-runner` for downstream skill work that is stateful, interactive,
 long-running, or better supervised in a standalone tmux session. Prefer one
@@ -400,7 +390,7 @@ mutating `skill-runner` worker at a time in a single worktree unless the write
 ownership is explicitly disjoint. Do not assume extra git worktrees; many repos
 are too large or dependency-heavy for that to be the default.
 
-Worker handoff shape, whether native subagent or `skill-runner`:
+Worker handoff shape:
 
 ```text
 Scope:

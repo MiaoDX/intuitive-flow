@@ -6,7 +6,24 @@ const defaultStatusLine =
 
 describe("codex config helper", () => {
   test("creates a default status line with git branch from an empty file", () => {
-    expect(ensureCodexConfigText("")).toBe(["[tui]", defaultStatusLine, ""].join("\n"));
+    expect(ensureCodexConfigText("")).toBe(["[features]", "multi_agent = false", "", "[tui]", defaultStatusLine, ""].join("\n"));
+  });
+
+  test("disables Codex native multi-agent support in managed config", () => {
+    const output = ensureCodexConfigText(
+      [
+        "[features]",
+        "hooks = true",
+        "multi_agent = true",
+        "image_generation = true",
+        "",
+        "[tui]",
+        defaultStatusLine,
+        "",
+      ].join("\n"),
+    );
+
+    expect(output).toContain(["[features]", "hooks = true", "multi_agent = false", "image_generation = true"].join("\n"));
   });
 
   test("updates the previous managed default to include git branch in the managed position", () => {
@@ -18,7 +35,7 @@ describe("codex config helper", () => {
       ].join("\n"),
     );
 
-    expect(output).toBe(["[tui]", defaultStatusLine, ""].join("\n"));
+    expect(output).toBe(["[tui]", defaultStatusLine, "", "[features]", "multi_agent = false", ""].join("\n"));
   });
 
   test("preserves custom status line order while appending managed items", () => {

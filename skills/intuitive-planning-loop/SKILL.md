@@ -2,11 +2,12 @@
 name: intuitive-planning-loop
 description: |
   Run a bounded autonomous planning loop before implementation: use scout
-  workers or subagents to apply intuitive-reduce-entropy and grill-with-docs-batch,
-  keep the main session as judge, iterate until the scope is clear, then present
-  one recommended plan plus alternatives for a single user review. Use this
+  workers to apply intuitive-reduce-entropy and grill-with-docs-batch, keep the
+  main session as judge, iterate until the scope is clear, then present one
+  recommended plan plus alternatives for a single user review. On Codex, scout
+  workers are tmux/skill-runner sessions, not native subagents. Use this
   whenever the user asks to "align yourselves", "run reduce entropy and grill
-  batch", "use subagents to refine the plan", "give me the plans after judging
+  batch", "use workers to refine the plan", "give me the plans after judging
   them", or wants faster planning without being pulled into every grill question.
 ---
 
@@ -36,7 +37,7 @@ It does not own:
 - implementation;
 - approving its own plan;
 - changing public contracts without user review;
-- letting subagents ask the user directly;
+- letting workers ask the user directly;
 - running paid, slow, hardware, or credentialed probes unless the user already
   authorized that cost class.
 
@@ -52,7 +53,7 @@ likely miss important scope:
 - previous conclusions may be overbroad or stale;
 - multiple good suggestions need triage;
 - docs, tests, metrics, or agent behavior may disagree;
-- the user wants subagents to work through reduce-entropy and grill-batch before
+- the user wants workers to run reduce-entropy and grill-batch before
   bringing them a synthesis.
 
 Do not use it for one-file fixes, simple status checks, obvious bug fixes, or a
@@ -69,9 +70,10 @@ Keep the main session as the control plane.
 - If a scout finds a product, contract, safety, cost, or compatibility decision,
   it marks `needs_user_review`; it does not decide.
 
-Use native subagents when the host supports them reliably. Otherwise use
-`skill-runner` or separate worker prompts. If no worker mechanism is available,
-run the same stages inline and state that delegation was unavailable.
+Follow `$skill-runner`'s Codex delegation policy. On Codex, scouts are
+main-session work, `$skill-runner`, or explicit tmux-backed `codex exec`
+workers, not native subagents. If no worker mechanism is available, run the
+same stages inline and state that delegation was unavailable.
 
 ## Loop Shape
 

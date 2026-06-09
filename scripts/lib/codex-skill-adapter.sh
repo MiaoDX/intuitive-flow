@@ -5,8 +5,9 @@
 #   Claude:  .claude/commands/<name>.md  (single file with `description:` frontmatter)
 #   Codex:   <name>/SKILL.md             (dir with frontmatter + adapter + body)
 #
-# The adapter block tells Codex how to translate AskUserQuestion → request_user_input
-# and Task() → spawn_agent. It is appended verbatim ahead of the original body.
+# The adapter block tells Codex how to translate AskUserQuestion →
+# request_user_input and how to avoid Claude-native Task() fanout on Codex. It
+# is appended verbatim ahead of the original body.
 
 # Emit the Codex skill adapter heredoc for a given skill name.
 _codex_skill_adapter_block() {
@@ -36,20 +37,22 @@ Multi-select workaround:
 Execute mode fallback:
 - When \`request_user_input\` is rejected (Execute mode), present a plain-text numbered list and pick a reasonable default.
 
-## C. Task() → spawn_agent Mapping
-GSD workflows use \`Task(...)\` (Claude Code syntax). Translate to Codex collaboration tools:
+## C. Task() / Subagent Policy
+GSD workflows may mention \`Task(...)\` (Claude Code syntax). On Codex, do not
+translate it to \`spawn_agent\` and do not use native subagents by default.
+Follow \`$skill-runner\`'s bundled Codex delegation policy
+(\`skill-runner/references/codex-delegation.md\` in the synced skills tree).
 
-Direct mapping:
-- \`Task(subagent_type="X", prompt="Y")\` → \`spawn_agent(agent_type="X", message="Y")\`
-- \`Task(model="...")\` → omit (Codex uses per-role config, not inline model selection)
-- \`fork_context: false\` by default — GSD agents load their own context via \`<files_to_read>\` blocks
+Codex fallback mapping:
+- Small read-only probes or tiny edits → run inline in the main session.
+- Stateful, long-running, or isolated worker work → use \`$skill-runner\` or an
+  explicit tmux-backed \`codex exec\` worker.
+- Claude Code hosts may still use their native \`Task(...)\`/subagent behavior.
 
-Parallel fan-out:
-- Spawn multiple agents → collect agent IDs → \`wait(ids)\` for all to complete
-
-Result parsing:
-- Look for structured markers in agent output: \`CHECKPOINT\`, \`PLAN COMPLETE\`, \`SUMMARY\`, etc.
-- \`close_agent(id)\` after collecting results from each agent
+If a copied workflow requires structured worker results, ask the tmux/runner
+worker to return compact markers such as \`CHECKPOINT\`, \`PLAN COMPLETE\`, or
+\`SUMMARY\`, then inspect the worker artifact or final message in the main
+session.
 </codex_skill_adapter>
 ADAPTER
 }

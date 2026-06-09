@@ -170,11 +170,9 @@ the boundary. Do not preload every reference by default.
   the route brief explicitly explains why the work is tiny, bounded, and safe
   for main-session context; otherwise launch a bounded `skill-runner`/tmux
   worker and babysit from the main session.
-- On Codex, avoid native subagents by default until the upstream subagent
-  lifecycle is stable again. Prefer main-session direct work for small probes
-  and `skill-runner`/tmux workers for durable parallelism unless the user
-  explicitly asks for Codex subagents or the local Codex release has been
-  revalidated.
+- On Codex, follow `$skill-runner`'s Codex delegation policy: avoid native
+  subagents by default, keep tiny work in the main session, and use
+  `skill-runner`/tmux workers for isolated durable sub-phases.
 - For durable runs that change local code, create semantic commits along the
   way after each coherent proof-backed slice. Do not wait until the entire flow
   is done unless commits are explicitly disabled or staging cannot be made safe.
@@ -224,7 +222,7 @@ Goal ownership: <adopt existing root | create root | no root goal | worker sub-g
 Selected path: <stage or skill sequence>
 Why: <one sentence>
 Bypassed/left behind: <stage - reason; stage - reason>
-Execution surface: <read-only main session | main session direct with exception reason | tmux worker per sub-phase | native subagents if stable/non-Codex>
+Execution surface: <read-only main session | main session direct with exception reason | skill-runner/tmux worker per sub-phase>
 Babysitter cadence: <none | every N min based on task risk/proof duration>
 Commit rhythm: <semantic commits enabled | disabled because ...>
 Stop gate: <repo command/artifact that decides complete | blocked | continue, or "none">
@@ -334,17 +332,15 @@ while an active flow depends on conversation context. If context pressure
 appears in the main session, prefer a handoff-style `/compact` and keep
 canonical artifacts current.
 
-Codex host caveat: native Codex subagents are currently treated as an unstable
-execution surface. Do not select them for routine probes, verification, or
-bounded edits when main-session work or `skill-runner`/tmux can handle the
-scope. Re-enable this preference only after Codex subagent spawn, completion,
-close, and mailbox delivery have been revalidated on the installed release.
+Delegation policy lives in `$skill-runner`'s Codex delegation reference. This
+skill only chooses whether work stays in the main session or moves to a
+`skill-runner`/tmux worker.
 
 | Work type | Preferred executor |
 | --- | --- |
-| Independent read-heavy probes | main session on Codex; native subagents only when stable/non-Codex |
-| Verification-heavy log/test inspection | main session or `skill-runner`/tmux on Codex; native subagents only when stable/non-Codex |
-| Bounded disjoint edits | `skill-runner`/tmux workers on Codex; native worker subagents only when stable/non-Codex and file ownership is explicit |
+| Independent read-heavy probes | main session unless isolation is worth the worker overhead |
+| Verification-heavy log/test inspection | main session or `skill-runner`/tmux |
+| Bounded disjoint edits | `skill-runner`/tmux workers when main-session context would suffer |
 | Stateful, interactive, durable, or long-running skill pipelines | `skill-runner` / tmux worker per sub-phase |
 | Canonical source-of-truth edits and route decisions | main session |
 
