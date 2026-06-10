@@ -37,6 +37,20 @@ user asks to "reduce entropy", "find cleanup", "make this repo easier to work
 in", or gives no target surface, inspect broadly enough to return the serious
 group of current candidates in one pass.
 
+For broad or repo-wide discovery, use this preflight before any high-noise
+directory read:
+
+1. Read only the repo's thin orientation surface first: root agent guidance and
+   the root/current human docs the repo names as canonical.
+2. Run the bundled high-noise summary script from the target repo root.
+3. Use that summary to decide which history, planning, generated, log, test, or
+   profile surfaces deserve candidate-level proof.
+4. Deep-read only the smallest window needed to prove a candidate; otherwise
+   park the observation.
+
+If you are about to run a command that lists or searches a high-noise root
+before this preflight, stop and run the summary script instead.
+
 For narrow prompts, the expected output is a ranked batch of 3-7 candidates
 when that many pass the No-Change Outcome Rule. Use fewer only when the repo
 evidence only supports fewer real findings. Do not hide the second- and
@@ -85,6 +99,12 @@ Discovery and implementation have different boundaries:
   round no longer finds a P0/P1 or materially useful P2 direction. A typical
   loop is code/test/script surface, docs/agent/backlog surface, then saturation
   sweep, but follow the repo evidence instead of a fixed checklist.
+- In broad discovery, treat history, generated output, planning workspaces, and
+  very large test/profile surfaces as high-noise surfaces, not forbidden
+  surfaces. They can absolutely produce real cleanup candidates, but they must
+  be entered through a budgeted probe first: list/index, find live references,
+  sample the smallest evidence needed, and only deep-read when a candidate
+  already has a materiality reason.
 - For large loops, create or update one discovery artifact such as
   `docs/plans/refactor-reduce-entropy-loop.md` when the target repo convention
   allows planning docs. Record audit rounds, selected candidates, parked items,
@@ -102,6 +122,119 @@ Discovery and implementation have different boundaries:
   packet if asked. Do not implement the candidates inside this skill unless the
   user explicitly changes the task from discovery to implementation and
   confirms the selected set.
+
+## High-Noise Surface Budget
+
+Do not solve a large repo by reading every historical or generated artifact.
+Those surfaces often matter, but their cleanup value comes from current
+confusion, live references, false confidence, or stale reachable entrypoints,
+not from their size.
+
+Apply this default budget before deep-reading:
+
+- `.planning/**`, `docs/plans/**`, `tasks/**`, `.scratch/**`, retrospectives,
+  and issue workspaces: index filenames, statuses, dates, owners, and current
+  doc/code references first. Deep-read only the files needed to prove stale
+  backlog drift, duplicated source-of-truth, or a live workflow trap.
+- `tmp/**`, `output/**`, `logs/**`, generated evidence, snapshots, manifests,
+  and local artifacts: check whether they are tracked, published, referenced by
+  current docs/tests/scripts, or used as fixtures. If not, park them as local
+  residue instead of expanding them.
+- Very large tests, profile registries, generated constants, or data tables:
+  inspect names, counts, ownership, import/caller references, and failing or
+  false-green gates before reading long bodies. Deep-read only around a
+  candidate seam.
+- Vendored dependencies, submodules, virtualenvs, caches, egg-info, and build
+  outputs: skip by default unless the repo explicitly owns that surface or a
+  live command depends on it.
+
+Useful first-pass commands are bounded `find`, `git ls-files`, `git status`,
+`rg --files`, `rg -n <specific token> <specific paths>`, `git log -n`, and
+small `sed` windows. Bound both the command and the printed result:
+
+- For default broad discovery, run the bundled high-noise summary script before
+  ad hoc directory scans:
+
+  ```bash
+  node "$HOME/.codex/skills/intuitive-reduce-entropy/scripts/high-noise-summary.mjs"
+  ```
+
+  When working inside this source repo, this equivalent path is also valid:
+
+  ```bash
+  node skills/intuitive-reduce-entropy/scripts/high-noise-summary.mjs
+  ```
+
+  Run it from the target repository root. The script includes common historical
+  and generated surfaces plus large `tests`/`test` and `profiles` surfaces when
+  present. Use `--surface <path>` for a narrowed probe and `--examples N` when
+  fewer examples are enough. If the script is not available, produce the same
+  summary shape manually; do not substitute a long custom `find`,
+  `git ls-files`, or `rg --files` listing.
+- Do not include high-noise roots in broad path-listing commands such as
+  `rg --files gr00t_manipulation scripts tests docs .planning .scratch specs`
+  or `find .planning docs/plans ...`. Use the summary script for those roots,
+  then run targeted `rg -n <specific token> <specific paths>` or a small `sed`
+  window only after a candidate needs proof.
+- prefer counts, grouped summaries, and 5-20 representative examples over long
+  path lists;
+- print at most the first screen of any index, then switch to targeted
+  reference searches;
+- for large markdown or tests, read headings/status/top matter first, then only
+  the narrow window around the candidate evidence;
+- if a command reports `Broken pipe`, truncates a huge list, or produces mostly
+  filenames without a candidate, treat that as a budget signal and stop the
+  scan.
+
+Avoid broad `rg` or `cat` commands whose output is mostly old plans, generated
+data, or full test/profile bodies. If the next probe would mostly increase
+transcript size instead of candidate confidence, stop and report the candidate,
+parked observation, or saturation reason.
+
+Exploratory verification commands can be high-noise too. For full test
+collection, broad `pytest -q`, wide linters, generated-report checks, or any
+command likely to print many test IDs, paths, warnings, or JSON rows, save the
+full output to a temp log and print only a bounded summary. Prefer the bundled
+summary runner over hand-written shell snippets:
+
+```bash
+node "$HOME/.codex/skills/intuitive-reduce-entropy/scripts/bounded-command-summary.mjs" \
+  --kind generic --timeout 180 -- \
+  <command> <args...>
+```
+
+Use the full temp log only for targeted follow-up. Do not paste hundreds of
+collected test names, generated rows, or repeated warnings into the transcript
+when the candidate only needs failure type, count, and a few representative
+lines.
+
+For `pytest --collect-only`, use the pytest-specific mode. It omits the raw
+tail because the tail often still contains many node IDs:
+
+```bash
+node "$HOME/.codex/skills/intuitive-reduce-entropy/scripts/bounded-command-summary.mjs" \
+  --kind pytest-collect --timeout 180 -- \
+  env PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 <pytest collect command>
+```
+
+If a tiny sample of collected node IDs is relevant, print at most 10 with a
+purpose-specific grep. Never print the full collection list.
+
+When using `bash -lc`, quote search patterns for the shell that will run `rg`.
+Backticks inside double quotes are still command substitutions; prefer fixed
+string probes such as `rg -n -F -e 'sonic_native' -- docs .planning` or single
+quoted regex patterns. Do not put markdown-code tokens like `` `name` `` inside
+double-quoted `rg` patterns.
+
+When a high-noise surface produces a candidate, include the evidence chain:
+
+```text
+Surface:
+Why this surface is live:
+Small evidence sampled:
+Deep-read trigger:
+Candidate or parked reason:
+```
 
 ## Materiality Contract
 
@@ -518,11 +651,17 @@ Use this route unless the user already names a specific entropy source.
 1. **Orient**: launch parallel native probes for root guidance, human docs,
    package/test config, automation, top-level layout, and the current
    verification command when two or more surfaces need inspection. For tiny
-   repos or precise prompts, inspect the relevant surface directly.
+   repos or precise prompts, inspect the relevant surface directly. For broad
+   prompts, run the high-noise summary preflight before searching `.planning`,
+   `docs/plans`, `.scratch`, generated/log/tmp surfaces, large tests, or
+   profile registries. For high-noise surfaces, orient with indexes and
+   references rather than full-body reads.
 2. **Classify**: map observed friction to the entropy sources above.
 3. **Choose discovery depth**: for narrow prompts, run one broad-enough pass.
    For repo-wide or saturation language, run discovery-loop mode and record the
-   rounds in one artifact when the repo convention allows it.
+   rounds in one artifact when the repo convention allows it. Each round should
+   name the surface, bounded probes used, candidate-level evidence found, parked
+   observations, and why deeper reading did or did not continue.
 4. **Recommend packet**: present the complete ranked candidate packet. Include a
    suggested review order and attach `Zen hint:`, `Pattern hint:`,
    affected paths, owner skill, proof commands, and execution risk to each
