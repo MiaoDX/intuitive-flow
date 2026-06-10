@@ -10,9 +10,9 @@ database/schema migration unless you explicitly add that scope.
 ```text
 Use $intuitive-reduce-entropy for this repo.
 
-Goal: identify the ranked batch of high-value entropy reduction candidates that
-would make the repo easier for future AI agents and humans to work in without
-changing runtime behavior.
+Goal: identify the ranked selection packet of high-value entropy reduction
+candidates that would make the repo easier for future AI agents and humans to
+work in without changing runtime behavior.
 
 Start by classifying entropy sources:
 - agent guidance and harness drift
@@ -22,12 +22,15 @@ Start by classifying entropy sources:
 - open-ended architecture/deepening opportunities, shallow modules, or hard-to-test seams
 - known stale APIs, wrappers, compatibility shims, or module seams
 
-Present the serious group of current candidates in one pass, normally 3-7
-items. Rank them by severity, evidence, and future surprise reduction. If fewer
-than 3 candidates pass the bar, explain why the other observations are parked.
-Treat "do another N" or "run the top N" as a maximum budget, not a requirement
-to manufacture N commits. On each fresh round, stop early with
-`Selected candidates: none` when only tiny polish remains.
+For narrow prompts, present the serious group of current candidates in one pass,
+normally 3-7 items. For repo-wide prompts, old-repo cleanup, "as much as
+possible", "all big directions", "again and again", or "continue until no
+more" language, run discovery-loop mode: keep auditing fresh surfaces until no
+P0/P1 or materially useful P2 directions remain. Rank candidates by severity,
+evidence, and future surprise reduction. If fewer than 3 candidates pass the
+bar, explain why the other observations are parked. Treat requested counts as a
+maximum, not a quota. Stop with `Selected candidates: none` when only tiny
+polish remains.
 
 Only count a candidate when it has at least one materiality reason:
 - false confidence in a gate, test, script, report, or build
@@ -38,8 +41,9 @@ Only count a candidate when it has at least one materiality reason:
 
 Do not count wording polish, numbering, formatting, route/index niceties, or
 supporting tests/docs as their own group. Bundle supporting tests and docs with
-the behavior or gate change they protect. For approved top-N loops, write the
-remaining candidates to JSON and run the installed skill's materiality gate:
+the behavior or gate change they protect. For open-ended discovery loops, write
+candidate groups to JSON and run the installed skill's materiality gate when it
+helps test whether the loop should stop:
 
 ```bash
 node "$HOME/.codex/skills/intuitive-reduce-entropy/scripts/materiality-gate.mjs" candidates.json
@@ -63,7 +67,13 @@ For each candidate include:
 - suggested proof
 - execution risk
 
-Route to the specialist owner after selection:
+After discovery, do not pick the easiest first slice or implement a single
+candidate by default. Ask the user to select all candidates, specific candidate
+ids, none, or a subset for more discussion. The user may route selected
+candidates to implementation, grill-batch discussion, preflight, another
+planning loop, or backlog parking.
+
+Record specialist owners in the selection packet:
 - $intuitive-init for AGENTS.md, CLAUDE.md, docs/agents, hooks, MCP, or skills setup
 - $intuitive-doc for README, ARCHITECTURE, STATUS, docs/human, or doc-tier drift
 - $intuitive-tests for test taxonomy, markers, pruning, fixtures, or test layout
@@ -79,23 +89,26 @@ Prefer aggressive cleanup inside accepted scope:
 
 Ask only for decisions that materially change scope, risk, public APIs, deletes,
 or external compatibility.
-Commit coherent slices along the way when asked.
-Run relevant verification after each significant change.
-Stop when the accepted checklist is green and remaining ideas are parked.
+Leave commits, code edits, and per-candidate verification to a later selected
+workflow unless the user explicitly changes the task from discovery to
+implementation and confirms the selected set.
+Stop when the selection packet is complete, the discovery loop is saturated, and
+remaining ideas are parked.
 ```
 
 ## Expected Outcome
 
 After a successful maintenance pass, the repo should have:
 
-- a ranked batch of credible entropy candidates, or an explicit no-change report
-- one accepted entropy source selected and addressed, an accepted top-N loop
-  completed or saturated early, or all candidates explicitly parked
+- a ranked selection packet of credible entropy candidates, or an explicit
+  no-change report
+- a discovery loop completed or saturated early when the prompt is repo-wide, or
+  all candidates explicitly parked
 - current human docs in `README.md`, `ARCHITECTURE.md`, `STATUS.md`, and
   `docs/human/**`
 - agent guidance that points at the right docs and commands without bloated
   root files
-- test or path cleanup completed only when selected in the accepted candidate
-  batch
-- verification results recorded, with any skipped local-only gates explained
+- selected candidates ready for the user's chosen next workflow, with
+  specialist owners, suggested proof, execution risks, and parked items recorded
+- discovery verification recorded, with any skipped local-only gates explained
 - remaining cleanup ideas parked instead of silently widening the scope

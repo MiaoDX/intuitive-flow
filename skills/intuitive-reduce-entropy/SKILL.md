@@ -8,16 +8,22 @@ description: |
   easier for humans and AI agents to work in, or wants maintenance suggestions
   without already knowing the target seam. This is the small public entrypoint
   for repo maintenance; it surfaces the serious group of cleanup opportunities
-  first, then routes accepted candidates to specialist skills. It must return a
-  no-change result instead of filling a requested count when only polish remains.
+  first, records likely specialist owners for each candidate, and returns a
+  selection packet for the user to choose from. It must return a no-change
+  result instead of filling a requested count when only polish remains.
+  It is a discovery and selection-packet skill; it should not prescribe the
+  next workflow after the user selects all or part of the package.
 ---
 
 # Intuitive Reduce Entropy
 
 Use this skill as the maintenance entrypoint when the user does not already know
-which repo surface most needs cleanup. It diagnoses likely entropy sources,
-recommends a ranked batch of bounded candidates, and routes accepted candidates
-to the specialist skill that owns each slice.
+which repo surface most needs cleanup. It diagnoses likely entropy sources and
+returns a ranked selection packet of bounded candidates. It should not choose a
+"first cut", simplest slice, or favorite implementation target for the user.
+After the user selects all or part of the packet, the next step is their choice:
+more discussion, `$grill-with-docs-batch`, `$intuitive-preflight`,
+implementation, or parking the work.
 
 The default goal is a repo where future agents can start quickly, humans can
 review current truth from a small doc surface, tests show real behavior, and
@@ -31,11 +37,11 @@ user asks to "reduce entropy", "find cleanup", "make this repo easier to work
 in", or gives no target surface, inspect broadly enough to return the serious
 group of current candidates in one pass.
 
-The expected first output is a ranked batch of 3-7 candidates when that many
-pass the No-Change Outcome Rule. Use fewer only when the repo evidence only
-supports fewer real findings. Do not hide the second- and third-best candidates
-just because one candidate is clearly highest-value; showing the batch is what
-makes the pass useful for periodic maintenance.
+For narrow prompts, the expected output is a ranked batch of 3-7 candidates
+when that many pass the No-Change Outcome Rule. Use fewer only when the repo
+evidence only supports fewer real findings. Do not hide the second- and
+third-best candidates just because one candidate is clearly highest-value;
+showing the batch is what makes the pass useful for periodic maintenance.
 
 Each candidate should be decision-complete and pass the materiality contract:
 
@@ -61,41 +67,41 @@ one false-green verification issue, and one confirmed leftover wrapper, because
 all three make the next human or agent less surprised. Keep speculative ideas
 out of the ranked batch and put them in `Parked items`.
 
-## Batch Execution Rule
+## Discovery Loop And Selection Handoff
 
-Discovery and execution have different boundaries:
+Discovery and implementation have different boundaries:
 
-- Discovery should surface a ranked batch so the user does not need to ask many
-  times to learn what is wrong.
-- Execution should still apply one coherent slice at a time, with its own
-  accepted checklist and verification, unless the user explicitly asks for a
-  loop or multi-round cleanup.
-- If the user asks to "run a loop", "do the top N", "do another N", "fix
-  these", or otherwise approves execution, treat N as an upper bound, not a
-  quota. Never fill unused slots with low-value work. Create or update one loop
-  gate such as `docs/plans/refactor-reduce-entropy-loop.md`, list the accepted
-  candidates or audit budget, run the deterministic materiality gate when the
-  bundled script is available, then execute only candidates that still pass the
-  No-Change Outcome Rule from the current repository state.
-- In a multi-round loop, every round starts with a fresh audit from current
-  HEAD. Stop early when the best remaining observation is only small polish,
-  optional wording, or a change that would make the user wonder why another
-  commit was needed.
-- Treat open-ended prompts such as "continue until no more entropy remains",
-  "keep reducing entropy", or `/goal` loops as saturation-sensitive. Do not
-  turn them into a search for every possible cleanup commit. After the first
-  strong batch is exhausted, stop unless the next candidate would still look
-  worthwhile in a maintainer's review queue without referencing "consistency",
-  "cleanup", or "nice to have" as the main justification.
-- Before each additional group in a loop, run a saturation audit: name the next
-  candidate, its materiality reason, and why it still deserves a commit after
-  the previous groups. If that sentence is weak, stop with `Selected candidates:
+- Discovery should surface the complete serious group of current candidates so
+  the user can choose all, choose a subset, or defer everything with full
+  context.
+- Do not frame one candidate as "the first cut", "the easiest slice", or the
+  skill's chosen implementation target. A recommended order is only planning
+  guidance; it is not a selection.
+- For narrow prompts, run one broad-enough pass and return the ranked batch.
+- For repo-wide prompts, old-repo cleanup, "as much as possible", "all big
+  directions", "again and again", "continue until no more", or similar
+  saturation language, enter discovery-loop mode by default.
+- In discovery-loop mode, run fresh rounds from current `HEAD` until another
+  round no longer finds a P0/P1 or materially useful P2 direction. A typical
+  loop is code/test/script surface, docs/agent/backlog surface, then saturation
+  sweep, but follow the repo evidence instead of a fixed checklist.
+- For large loops, create or update one discovery artifact such as
+  `docs/plans/refactor-reduce-entropy-loop.md` when the target repo convention
+  allows planning docs. Record audit rounds, selected candidates, parked items,
+  suggested proof, and the stop condition in that one artifact instead of
+  scattering partial batches through chat.
+- Before adding another group in a loop, run a saturation audit: name the next
+  candidate, its materiality reason, and why it still deserves review after the
+  previous rounds. If that sentence is weak, stop with `Selected candidates:
   none`.
-- Pause before broad file moves, deletes with uncertain consumers, public API
-  changes, external compatibility removal, paid/slow/local-provider gates, or
-  product-scope decisions even if they appear in the batch.
-- After each executed candidate, update the loop gate and continue only while
-  another accepted P0/P1 or materially useful P2 candidate remains in scope.
+- Mark broad file moves, deletes with uncertain consumers, public API changes,
+  external compatibility removal, paid/slow/local-provider gates, and
+  product-scope decisions as execution risks. Do not hide them from the
+  discovery packet just because they need approval before implementation.
+- After the user selects candidates, produce a compact selected-candidates
+  packet if asked. Do not implement the candidates inside this skill unless the
+  user explicitly changes the task from discovery to implementation and
+  confirms the selected set.
 
 ## Materiality Contract
 
@@ -151,10 +157,11 @@ enough impact to justify a standalone commit:
 
 ### Loop Deterministic Gate
 
-When running an approved top-N loop, write the remaining accepted candidates to
-JSON and run [scripts/materiality-gate.mjs](scripts/materiality-gate.mjs) before
-executing the next group. Resolve the script relative to this `SKILL.md`, not
-relative to the target repository. In Codex that is usually:
+When validating an open-ended discovery loop, write the candidate groups to JSON
+and run [scripts/materiality-gate.mjs](scripts/materiality-gate.mjs) before
+adding another group to the selection packet. Resolve the script relative to
+this `SKILL.md`, not relative to the target repository. In Codex that is
+usually:
 
 ```bash
 node "$HOME/.codex/skills/intuitive-reduce-entropy/scripts/materiality-gate.mjs" candidates.json
@@ -197,7 +204,7 @@ node skills/intuitive-reduce-entropy/scripts/materiality-gate.mjs candidates.jso
 ```
 
 If it returns `stop_recommended: true`, stop before the requested count is
-exhausted and report why the loop saturated.
+exhausted and report why the discovery loop saturated.
 
 ## Zen Of Python Bias
 
@@ -266,7 +273,7 @@ would remove, or say `Pattern hint: no pattern; direct cleanup is clearer.`
 For architecture-shaped entropy, public-contract drift, task/skill/profile
 boundary questions, MCP/tool surface changes, lifecycle gates, data-flow
 cleanup, or code seams where the module map is unclear, run an explicit review
-sequence before recommending implementation:
+sequence before presenting the direction as decision-ready:
 
 1. `$zoom-out`: build a domain-language map of the relevant modules, callers,
    public contracts, data flow, and invariants. Use repo docs and code, not just
@@ -326,14 +333,13 @@ retrospectives, generated evidence, and proof artifacts.
 ## Bounded Proposal Rule
 
 For broad or ambiguous cleanup, audit first and stop after a decision-complete
-batch proposal. Do not move files, delete tests, rewrite guidance, or edit
-production code until the target slice or accepted loop batch, accepted
-checklist, evidence level, and stop condition are explicit.
+selection packet. Do not move files, delete tests, rewrite guidance, or edit
+production code while the user is still asking what should be cleaned.
 
-For a precise target where the user asks for implementation, apply one coherent
-vertical slice. For an approved loop, apply the accepted candidates one slice at
-a time. Keep newly discovered unrelated ideas parked instead of letting the work
-expand by drift.
+For a precise target where the user asks for implementation or deeper planning,
+return the evidence, proof commands, execution risks, and stop condition so the
+user can route it to their chosen next workflow. Keep newly discovered unrelated
+ideas parked instead of letting the work expand by drift.
 
 ## No-Change Outcome Rule
 
@@ -368,10 +374,10 @@ Parked items:
 Next safe task:
 ```
 
-In an active loop, this same rule is the saturation check. If a fresh round
-finds no P0/P1 or materially useful P2 candidate, close the existing loop gate
-as `DONE` or `PARK`, record why the loop stopped before the budget was spent,
-and do not make another cleanup commit merely to satisfy the requested count.
+In an active discovery loop, this same rule is the saturation check. If a fresh
+round finds no P0/P1 or materially useful P2 candidate, mark the discovery
+artifact as saturated or parked, record why the loop stopped, and do not invent
+another cleanup direction merely to satisfy a requested count.
 
 ## Delegation Model
 
@@ -384,11 +390,12 @@ the main session and use `skill-runner`/tmux only when isolation is worth it;
 do not use native Codex subagents by default. On stable non-Codex hosts, native
 subagents are acceptable for independent probes or explicitly disjoint edits.
 
-Use `skill-runner` for downstream skill work that is stateful, interactive,
-long-running, or better supervised in a standalone tmux session. Prefer one
-mutating `skill-runner` worker at a time in a single worktree unless the write
-ownership is explicitly disjoint. Do not assume extra git worktrees; many repos
-are too large or dependency-heavy for that to be the default.
+Use `skill-runner` only for read-heavy discovery probes or later selected work
+that is stateful, interactive, long-running, or better supervised in a
+standalone tmux session. Prefer one mutating `skill-runner` worker at a time in
+a single worktree unless the write ownership is explicitly disjoint. Do not
+assume extra git worktrees; many repos are too large or dependency-heavy for
+that to be the default.
 
 Worker handoff shape:
 
@@ -413,8 +420,8 @@ fan-out/fan-in runners for a later proven need.
 ## Canonical Cleanup Rule
 
 Prefer the new intuitive API, path, module boundary, command shape, or folder
-layout over backward compatibility. In an approved cleanup/refactor slice, old
-surfaces are migration targets, not contracts.
+layout over backward compatibility. When a selected cleanup/refactor direction
+is later implemented, old surfaces are migration targets, not contracts.
 
 - Update known in-repo callers, docs, tests, recipes, examples, CI, and command
   references to the new shape.
@@ -428,18 +435,17 @@ surfaces are migration targets, not contracts.
 
 ## Public Entry Model
 
-Keep the user-facing choice small:
+Keep the reduce-entropy output focused on discovery, not on choosing the next
+workflow:
 
-- `$intuitive-flow` -> default build/change entrypoint; routes tiny concrete
-  work directly, cleanup/refactor work to `$intuitive-refactor`, and broad work
-  through durable Flow.
-- `$intuitive-refactor` -> clean a known module, seam, API, or architecture
-  target.
 - `$intuitive-reduce-entropy` -> find what repo maintenance would pay off most
   now.
-- `$intuitive-planning-loop` -> run bounded autonomous planning scouts before a
-  single user review packet.
-- `$intuitive-squash` -> clean local agent commit history before handoff.
+- `$intuitive-refactor` -> likely owner for known module, seam, API, or
+  architecture cleanup targets.
+- `$intuitive-doc`, `$intuitive-init`, and `$intuitive-tests` -> likely owners
+  for docs, agent guidance, and test-suite surfaces.
+- `$grill-with-docs-batch`, `$intuitive-preflight`, implementation planning, or
+  backlog parking may all be valid next steps after the user selects candidates.
 
 Specialist skills still exist, but the user should not need to pick one before
 the repo has been diagnosed:
@@ -473,7 +479,7 @@ Classify the user's prompt and repo evidence into one or more entropy sources:
 | Repo surface layout | mixed human/agent/runtime/test/script surfaces, flat scripts/examples, misplaced files, stale path consumers | route by object; see Layout Routing |
 | Architecture discovery | open-ended architecture improvement, shallow modules, hard-to-test or hard-to-navigate code, unclear module depth or seams, request to find refactoring opportunities | Architecture Review Sequence first; optionally host-installed `$improve-codebase-architecture` in report-only mode; then `$intuitive-refactor` after a candidate is accepted |
 | Known code cleanup | named module, accepted seam, stale API, compatibility shim, or target-local architecture cleanup | `$intuitive-refactor` |
-| Workflow drift | unclear source of truth between plans, GSD, issues, docs, and commits | `$intuitive-flow` or `$intuitive-refactor`, depending on whether work is planned or cleanup-shaped |
+| Workflow drift | unclear source of truth between plans, GSD, issues, docs, and commits | record the drift and likely next discussion/planning owner |
 
 ## Layout Routing
 
@@ -514,38 +520,35 @@ Use this route unless the user already names a specific entropy source.
    verification command when two or more surfaces need inspection. For tiny
    repos or precise prompts, inspect the relevant surface directly.
 2. **Classify**: map observed friction to the entropy sources above.
-3. **Recommend batch**: present the ranked candidate batch by default, normally
-   3-7 candidates. Include a recommended execution order and attach `Zen hint:`,
-   `Pattern hint:`, affected paths, owner skill, proof commands, and execution
-   risk to each candidate. If only one candidate passes the No-Change Outcome
-   Rule, present a batch of one and briefly say why other observations were
-   parked. If no candidate passes, report `Selected candidates: none` and stop.
-4. **Architecture sequence**: when the best slice is architecture/deepening,
+3. **Choose discovery depth**: for narrow prompts, run one broad-enough pass.
+   For repo-wide or saturation language, run discovery-loop mode and record the
+   rounds in one artifact when the repo convention allows it.
+4. **Recommend packet**: present the complete ranked candidate packet. Include a
+   suggested review order and attach `Zen hint:`, `Pattern hint:`,
+   affected paths, owner skill, proof commands, and execution risk to each
+   candidate. If only one candidate passes the No-Change Outcome Rule, present a
+   packet of one and briefly say why other observations were parked. If no
+   candidate passes, report `Selected candidates: none` and stop.
+5. **Architecture sequence**: when any candidate direction is
+   architecture/deepening,
    public-contract cleanup, MCP/tool boundary cleanup, lifecycle gates, or an
-   unclear target seam, run `$zoom-out` and `$plan-eng-review` before execution.
+   unclear target seam, run `$zoom-out` and `$plan-eng-review` before
+   presenting it as decision-ready.
    If no target seam has been accepted after that, optionally route to
    host-installed `$improve-codebase-architecture` in report-only mode. Treat
    all discovery output as candidate evidence, not execution approval, and keep
-   it in the ranked batch unless the user already accepted the architecture
+   it in the ranked packet unless the user already selected the architecture
    candidate.
-5. **Gate**: if execution is requested, use `$intuitive-refactor` to create or
-   update one persistent maintenance gate for a single accepted target, normally
-   `docs/plans/refactor-reduce-entropy-<target>.md`; for an approved multi-round
-   cleanup, create or update a loop gate such as
-   `docs/plans/refactor-reduce-entropy-loop.md` with the accepted candidate list
-   or maximum audit budget, execution order, proof commands, and stop
-   condition. The stop condition must say the loop may finish before the budget
-   is exhausted when a fresh round returns `Selected candidates: none`.
-6. **Route**: run the specialist owner for each accepted candidate, or keep the
-   slice here only when it spans mixed repo surfaces without a narrower owner.
-7. **Verify and close**: run the repo's relevant checks after each executed
-   candidate, update the gate status, and park remaining cross-seam ideas.
+6. **Selection packet**: when the user selects all or part of the packet,
+   preserve the selected candidates, suggested review order, likely specialist owners,
+   proof commands, execution risks, parked items, and stop condition. Do not
+   silently narrow the selected set to one small slice.
 
-Before routing to a specialist, produce a compact handoff packet so the next
-stage does not repeat the whole audit:
+When the user asks for a compact selected-candidates packet, use this shape so
+the next stage does not repeat the whole audit:
 
 ```text
-Accepted candidate:
+Selected candidates:
 Entropy source:
 Zen hint:
 Pattern hint:
@@ -555,20 +558,15 @@ Evidence:
 Affected paths:
 Discovery skill:
 Architecture packet (architecture-shaped slices only):
-Owner skill:
+Owner skills:
 Proof commands:
 Parked items:
 Stop condition:
 ```
 
-For long or stateful specialist execution, pass that packet through
-`skill-runner`/tmux and have the main session inspect `result.md`, `eval.md`,
-worker output, the actual diff, and verification before closeout.
-
-Run another slice only when the accepted loop gate still has a concrete P0/P1
-or materially useful P2 candidate inside scope. Do not repeat just because more
-possible cleanup exists, and do not downgrade the materiality bar after several
-successful rounds.
+The user may route the selected packet to implementation, `$grill-with-docs-batch`,
+`$intuitive-preflight`, another planning loop, or simply keep it as a backlog.
+Do not assume which route they will choose.
 
 ## User Input Routing
 
@@ -593,15 +591,15 @@ If the user names a likely area, route directly:
 - "layout", "folders", "scripts", "examples", "repo structure" -> inspect the
   object first, then route through Layout Routing.
 
-If the user gives no area, do not guess silently. Return a ranked batch:
+If the user gives no area, do not guess silently. Return a ranked packet:
 
 ```text
-Recommended batch:
+Recommended packet:
 1. <candidate> — <severity>, <owner>, <why now>
 2. <candidate> — <severity>, <owner>, <why now>
 3. <candidate> — <severity>, <owner>, <why now>
 
-Recommended execution order:
+Suggested review order:
 - <candidate ids, with reason>
 
 Parked items:
@@ -610,14 +608,15 @@ Parked items:
 Suggested proof:
 - <commands/searches>
 
-Proceed with candidate <N>, or run up to the top <N> as a loop?
+Select all, select specific candidate ids, discuss selected candidates further,
+or park the packet.
 ```
 
 ## Decision Policy
 
-Auto-select a default candidate order only when repo evidence makes it
-low-risk and reversible. Pause for the user when a decision would materially
-change:
+Suggest a review order only when repo evidence makes the ordering clear. Do not
+auto-select the subset to implement. Pause for the user when a
+decision would materially change:
 
 - runtime behavior or public APIs
 - externally documented command/import paths
@@ -633,15 +632,12 @@ mechanical defaults, not permission to cross these pause points silently.
 
 Stop when all of these are true:
 
-- the accepted maintenance gate or loop gate is `DONE` or `PARK`, with
-  remaining ideas recorded
-- either a ranked candidate batch was delivered for selection, or the accepted
-  execution loop completed the approved candidates or saturated early with
-  `Selected candidates: none`
+- either a ranked candidate packet was delivered for selection, or a discovery
+  loop saturated with `Selected candidates: none`
 - specialist skills were used for their owned surfaces instead of duplicating
   their full procedures here
 - verification commands pass, or skipped gates are documented with a concrete
-  reason
+  reason when verification was part of the discovery task
 - the agent can state the next safe task without starting another broad cleanup
   sweep
 - no-change runs explicitly say `Selected candidates: none` and do not create a
@@ -653,17 +649,17 @@ End with:
 
 ```text
 Entropy source:
-Recommended batch:
-Accepted candidate or loop:
-Specialist owner:
-Gate:
+Recommended packet:
+Selected candidates:
+Specialist owners:
+Discovery artifact:
 Zen hint:
 Pattern hint:
 Architecture packet (architecture-shaped slices only):
 Changes:
 Verification:
 Parked items:
-Next safe task:
+Next options:
 ```
 
 For no-change runs, use:
