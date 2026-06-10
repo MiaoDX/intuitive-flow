@@ -28,10 +28,16 @@ type RenderedEvidence = {
 
 export type GoalSummary = {
   purpose: string;
+  sourcePurpose: string;
   route: string;
   sources: string[];
   proof: string;
   rawGoal: string;
+};
+
+export type MulticaWorkspace = {
+  id: string;
+  name: string;
 };
 
 export type SessionEvidence = {
@@ -327,6 +333,24 @@ function runMultica(opts: Options, args: string[], input?: string): string {
   return result.stdout;
 }
 
+function runMulticaGlobal(opts: Options, args: string[], input?: string): string {
+  const globalArgs: string[] = [];
+  if (opts.profile) globalArgs.push("--profile", opts.profile);
+
+  const result = spawnSync("multica", [...globalArgs, ...args], {
+    input,
+    encoding: "utf8",
+    env: { ...process.env, PATH: `${homedir()}/.local/bin:${process.env.PATH ?? ""}` },
+  });
+  if (result.error) {
+    throw new Error(`failed to run multica: ${result.error.message}`);
+  }
+  if (result.status !== 0) {
+    throw new Error(`multica ${args.join(" ")} failed:\n${result.stderr || result.stdout}`);
+  }
+  return result.stdout;
+}
+
 function multicaConfigPath(opts: Options): string {
   const suffix = opts.profile ? `-${opts.profile}` : "";
   return join(homedir(), ".multica", `config${suffix}.json`);
@@ -340,6 +364,94 @@ function readMulticaConfig(opts: Options): JsonRecord | undefined {
   } catch {
     return undefined;
   }
+}
+
+function slugifyWorkspaceName(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function workspaceTokenFromUrlOrPath(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  try {
+    const url = new URL(trimmed);
+    const segment = url.pathname.split("/").filter(Boolean)[0];
+    if (segment) return segment;
+  } catch {
+    // Not a URL; fall through to path/token handling.
+  }
+
+  const pathMatch = trimmed.match(/(?:^|\/)([a-z0-9][a-z0-9-]*)(?:\/(?:issues?|projects?|repos?|$)|\/?$)/i);
+  if (pathMatch?.[1]) return pathMatch[1];
+  return trimmed;
+}
+
+export function parseWorkspaceListOutput(output: string): MulticaWorkspace[] {
+  const lines = output.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  return lines
+    .map((line) => {
+      const match = line.match(/^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\s+(.+)$/i);
+      if (!match) return undefined;
+      return { id: match[1], name: match[2].trim() };
+    })
+    .filter((workspace): workspace is MulticaWorkspace => Boolean(workspace));
+}
+
+export function resolveWorkspaceIdFromList(requested: string, workspaces: MulticaWorkspace[]): string {
+  const token = workspaceTokenFromUrlOrPath(requested);
+  if (!token) return "";
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(token)) {
+    return token;
+  }
+
+  const normalized = slugifyWorkspaceName(token);
+  const matches = workspaces.filter((workspace) => {
+    const name = workspace.name.trim();
+    return (
+      name.toLowerCase() === token.toLowerCase() ||
+      slugifyWorkspaceName(name) === normalized ||
+      workspace.id.toLowerCase() === token.toLowerCase()
+    );
+  });
+
+  if (matches.length === 1) return matches[0].id;
+  if (matches.length > 1) {
+    throw new Error(`Ambiguous Multica workspace '${requested}'. Use the workspace UUID explicitly.`);
+  }
+  return "";
+}
+
+function resolveWorkspaceId(opts: Options, required: boolean): string | undefined {
+  const explicit = opts.workspaceId ?? "";
+  const requested = explicit || process.env.MULTICA_WORKSPACE_ID || "";
+
+  if (!requested) {
+    if (required) {
+      throw new Error(
+        "Multica workspace is required for create-from-preflight. Pass --workspace-id <workspace UUID|name|URL slug|workspace URL>.",
+      );
+    }
+    return undefined;
+  }
+
+  const workspaces = parseWorkspaceListOutput(runMulticaGlobal(opts, ["workspace", "list"]));
+  const resolved = resolveWorkspaceIdFromList(requested, workspaces);
+  if (!resolved) {
+    const available = workspaces.map((workspace) => `${workspace.name} (${workspace.id})`).join(", ") || "none";
+    throw new Error(`Could not resolve Multica workspace '${requested}'. Available workspaces: ${available}`);
+  }
+
+  if (!explicit && required) {
+    throw new Error(
+      "Refusing to create a preflight issue from implicit MULTICA_WORKSPACE_ID. Pass --workspace-id explicitly so the target workspace is reviewable.",
+    );
+  }
+  return resolved;
 }
 
 async function uploadEvidenceImage(opts: Options, filePath: string): Promise<{ id?: string; url?: string } | undefined> {
@@ -1275,10 +1387,11 @@ export function summarizeGoal(goal: string): GoalSummary {
     lines[0] ??
     "完成请求的 goal";
 
-  const purpose = sentenceCaseAction(actionLine.replace(/\s+via\s+\$[a-z0-9-]+/gi, ""));
+  const sourcePurpose = actionLine.replace(/\s+via\s+\$[a-z0-9-]+/gi, "").trim();
+  const purpose = sentenceCaseAction(sourcePurpose);
   const proof = proofLines.length ? proofLines.map(sentenceCaseAction).join(" ") : "使用 goal 中声明的验证方式或完成定义。";
 
-  return { purpose, route, sources, proof, rawGoal };
+  return { purpose, sourcePurpose, route, sources, proof, rawGoal };
 }
 
 export function markdownForStart(summary: GoalSummary): string {
@@ -1286,7 +1399,9 @@ export function markdownForStart(summary: GoalSummary): string {
   return `${agentCommentBanner}<!-- multica-goal-tracker:start -->
 ## Goal 跟踪开始
 
-**目标:** ${summary.purpose}
+**目标（中文）:** ${summary.purpose}
+
+**Goal (English/source):** ${summary.sourcePurpose}
 
 **执行入口:** ${summary.route}
 
@@ -1307,7 +1422,9 @@ export function summaryBlock(summary: GoalSummary): string {
   return `<!-- multica-goal-tracker:summary:start -->
 ## Goal 摘要
 
-**目标:** ${summary.purpose}
+**目标（中文）:** ${summary.purpose}
+
+**Goal (English/source):** ${summary.sourcePurpose}
 
 **执行入口:** ${summary.route}
 
@@ -1421,12 +1538,14 @@ export function parsePreflightContract(raw: string, titleOverride?: string): Pre
 
 export function markdownForPreflightIssueDescription(contract: PreflightContract, summary: GoalSummary): string {
   const sources = summary.sources.length ? summary.sources.map((s) => `\`${s}\``).join(", ") : "未在 goal 中明确。";
-  const goal = contract.goal || summary.purpose;
+  const goal = contract.goal || summary.sourcePurpose;
   const plan = contract.canonicalSource || sources;
   return `${agentCommentBanner}<!-- multica-goal-tracker:preflight-issue:v1 -->
 ## Preflight 跟踪 Issue
 
-**目标:** ${goal}
+**目标（中文）:** ${summary.purpose}
+
+**Goal (English/source):** ${goal}
 
 **执行入口:** ${summary.route}
 
@@ -2130,6 +2249,8 @@ function printDryRun(kind: string, content: string, extra: Record<string, string
 }
 
 function createFromPreflight(opts: Options) {
+  const workspaceId = resolveWorkspaceId(opts, true);
+  const resolvedOpts = { ...opts, workspaceId };
   const preflight = readInput(opts.preflightText, opts.preflightFile);
   const contract = parsePreflightContract(preflight, opts.title);
   const summary = summarizeGoal(contract.goalCommand);
@@ -2145,6 +2266,7 @@ function createFromPreflight(opts: Options) {
       project: opts.project ?? "",
       assignee: opts.assignee ?? opts.assigneeId ?? "",
       allowDuplicate: String(opts.allowDuplicate),
+      workspaceId: workspaceId ?? "",
     });
     printDryRun("start comment", startComment);
     return;
@@ -2170,13 +2292,13 @@ function createFromPreflight(opts: Options) {
   if (opts.assigneeId) args.push("--assignee-id", opts.assigneeId);
   if (opts.allowDuplicate) args.push("--allow-duplicate");
 
-  const out = runMultica(opts, args);
+  const out = runMultica(resolvedOpts, args);
   const issue = issueIdentifierFromCreateOutput(out);
   if (!issue) {
     throw new Error("Could not read created issue identifier from multica issue create output.");
   }
 
-  start(withIssue({ ...opts, goal: contract.goalCommand, goalFile: undefined, updateDescription: false }, issue));
+  start(withIssue({ ...resolvedOpts, goal: contract.goalCommand, goalFile: undefined, updateDescription: false }, issue));
   console.log(`Created tracked preflight issue ${issue}`);
 }
 

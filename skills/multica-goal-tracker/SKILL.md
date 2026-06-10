@@ -51,19 +51,29 @@ or `To execute` with the executable `/goal`.
 ```bash
 bun skills/multica-goal-tracker/scripts/track_goal.ts \
   create-from-preflight \
-  --preflight-file /tmp/preflight.md
+  --preflight-file /tmp/preflight.md \
+  --workspace-id roboclaws
 ```
 
 The script:
 
 - parses the preflight contract;
 - extracts the exact `/goal` from `Main-session /goal prompt` or `To execute`;
+- requires an explicit target workspace for issue creation and resolves
+  `--workspace-id` from a workspace UUID, display name, URL slug, or full
+  workspace URL;
 - generates a concise issue title from the canonical source unless `--title` is
   supplied;
 - creates a Multica issue whose description contains only the tracker marker,
-  a short goal summary, the plan/canonical source, the proof expectation, and
-  the exact `/goal`;
+  a short bilingual goal summary, the plan/canonical source, the proof
+  expectation, and the exact `/goal`;
 - appends the normal `multica-goal-tracker:start` comment to the created issue.
+
+Never rely on the Multica CLI default workspace when creating an issue from a
+preflight. The default workspace may point at another product. If the user gives
+a URL such as `https://multica.evad.mioffice.cn/roboclaws/`, pass
+`--workspace-id roboclaws` or the full URL so the script can resolve and verify
+the real workspace id before writing.
 
 Keep `create-from-preflight` issue descriptions intentionally short. Do not
 paste the full `## Preflight Contract` into the issue body; the plan file is
@@ -77,6 +87,7 @@ Use `--dry-run` first when validating a new preflight shape:
 bun skills/multica-goal-tracker/scripts/track_goal.ts \
   create-from-preflight \
   --preflight-file /tmp/preflight.md \
+  --workspace-id roboclaws \
   --dry-run
 ```
 

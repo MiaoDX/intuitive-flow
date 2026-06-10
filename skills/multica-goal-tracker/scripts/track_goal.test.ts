@@ -24,8 +24,10 @@ import {
   markdownForStart,
   nextAttemptSequence,
   normalizeLines,
+  parseWorkspaceListOutput,
   parsePreflightContract,
   replaceMarkedBlock,
+  resolveWorkspaceIdFromList,
   selectLatestRunId,
   sessionEvidenceFromSessionText,
   sessionEvidenceFromSkillRunnerDir,
@@ -111,7 +113,8 @@ Reply LGTM.
     expect(contract.title).toBe("Refactor G1 Visual Metric Contract");
     expect(contract.goalCommand).toBe("/goal execute docs/plans/refactor-g1-visual-metric-contract.md with intuitive-flow");
     expect(description).toContain("<!-- multica-goal-tracker:preflight-issue:v1 -->");
-    expect(description).toContain("**目标:** Align G1 visual metrics.");
+    expect(description).toContain("**目标（中文）:** 执行 docs/plans/refactor-g1-visual-metric-contract.md with intuitive-flow");
+    expect(description).toContain("**Goal (English/source):** Align G1 visual metrics.");
     expect(description).toContain("**计划文件:** docs/plans/refactor-g1-visual-metric-contract.md");
     expect(description).toContain("## Goal 命令");
     expect(description).toContain("/goal execute docs/plans/refactor-g1-visual-metric-contract.md with intuitive-flow");
@@ -138,9 +141,36 @@ To execute:
 
     expect(normalizeLines(summary.rawGoal)[0]).toBe("fix the broken sync path with $intuitive-flow");
     expect(summary.purpose).toBe("修复 the broken sync path with $intuitive-flow");
+    expect(summary.sourcePurpose).toBe("fix the broken sync path with $intuitive-flow");
     expect(summary.route).toBe("$intuitive-flow");
     expect(summary.sources).toEqual(["docs/plans/refactor-sync.md"]);
     expect(summary.proof).toContain("验证 with bun run verify");
+  });
+
+  test("writes bilingual goal fields in start comments", () => {
+    const summary = summarizeGoal("/goal fix the broken sync path with $intuitive-flow");
+    const comment = markdownForStart(summary);
+
+    expect(comment).toContain("**目标（中文）:** 修复 the broken sync path with $intuitive-flow");
+    expect(comment).toContain("**Goal (English/source):** fix the broken sync path with $intuitive-flow");
+  });
+
+  test("resolves workspace slugs, names, urls, and ids from workspace list output", () => {
+    const workspaces = parseWorkspaceListOutput(`
+ID                                    NAME
+d5025f68-febd-4b06-a55a-339fd07c357d  Robomanipulation
+0b57f23e-6d3a-4721-91fc-060c16d92eec  Roboclaws
+88005f8f-1a22-4452-b744-29e196d4cb5e  Robo Harness
+`);
+
+    expect(resolveWorkspaceIdFromList("roboclaws", workspaces)).toBe("0b57f23e-6d3a-4721-91fc-060c16d92eec");
+    expect(resolveWorkspaceIdFromList("Roboclaws", workspaces)).toBe("0b57f23e-6d3a-4721-91fc-060c16d92eec");
+    expect(resolveWorkspaceIdFromList("https://multica.evad.mioffice.cn/roboclaws/issues/ROB-39", workspaces)).toBe(
+      "0b57f23e-6d3a-4721-91fc-060c16d92eec",
+    );
+    expect(resolveWorkspaceIdFromList("88005f8f-1a22-4452-b744-29e196d4cb5e", workspaces)).toBe(
+      "88005f8f-1a22-4452-b744-29e196d4cb5e",
+    );
   });
 
   test("recognizes compact preflight route wording without a dollar prefix", () => {
