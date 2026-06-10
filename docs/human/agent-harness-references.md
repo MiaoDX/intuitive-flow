@@ -96,8 +96,9 @@ Use this baseline when creating or revising repo-owned skills:
 - Use isolated subagent or forked context for research-heavy, log-heavy, or
   parallel verification skills only when the host supports it reliably and the
   task has a clear standalone output. For Codex, follow
-  `skills/skill-runner/references/codex-delegation.md`: prefer main-session probes or
-  tmux/`skill-runner` workers and keep native subagents disabled until local
+  `skills/skill-runner/references/codex-delegation.md`: prefer main-session
+  probes, Paseo-managed agents when the MCP surface is available and probed, or
+  tmux/`skill-runner` workers, and keep native subagents disabled until local
   revalidation proves the installed release is stable.
 - Treat tool preapproval as a convenience, not a security boundary.
   `allowed-tools` can reduce prompts while a skill is active; blocking sensitive
@@ -130,7 +131,7 @@ Use this baseline when creating or revising repo-owned skills:
 | [Codex skills](https://developers.openai.com/codex/skills) | Skills are reusable workflow packages for Codex. Their descriptions control discovery within a limited listing budget, so trigger text should be specific and concise; keep large references outside the entrypoint and use scripts for deterministic mechanics. |
 | [Codex plugins](https://developers.openai.com/codex/plugins) | Plugins package reusable agent capabilities beyond a single workflow. Prefer explicit source manifests, validation, and trust review before syncing plugin or skill sources into local user-level tooling. |
 | [Codex hooks](https://developers.openai.com/codex/hooks) | Hooks provide deterministic automation around agent lifecycle events; use them for repeatable checks rather than relying on prompt memory. |
-| [Codex subagents](https://developers.openai.com/codex/subagents) | Treat Codex native subagents as an unstable surface in this harness until local revalidation proves spawn, completion, parent result delivery, clean exit, file ownership, sandboxing, and model behavior. Use `skills/skill-runner/references/codex-delegation.md` and tmux/`skill-runner` workers as the default Codex delegation path. |
+| [Codex subagents](https://developers.openai.com/codex/subagents) | Treat Codex native subagents as an unstable surface in this harness until local revalidation proves spawn, completion, parent result delivery, clean exit, file ownership, sandboxing, and model behavior. Use `skills/skill-runner/references/codex-delegation.md`: prefer Paseo-managed agents for parallel short/read-heavy Codex delegation when available and probed, and tmux/`skill-runner` workers for fallback, durable, stateful, mutating, or artifact-sensitive work. |
 | [Codex changelog](https://developers.openai.com/codex/changelog) | Re-check release notes after major CLI changes. Goal mode and skill/plugin behavior can shift normal workflow boundaries and should be tested before becoming default runtime rules. When goal mode is used in Codex, keep it worker-local unless a direct main-session task is tiny. |
 | [AGENTS.md open format](https://agents.md/) | `AGENTS.md` is a cross-agent convention supported by multiple coding tools. Prefer it for shared repo rules, with tool-specific deltas kept in tool-specific files. |
 

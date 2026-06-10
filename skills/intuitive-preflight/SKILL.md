@@ -127,7 +127,7 @@ Return this shape. Keep it compact enough for the user to approve in one pass.
 Preflight status: DRAFT | BLOCKED_NEEDS_DECISION | BLOCKED_NEEDS_LOCAL_VALIDATION
 Task source: <user prompt | plan path | issue | mixed>
 Canonical source: <docs/plans/... | issue URL | conversation only>
-Route: <main direct | $intuitive-refactor | durable $intuitive-flow | skill-runner worker>
+Route: <main direct | $intuitive-refactor | durable $intuitive-flow | Paseo-managed agent | skill-runner worker>
 
 Goal:
 <one sentence>
@@ -167,7 +167,7 @@ Verification:
 
 Execution surface:
 - Main session: <root supervisor role>
-- Worker: <none | skill-runner scope>
+- Worker: <none | Paseo scope | skill-runner scope>
 - Worker-local goal: <none | exact bounded goal>
 
 To execute:
@@ -214,7 +214,13 @@ Choose the smallest honest route:
 | Read-only diagnosis or one-file/two-file concrete fix | main direct |
 | Known cleanup, stale API, compatibility, module layout, or architecture seam | `$intuitive-refactor` |
 | Plan-backed, broad, stateful, or multi-stage work | durable `$intuitive-flow` |
+| Parallel read-heavy scout, review pass, verification/log probe, or short bounded independent task on Codex with probed Paseo MCP | Paseo-managed agent under main-session supervision |
 | Long-running implementation, review pipeline, GSD, broad refactor, or slow verification | `skill-runner` worker under main-session supervision |
+
+Do not use a Paseo-managed agent merely because the MCP exists. Use it when the
+Paseo provider/model probe succeeds and parallelism or isolated context is
+valuable, then inspect `get_agent_activity` plus `get_agent_status` before
+trusting the result.
 
 Do not use `skill-runner` merely because it exists. Use it when isolated state,
 long runtime, worker-local goal, or post-run artifacts will materially improve

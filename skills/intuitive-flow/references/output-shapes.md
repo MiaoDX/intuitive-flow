@@ -15,7 +15,7 @@ Goal ownership: <adopt existing root | create root | no root goal | worker sub-g
 Selected path: <stage/skill sequence>
 Why: <one sentence>
 Bypassed/left behind: <stage - reason; stage - reason>
-Execution surface: <read-only main session | main session direct with exception reason | skill-runner/tmux worker per sub-phase>
+Execution surface: <read-only main session | main session direct with exception reason | Paseo-managed agent | skill-runner/tmux worker per sub-phase>
 Babysitter cadence: <none | every N min based on task risk/proof duration>
 Commit rhythm: <semantic commits enabled | disabled because ...>
 Stop gate: <repo command/artifact deciding complete | blocked | continue, or "none">

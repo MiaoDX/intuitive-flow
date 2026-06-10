@@ -66,10 +66,12 @@ decisions, source-of-truth edits, integration, and final verification.
 
 Codex delegation policy lives in
 [references/codex-delegation.md](references/codex-delegation.md). In short:
-keep tiny work in the main session, use this runner or explicit tmux-backed
-`codex exec` workers for isolated sub-phases, and do not use native Codex
-subagents by default. Claude Code native subagents are separate and may be used
-on stable hosts with clear ownership.
+keep tiny work in the main session, use Paseo-managed agents for parallel
+read-heavy scouts or short bounded independent tasks when the Paseo MCP surface
+is available and a no-edit provider/model probe succeeds, use this runner or
+explicit tmux-backed `codex exec` workers for durable or artifact-sensitive
+sub-phases, and do not use native Codex subagents by default. Claude Code native
+subagents are separate and may be used on stable hosts with clear ownership.
 
 Do not assume a separate git worktree for runner jobs. Many target repos have
 large dependencies or heavyweight setup, so organize work to be safe in the

@@ -1,16 +1,26 @@
 # Codex Delegation Policy
 
 Codex native subagents are not a stable execution surface for this harness. Do
-not use Codex `spawn_agent`, native subagents, or multi-agent fanout for routine
-work.
+not use Codex `spawn_agent`, native subagents, or native multi-agent fanout for
+routine work.
 
 Use this policy for Codex sessions:
 
 - Keep small read-only probes and tiny edits in the main session.
-- Use `$skill-runner` or an explicit tmux-backed `codex exec` worker for
-  isolated, long-running, stateful, or durable sub-phases.
+- When the Paseo MCP surface is available, use Paseo-managed agents for
+  parallel read-heavy scouts, review passes, verification/log probes, and short
+  bounded independent tasks after a no-edit provider/model probe succeeds.
+- Use `$skill-runner` or an explicit tmux-backed `codex exec` worker when Paseo
+  is unavailable or the provider/model probe fails, and for isolated,
+  long-running, stateful, mutating, artifact-sensitive, or durable sub-phases.
 - Keep the main session responsible for route decisions, canonical docs,
   integration, diff review, and final verification.
+- For Paseo-managed agents, require a structured final summary in the worker
+  prompt, then inspect `get_agent_activity` and `get_agent_status` before
+  trusting the result. A finish notification alone is not proof.
+- Prefer the current/default Codex model surfaced by Paseo, but only after the
+  provider/model probe succeeds. Do not switch to smaller or alternate model
+  IDs just because they are listed.
 - Treat Claude Code separately: Claude Code native subagents remain acceptable
   when the host supports them and file ownership is clear.
 
@@ -24,4 +34,5 @@ release is revalidated for all of these behaviors in the local environment:
 - file ownership, sandbox behavior, and model selection are predictable.
 
 Until that revalidation exists, disable Codex `features.multi_agent` in managed
-Codex config and route delegation through tmux-backed workers instead.
+Codex config and route native-subagent-shaped delegation through
+Paseo-managed agents when available or tmux-backed workers otherwise.

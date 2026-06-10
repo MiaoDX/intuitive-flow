@@ -519,16 +519,20 @@ artifact editor. Use delegation to keep route evidence, worker logs, and
 implementation detail out of the main context when the work naturally separates.
 
 Follow `$skill-runner`'s Codex delegation policy. On Codex, keep tiny probes in
-the main session and use `skill-runner`/tmux only when isolation is worth it;
-do not use native Codex subagents by default. On stable non-Codex hosts, native
-subagents are acceptable for independent probes or explicitly disjoint edits.
+the main session, use Paseo-managed agents for parallel read-heavy scouts,
+review passes, verification/log probes, and short bounded independent tasks
+when the Paseo MCP surface is available and a no-edit provider/model probe
+succeeds, and use `skill-runner`/tmux when durable artifacts or stronger
+isolation are worth it. Do not use native Codex subagents by default. On stable
+non-Codex hosts, native subagents are acceptable for independent probes or
+explicitly disjoint edits.
 
-Use `skill-runner` only for read-heavy discovery probes or later selected work
-that is stateful, interactive, long-running, or better supervised in a
-standalone tmux session. Prefer one mutating `skill-runner` worker at a time in
-a single worktree unless the write ownership is explicitly disjoint. Do not
-assume extra git worktrees; many repos are too large or dependency-heavy for
-that to be the default.
+Use `skill-runner` only for discovery probes or later selected work that is
+stateful, interactive, long-running, artifact-sensitive, or better supervised
+in a standalone tmux session. Prefer one mutating worker at a time in a single
+worktree unless the write ownership is explicitly disjoint. Do not assume extra
+git worktrees; many repos are too large or dependency-heavy for that to be the
+default.
 
 Worker handoff shape:
 
@@ -541,9 +545,11 @@ Open risks:
 Suggested next action:
 ```
 
-For `skill-runner`, inspect `result.md`, `eval.md`, `last-message.md` when
-available, targeted logs, the actual diff, and verification evidence before
-trusting the worker's final status.
+For Paseo-managed agents, require a structured final summary and inspect
+`get_agent_activity` plus `get_agent_status` before trusting the worker's final
+status. For `skill-runner`, inspect `result.md`, `eval.md`, `last-message.md`
+when available, targeted logs, the actual diff, and verification evidence
+before trusting the worker's final status.
 
 Model policy: prefer the current best/default model for normal delegated work.
 Use smaller or quicker models only for truly easy probes where mistakes are
