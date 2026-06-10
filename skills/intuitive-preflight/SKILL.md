@@ -78,6 +78,35 @@ requires a real simulator. Instead classify it explicitly:
 - required manual acceptance gate;
 - optional exploratory gate.
 
+### Runnable Product Proof Rule
+
+Do not stop at code-local tests when the change affects a user-facing run
+surface, operator console route, coding-agent workflow, agent prompt/runtime,
+MCP server, simulator-backed task, report artifact, or demo contract. The
+preflight must name the cheapest public command or manual flow that actually
+exercises the changed behavior end to end, then add any higher-fidelity local
+or human-only proof needed before claiming success.
+
+Use a proof ladder:
+
+1. deterministic gates: lint, type, unit, focused contract tests;
+2. integration gates: catalog resolution, route launch construction, report or
+   artifact checker tests;
+3. product run gates: the public `just ...` command, console flow, script, or
+   harness command that drives the changed route;
+4. local/live/manual gates: provider-backed, Docker-backed, simulator-backed,
+   browser-observed, hardware, GPU, paid, or human-judged proof.
+
+For every affected public route or task intent, include at least one product
+run gate unless the plan is explicitly docs-only or test-only. If the task
+changes a coding-agent cleanup route, for example, the Verification section
+should include an appropriate `just run::surface ... driver=codex intent=cleanup`
+or operator-console launch proof in addition to unit tests. If the run requires
+credentials, Docker, simulator assets, GPU, hardware, or a human watching the
+UI, keep it in the contract as a required local/live or manual acceptance gate
+and mark completion `BLOCKED_NEEDS_LOCAL_VALIDATION` when it cannot be run in
+the current environment.
+
 Required integration, local/live, and manual acceptance gates are completion
 gates, not decoration. If a required gate validates the changed behavior and
 cannot run in the current environment, default to
@@ -119,7 +148,7 @@ Context package:
 
 Definition of Done / acceptance criteria:
 - SUCCESS only if:
-  - <observable proof>
+  - <observable proof, including product run gates for any changed public route>
 - BLOCKED_NEEDS_DECISION if:
   - <decision or external gate>
 - BLOCKED_NEEDS_LOCAL_VALIDATION if:
@@ -130,7 +159,11 @@ Definition of Done / acceptance criteria:
   - <existing behavior or contract>
 
 Verification:
-- <commands, artifacts, manual checks, or skipped gates with reasons>
+- Deterministic gates: <lint/type/unit/focused contract commands>
+- Integration gates: <catalog/route/report/artifact commands>
+- Product run gates: <public run command, console flow, harness, or script that exercises the changed behavior>
+- Local/live/manual gates: <provider/Docker/simulator/GPU/hardware/browser/human checks, or why unavailable>
+- Optional exploratory gates: <non-blocking checks only>
 
 Execution surface:
 - Main session: <root supervisor role>
