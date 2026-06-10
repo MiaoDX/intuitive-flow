@@ -60,9 +60,16 @@ The script:
 - extracts the exact `/goal` from `Main-session /goal prompt` or `To execute`;
 - generates a concise issue title from the canonical source unless `--title` is
   supplied;
-- creates a Multica issue whose description contains the tracker marker, goal
-  summary, exact `/goal`, and full preflight contract;
+- creates a Multica issue whose description contains only the tracker marker,
+  a short goal summary, the plan/canonical source, the proof expectation, and
+  the exact `/goal`;
 - appends the normal `multica-goal-tracker:start` comment to the created issue.
+
+Keep `create-from-preflight` issue descriptions intentionally short. Do not
+paste the full `## Preflight Contract` into the issue body; the plan file is
+the source of truth for detailed scope, non-goals, context, and verification.
+Humans should be able to scan the issue quickly, then open the plan only when
+they need the full contract.
 
 Use `--dry-run` first when validating a new preflight shape:
 

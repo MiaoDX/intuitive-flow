@@ -1421,20 +1421,16 @@ export function parsePreflightContract(raw: string, titleOverride?: string): Pre
 
 export function markdownForPreflightIssueDescription(contract: PreflightContract, summary: GoalSummary): string {
   const sources = summary.sources.length ? summary.sources.map((s) => `\`${s}\``).join(", ") : "未在 goal 中明确。";
+  const goal = contract.goal || summary.purpose;
+  const plan = contract.canonicalSource || sources;
   return `${agentCommentBanner}<!-- multica-goal-tracker:preflight-issue:v1 -->
 ## Preflight 跟踪 Issue
 
-**目标:** ${summary.purpose}
+**目标:** ${goal}
 
 **执行入口:** ${summary.route}
 
-**Canonical source:** ${contract.canonicalSource || "未明确。"}
-
-**Task source:** ${contract.taskSource || "未明确。"}
-
-**Route:** ${contract.route || "未明确。"}
-
-**来源材料:** ${sources}
+**计划文件:** ${plan}
 
 **预期验证:** ${summary.proof}
 
@@ -1442,12 +1438,6 @@ export function markdownForPreflightIssueDescription(contract: PreflightContract
 
 \`\`\`text
 ${summary.rawGoal}
-\`\`\`
-
-## Preflight Contract
-
-\`\`\`text
-${contract.raw}
 \`\`\`
 `;
 }

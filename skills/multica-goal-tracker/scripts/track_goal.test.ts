@@ -87,7 +87,7 @@ To execute:
     expect(extractGoalFromPreflight(preflight)).toBe("/goal execute docs/plans/refactor-api.md with intuitive-flow");
   });
 
-  test("parses preflight contracts into issue title, goal, and preserved description", () => {
+  test("parses preflight contracts into issue title, goal, and concise description", () => {
     const preflight = `
 Preflight status: DRAFT
 Task source: plan path
@@ -111,10 +111,13 @@ Reply LGTM.
     expect(contract.title).toBe("Refactor G1 Visual Metric Contract");
     expect(contract.goalCommand).toBe("/goal execute docs/plans/refactor-g1-visual-metric-contract.md with intuitive-flow");
     expect(description).toContain("<!-- multica-goal-tracker:preflight-issue:v1 -->");
+    expect(description).toContain("**目标:** Align G1 visual metrics.");
+    expect(description).toContain("**计划文件:** docs/plans/refactor-g1-visual-metric-contract.md");
     expect(description).toContain("## Goal 命令");
     expect(description).toContain("/goal execute docs/plans/refactor-g1-visual-metric-contract.md with intuitive-flow");
-    expect(description).toContain("## Preflight Contract");
-    expect(description).toContain("Preflight status: DRAFT");
+    expect(description).not.toContain("## Preflight Contract");
+    expect(description).not.toContain("Preflight status: DRAFT");
+    expect(description).not.toContain("Approval gate:");
   });
 
   test("does not create a contract from blocked preflight", () => {
