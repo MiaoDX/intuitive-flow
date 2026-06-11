@@ -16,6 +16,9 @@ Stop gate:
 Scope changes:
 - <none | accepted changes from autoplan/plan reconciliation/GSD handoff/refactor gate/execution discoveries>
 
+Source plan:
+- <updated docs/plans/<slug>.md to Implemented/Partially implemented/Superseded/Active with remaining gates | checked and left unchanged because ... | not applicable>
+
 STATUS.md:
 - <checked and updated | checked and left unchanged | not applicable>
 

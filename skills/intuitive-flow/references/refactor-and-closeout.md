@@ -86,6 +86,27 @@ criteria, re-check relevant `CONTEXT.md` or `CONTEXT-MAP.md`. Update it through
 `grill-with-docs` semantics when terms changed; otherwise report it was checked
 and left unchanged.
 
+## Source Plan Freshness
+
+For plan-backed implementation, inspect the source `docs/plans/<slug>.md`
+before final closeout. The plan is still canonical pre-GSD history, but it must
+not lie about shipped work after the implementation lands.
+
+Update the plan when the run changed any of:
+
+- implementation status;
+- public command/API/profile/MCP/tool contract;
+- accepted scope or non-goals;
+- verification evidence;
+- remaining slices, parked follow-ups, or local-dev handoff.
+
+Prefer a compact closeout block or metadata refresh over a long execution
+ledger. A good plan closeout tells the next agent whether the plan is
+`Implemented`, `Partially implemented`, `Superseded`, or still `Active`, and
+which exact gates remain. If the plan remains unchanged, record why in the
+Flow closeout, such as "source plan already marked implemented" or "direct edit
+was not plan-backed".
+
 ## Serena Memory Maintenance
 
 After canonical docs/status/plans are updated, check Serena memories when the

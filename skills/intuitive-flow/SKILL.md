@@ -157,9 +157,13 @@ the boundary. Do not preload every reference by default.
   edits that are not using a plan as source of truth may bypass this.
 - Do not create competing `.planning/phases/*` artifacts while the team is still
   brainstorming in `docs/plans/*.md`.
-- Check `CONTEXT.md` or `CONTEXT-MAP.md` when domain terms, durable boundaries,
-  or context-backed acceptance criteria matter. Context files are evidence, not
-  PRDs or execution ledgers.
+- For plan-backed implementation, treat the canonical plan and relevant context
+  files as the context package. Read the `docs/plans/<slug>.md` source plus
+  any `CONTEXT.md` / `CONTEXT-MAP.md` files it references before editing code.
+  If `CONTEXT-MAP.md` exists, use it to select the relevant context instead of
+  assuming only root `CONTEXT.md`. Context files are evidence for domain terms,
+  durable boundaries, and acceptance criteria; they are not PRDs or execution
+  ledgers.
 - Ask only for hard-stop decisions. Auto-continue routine, reversible, or
   already-implied choices during a confirmed durable run.
 - Keep the main session as the control plane for durable multi-stage runs.
@@ -191,6 +195,16 @@ the boundary. Do not preload every reference by default.
   `STATUS.md`, and `docs/human/**`, update drifted human truth, and move or
   remove obsolete legacy docs when they are no longer needed, especially stale
   files under `docs/human/`.
+- Before closing plan-backed implementation, audit the source
+  `docs/plans/<slug>.md` for stale status. If the run implemented all or part of
+  that plan, update the plan in the same closeout slice: refresh `Status`,
+  `Last reviewed`, current implementation contract, shipped evidence, and
+  remaining parked/follow-up slices. A plan that still reads as "Proposed",
+  "to implement", or "next slice" after the flow already shipped the work is
+  drift and will mislead the next agent. Mark it `Implemented`,
+  `Partially implemented`, `Superseded`, or keep it `Active` with explicit
+  remaining gates; do not mark it implemented when unverified acceptance gates
+  or parked in-scope work remain.
 - Before marking a durable implementation/refactor complete, run parked-todo
   triage. If a parked item is still inside the original objective and is either
   required for completion or a bounded high-value follow-up with an explicit
@@ -449,6 +463,8 @@ closeout must include:
 - scope changes, always, including `none`; include accepted scope changes from
   `autoplan`, plan reconciliation, GSD handoff, refactor gates, or execution
   discoveries
+- source plan freshness result for plan-backed implementation: updated
+  `<docs/plans/...>`, checked and left unchanged with reason, or not applicable
 - `STATUS.md` check/update result for non-trivial durable runs
 - Serena memory check/update result when Serena memories are configured, or
   `not configured/not available`

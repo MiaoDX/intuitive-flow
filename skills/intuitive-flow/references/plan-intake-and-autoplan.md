@@ -108,6 +108,12 @@ pointing at a plan, or approves a plan-backed run, first resolve the canonical
 `docs/plans/<slug>.md` path. Then check whether `autoplan` already ran and its
 accepted decisions were reconciled into that file.
 
+Before implementation edits, also read the plan's referenced context files. If
+the repo has `CONTEXT-MAP.md`, use it to find the relevant `CONTEXT.md` section;
+otherwise read root `CONTEXT.md` when the plan depends on domain terms,
+durable boundaries, public/private data rules, MCP/tool contracts, command
+surfaces, safety policy, or acceptance criteria.
+
 Treat as `autoplan` evidence:
 
 - the canonical plan contains accepted review decisions for scope, risks, tests,

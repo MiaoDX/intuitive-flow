@@ -49,6 +49,12 @@ architecture/refactor routing, or implementation when terms, invariants, or
 long-lived contract boundaries matter. If `CONTEXT-MAP.md` exists, use it to
 select the relevant context file instead of assuming root `CONTEXT.md`.
 
+For plan-backed implementation, read the source `docs/plans/<slug>.md` and any
+context files it references before editing code. If the plan names domain terms,
+public/private boundaries, acceptance criteria, safety rules, command surfaces,
+or MCP/tool contracts, the relevant `CONTEXT.md` entry is part of the execution
+context package, not optional background reading.
+
 When discussion resolves vocabulary or durable boundaries, update context
 through `grill-with-docs` semantics: keep domain language in context, keep
 implementation steps in `docs/plans` or GSD artifacts, and cite context from the
@@ -75,6 +81,32 @@ update is needed, say it was checked and left unchanged.
 For parallel standalone terminal work, use
 `docs/status/active/<task-slug>.md` instead of editing `STATUS.md` for routine
 progress.
+
+## Plan Freshness At Closeout
+
+When a flow implements work from `docs/plans/<slug>.md`, update that source plan
+before final closeout if its status, current contract, or remaining-work list no
+longer matches HEAD. A plan that still says `Proposed`, `Active`, "to
+implement", or "next slice" after the accepted work has shipped is stale
+canonical state and will misroute future agents.
+
+Refresh only the planning truth that changed:
+
+- `Status`: `Implemented`, `Partially implemented`, `Superseded`, or still
+  `Active` with explicit remaining gates.
+- `Last reviewed`: the closeout date.
+- `Current implementation contract`: current command/API/profile/tool shape if
+  it changed.
+- `Shipped evidence` or equivalent: commit ids, verification commands, report
+  artifacts, or phase/retrospective links.
+- `Remaining work` / `Parked follow-ups`: items not implemented, with why they
+  remain out of scope or what gate would unpark them.
+
+Do not mark a plan implemented merely because code changed. If acceptance gates
+were not verified, local/hardware evidence is still pending, or in-scope work
+remains required, use `Partially implemented` or `Active` and state the blocker.
+If a newer plan supersedes the old one, link the newer plan instead of rewriting
+history into the old file.
 
 ## Provenance Honesty
 
