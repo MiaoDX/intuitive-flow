@@ -53,10 +53,12 @@
 - Fix root causes rather than papering over symptoms.
 - Prefer minimal, local changes over speculative abstraction.
 - Understand why existing code exists before changing it.
-- Prefer live-at-HEAD behavior and forward migration over backward compatibility
-  by default. Remove or replace obsolete paths when the change is scoped; ask
-  before compatibility removal touches a broad command, install, or user-facing
-  surface.
+- Prefer live-at-HEAD behavior and forward migration over backward compatibility.
+  For architecture design, do not preserve old APIs, commands, layouts, or
+  compatibility shims as design goals. Design the organized future shape first,
+  migrate known in-repo callers, and remove obsolete surfaces in the scoped
+  slice. Treat a temporary bridge only as an explicitly requested migration
+  tactic with a removal trigger, not as part of the target architecture.
 - Fail fast with explicit errors rather than silent fallbacks.
 - Do not use `hasattr()` or `getattr()` for known types. Use direct attribute access.
 

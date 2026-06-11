@@ -86,18 +86,20 @@ Stop condition:
 ## Canonical Cleanup Rule
 
 Prefer the new intuitive API, path, module boundary, command shape, or folder
-layout over backward compatibility. In an approved cleanup/refactor slice, old
+layout over backward compatibility. Architecture design should never keep an
+old surface merely because it exists. In an approved cleanup/refactor slice, old
 surfaces are migration targets, not contracts.
 
 - Update known in-repo callers, docs, tests, recipes, examples, CI, and command
   references to the new shape.
 - Delete old wrappers, aliases, command paths, import paths, dead branches, and
   compatibility shims after known consumers are migrated.
-- Keep compatibility only when the user explicitly protects it, a published
-  external contract must remain live, or verification shows a non-migratable
-  outside-repo consumer.
-- If compatibility is kept, mark it temporary and record the removal trigger in
-  the active plan, scope gate, or output report.
+- Do not ask whether to preserve compatibility as a generic architecture
+  choice. If the user explicitly requests a temporary migration bridge, mark it
+  as a tactical exception and record the removal trigger in the active plan,
+  scope gate, or output report.
+- If a broad command, install, or user-facing surface is affected, propose the
+  forward migration/removal plan; do not default to a compatibility layer.
 
 If the user asks for a full autonomous run, continue only through safe,
 deterministic gates. Pause before local-only, paid-provider, Docker/Gateway, or
@@ -322,7 +324,8 @@ The stop condition must be concrete enough that an agent can stop even if it can
 still imagine more cleanup. Good stop conditions look like:
 
 - "All accepted cleanup items pass `npm run test:publish-rules` and
-  `npm run quality:check`; old APIs are removed or explicitly protected."
+  `npm run quality:check`; old APIs are removed. If the user requested a
+  temporary migration bridge, it has a recorded removal trigger."
 - "Stop after report-only architecture candidates; wait for the user to pick
   one candidate."
 - "Stop before implementation because the next proof requires real Gateway
@@ -359,7 +362,8 @@ Before declaring completion, audit the accepted checklist against real evidence:
   unavailable with its impact on confidence
 - target-local P2 cleanup is either completed or explicitly deferred
 - every cross-seam/Parked item is recorded and not silently implemented
-- every old API/path/compatibility surface is removed or explicitly protected
+- every old API/path/compatibility surface is removed, or any user-requested
+  temporary bridge has a recorded removal trigger
 - no unapproved new refactor work was added after implementation began
 
 Update the gate file with the final checklist status, evidence commands, skipped

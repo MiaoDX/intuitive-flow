@@ -119,15 +119,16 @@ Root `AGENTS.md` and `CLAUDE.md` should contain only:
 
 ## Compatibility Posture
 
-Prefer live-at-HEAD behavior and forward migration over backward compatibility
-by default. Treat `legacy`, `compatibility`, old command aliases, stale
-transitional docs, and preserved historical surfaces as cleanup signals, not as
-things to keep automatically.
+Prefer live-at-HEAD behavior and forward migration over backward compatibility.
+Treat `legacy`, `compatibility`, old command aliases, stale transitional docs,
+and preserved historical surfaces as cleanup signals, not as things to keep
+automatically.
 
 When the change is scoped, remove or replace obsolete paths and update their
-tests/docs in the same pass. If removing compatibility would touch a broad
+tests/docs in the same pass. If removing obsolete paths would touch a broad
 command surface, install/update behavior, generated outputs, public docs, or
-many files, stop after a proposal and ask the user to confirm the removal plan.
+many files, propose the forward migration/removal plan; do not preserve a
+compatibility layer as the architecture default.
 
 Use a practical WHY / WHAT / HOW shape for the root files:
 

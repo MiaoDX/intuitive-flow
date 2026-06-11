@@ -115,9 +115,10 @@ Discovery and implementation have different boundaries:
   previous rounds. If that sentence is weak, stop with `Selected candidates:
   none`.
 - Mark broad file moves, deletes with uncertain consumers, public API changes,
-  external compatibility removal, paid/slow/local-provider gates, and
-  product-scope decisions as execution risks. Do not hide them from the
-  discovery packet just because they need approval before implementation.
+  paid/slow/local-provider gates, and product-scope decisions as execution
+  risks. Do not hide them from the discovery packet just because they need
+  approval before implementation. Do not classify compatibility removal itself
+  as a reason to preserve the old shape; classify the concrete migration risk.
 - After the user selects candidates, produce a compact selected-candidates
   packet if asked. Do not implement the candidates inside this skill unless the
   user explicitly changes the task from discovery to implementation and
@@ -559,18 +560,21 @@ fan-out/fan-in runners for a later proven need.
 ## Canonical Cleanup Rule
 
 Prefer the new intuitive API, path, module boundary, command shape, or folder
-layout over backward compatibility. When a selected cleanup/refactor direction
-is later implemented, old surfaces are migration targets, not contracts.
+layout over backward compatibility. Architecture candidates should design for
+the organized future at `HEAD`, not preserve old surfaces for their own sake.
+When a selected cleanup/refactor direction is later implemented, old surfaces
+are migration targets, not contracts.
 
 - Update known in-repo callers, docs, tests, recipes, examples, CI, and command
   references to the new shape.
 - Delete old wrappers, aliases, command paths, import paths, dead branches, and
   compatibility shims after known consumers are migrated.
-- Keep compatibility only when the user explicitly protects it, a published
-  external contract must remain live, or verification shows a non-migratable
-  outside-repo consumer.
-- If compatibility is kept, mark it temporary and record the removal trigger in
-  the active plan, scope gate, or output report.
+- Do not ask whether to preserve compatibility as a generic architecture
+  choice. If the user explicitly requests a temporary migration bridge, mark it
+  as a tactical exception and record the removal trigger in the active plan,
+  scope gate, or output report.
+- If a broad command, install, or user-facing surface is affected, propose the
+  forward migration/removal plan; do not default to a compatibility layer.
 
 ## Public Entry Model
 
@@ -639,7 +643,7 @@ organized:
   separation, or unclear repo navigation -> keep the slice here and route
   subparts to the relevant specialist.
 
-For any layout-shaped slice, preserve the old safety rules:
+For any layout-shaped slice, keep the safety rules:
 
 - move one bounded slice at a time
 - find path consumers before proposing moves: imports, docs, CI, recipes,
@@ -766,7 +770,7 @@ decision would materially change:
 - runtime behavior or public APIs
 - externally documented command/import paths
 - broad file moves, deletes, or test pruning
-- compatibility shims that may have outside-repo consumers
+- user-requested temporary compatibility bridges or broad migration removals
 - paid, slow, Docker, hardware, simulator, or local-provider verification gates
 - product intent, audience, or scope
 

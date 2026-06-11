@@ -48,11 +48,12 @@ Stop with `BLOCKED_NEEDS_DECISION` instead of drafting a fake-complete contract
 when any of these are unclear and materially change the work:
 
 - target user, product intent, or desired behavior
-- public contract, API, data model, or compatibility boundary
+- public contract, API, or data model
 - scope/non-goal boundary
 - required context source, artifact, file, issue, plan, or log
 - acceptance criteria or success threshold
-- destructive action, broad file movement, or compatibility removal
+- destructive action or broad file movement
+- user-explicit temporary compatibility or migration bridge requirement
 - paid, credentialed, hardware, Docker, GPU, real simulator, or provider gate
 
 Ask only for hard-stop decisions. If the missing detail is mechanical,
@@ -212,7 +213,7 @@ Choose the smallest honest route:
 | Contract shape | Route |
 | --- | --- |
 | Read-only diagnosis or one-file/two-file concrete fix | main direct |
-| Known cleanup, stale API, compatibility, module layout, or architecture seam | `$intuitive-refactor` |
+| Known cleanup, stale API, obsolete compatibility shim, module layout, or architecture seam | `$intuitive-refactor` |
 | Plan-backed, broad, stateful, or multi-stage work | durable `$intuitive-flow` |
 | Parallel read-heavy scout, review pass, verification/log probe, or short bounded independent task on Codex with probed Paseo MCP | Paseo-managed agent under main-session supervision |
 | Long-running implementation, review pipeline, GSD, broad refactor, or slow verification | `skill-runner` worker under main-session supervision |

@@ -68,8 +68,10 @@ Keep the main session as the control plane.
 - Scouts return structured summaries, not raw notes.
 - The main session decides which findings survive.
 - Scouts never expand scope or ask the user questions directly.
-- If a scout finds a product, contract, safety, cost, or compatibility decision,
-  it marks `needs_user_review`; it does not decide.
+- If a scout finds a product, contract, safety, cost, or user-explicit
+  temporary compatibility/migration-bridge decision, it marks
+  `needs_user_review`; it does not decide. Do not treat ordinary compatibility
+  removal as a user-review decision by itself.
 
 Follow `$skill-runner`'s Codex delegation policy. On Codex, scouts are
 main-session work, Paseo-managed agents when available and probed,
@@ -167,7 +169,8 @@ After each scout returns, classify every item:
 - `park`: plausible but outside the current charter;
 - `reject`: polish, duplicated, weak evidence, or wrong direction;
 - `needs_user_review`: materially changes product, public contract, private
-  boundary, cost, hardware, compatibility, or rollout risk.
+  boundary, cost, hardware, user-explicit temporary compatibility/migration
+  bridge, or rollout risk.
 
 Reject quota filling. A loop with one strong plan is better than three weak
 ones.

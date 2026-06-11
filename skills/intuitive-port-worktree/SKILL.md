@@ -138,7 +138,8 @@ changed between source and target.
 2. Map the behavior into the target's current modules and tests.
 3. Avoid copying obsolete wrappers or stale paths when the target already has a
    newer canonical location.
-4. Keep compatibility shims only if they still exist as target contracts.
+4. Do not recreate compatibility shims unless the target branch explicitly
+   treats them as current contracts.
 5. Preserve user-facing behavior and tests from the source change, not the old
    file layout.
 
