@@ -4,7 +4,7 @@ Last reviewed: 2026-06-08
 
 This audit applies the self-improvement lens from
 [`agent-harness-references.md`](agent-harness-references.md) to every current
-repo-owned root skill listed in `scripts/local-skill-manifest.txt`. The goal is
+repo-owned root skill listed in `scripts/default-skill-allowlist.txt`. The goal is
 not to paste a maintenance prompt into every skill. The goal is to find which
 skill texts should become smaller, clearer, or better routed across docs,
 scripts, hooks, tests, and skills.

@@ -4,34 +4,53 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import {
   checkRootSkills,
-  parseManifestText,
+  parseDefaultSkillAllowlistText,
   pruneLegacyArtifacts,
   pruneRemovedOwnedRootSkills,
   recordOwnedRootSkills,
-} from "./local-skill-manifest";
+} from "./default-skill-allowlist";
 
-describe("local skill manifest", () => {
-  test("parses supported entries and deduplicates repeats", () => {
-    const manifest = parseManifestText(`
+describe("default skill allowlist", () => {
+  test("parses root, external, GStack, GSD, and legacy entries", () => {
+    const allowlist = parseDefaultSkillAllowlistText(`
       # comment
       root-skill intuitive-flow
       root-skill intuitive-flow
+      external-skill mattpocock https://github.com/mattpocock/skills diagnose
+      external-skill mattpocock https://github.com/mattpocock/skills tdd
+      gstack-skill gstack-review
+      gsd-skill gsd-plan-phase
       legacy-skill old-flow
       legacy-command old.md
       legacy-mimocode-command stale.md
     `);
 
-    expect(manifest.rootSkills).toEqual(["intuitive-flow"]);
-    expect(manifest.legacySkills).toEqual(["old-flow"]);
-    expect(manifest.legacyCommands).toEqual(["old.md"]);
-    expect(manifest.legacyMimocodeCommands).toEqual(["stale.md"]);
+    expect(allowlist.rootSkills).toEqual(["intuitive-flow"]);
+    expect(allowlist.externalSources).toEqual([
+      {
+        label: "mattpocock",
+        repo: "https://github.com/mattpocock/skills",
+        skills: ["diagnose", "tdd"],
+      },
+    ]);
+    expect(allowlist.gstackSkills).toEqual(["gstack-review"]);
+    expect(allowlist.gsdSkills).toEqual(["gsd-plan-phase"]);
+    expect(allowlist.legacySkills).toEqual(["old-flow"]);
+    expect(allowlist.legacyCommands).toEqual(["old.md"]);
+    expect(allowlist.legacyMimocodeCommands).toEqual(["stale.md"]);
   });
 
-  test("rejects path-like values", () => {
-    expect(() => parseManifestText("legacy-skill ../not-owned")).toThrow("unsafe manifest value");
+  test("rejects unsafe values and duplicate labels pointing at different repos", () => {
+    expect(() => parseDefaultSkillAllowlistText("legacy-skill ../not-owned")).toThrow("unsafe skill name");
+    expect(() =>
+      parseDefaultSkillAllowlistText(`
+        external-skill demo owner/one alpha
+        external-skill demo owner/two beta
+      `),
+    ).toThrow("external skill source label maps to multiple repos");
   });
 
-  test("checks manifest against root skill folders", () => {
+  test("checks root skill folders against the allowlist", () => {
     const root = mkdtempSync(join(tmpdir(), "root-skills-"));
     try {
       mkdirSync(join(root, "listed"), { recursive: true });
@@ -39,16 +58,16 @@ describe("local skill manifest", () => {
       mkdirSync(join(root, "unlisted"), { recursive: true });
       writeFileSync(join(root, "unlisted", "SKILL.md"), "");
 
-      const errors = checkRootSkills(parseManifestText("root-skill listed\nroot-skill missing\n"), root);
+      const errors = checkRootSkills(parseDefaultSkillAllowlistText("root-skill listed\nroot-skill missing\n"), root);
 
-      expect(errors).toContain("manifest lists missing root skill: missing");
-      expect(errors).toContain("root skill missing from manifest: unlisted");
+      expect(errors).toContain("default allowlist lists missing root skill: missing");
+      expect(errors).toContain("root skill missing from default allowlist: unlisted");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
   });
 
-  test("prunes only manifest-listed legacy artifacts", () => {
+  test("prunes only allowlist legacy artifacts", () => {
     const home = mkdtempSync(join(tmpdir(), "skill-home-"));
     try {
       mkdirSync(join(home, ".codex", "skills", "old-skill"), { recursive: true });
@@ -60,7 +79,10 @@ describe("local skill manifest", () => {
       writeFileSync(join(home, ".config", "mimocode", "command", "old-skill.md"), "");
       writeFileSync(join(home, ".config", "mimocode", "command", "keep.md"), "");
 
-      const removed = pruneLegacyArtifacts(parseManifestText("legacy-skill old-skill\nlegacy-command old.md\nlegacy-mimocode-command stale.md\n"), home);
+      const removed = pruneLegacyArtifacts(
+        parseDefaultSkillAllowlistText("legacy-skill old-skill\nlegacy-command old.md\nlegacy-mimocode-command stale.md\n"),
+        home,
+      );
 
       expect(removed).toBe(4);
       expect(existsSync(join(home, ".codex", "skills", "old-skill"))).toBe(false);
@@ -74,21 +96,7 @@ describe("local skill manifest", () => {
     }
   });
 
-  test("does not prune root skills before owned state exists", () => {
-    const home = mkdtempSync(join(tmpdir(), "skill-home-"));
-    try {
-      mkdirSync(join(home, ".codex", "skills", "old-owned"), { recursive: true });
-
-      const removed = pruneRemovedOwnedRootSkills(parseManifestText("root-skill current\n"), home);
-
-      expect(removed).toBe(0);
-      expect(existsSync(join(home, ".codex", "skills", "old-owned"))).toBe(true);
-    } finally {
-      rmSync(home, { recursive: true, force: true });
-    }
-  });
-
-  test("prunes only previously owned root skills missing from the current manifest", () => {
+  test("prunes only previously owned root skills missing from the allowlist", () => {
     const home = mkdtempSync(join(tmpdir(), "skill-home-"));
     try {
       mkdirSync(join(home, ".intuitive-flow"), { recursive: true });
@@ -101,7 +109,7 @@ describe("local skill manifest", () => {
       mkdirSync(join(home, ".agents", "skills", "removed"), { recursive: true });
       mkdirSync(join(home, ".codex", "skills", "user-skill"), { recursive: true });
 
-      const removed = pruneRemovedOwnedRootSkills(parseManifestText("root-skill current\n"), home);
+      const removed = pruneRemovedOwnedRootSkills(parseDefaultSkillAllowlistText("root-skill current\n"), home);
 
       expect(removed).toBe(2);
       expect(existsSync(join(home, ".codex", "skills", "current"))).toBe(true);
@@ -116,14 +124,14 @@ describe("local skill manifest", () => {
   test("records current root skills as owned state", () => {
     const home = mkdtempSync(join(tmpdir(), "skill-home-"));
     try {
-      const manifest = parseManifestText("root-skill intuitive-flow\nroot-skill intuitive-doc\n");
+      const allowlist = parseDefaultSkillAllowlistText("root-skill intuitive-flow\nroot-skill intuitive-doc\n");
 
-      recordOwnedRootSkills(manifest, home);
+      recordOwnedRootSkills(allowlist, home);
 
       const state = JSON.parse(readFileSync(join(home, ".intuitive-flow", "owned-root-skills.json"), "utf8"));
       expect(state).toEqual({
         schemaVersion: 1,
-        rootSkills: ["intuitive-flow", "intuitive-doc"],
+        rootSkills: ["intuitive-doc", "intuitive-flow"],
       });
     } finally {
       rmSync(home, { recursive: true, force: true });

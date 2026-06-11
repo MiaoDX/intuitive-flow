@@ -395,7 +395,7 @@ gsd_current_for_target() {
     local latest="$3"
     local version_file="$config_dir/get-shit-done/VERSION"
     local profile_file="$config_dir/.gsd-profile"
-    local desired_profile="${GSD_INSTALL_PROFILE:-standard}"
+    local desired_profile="standard"
     local installed=""
     local active_profile=""
 
@@ -433,7 +433,7 @@ gsd_current_for_target() {
 run_gsd_installer() {
     local registry="$1"
     local target="$2"
-    local profile="${GSD_INSTALL_PROFILE:-standard}"
+    local profile="standard"
     local out
 
     if [ "$registry" = "$NPM_MIRROR_REGISTRY" ] && [ "$NPM_REGISTRY_MODE" = "mirror" ]; then
@@ -480,6 +480,9 @@ run_gsd_workflow() {
 
     local gsd_version
     gsd_version=$(cat ~/.claude/get-shit-done/VERSION 2>/dev/null || echo "?")
+    if command -v bun >/dev/null 2>&1; then
+        bun "$SCRIPT_DIR/lib/managed-skill-state.ts" gsd-sync "$SCRIPT_DIR/default-skill-allowlist.txt" || return 1
+    fi
     echo "  ✓ gsd v$gsd_version (claude + codex)"
 }
 

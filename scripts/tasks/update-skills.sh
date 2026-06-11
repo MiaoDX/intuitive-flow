@@ -22,17 +22,17 @@ _run_skills() {
     echo "  ✓ skills ($label) → $agent"
 }
 
-_external_skill_manifest() {
-    printf '%s/external-skill-sources.txt\n' "$SCRIPT_DIR"
+_default_skill_allowlist() {
+    printf '%s/default-skill-allowlist.txt\n' "$SCRIPT_DIR"
 }
 
-_external_skill_tool() {
+_allowlist_tool() {
     if ! command -v bun >/dev/null 2>&1; then
         echo "  ! bun not found; run scripts/update.sh after fixing the environment pre-check"
         return 1
     fi
 
-    bun "$SCRIPT_DIR/lib/external-skill-sources.ts" "$@"
+    bun "$SCRIPT_DIR/lib/default-skill-allowlist.ts" "$@"
 }
 
 _managed_skill_state_tool() {
@@ -46,10 +46,10 @@ _managed_skill_state_tool() {
 
 _run_external_skills() {
     local agent="$1" label="$2"
-    local manifest repo skill_args_output
-    manifest=$(_external_skill_manifest)
-    repo=$(_external_skill_tool repo "$manifest" "$label") || return 1
-    skill_args_output=$(_external_skill_tool skill-args "$manifest" "$label") || return 1
+    local allowlist repo skill_args_output
+    allowlist=$(_default_skill_allowlist)
+    repo=$(_allowlist_tool external-repo "$allowlist" "$label") || return 1
+    skill_args_output=$(_allowlist_tool external-skill-args "$allowlist" "$label") || return 1
 
     local skill_args=()
     if [ -n "$skill_args_output" ]; then
@@ -64,21 +64,21 @@ _run_external_skills() {
         _run_skills "$agent" "$repo" "$label" || return 1
     fi
 
-    _managed_skill_state_tool external-sync "$manifest" "$label"
+    _managed_skill_state_tool external-sync "$allowlist" "$label"
 }
 
-run_skills_anthro() {
-    _run_external_skills "$1" "anthropics"
+run_external_skill_label() {
+    _run_external_skills "$1" "$2"
 }
 
-run_skills_codex() {
-    _run_external_skills "$1" "codex"
+list_external_skill_labels() {
+    local allowlist
+    allowlist=$(_default_skill_allowlist)
+    _allowlist_tool external-labels "$allowlist"
 }
 
-run_skills_mattpocock() {
-    _run_external_skills "$1" "mattpocock"
-}
-
-run_skills_taste_skill() {
-    _run_external_skills "$1" "taste-skill"
+prune_removed_external_skill_labels() {
+    local allowlist
+    allowlist=$(_default_skill_allowlist)
+    _managed_skill_state_tool external-prune-removed "$allowlist"
 }

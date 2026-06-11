@@ -4,6 +4,7 @@
   "private": true,
   "packageManager": "bun@1.3.12",
   "scripts": {
+    "audit:skill-upstreams": "bun scripts/lib/audit-skill-upstreams.ts",
     "check:skills": "bun scripts/lib/check-skills.ts",
     "check:shell": "shellcheck --severity=error scripts/update.sh scripts/**/*.sh .githooks/pre-commit",
     "check": "tsc --noEmit",

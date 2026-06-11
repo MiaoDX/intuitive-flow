@@ -74,7 +74,7 @@ run_gstack() {
         return 1
     }
 
-    _managed_skill_state_tool gstack-sync "$repo_dir" || return 1
+    _managed_skill_state_tool gstack-sync "$repo_dir" "$SCRIPT_DIR/default-skill-allowlist.txt" || return 1
 
     echo "  ✓ gstack latest"
     echo "  ✓ gstack path: $repo_dir"

@@ -82,9 +82,10 @@ The primary user-facing skills are `$intuitive-flow`, `$intuitive-refactor`,
 `$intuitive-doc`, `$intuitive-init`, `$intuitive-tests`,
 `$intuitive-port-worktree`, `$multica-goal-tracker`, `$skill-runner`, and
 `$simplify` remain available for direct or routed use, but are not the default
-choice a user must make up front. `scripts/local-skill-manifest.txt` is the
-complete install list; `docs/human/skill-self-improvement-audit.md` records the
-human-facing role of each installed root skill.
+choice a user must make up front. `scripts/default-skill-allowlist.txt` is the
+complete default install list across repo-owned, external, GStack, and GSD
+skills; `docs/human/skill-self-improvement-audit.md` records the human-facing
+role of each installed root skill.
 `$intuitive-preflight` owns approval-ready preflight contracts before a plan or
 vague task starts: context package, scope, non-goals, definition of done,
 verification, route, worker strategy, and main-session `/goal` wording. Open-ended architecture
@@ -114,15 +115,21 @@ those skills into Claude Code, Codex, MiMoCode, and shared agent install
 surfaces. Do not change the repo source tree solely because a host discovers
 skills under `.claude/skills`, `.codex/skills`, or `.agents/skills`.
 
-The install surface is controlled by `scripts/local-skill-manifest.txt`:
+The install surface is controlled by `scripts/default-skill-allowlist.txt`:
 
 - `root-skill` entries are repo-owned skills that should be installed or synced.
+- `external-skill` entries name the external source label, GitHub repo, and
+  exact skill to install.
+- `gstack-skill` entries name the managed GStack wrappers that remain visible
+  after upstream setup.
+- `gsd-skill` entries name the managed GSD wrappers that remain visible after
+  upstream setup.
 - `legacy-skill` entries identify old repo-owned skill installs and their
   generated MiMoCode command wrappers that the updater may prune.
 - `legacy-command` and `legacy-mimocode-command` entries identify old standalone
   command files that the updater may prune.
-- The manifest check fails if a root skill exists but is not listed, or if the
-  manifest lists a missing root skill.
+- The allowlist check fails if a root skill exists but is not listed, or if the
+  allowlist lists a missing root skill.
 
 During `scripts/update.sh`, the local sync writes
 `~/.intuitive-flow/owned-root-skills.json` after a successful root-skill sync.
@@ -132,45 +139,35 @@ state does not exist yet, the updater seeds it after sync and does not infer
 ownership from matching names. User-installed skills outside that owned state
 are preserved.
 
-External skill installs are controlled by `scripts/external-skill-sources.txt`.
-Each source names a label, an upstream GitHub repo, and either an explicit
-`allowlist` of trusted skill names or an intentional `all` install. The updater
-reads this manifest before running `npx skills add`, and `bun run check:skills`
-validates the manifest shape so external source drift is visible in the normal
-proof boundary. Matt Pocock skills are intentionally allowlisted to the small
-debugging, TDD, handoff, and planning-discussion surface that Intuitive still
-routes to; deprecated, in-progress, setup, writing, and issue-workflow skills
-are not installed by default.
+External skill installs are explicit `external-skill` entries in the default
+allowlist. The updater never installs an external source in broad `all` mode by
+default. `bun run audit:skill-upstreams` is the read-only discovery path for
+new upstream candidates: it reports skills outside the allowlist but does not
+install them or edit the allowlist.
 
 External source cleanup uses the same ownership rule. After each successful
 external install, the updater writes
 `~/.intuitive-flow/external-skills-<label>.json`. Later runs remove only skills
-that were previously recorded for that label but are no longer desired. For
-`allowlist` sources, desired skills come from `scripts/external-skill-sources.txt`;
-for intentional `all` sources, desired skills come from `.agents/.skill-lock.json`
-entries for that exact upstream source. If the lock has no source evidence, the
-cleanup fails closed and preserves the previous state.
+that were previously recorded for that label but are no longer desired.
 
-GSD installs default to `GSD_INSTALL_PROFILE=standard`, not upstream `full`.
-The wrapper passes `--profile=$GSD_INSTALL_PROFILE` and treats a profile drift as
-requiring reinstall even when the installed GSD version is current. Set
-`GSD_INSTALL_PROFILE=core` for the smallest project-loop surface or `full` for
-the complete command set.
+GSD setup remains upstream-owned, but exposed GSD wrappers are pruned back to
+the `gsd-skill` entries in the default allowlist after each installer run. The
+wrapper still passes `--profile=standard` to the upstream installer for install
+mechanics, but the visible default surface is the allowlist, not the upstream
+profile.
 
 GStack installation is upstream-owned but wrapped by this updater. After a
 successful GStack setup, the wrapper records generated Codex `gstack-*` skills in
 `~/.intuitive-flow/gstack-codex-skills.json` and Claude short-name wrappers in
-`~/.intuitive-flow/gstack-claude-skills.json`. The default
-`GSTACK_SKILL_SURFACE=standard` keeps the common browser, QA, review,
-plan-engineering review, ship, health, investigate, guard, scrape, and spec
-entrypoints. It prunes only stale symlinks or `SKILL.md` wrappers that point
-into the managed GStack checkout. Set `GSTACK_SKILL_SURFACE=full` to expose
-every upstream GStack skill. It does not infer ownership from plain directory
-names or delete unrelated user skills.
+`~/.intuitive-flow/gstack-claude-skills.json`. Desired GStack wrappers come from
+the `gstack-skill` entries in the default allowlist. The updater prunes only
+stale symlinks or `SKILL.md` wrappers that point into the managed GStack
+checkout. It does not infer ownership from plain directory names or delete
+unrelated user skills.
 
-To add a public skill, create `skills/<name>/SKILL.md`, add it to the manifest,
-update the live human docs that describe the public surface, refresh any
-current skill audit that claims manifest-wide coverage, and run `bun run
+To add a public skill, create `skills/<name>/SKILL.md`, add it to the default
+allowlist, update the live human docs that describe the public surface, refresh
+any current skill audit that claims allowlist-wide coverage, and run `bun run
 verify`. If the change is based on external agent-harness guidance, record the
 source and distilled lesson in
 `docs/human/agent-harness-references.md` before spreading the rule into skills.
@@ -191,7 +188,7 @@ The updater currently handles these phases:
 - Claude plugin installation
 - Codex feature, status-line config, and merged hook config
 - gstack state sync and vendored gstack setup
-- external skill source installation from `scripts/external-skill-sources.txt`
+- external skill installation from `scripts/default-skill-allowlist.txt`
 - local command and root-skill sync
 
 Task execution is centralized in `scripts/lib/task-runner.sh`. Individual phases
@@ -219,9 +216,9 @@ bun run setup:hooks
 
 The pre-commit hook delegates to `scripts/dev/pre-commit.sh` and runs
 `bun run check:skills`. This catches missing manifest entries, stale generated
-include syntax, invalid frontmatter, broken local skill resource references, and
-GitHub Actions Bun pin drift before commit without making every commit run the
-full TypeScript and test proof.
+include syntax, invalid frontmatter, broken local skill resource references,
+default allowlist drift, and GitHub Actions Bun pin drift before commit without
+making every commit run the full TypeScript and test proof.
 
 ## Codex Adapter Contract
 
@@ -252,21 +249,22 @@ The basic local proof command is:
 bun run verify
 ```
 
-That validates repo-owned skill structure, external skill source manifests,
-local skill resource references, and Bun toolchain pin alignment, runs
+That validates repo-owned skill structure, default allowlist coverage, local
+skill resource references, and Bun toolchain pin alignment, runs
 ShellCheck error-level checks for Bash orchestration scripts, runs TypeScript
 checking, and runs Bun tests. GitHub Actions mirrors the same proof in
-`.github/workflows/verify.yml`, so broken skill manifests, frontmatter, resource
+`.github/workflows/verify.yml`, so broken skill allowlists, frontmatter, resource
 references, deprecated `skills-src/` files, or CI/local Bun version drift fail
 CI.
 
-At the moment, the test suite covers the local skill manifest parser, root-skill
-manifest checks, direct skill validation, deprecated source rejection, resource
-reference checks, external skill source validation, GitHub Actions Bun pin
+At the moment, the test suite covers the default skill allowlist parser,
+root-skill allowlist checks, direct skill validation, deprecated source
+rejection, resource reference checks, external skill entry validation, GitHub Actions Bun pin
 alignment, and pruning of
-manifest-owned legacy artifacts, stale previously owned root skills, stale
-managed external skills, stale managed GStack skill links, default GStack
-surface pruning, and installer wrapper calls that enforce managed state.
+allowlist-owned legacy artifacts, stale previously owned root skills, stale
+managed external skills, stale managed GStack skill links, managed GSD wrapper
+pruning, upstream skill audit output, and installer wrapper calls that enforce
+managed state.
 
 The repo-owned pre-commit hook repeats the skill structure check locally when
 `core.hooksPath` points at `.githooks/`.

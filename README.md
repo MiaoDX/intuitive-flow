@@ -83,10 +83,9 @@ Keep the public choice small:
 Common routed specialists include `$intuitive-preflight`, `$intuitive-doc`,
 `$intuitive-init`, and `$intuitive-tests`; direct-use utilities such as
 `$intuitive-port-worktree`, `$multica-goal-tracker`, `$skill-runner`, and
-`$simplify` are installed too. The full repo-owned install list lives in
-`scripts/local-skill-manifest.txt`, with the human-facing role audit in
-`docs/human/skill-self-improvement-audit.md`. Architecture discovery may route
-through `improve-codebase-architecture` when that external skill is installed.
+`$simplify` are installed too. The complete default install surface lives in
+`scripts/default-skill-allowlist.txt`, with the human-facing role audit in
+`docs/human/skill-self-improvement-audit.md`.
 
 ## Human Docs
 
@@ -107,7 +106,8 @@ promotes them.
 
 | Script | Purpose |
 | --- | --- |
-| `bun run check:skills` | Validate repo-owned skills, manifest coverage, external skill sources, frontmatter, local resource links, and Bun toolchain pin alignment |
+| `bun run audit:skill-upstreams` | Read-only audit for candidate skills in upstream skill repos that are outside the default allowlist |
+| `bun run check:skills` | Validate repo-owned skills, default allowlist coverage, frontmatter, local resource links, and Bun toolchain pin alignment |
 | `bun run check:shell` | Run ShellCheck error-level validation for the updater, Bash helper scripts, and the Git hook entrypoint |
 | `bun run setup:hooks` | Configure this checkout to use repo-owned Git hooks from `.githooks/` |
 | `scripts/update.sh` | Install or update agent surfaces, skills, commands, GSD, and gstack |
@@ -133,9 +133,10 @@ bun run verify
 
 Human docs define repo truth, `AGENTS.md` and `CLAUDE.md` stay project-local,
 `skills/` is the canonical repo-owned skill surface, and `scripts/update.sh`
-syncs Claude Code, Codex, GSD, gstack, manifest-listed external skill sources, and
-repo-owned skills into user-level tooling. See [ARCHITECTURE.md](ARCHITECTURE.md)
-for subsystem contracts and proof boundaries.
+syncs Claude Code, Codex, GSD, gstack, external skills, and repo-owned skills
+into user-level tooling according to `scripts/default-skill-allowlist.txt`. See
+[ARCHITECTURE.md](ARCHITECTURE.md) for subsystem contracts and proof
+boundaries.
 
 ## Contributing
 

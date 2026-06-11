@@ -28,7 +28,7 @@ _manifest_tool() {
         return 1
     fi
 
-    bun "$SCRIPT_DIR/lib/local-skill-manifest.ts" "$@"
+    bun "$SCRIPT_DIR/lib/default-skill-allowlist.ts" "$@"
 }
 
 _remove_stale_local_artifacts() {
@@ -59,14 +59,14 @@ _check_root_skill_manifest() {
 #   Claude Code + ~/.codex/skills/  (skills)
 #   ~/.config/mimocode/command/     (MiMoCode slash-command wrappers)
 run_sync_local_commands_skills() {
-    local project_dir commands_src local_skill_manifest
+    local project_dir commands_src default_skill_allowlist
     project_dir=$(cd "$SCRIPT_DIR/.." && pwd)
     commands_src="$project_dir/.claude/commands"
-    local_skill_manifest="$project_dir/scripts/local-skill-manifest.txt"
+    default_skill_allowlist="$project_dir/scripts/default-skill-allowlist.txt"
 
     task_notice "Repo-local commands & skills: pruning stale artifacts"
-    _remove_stale_local_artifacts "$local_skill_manifest" || return 1
-    _remove_stale_owned_root_skills "$local_skill_manifest" || return 1
+    _remove_stale_local_artifacts "$default_skill_allowlist" || return 1
+    _remove_stale_owned_root_skills "$default_skill_allowlist" || return 1
 
     local claude_dest="$HOME/.claude/commands"
     local codex_dest="$HOME/.codex/skills"
@@ -109,7 +109,7 @@ run_sync_local_commands_skills() {
         local root_skills_mimocode_synced=0
         local mimocode_command_dest="$HOME/.config/mimocode/command"
         local skill_dir skill_name
-        if ! _check_root_skill_manifest "$local_skill_manifest" "$root_skills_src"; then
+        if ! _check_root_skill_manifest "$default_skill_allowlist" "$root_skills_src"; then
             return 1
         fi
         local skills_registry
@@ -140,7 +140,7 @@ run_sync_local_commands_skills() {
             root_skills_mimocode_synced=$((root_skills_mimocode_synced + 1))
 
             echo "  synced skill: $skill_name"
-        done < <(_manifest_tool root-skills "$local_skill_manifest")
+        done < <(_manifest_tool root-skills "$default_skill_allowlist")
         if [ "$root_skills_claude_synced" -gt 0 ] || [ "$root_skills_codex_synced" -gt 0 ]; then
             echo "  ✓ $root_skills_claude_synced repo-local skill(s) → Claude Code"
             echo "  ✓ $root_skills_codex_synced repo-local skill(s) → ~/.codex/skills/"
@@ -148,7 +148,7 @@ run_sync_local_commands_skills() {
         if [ "$root_skills_mimocode_synced" -gt 0 ]; then
             echo "  ✓ $root_skills_mimocode_synced repo-local command(s) → ~/.config/mimocode/command/"
         fi
-        _record_owned_root_skills "$local_skill_manifest" || return 1
+        _record_owned_root_skills "$default_skill_allowlist" || return 1
     fi
 }
 

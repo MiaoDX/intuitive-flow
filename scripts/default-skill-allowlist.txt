@@ -1,0 +1,74 @@
+# Canonical default skill install allowlist.
+#
+# This is the only source of truth for skills installed by scripts/update.sh.
+# External sources must list explicit skills; do not use broad `all` installs.
+#
+# Format:
+# root-skill <skill>
+# external-skill <label> <repo> <skill>
+# gstack-skill <gstack-skill>
+# gsd-skill <gsd-skill>
+# legacy-skill <skill>
+# legacy-command <command.md>
+# legacy-mimocode-command <command.md>
+
+# Repo-owned root skills installed from ./skills.
+root-skill grill-with-docs-batch
+root-skill intuitive-planning-loop
+root-skill intuitive-preflight
+root-skill intuitive-doc
+root-skill intuitive-flow
+root-skill intuitive-init
+root-skill intuitive-port-worktree
+root-skill intuitive-reduce-entropy
+root-skill intuitive-refactor
+root-skill intuitive-squash
+root-skill intuitive-tests
+root-skill multica-goal-tracker
+root-skill simplify
+root-skill skill-runner
+
+# External skills installed through the skills CLI.
+external-skill anthropics anthropics/skills skill-creator
+external-skill codex skills-directory/skill-codex codex
+external-skill mattpocock https://github.com/mattpocock/skills diagnose
+external-skill mattpocock https://github.com/mattpocock/skills grill-with-docs
+external-skill mattpocock https://github.com/mattpocock/skills handoff
+external-skill mattpocock https://github.com/mattpocock/skills tdd
+external-skill mattpocock https://github.com/mattpocock/skills zoom-out
+
+# Managed GStack wrappers kept after setup.
+gstack-skill gstack-browse
+gstack-skill gstack-open-gstack-browser
+gstack-skill gstack-plan-eng-review
+gstack-skill gstack-review
+gstack-skill gstack-qa
+gstack-skill gstack-investigate
+
+# Managed GSD wrappers kept after setup.
+gsd-skill gsd-new-project
+gsd-skill gsd-import
+gsd-skill gsd-plan-phase
+gsd-skill gsd-execute-phase
+gsd-skill gsd-verify-work
+gsd-skill gsd-progress
+gsd-skill gsd-resume-work
+gsd-skill gsd-pause-work
+
+# Legacy repo-owned skill names that update.sh may remove from local installs.
+legacy-skill agent-teams-impl-ralph-refactor
+legacy-skill agent-teams-plan-ralph-refactor
+legacy-skill codex-impl-ralph-refactor
+legacy-skill codex-plan-ralph-refactor
+legacy-skill gsd-squash
+legacy-skill gsd_squash
+legacy-skill hybrid-phase-pipeline
+legacy-skill intuitive-build
+legacy-skill intuitive-contract
+legacy-skill intuitive-layout
+legacy-skill intuitive-migrate
+legacy-skill intuitive-ut
+legacy-skill refactor-scope-gate
+
+# Legacy repo-owned Claude command files that update.sh may remove.
+legacy-command gsd_squash.md

@@ -12,7 +12,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
-import { findExternalSkillSource, readExternalSkillSources } from "./external-skill-sources";
+import { externalSkillSourceByLabel, readDefaultSkillAllowlist } from "./default-skill-allowlist";
 
 type SkillState = {
   schemaVersion: 1;
@@ -27,51 +27,11 @@ type SkillLock = {
 const stateDir = (home: string) => join(home, ".intuitive-flow");
 const gstackCodexStatePath = (home: string) => join(stateDir(home), "gstack-codex-skills.json");
 const gstackClaudeStatePath = (home: string) => join(stateDir(home), "gstack-claude-skills.json");
+const gsdStatePath = (home: string) => join(stateDir(home), "gsd-skills.json");
 const externalStatePath = (home: string, label: string) => join(stateDir(home), `external-skills-${label}.json`);
-
-type GstackSurface = "standard" | "full";
-
-const standardGstackCodexSkills = Object.freeze([
-  "gstack-browse",
-  "gstack-guard",
-  "gstack-health",
-  "gstack-investigate",
-  "gstack-open-gstack-browser",
-  "gstack-plan-eng-review",
-  "gstack-qa",
-  "gstack-review",
-  "gstack-scrape",
-  "gstack-ship",
-  "gstack-spec",
-]);
-
-const standardGstackClaudeSkillStems = Object.freeze([
-  "browse",
-  "guard",
-  "health",
-  "investigate",
-  "open-gstack-browser",
-  "plan-eng-review",
-  "qa",
-  "review",
-  "scrape",
-  "ship",
-  "spec",
-]);
+const externalStateFilePattern = /^external-skills-([A-Za-z0-9-]+)\.json$/;
 
 const isSafeName = (value: string) => /^[A-Za-z0-9_][A-Za-z0-9._-]*$/.test(value) && !value.includes("..");
-
-const resolveGstackSurface = (): GstackSurface => {
-  const raw = process.env.GSTACK_SKILL_SURFACE ?? "standard";
-  if (raw === "standard" || raw === "") {
-    return "standard";
-  }
-  if (raw === "full" || raw === "all") {
-    return "full";
-  }
-
-  throw new Error(`unsupported GSTACK_SKILL_SURFACE=${raw}; expected standard or full`);
-};
 
 const readState = (path: string): SkillState | null => {
   if (!existsSync(path)) {
@@ -136,6 +96,24 @@ const removeExternalSkillIfPresent = (path: string): number => {
   return removeIfExists(path);
 };
 
+const removeGsdSkillIfManaged = (path: string): number => {
+  const skillPath = join(path, "SKILL.md");
+  if (!existsSync(skillPath)) {
+    return 0;
+  }
+
+  try {
+    const text = readFileSync(skillPath, "utf8");
+    if (!text.includes("get-shit-done")) {
+      return 0;
+    }
+  } catch {
+    return 0;
+  }
+
+  return removeIfExists(path);
+};
+
 const pathInside = (candidate: string, root: string) => {
   const candidateAbs = resolve(candidate);
   const rootAbs = resolve(root);
@@ -176,14 +154,11 @@ const listGstackCodexSkillNames = (repoDir: string): string[] => {
     .sort();
 };
 
-const listGstackCodexDesiredSkillNames = (repoDir: string, surface: GstackSurface): string[] => {
+const listGstackCodexDesiredSkillNames = (repoDir: string, allowlistPath: string): string[] => {
   const available = listGstackCodexSkillNames(repoDir);
-  if (surface === "full") {
-    return available;
-  }
-
+  const desired = readDefaultSkillAllowlist(allowlistPath).gstackSkills;
   const availableSet = new Set(available);
-  return standardGstackCodexSkills.filter((skillName) => availableSet.has(skillName));
+  return desired.filter((skillName) => availableSet.has(skillName));
 };
 
 const readSkillName = (skillDir: string): string | null => {
@@ -213,11 +188,11 @@ const listGstackClaudeSourceStems = (repoDir: string): string[] => {
     .sort();
 };
 
-const listGstackClaudeDesiredSkillNames = (repoDir: string, surface: GstackSurface): string[] => {
+const listGstackClaudeDesiredSkillNames = (repoDir: string, allowlistPath: string): string[] => {
   const availableStems = listGstackClaudeSourceStems(repoDir);
-  const stems = surface === "full"
-    ? availableStems
-    : standardGstackClaudeSkillStems.filter((stem) => availableStems.includes(stem));
+  const stems = readDefaultSkillAllowlist(allowlistPath).gstackSkills
+    .map((skillName) => skillName.replace(/^gstack-/, ""))
+    .filter((stem) => availableStems.includes(stem));
   const desired = new Set<string>(["gstack", "_gstack-command"]);
 
   for (const stem of stems) {
@@ -225,11 +200,6 @@ const listGstackClaudeDesiredSkillNames = (repoDir: string, surface: GstackSurfa
     if (isSafeName(skillName)) {
       desired.add(skillName);
     }
-  }
-
-  if (surface === "full") {
-    const browserSkillName = readSkillName(join(repoDir, "open-gstack-browser")) ?? "open-gstack-browser";
-    desired.add(browserSkillName.startsWith("gstack-") ? "gstack-connect-chrome" : "connect-chrome");
   }
 
   return [...desired].sort();
@@ -305,9 +275,9 @@ const pruneBrokenClaudeGstackLinks = (home: string, repoDir: string): number => 
 
 export const syncGstackSkillState = (
   repoDir: string,
+  allowlistPath: string,
   home = process.env.HOME ?? "",
   codexHome = process.env.CODEX_HOME ?? join(home, ".codex"),
-  surface = resolveGstackSurface(),
 ): number => {
   if (home === "") {
     throw new Error("HOME is required for gstack skill state");
@@ -315,7 +285,7 @@ export const syncGstackSkillState = (
 
   const repoAbs = resolve(repoDir);
   const codexSkills = join(codexHome, "skills");
-  const desiredCodexSkills = listGstackCodexDesiredSkillNames(repoAbs, surface);
+  const desiredCodexSkills = listGstackCodexDesiredSkillNames(repoAbs, allowlistPath);
   const desiredCodex = new Set(desiredCodexSkills);
   const codexStatePath = gstackCodexStatePath(home);
   const previousCodex = readState(codexStatePath);
@@ -346,7 +316,7 @@ export const syncGstackSkillState = (
     }
   }
 
-  const desiredClaudeSkills = listGstackClaudeDesiredSkillNames(repoAbs, surface);
+  const desiredClaudeSkills = listGstackClaudeDesiredSkillNames(repoAbs, allowlistPath);
   const desiredClaude = new Set(desiredClaudeSkills);
   const claudeStatePath = gstackClaudeStatePath(home);
   const previousClaude = readState(claudeStatePath);
@@ -408,17 +378,6 @@ const writeSkillLock = (home: string, lock: SkillLock) => {
   writeFileSync(lockPath, JSON.stringify(lock, null, 2) + "\n");
 };
 
-const lockedSkillsForSource = (home: string, source: string): string[] => {
-  const normalizedSource = normalizeSource(source);
-  const skills = readSkillLock(home).skills ?? {};
-
-  return Object.entries(skills)
-    .filter(([, metadata]) => normalizeSource(metadata.source ?? "") === normalizedSource)
-    .map(([skillName]) => skillName)
-    .filter(isSafeName)
-    .sort();
-};
-
 const removeSkillLockEntry = (home: string, skillName: string, source: string) => {
   const lock = readSkillLock(home);
   const skills = lock.skills ?? {};
@@ -431,7 +390,7 @@ const removeSkillLockEntry = (home: string, skillName: string, source: string) =
 };
 
 export const syncExternalSkillState = (
-  manifestPath: string,
+  allowlistPath: string,
   label: string,
   home = process.env.HOME ?? "",
 ): number => {
@@ -439,15 +398,10 @@ export const syncExternalSkillState = (
     throw new Error("HOME is required for external skill state");
   }
 
-  const manifest = readExternalSkillSources(manifestPath);
-  const source = findExternalSkillSource(manifest, label);
+  const allowlist = readDefaultSkillAllowlist(allowlistPath);
+  const source = externalSkillSourceByLabel(allowlist, label);
   const normalizedSource = normalizeSource(source.repo);
-  const desiredSkills = source.mode === "allowlist"
-    ? source.skills.filter(isSafeName).sort()
-    : lockedSkillsForSource(home, normalizedSource);
-  if (source.mode === "all" && desiredSkills.length === 0) {
-    return 0;
-  }
+  const desiredSkills = source.skills.filter(isSafeName).sort();
   const desired = new Set(desiredSkills);
   const statePath = externalStatePath(home, label);
   const previous = readState(statePath);
@@ -474,8 +428,100 @@ export const syncExternalSkillState = (
   return removed;
 };
 
+export const pruneRemovedExternalSkillStates = (
+  allowlistPath: string,
+  home = process.env.HOME ?? "",
+): number => {
+  if (home === "") {
+    throw new Error("HOME is required for external skill state pruning");
+  }
+
+  const allowlist = readDefaultSkillAllowlist(allowlistPath);
+  const desiredLabels = new Set(allowlist.externalSources.map((source) => source.label));
+  const dir = stateDir(home);
+  if (!existsSync(dir)) {
+    return 0;
+  }
+
+  let removed = 0;
+  for (const entry of readdirSync(dir)) {
+    const match = externalStateFilePattern.exec(entry);
+    if (!match) {
+      continue;
+    }
+
+    const label = match[1];
+    if (desiredLabels.has(label)) {
+      continue;
+    }
+
+    const statePath = join(dir, entry);
+    const previous = readState(statePath);
+    if (!previous) {
+      continue;
+    }
+
+    for (const skillName of previous.skills) {
+      removed += removeExternalSkillIfPresent(join(home, ".agents", "skills", skillName));
+      removed += removeExternalSkillIfPresent(join(home, ".claude", "skills", skillName));
+      removeSkillLockEntry(home, skillName, previous.source);
+    }
+
+    removed += removeIfExists(statePath);
+  }
+
+  return removed;
+};
+
+export const syncGsdSkillState = (
+  allowlistPath: string,
+  home = process.env.HOME ?? "",
+  codexHome = process.env.CODEX_HOME ?? join(home, ".codex"),
+): number => {
+  if (home === "") {
+    throw new Error("HOME is required for GSD skill state");
+  }
+
+  const desiredSkills = readDefaultSkillAllowlist(allowlistPath).gsdSkills.filter(isSafeName).sort();
+  const desired = new Set(desiredSkills);
+  const statePath = gsdStatePath(home);
+  const previous = readState(statePath);
+  let removed = 0;
+
+  if (previous) {
+    for (const skillName of previous.skills) {
+      if (desired.has(skillName)) {
+        continue;
+      }
+
+      removed += removeGsdSkillIfManaged(join(codexHome, "skills", skillName));
+      removed += removeGsdSkillIfManaged(join(home, ".claude", "skills", skillName));
+    }
+  }
+
+  for (const root of [join(codexHome, "skills"), join(home, ".claude", "skills")]) {
+    if (!existsSync(root)) {
+      continue;
+    }
+    for (const entry of readdirSync(root)) {
+      if (!entry.startsWith("gsd-") || !isSafeName(entry) || desired.has(entry)) {
+        continue;
+      }
+      removed += removeGsdSkillIfManaged(join(root, entry));
+    }
+  }
+
+  writeState(statePath, {
+    schemaVersion: 1,
+    source: "opengsd/get-shit-done-redux",
+    skills: desiredSkills,
+  });
+
+  return removed;
+};
+
 const usage = () => {
-  console.error("Usage: managed-skill-state.ts <gstack-sync|external-sync> <args...>");
+  console.error("Usage: managed-skill-state.ts <gstack-sync|external-sync|external-prune-removed|gsd-sync> <args...>");
 };
 
 const main = () => {
@@ -483,29 +529,57 @@ const main = () => {
 
   try {
     if (command === "gstack-sync") {
-      const [repoDir] = args;
-      if (!repoDir) {
+      const [repoDir, allowlistPath] = args;
+      if (!repoDir || !allowlistPath) {
         usage();
         process.exit(2);
       }
 
-      const removed = syncGstackSkillState(repoDir);
+      const removed = syncGstackSkillState(repoDir, allowlistPath);
       if (removed > 0) {
         console.log(`  ✓ removed ${removed} stale gstack skill artifact(s)`);
       }
       return;
     }
 
-    if (command === "external-sync") {
-      const [manifestPath, label] = args;
-      if (!manifestPath || !label) {
+    if (command === "gsd-sync") {
+      const [allowlistPath] = args;
+      if (!allowlistPath) {
         usage();
         process.exit(2);
       }
 
-      const removed = syncExternalSkillState(manifestPath, label);
+      const removed = syncGsdSkillState(allowlistPath);
+      if (removed > 0) {
+        console.log(`  ✓ removed ${removed} stale GSD skill artifact(s)`);
+      }
+      return;
+    }
+
+    if (command === "external-sync") {
+      const [allowlistPath, label] = args;
+      if (!allowlistPath || !label) {
+        usage();
+        process.exit(2);
+      }
+
+      const removed = syncExternalSkillState(allowlistPath, label);
       if (removed > 0) {
         console.log(`  ✓ removed ${removed} stale external skill artifact(s) for ${label}`);
+      }
+      return;
+    }
+
+    if (command === "external-prune-removed") {
+      const [allowlistPath] = args;
+      if (!allowlistPath) {
+        usage();
+        process.exit(2);
+      }
+
+      const removed = pruneRemovedExternalSkillStates(allowlistPath);
+      if (removed > 0) {
+        console.log(`  ✓ removed ${removed} stale external skill artifact(s) for removed source label(s)`);
       }
       return;
     }

@@ -2,23 +2,20 @@
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, normalize } from "node:path";
-import { checkExternalSkillSourcesText } from "./external-skill-sources";
-import { checkRootSkills, parseManifestText } from "./local-skill-manifest";
+import { checkRootSkills, readDefaultSkillAllowlist } from "./default-skill-allowlist";
 
 export type SkillCheckOptions = {
   skillsRoot: string;
-  manifestPath: string;
+  allowlistPath: string;
   deprecatedSourceRoot: string;
-  externalSkillSourcesPath?: string;
   packageJsonPath?: string;
   githubVerifyWorkflowPath?: string;
 };
 
 const defaultOptions = (): SkillCheckOptions => ({
   skillsRoot: join(process.cwd(), "skills"),
-  manifestPath: join(process.cwd(), "scripts", "local-skill-manifest.txt"),
+  allowlistPath: join(process.cwd(), "scripts", "default-skill-allowlist.txt"),
   deprecatedSourceRoot: join(process.cwd(), "skills-src"),
-  externalSkillSourcesPath: join(process.cwd(), "scripts", "external-skill-sources.txt"),
   packageJsonPath: join(process.cwd(), "package.json"),
   githubVerifyWorkflowPath: join(process.cwd(), ".github", "workflows", "verify.yml"),
 });
@@ -242,21 +239,19 @@ export const checkSkills = (options = defaultOptions()): string[] => {
     return errors;
   }
 
-  if (!existsSync(options.manifestPath)) {
-    errors.push("missing local skill manifest: scripts/local-skill-manifest.txt");
+  if (!existsSync(options.allowlistPath)) {
+    errors.push("missing default skill allowlist: scripts/default-skill-allowlist.txt");
     return errors;
   }
 
-  const manifest = parseManifestText(readFileSync(options.manifestPath, "utf8"));
-  errors.push(...checkRootSkills(manifest, options.skillsRoot));
-
-  if (options.externalSkillSourcesPath) {
-    if (!existsSync(options.externalSkillSourcesPath)) {
-      errors.push("missing external skill source manifest: scripts/external-skill-sources.txt");
-    } else {
-      errors.push(...checkExternalSkillSourcesText(readFileSync(options.externalSkillSourcesPath, "utf8")));
-    }
+  let allowlist;
+  try {
+    allowlist = readDefaultSkillAllowlist(options.allowlistPath);
+  } catch (error) {
+    errors.push(error instanceof Error ? error.message : String(error));
+    return errors;
   }
+  errors.push(...checkRootSkills(allowlist, options.skillsRoot));
 
   for (const skillName of skillNames(options.skillsRoot)) {
     errors.push(...checkSkill(options.skillsRoot, skillName));

@@ -2,14 +2,19 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { syncExternalSkillState, syncGstackSkillState } from "./managed-skill-state";
+import {
+  pruneRemovedExternalSkillStates,
+  syncExternalSkillState,
+  syncGsdSkillState,
+  syncGstackSkillState,
+} from "./managed-skill-state";
 
 const repoRoot = process.cwd();
 
-const writeExternalManifest = (root: string, text: string) => {
-  const manifestPath = join(root, "external-skill-sources.txt");
-  writeFileSync(manifestPath, text);
-  return manifestPath;
+const writeAllowlist = (root: string, text: string) => {
+  const allowlistPath = join(root, "default-skill-allowlist.txt");
+  writeFileSync(allowlistPath, text);
+  return allowlistPath;
 };
 
 describe("managed skill state", () => {
@@ -21,8 +26,9 @@ describe("managed skill state", () => {
       writeFileSync(join(repo, ".agents", "skills", "gstack-review", "SKILL.md"), "# Review\n");
       mkdirSync(join(home, ".codex", "skills", "gstack-stale"), { recursive: true });
       writeFileSync(join(home, ".codex", "skills", "gstack-stale", "SKILL.md"), "# User stale-looking skill\n");
+      const allowlistPath = writeAllowlist(repo, "gstack-skill gstack-review\n");
 
-      const removed = syncGstackSkillState(repo, home);
+      const removed = syncGstackSkillState(repo, allowlistPath, home);
 
       expect(removed).toBe(0);
       expect(existsSync(join(home, ".codex", "skills", "gstack-stale", "SKILL.md"))).toBe(true);
@@ -48,11 +54,12 @@ describe("managed skill state", () => {
       mkdirSync(join(home, ".codex", "skills"), { recursive: true });
       symlinkSync(join(repo, ".agents", "skills", "gstack-review"), join(home, ".codex", "skills", "gstack-review"));
       symlinkSync(join(repo, ".agents", "skills", "gstack-old"), join(home, ".codex", "skills", "gstack-old"));
+      const allowlistPath = writeAllowlist(repo, "gstack-skill gstack-review\ngstack-skill gstack-old\n");
 
-      expect(syncGstackSkillState(repo, home, join(home, ".codex"), "full")).toBe(0);
+      expect(syncGstackSkillState(repo, allowlistPath, home, join(home, ".codex"))).toBe(0);
       rmSync(join(repo, ".agents", "skills", "gstack-old"), { recursive: true, force: true });
 
-      const removed = syncGstackSkillState(repo, home, join(home, ".codex"), "full");
+      const removed = syncGstackSkillState(repo, allowlistPath, home, join(home, ".codex"));
 
       expect(removed).toBe(1);
       expect(existsSync(join(home, ".codex", "skills", "gstack-review", "SKILL.md"))).toBe(true);
@@ -63,7 +70,7 @@ describe("managed skill state", () => {
     }
   });
 
-  test("standard gstack surface prunes owned Codex and Claude skills outside the allowlist", () => {
+  test("gstack sync prunes owned Codex and Claude skills outside the allowlist", () => {
     const home = mkdtempSync(join(tmpdir(), "managed-skills-home-"));
     const repo = mkdtempSync(join(tmpdir(), "managed-skills-gstack-"));
     try {
@@ -101,8 +108,12 @@ describe("managed skill state", () => {
       symlinkSync(join(repo, "benchmark", "SKILL.md"), join(home, ".claude", "skills", "benchmark", "SKILL.md"));
       symlinkSync(join(repo, "plan-eng-review", "SKILL.md"), join(home, ".claude", "skills", "plan-eng-review", "SKILL.md"));
       symlinkSync(join(repo, "qa", "SKILL.md"), join(home, ".claude", "skills", "qa", "SKILL.md"));
+      const allowlistPath = writeAllowlist(
+        repo,
+        "gstack-skill gstack-review\ngstack-skill gstack-plan-eng-review\ngstack-skill gstack-qa\n",
+      );
 
-      const removed = syncGstackSkillState(repo, home);
+      const removed = syncGstackSkillState(repo, allowlistPath, home);
 
       expect(removed).toBe(2);
       expect(existsSync(join(home, ".codex", "skills", "gstack-review", "SKILL.md"))).toBe(true);
@@ -133,9 +144,9 @@ describe("managed skill state", () => {
 
   test("prunes stale external allowlist skills while preserving unowned user skills", () => {
     const home = mkdtempSync(join(tmpdir(), "managed-skills-home-"));
-    const root = mkdtempSync(join(tmpdir(), "managed-skills-manifest-"));
+    const root = mkdtempSync(join(tmpdir(), "managed-skills-allowlist-"));
     try {
-      const manifestPath = writeExternalManifest(root, "source demo owner/demo allowlist keep\n");
+      const allowlistPath = writeAllowlist(root, "external-skill demo owner/demo keep\n");
       mkdirSync(join(home, ".intuitive-flow"), { recursive: true });
       writeFileSync(
         join(home, ".intuitive-flow", "external-skills-demo.json"),
@@ -156,7 +167,7 @@ describe("managed skill state", () => {
         }),
       );
 
-      const removed = syncExternalSkillState(manifestPath, "demo", home);
+      const removed = syncExternalSkillState(allowlistPath, "demo", home);
 
       expect(removed).toBe(2);
       expect(existsSync(join(home, ".agents", "skills", "keep"))).toBe(true);
@@ -172,9 +183,9 @@ describe("managed skill state", () => {
 
   test("external pruning preserves linked skills that another manager owns", () => {
     const home = mkdtempSync(join(tmpdir(), "managed-skills-home-"));
-    const root = mkdtempSync(join(tmpdir(), "managed-skills-manifest-"));
+    const root = mkdtempSync(join(tmpdir(), "managed-skills-allowlist-"));
     try {
-      const manifestPath = writeExternalManifest(root, "source demo owner/demo allowlist keep\n");
+      const allowlistPath = writeAllowlist(root, "external-skill demo owner/demo keep\n");
       mkdirSync(join(home, ".intuitive-flow"), { recursive: true });
       writeFileSync(
         join(home, ".intuitive-flow", "external-skills-demo.json"),
@@ -195,7 +206,7 @@ describe("managed skill state", () => {
         }),
       );
 
-      const removed = syncExternalSkillState(manifestPath, "demo", home);
+      const removed = syncExternalSkillState(allowlistPath, "demo", home);
 
       expect(removed).toBe(0);
       expect(existsSync(join(home, ".claude", "skills", "qa", "SKILL.md"))).toBe(true);
@@ -206,30 +217,44 @@ describe("managed skill state", () => {
     }
   });
 
-  test("records full external source installs from the skills lock without pruning on first run", () => {
+  test("prunes removed external source labels from prior owned state", () => {
     const home = mkdtempSync(join(tmpdir(), "managed-skills-home-"));
-    const root = mkdtempSync(join(tmpdir(), "managed-skills-manifest-"));
+    const root = mkdtempSync(join(tmpdir(), "managed-skills-allowlist-"));
     try {
-      const manifestPath = writeExternalManifest(root, "source demo https://github.com/owner/demo.git all\n");
+      const allowlistPath = writeAllowlist(root, "external-skill keep owner/keep alpha\n");
+      mkdirSync(join(home, ".intuitive-flow"), { recursive: true });
+      writeFileSync(
+        join(home, ".intuitive-flow", "external-skills-removed.json"),
+        JSON.stringify({ schemaVersion: 1, source: "owner/removed", skills: ["old"] }),
+      );
+      writeFileSync(
+        join(home, ".intuitive-flow", "external-skills-keep.json"),
+        JSON.stringify({ schemaVersion: 1, source: "owner/keep", skills: ["alpha"] }),
+      );
+      mkdirSync(join(home, ".agents", "skills", "old"), { recursive: true });
+      mkdirSync(join(home, ".agents", "skills", "alpha"), { recursive: true });
       mkdirSync(join(home, ".agents"), { recursive: true });
       writeFileSync(
         join(home, ".agents", ".skill-lock.json"),
         JSON.stringify({
           skills: {
-            alpha: { source: "owner/demo" },
-            beta: { source: "https://github.com/owner/demo.git" },
-            other: { source: "someone/else" },
+            old: { source: "owner/removed" },
+            alpha: { source: "owner/keep" },
           },
         }),
       );
 
-      const removed = syncExternalSkillState(manifestPath, "demo", home);
+      const removed = pruneRemovedExternalSkillStates(allowlistPath, home);
 
-      expect(removed).toBe(0);
-      expect(JSON.parse(readFileSync(join(home, ".intuitive-flow", "external-skills-demo.json"), "utf8"))).toEqual({
-        schemaVersion: 1,
-        source: "owner/demo",
-        skills: ["alpha", "beta"],
+      expect(removed).toBe(2);
+      expect(existsSync(join(home, ".agents", "skills", "old"))).toBe(false);
+      expect(existsSync(join(home, ".agents", "skills", "alpha"))).toBe(true);
+      expect(existsSync(join(home, ".intuitive-flow", "external-skills-removed.json"))).toBe(false);
+      expect(existsSync(join(home, ".intuitive-flow", "external-skills-keep.json"))).toBe(true);
+      expect(JSON.parse(readFileSync(join(home, ".agents", ".skill-lock.json"), "utf8"))).toEqual({
+        skills: {
+          alpha: { source: "owner/keep" },
+        },
       });
     } finally {
       rmSync(home, { recursive: true, force: true });
@@ -237,27 +262,33 @@ describe("managed skill state", () => {
     }
   });
 
-  test("full external source sync does not prune when the skills lock has no source evidence", () => {
+  test("GSD sync prunes managed wrappers outside the allowlist", () => {
     const home = mkdtempSync(join(tmpdir(), "managed-skills-home-"));
-    const root = mkdtempSync(join(tmpdir(), "managed-skills-manifest-"));
+    const root = mkdtempSync(join(tmpdir(), "managed-skills-allowlist-"));
     try {
-      const manifestPath = writeExternalManifest(root, "source demo owner/demo all\n");
+      const allowlistPath = writeAllowlist(root, "gsd-skill gsd-plan-phase\n");
       mkdirSync(join(home, ".intuitive-flow"), { recursive: true });
       writeFileSync(
-        join(home, ".intuitive-flow", "external-skills-demo.json"),
-        JSON.stringify({ schemaVersion: 1, source: "owner/demo", skills: ["alpha"] }),
+        join(home, ".intuitive-flow", "gsd-skills.json"),
+        JSON.stringify({ schemaVersion: 1, source: "opengsd/get-shit-done-redux", skills: ["gsd-plan-phase", "gsd-old"] }),
       );
-      mkdirSync(join(home, ".agents", "skills", "alpha"), { recursive: true });
-      writeFileSync(join(home, ".agents", ".skill-lock.json"), JSON.stringify({ skills: {} }));
+      mkdirSync(join(home, ".codex", "skills", "gsd-plan-phase"), { recursive: true });
+      writeFileSync(join(home, ".codex", "skills", "gsd-plan-phase", "SKILL.md"), "get-shit-done plan\n");
+      mkdirSync(join(home, ".codex", "skills", "gsd-old"), { recursive: true });
+      writeFileSync(join(home, ".codex", "skills", "gsd-old", "SKILL.md"), "get-shit-done old\n");
+      mkdirSync(join(home, ".codex", "skills", "gsd-user"), { recursive: true });
+      writeFileSync(join(home, ".codex", "skills", "gsd-user", "SKILL.md"), "# User skill\n");
 
-      const removed = syncExternalSkillState(manifestPath, "demo", home);
+      const removed = syncGsdSkillState(allowlistPath, home, join(home, ".codex"));
 
-      expect(removed).toBe(0);
-      expect(existsSync(join(home, ".agents", "skills", "alpha"))).toBe(true);
-      expect(JSON.parse(readFileSync(join(home, ".intuitive-flow", "external-skills-demo.json"), "utf8"))).toEqual({
+      expect(removed).toBe(1);
+      expect(existsSync(join(home, ".codex", "skills", "gsd-plan-phase", "SKILL.md"))).toBe(true);
+      expect(existsSync(join(home, ".codex", "skills", "gsd-old"))).toBe(false);
+      expect(existsSync(join(home, ".codex", "skills", "gsd-user", "SKILL.md"))).toBe(true);
+      expect(JSON.parse(readFileSync(join(home, ".intuitive-flow", "gsd-skills.json"), "utf8"))).toEqual({
         schemaVersion: 1,
-        source: "owner/demo",
-        skills: ["alpha"],
+        source: "opengsd/get-shit-done-redux",
+        skills: ["gsd-plan-phase"],
       });
     } finally {
       rmSync(home, { recursive: true, force: true });
@@ -268,10 +299,13 @@ describe("managed skill state", () => {
   test("update wrappers call managed skill state after installs", () => {
     const updateGstack = readFileSync(join(repoRoot, "scripts", "tasks", "update-gstack.sh"), "utf8");
     const updateSkills = readFileSync(join(repoRoot, "scripts", "tasks", "update-skills.sh"), "utf8");
+    const updateCli = readFileSync(join(repoRoot, "scripts", "tasks", "update-cli.sh"), "utf8");
 
     expect(updateGstack).toContain('managed-skill-state.ts" "$@"');
-    expect(updateGstack).toContain('gstack-sync "$repo_dir"');
+    expect(updateGstack).toContain('gstack-sync "$repo_dir" "$SCRIPT_DIR/default-skill-allowlist.txt"');
     expect(updateSkills).toContain('managed-skill-state.ts" "$@"');
-    expect(updateSkills).toContain('external-sync "$manifest" "$label"');
+    expect(updateSkills).toContain('external-sync "$allowlist" "$label"');
+    expect(updateSkills).toContain('external-prune-removed "$allowlist"');
+    expect(updateCli).toContain('gsd-sync "$SCRIPT_DIR/default-skill-allowlist.txt"');
   });
 });

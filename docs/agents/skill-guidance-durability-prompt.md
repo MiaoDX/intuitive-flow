@@ -134,7 +134,7 @@ bun run verify
 scripts/tasks/sync-local-commands-skills.sh
 ```
 
-- `bun run check:skills` validates repo-owned skills and manifest coverage.
+- `bun run check:skills` validates repo-owned skills and default allowlist coverage.
 - `bun run verify` is the normal local proof.
 - `scripts/tasks/sync-local-commands-skills.sh` refreshes installed local agent
   surfaces; run it only when that side effect is intended.

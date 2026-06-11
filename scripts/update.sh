@@ -240,12 +240,14 @@ fi
 # GSD scans ~/.codex/skills, and GStack rewrites the gstack skill links there.
 # Keep those phases ahead of the remaining skill installers so home-level skill
 # updates do not overlap.
+external_skill_labels=$(list_external_skill_labels)
 for agent in claude-code codex; do
-    n="External skills: anthropics -> $agent"; task_run "$n" run_skills_anthro "$agent"; task_await "$n"
-    n="External skills: codex -> $agent"; task_run "$n" run_skills_codex "$agent"; task_await "$n"
-    n="External skills: mattpocock -> $agent"; task_run "$n" run_skills_mattpocock "$agent"; task_await "$n"
-    n="External skills: taste-skill -> $agent"; task_run "$n" run_skills_taste_skill "$agent"; task_await "$n"
+    while IFS= read -r label; do
+        [ -n "$label" ] || continue
+        n="External skills: $label -> $agent"; task_run "$n" run_external_skill_label "$agent" "$label"; task_await "$n"
+    done <<< "$external_skill_labels"
 done
+n="External skills: prune removed labels"; task_run "$n" prune_removed_external_skill_labels; task_await "$n"
 
 # Local command/skill sync also writes to ~/.codex/skills. Run it last so local
 # skill overrides win deterministically.

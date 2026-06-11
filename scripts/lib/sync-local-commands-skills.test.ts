@@ -12,7 +12,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, join } from "node:path";
-import { parseManifestText } from "./local-skill-manifest";
+import { parseDefaultSkillAllowlistText } from "./default-skill-allowlist";
 
 const repoRoot = process.cwd();
 
@@ -66,7 +66,7 @@ describe("local command and skill sync task", () => {
       mkdirSync(join(home, ".codex", "skills"), { recursive: true });
       mkdirSync(join(fixture, ".claude", "commands"), { recursive: true });
       mkdirSync(join(fixture, "scripts", "lib"), { recursive: true });
-      writeFileSync(join(fixture, "scripts", "local-skill-manifest.txt"), "");
+      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "");
       writeFileSync(
         join(fixture, ".claude", "commands", "sample.md"),
         [
@@ -79,8 +79,8 @@ describe("local command and skill sync task", () => {
         ].join("\n"),
       );
       copyFileSync(
-        join(repoRoot, "scripts", "lib", "local-skill-manifest.ts"),
-        join(fixture, "scripts", "lib", "local-skill-manifest.ts"),
+        join(repoRoot, "scripts", "lib", "default-skill-allowlist.ts"),
+        join(fixture, "scripts", "lib", "default-skill-allowlist.ts"),
       );
 
       const result = spawnSync(
@@ -114,12 +114,12 @@ describe("local command and skill sync task", () => {
     }
   });
 
-  test("syncs manifest-owned root skills into a temp Codex skills directory", async () => {
+  test("syncs allowlist-owned root skills into a temp Codex skills directory", async () => {
     const home = mkdtempSync(join(tmpdir(), "sync-skills-home-"));
     try {
       mkdirSync(join(home, ".codex", "skills"), { recursive: true });
       const { npmLog, npxLog, stubBin } = createCliStubs(home);
-      const manifest = parseManifestText(await Bun.file(join(repoRoot, "scripts", "local-skill-manifest.txt")).text());
+      const allowlist = parseDefaultSkillAllowlistText(await Bun.file(join(repoRoot, "scripts", "default-skill-allowlist.txt")).text());
 
       const result = spawnSync("bash", ["scripts/tasks/sync-local-commands-skills.sh"], {
         cwd: repoRoot,
@@ -131,11 +131,11 @@ describe("local command and skill sync task", () => {
         throw new Error(`sync failed\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`);
       }
 
-      expect(manifest.rootSkills.length).toBeGreaterThan(0);
+      expect(allowlist.rootSkills.length).toBeGreaterThan(0);
       const npmCalls = await Bun.file(npmLog).text();
       expect(npmCalls).toContain("view skills version");
       const npxCalls = await Bun.file(npxLog).text();
-      for (const skillName of manifest.rootSkills) {
+      for (const skillName of allowlist.rootSkills) {
         expect(existsSync(join(home, ".codex", "skills", skillName, "SKILL.md"))).toBe(true);
         expect(existsSync(join(home, ".codex", "skills", skillName, skillName, "SKILL.md"))).toBe(false);
         expect(npxCalls).toContain(join(repoRoot, "skills", skillName));
@@ -157,7 +157,7 @@ describe("local command and skill sync task", () => {
     }
   });
 
-  test("fails through the sync path when root skill manifest drift exists", () => {
+  test("fails through the sync path when root skill allowlist drift exists", () => {
     const home = mkdtempSync(join(tmpdir(), "sync-skills-drift-home-"));
     const fixture = mkdtempSync(join(tmpdir(), "sync-skills-project-"));
     try {
@@ -165,12 +165,12 @@ describe("local command and skill sync task", () => {
       mkdirSync(join(fixture, "scripts", "lib"), { recursive: true });
       mkdirSync(join(fixture, "skills", "listed"), { recursive: true });
       mkdirSync(join(fixture, "skills", "unlisted"), { recursive: true });
-      writeFileSync(join(fixture, "scripts", "local-skill-manifest.txt"), "root-skill listed\n");
+      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill listed\n");
       writeFileSync(join(fixture, "skills", "listed", "SKILL.md"), "# Listed\n");
       writeFileSync(join(fixture, "skills", "unlisted", "SKILL.md"), "# Unlisted\n");
       copyFileSync(
-        join(repoRoot, "scripts", "lib", "local-skill-manifest.ts"),
-        join(fixture, "scripts", "lib", "local-skill-manifest.ts"),
+        join(repoRoot, "scripts", "lib", "default-skill-allowlist.ts"),
+        join(fixture, "scripts", "lib", "default-skill-allowlist.ts"),
       );
 
       const result = spawnSync(
@@ -189,14 +189,14 @@ describe("local command and skill sync task", () => {
       );
 
       expect(result.status).toBe(1);
-      expect(result.stderr).toContain("root skill missing from manifest: unlisted");
+      expect(result.stderr).toContain("root skill missing from default allowlist: unlisted");
     } finally {
       rmSync(home, { recursive: true, force: true });
       rmSync(fixture, { recursive: true, force: true });
     }
   });
 
-  test("ignores legacy .claude/skills entries outside the root manifest", () => {
+  test("ignores legacy .claude/skills entries outside the root allowlist", () => {
     const home = mkdtempSync(join(tmpdir(), "sync-skills-legacy-claude-home-"));
     const fixture = mkdtempSync(join(tmpdir(), "sync-skills-project-"));
     try {
@@ -205,12 +205,12 @@ describe("local command and skill sync task", () => {
       mkdirSync(join(fixture, "scripts", "lib"), { recursive: true });
       mkdirSync(join(fixture, "skills", "alpha"), { recursive: true });
       mkdirSync(join(fixture, ".claude", "skills", "legacy-local"), { recursive: true });
-      writeFileSync(join(fixture, "scripts", "local-skill-manifest.txt"), "root-skill alpha\n");
+      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill alpha\n");
       writeFileSync(join(fixture, "skills", "alpha", "SKILL.md"), "---\nname: alpha\ndescription: Alpha skill.\n---\n");
       writeFileSync(join(fixture, ".claude", "skills", "legacy-local", "SKILL.md"), "---\nname: legacy-local\ndescription: Legacy local skill.\n---\n");
       copyFileSync(
-        join(repoRoot, "scripts", "lib", "local-skill-manifest.ts"),
-        join(fixture, "scripts", "lib", "local-skill-manifest.ts"),
+        join(repoRoot, "scripts", "lib", "default-skill-allowlist.ts"),
+        join(fixture, "scripts", "lib", "default-skill-allowlist.ts"),
       );
 
       const result = spawnSync(
@@ -252,12 +252,12 @@ describe("local command and skill sync task", () => {
       mkdirSync(join(fixture, "scripts", "lib"), { recursive: true });
       mkdirSync(join(fixture, "skills", "alpha"), { recursive: true });
       mkdirSync(join(fixture, "skills", "beta"), { recursive: true });
-      writeFileSync(join(fixture, "scripts", "local-skill-manifest.txt"), "root-skill alpha\nroot-skill beta\n");
+      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill alpha\nroot-skill beta\n");
       writeFileSync(join(fixture, "skills", "alpha", "SKILL.md"), "---\nname: alpha\ndescription: Alpha skill.\n---\n");
       writeFileSync(join(fixture, "skills", "beta", "SKILL.md"), "---\nname: beta\ndescription: Beta skill.\n---\n");
       copyFileSync(
-        join(repoRoot, "scripts", "lib", "local-skill-manifest.ts"),
-        join(fixture, "scripts", "lib", "local-skill-manifest.ts"),
+        join(repoRoot, "scripts", "lib", "default-skill-allowlist.ts"),
+        join(fixture, "scripts", "lib", "default-skill-allowlist.ts"),
       );
 
       const runSync = () => spawnSync(
@@ -287,7 +287,7 @@ describe("local command and skill sync task", () => {
         rootSkills: ["alpha", "beta"],
       });
 
-      writeFileSync(join(fixture, "scripts", "local-skill-manifest.txt"), "root-skill alpha\n");
+      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill alpha\n");
       rmSync(join(fixture, "skills", "beta"), { recursive: true, force: true });
       mkdirSync(join(home, ".codex", "skills", "user-skill"), { recursive: true });
       writeFileSync(join(home, ".codex", "skills", "user-skill", "SKILL.md"), "# User skill\n");

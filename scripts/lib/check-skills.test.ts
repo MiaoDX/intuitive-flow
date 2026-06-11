@@ -21,15 +21,14 @@ const writeFixtureFile = (root: string, relativePath: string, text: string) => {
 
 const optionsFor = (root: string) => ({
   skillsRoot: join(root, "skills"),
-  manifestPath: join(root, "scripts", "local-skill-manifest.txt"),
+  allowlistPath: join(root, "scripts", "default-skill-allowlist.txt"),
   deprecatedSourceRoot: join(root, "skills-src"),
-  externalSkillSourcesPath: undefined,
 });
 
 describe("skill checker", () => {
   test("accepts canonical skills with local references", async () => {
     await withTempProject((root) => {
-      writeFixtureFile(root, "scripts/local-skill-manifest.txt", "root-skill alpha\n");
+      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill alpha\n");
       writeFixtureFile(
         root,
         "skills/alpha/SKILL.md",
@@ -43,7 +42,7 @@ describe("skill checker", () => {
 
   test("rejects deprecated skills-src files", async () => {
     await withTempProject((root) => {
-      writeFixtureFile(root, "scripts/local-skill-manifest.txt", "root-skill alpha\n");
+      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill alpha\n");
       writeFixtureFile(root, "skills/alpha/SKILL.md", "---\nname: alpha\ndescription: Alpha.\n---\n");
       writeFixtureFile(root, "skills-src/alpha/SKILL.md", "old\n");
 
@@ -51,19 +50,19 @@ describe("skill checker", () => {
     });
   });
 
-  test("uses the manifest as the root skill allowlist", async () => {
+  test("uses the default allowlist as the root skill allowlist", async () => {
     await withTempProject((root) => {
-      writeFixtureFile(root, "scripts/local-skill-manifest.txt", "root-skill alpha\n");
+      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill alpha\n");
       writeFixtureFile(root, "skills/alpha/SKILL.md", "---\nname: alpha\ndescription: Alpha.\n---\n");
       writeFixtureFile(root, "skills/beta/SKILL.md", "---\nname: beta\ndescription: Beta.\n---\n");
 
-      expect(checkSkills(optionsFor(root))).toContain("root skill missing from manifest: beta");
+      expect(checkSkills(optionsFor(root))).toContain("root skill missing from default allowlist: beta");
     });
   });
 
   test("rejects generated includes and missing resource references", async () => {
     await withTempProject((root) => {
-      writeFixtureFile(root, "scripts/local-skill-manifest.txt", "root-skill alpha\n");
+      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill alpha\n");
       writeFixtureFile(
         root,
         "skills/alpha/SKILL.md",
@@ -78,7 +77,7 @@ describe("skill checker", () => {
 
   test("rejects machine-local checkout paths in skill markdown", async () => {
     await withTempProject((root) => {
-      writeFixtureFile(root, "scripts/local-skill-manifest.txt", "root-skill alpha\n");
+      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill alpha\n");
       writeFixtureFile(
         root,
         "skills/alpha/SKILL.md",
@@ -93,7 +92,7 @@ describe("skill checker", () => {
 
   test("rejects missing local links from skill reference files", async () => {
     await withTempProject((root) => {
-      writeFixtureFile(root, "scripts/local-skill-manifest.txt", "root-skill alpha\n");
+      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill alpha\n");
       writeFixtureFile(
         root,
         "skills/alpha/SKILL.md",
@@ -107,24 +106,20 @@ describe("skill checker", () => {
     });
   });
 
-  test("validates external skill source manifests when configured", async () => {
+  test("validates external skill entries in the default allowlist", async () => {
     await withTempProject((root) => {
-      writeFixtureFile(root, "scripts/local-skill-manifest.txt", "root-skill alpha\n");
-      writeFixtureFile(root, "scripts/external-skill-sources.txt", "source demo https://example.com/demo all\n");
+      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill alpha\nexternal-skill demo https://example.com/demo alpha\n");
       writeFixtureFile(root, "skills/alpha/SKILL.md", "---\nname: alpha\ndescription: Alpha.\n---\n");
 
-      const errors = checkSkills({
-        ...optionsFor(root),
-        externalSkillSourcesPath: join(root, "scripts", "external-skill-sources.txt"),
-      });
+      const errors = checkSkills(optionsFor(root));
 
-      expect(errors).toContain("unsupported external skill repo on line 1: https://example.com/demo");
+      expect(errors).toContain("unsupported external skill repo on line 2: https://example.com/demo");
     });
   });
 
   test("rejects GitHub Actions Bun pins that drift from packageManager", async () => {
     await withTempProject((root) => {
-      writeFixtureFile(root, "scripts/local-skill-manifest.txt", "root-skill alpha\n");
+      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill alpha\n");
       writeFixtureFile(root, "skills/alpha/SKILL.md", "---\nname: alpha\ndescription: Alpha.\n---\n");
       writeFixtureFile(root, "package.json", JSON.stringify({ name: "fixture", packageManager: "bun@1.3.12" }));
       writeFixtureFile(
@@ -147,7 +142,7 @@ describe("skill checker", () => {
 
   test("requires packageManager when GitHub Actions pins Bun", async () => {
     await withTempProject((root) => {
-      writeFixtureFile(root, "scripts/local-skill-manifest.txt", "root-skill alpha\n");
+      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill alpha\n");
       writeFixtureFile(root, "skills/alpha/SKILL.md", "---\nname: alpha\ndescription: Alpha.\n---\n");
       writeFixtureFile(root, "package.json", JSON.stringify({ name: "fixture" }));
       writeFixtureFile(

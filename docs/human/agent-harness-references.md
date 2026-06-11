@@ -31,9 +31,9 @@ this page should preserve the source and rationale.
 - Separate source layout from install/discovery layout. In this repo,
   `skills/` remains the canonical source; sync scripts fan those skills out to
   Claude Code, Codex, and shared agent install surfaces.
-- Treat third-party skills as supply-chain inputs. Make external sources,
-  allowlists, and intentional full-source installs explicit before syncing them
-  into user-level agent tooling.
+- Treat third-party skills as supply-chain inputs. Make external sources and
+  default allowlists explicit before syncing them into user-level agent tooling;
+  do not default to broad upstream `all` installs.
 - Package shared multi-component capabilities as plugins. A standalone skill is
   enough for one reusable workflow; use a plugin when distributing skills
   together with subagents, hooks, MCP servers, binaries, settings, or other
@@ -160,10 +160,10 @@ When this page gains a source that changes repo practice:
    sync pipeline project it into Claude Code, Codex, and shared install
    surfaces. Do not change source layout merely because a host exposes another
    discovery path.
-5. Keep external skill installs in `scripts/external-skill-sources.txt`; use
-   `allowlist` when only specific skills are trusted, and `all` only when the
-   full upstream source is intentionally accepted.
-6. Run `bun run check:skills` after skill or external-source edits.
+5. Keep default skill installs in `scripts/default-skill-allowlist.txt`; use
+   `bun run audit:skill-upstreams` to inspect upstream candidates before adding
+   anything outside the current list.
+6. Run `bun run check:skills` after skill or allowlist edits.
 7. Run `bun run verify`.
 8. Update `STATUS.md` or `ARCHITECTURE.md` only when the repo's supported
    commands, public contracts, or proof boundaries changed.

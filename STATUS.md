@@ -1,6 +1,6 @@
 # Status
 
-Last reviewed: 2026-06-08
+Last reviewed: 2026-06-11
 
 ## Current State
 
@@ -11,7 +11,8 @@ currently provides:
 - a human-facing agent harness reference ledger in
   `docs/human/agent-harness-references.md`
 - reusable installed skills under `skills/`
-- an external skill source manifest at `scripts/external-skill-sources.txt`
+- a single default skill install allowlist at
+  `scripts/default-skill-allowlist.txt`
 - update and sync automation under `scripts/`
 - repo-owned Git hooks under `.githooks/`
 - Bun TypeScript helpers and tests under `scripts/lib/`
@@ -53,15 +54,16 @@ The current maintenance focus is keeping the repo dogfoodable:
   turning those lessons into skill rules
 - keep the user-facing skill surface small: flow, refactor, reduce-entropy,
   planning-loop, and squash; route or directly invoke specialists from the
-  manifest as needed, with docs/init/tests/preflight/worktree-porting/issue
+  allowlist as needed, with docs/init/tests/preflight/worktree-porting/issue
   tracking/skill-runner utilities kept out of the primary choice set
-- keep root skills listed in `scripts/local-skill-manifest.txt`
-- keep external skill installs explicit in `scripts/external-skill-sources.txt`
+- keep default skill installs listed in `scripts/default-skill-allowlist.txt`
+- use `bun run audit:skill-upstreams` to review upstream skill candidates
+  outside the allowlist before adding anything new
 - keep installed global skill surfaces pruned by owner state: Intuitive root
-  skills, managed external sources, GSD profile installs, and GStack wrappers
+  skills, managed external sources, GSD wrappers, and GStack wrappers
 - edit repo-owned skills directly under `skills/`
 - keep local hooks enabled with `bun run setup:hooks` so skill structure,
-  manifest coverage, and local resource references are checked before commit
+  allowlist coverage, and local resource references are checked before commit
 - keep CI and local `bun run verify` aligned
 - keep Bash as the ShellCheck-gated orchestration layer and Bun TypeScript as
   the structured validation layer
@@ -81,12 +83,11 @@ There is no active `.planning/` roadmap or GSD phase in this checkout.
   environment surfaces, not human docs.
 - `scripts/update.sh` is not a harmless test command; it mutates installed tools
   and user config.
-- Full external skill-source installs are intentional only when listed as `all`
-  in `scripts/external-skill-sources.txt`; prefer `allowlist` for narrow trust.
-- GSD installs default to `GSD_INSTALL_PROFILE=standard`; set `core` or `full`
-  only when intentionally changing the visible GSD command surface.
-- GStack installs default to `GSTACK_SKILL_SURFACE=standard`; set `full` only
-  when intentionally exposing every upstream GStack skill.
+- Default skill visibility is controlled by
+  `scripts/default-skill-allowlist.txt`; external sources are never installed in
+  broad `all` mode by default.
+- GSD and GStack setup may create upstream wrappers temporarily, but the updater
+  prunes managed wrappers back to the default allowlist.
 - `skills/` is the canonical repo-owned skill source and install surface.
 - `.githooks/pre-commit` is opt-in per checkout through `bun run setup:hooks`
   because Git does not version local hook configuration.
