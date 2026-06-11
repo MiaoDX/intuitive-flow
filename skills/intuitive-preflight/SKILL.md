@@ -122,62 +122,33 @@ must run or explicitly report as unavailable.
 
 ## Output
 
-Return this shape. Keep it compact enough for the user to approve in one pass.
+Return a compact contract suitable for pasting into a plan file. Preserve the
+same decision semantics, but avoid nested bullets and repeated boilerplate. Use
+`none` for empty or non-applicable items. Prefer one-line fields; wrap only when
+needed.
 
 ```text
-Preflight status: DRAFT | BLOCKED_NEEDS_DECISION | BLOCKED_NEEDS_LOCAL_VALIDATION
+Preflight status: <DRAFT | BLOCKED_NEEDS_DECISION | BLOCKED_NEEDS_LOCAL_VALIDATION>
 Task source: <user prompt | plan path | issue | mixed>
 Canonical source: <docs/plans/... | issue URL | conversation only>
 Route: <main direct | $intuitive-refactor | durable $intuitive-flow | Paseo-managed agent | skill-runner worker>
+Goal: <one sentence>
 
-Goal:
-<one sentence>
+Scope: <included work; use short bullets only if needed>
+Non-goals: <explicit exclusions>
+Context: must-read=<canonical files/plans/issues/logs/artifacts>; useful=<optional evidence>; avoid-unless-needed=<large/stale/noisy/historical sources>
 
-Scope:
-- <included work>
+Acceptance:
+- SUCCESS: <observable proof, including product run gates for changed public routes>
+- BLOCKED_NEEDS_DECISION: <decision or external gate, or none>
+- BLOCKED_NEEDS_LOCAL_VALIDATION: <required integration/local/live/manual proof unavailable here, or none>
+- INTERMEDIATE_ONLY: <only if explicitly approved; useful incomplete checkpoint, or none>
+- No regressions: <existing behavior or contract>
 
-Non-goals:
-- <explicitly excluded work>
-
-Context package:
-- Must read:
-  - <canonical files, plans, issues, logs, or artifacts>
-- Useful evidence:
-  - <optional context that can improve execution>
-- Do not read unless needed:
-  - <large, stale, noisy, or historical sources>
-
-Definition of Done / acceptance criteria:
-- SUCCESS only if:
-  - <observable proof, including product run gates for any changed public route>
-- BLOCKED_NEEDS_DECISION if:
-  - <decision or external gate>
-- BLOCKED_NEEDS_LOCAL_VALIDATION if:
-  - <required integration/local/live/manual proof cannot run in this environment>
-- INTERMEDIATE_ONLY if explicitly approved:
-  - <useful but incomplete checkpoint, not complete/merge-ready/no-regression>
-- Must not regress:
-  - <existing behavior or contract>
-
-Verification:
-- Deterministic gates: <lint/type/unit/focused contract commands>
-- Integration gates: <catalog/route/report/artifact commands>
-- Product run gates: <public run command, console flow, harness, or script that exercises the changed behavior>
-- Local/live/manual gates: <provider/Docker/simulator/GPU/hardware/browser/human checks, or why unavailable>
-- Optional exploratory gates: <non-blocking checks only>
-
-Execution surface:
-- Main session: <root supervisor role>
-- Worker: <none | Paseo scope | skill-runner scope>
-- Worker-local goal: <none | exact bounded goal>
-
-To execute:
- /goal execute <canonical source> with intuitive-flow
-
-Approval gate:
-Reply LGTM, approve, or go ahead to approve the contract. To start durable
-execution from the main session, use the exact `To execute` command above;
-otherwise request edits.
+Verification: deterministic=<lint/type/unit/focused contract commands>; integration=<catalog/route/report/artifact commands>; product-run=<public command/flow/script/harness>; local-live-manual=<provider/Docker/simulator/GPU/hardware/browser/human checks, or unavailable reason>; optional=<non-blocking checks>
+Execution: main=<root supervisor role>; worker=<none | Paseo scope | skill-runner scope>; worker-goal=<none | exact bounded goal>
+To execute: /goal execute <canonical source> with intuitive-flow
+Approval: LGTM/approve/go ahead approves; edits request revision.
 ```
 
 The `To execute` command should normally be the compact durable command:
@@ -189,21 +160,20 @@ The `To execute` command should normally be the compact durable command:
 Use a real durable artifact when available, for example:
 
 ```text
-To execute:
- /goal execute docs/plans/foo.md with intuitive-flow
+To execute: /goal execute docs/plans/foo.md with intuitive-flow
 ```
 
 If the canonical source is conversation-only, first recommend writing or
-updating a plan file with this contract so context compression cannot erase the
-approved scope and acceptance criteria.
+updating a plan file with this contract. Add that as one short
+`Plan-file recommendation:` line before `To execute:` so context compression
+cannot erase the approved scope and acceptance criteria.
 
-If blocked, replace the execution sections with:
+If blocked, replace `Execution`, `To execute`, and `Approval` with:
 
 ```text
 Open decisions:
-- <question with why it matters>
-Recommended default:
-- <only when safe; otherwise "none">
+- <question> (<why it matters>)
+Recommended default: <only when safe; otherwise none>
 ```
 
 ## Route Rules
