@@ -65,6 +65,52 @@ plan file. If it is contract-shaped but the exact public shape is not selected
 yet, default to recording the current assumption in the plan and defer the ADR
 until the public contract is chosen.
 
+For new plan files, prefer a date-prefixed slug such as
+`docs/plans/YYYY-MM-DD-short-topic.md` when the target repo does not already have
+a stronger convention. Do not bulk-rename old plans only to add dates. Mixed
+legacy and dated plan filenames are acceptable if an index or `docs/plans/README.md`
+explains the convention. For active or recently reviewed plans, prefer metadata
+near the top over filename churn:
+
+- `Status`
+- `Created`
+- `Last reviewed`
+- `Current implementation contract`
+- `Related ADRs`
+- `Supersedes` / `Superseded by`
+
+Keep ADR numbering for durable decisions, but make the creation threshold strict.
+Do not create ADRs for proof loops, reruns, local-dev evidence, benchmark runs,
+one-off gates, phase checklists, task status, report wording, local artifact
+regeneration, or reversible implementation details.
+
+## ADR And Plan Surface Cleanup
+
+When the user's concern is that the repo has too many plans or ADRs, treat that
+as a documentation-entropy problem before proposing another decision record.
+Classify the existing files into:
+
+- current execution plans;
+- stale or superseded plans;
+- durable ADRs future agents should obey;
+- ADR-shaped execution records, proof logs, rerun notes, or status snapshots.
+
+For plan overload, default to reversible organization: add or update
+`docs/plans/README.md`, document the date-prefixed convention for new plan files,
+add plan metadata where it changes implementation behavior, and avoid broad
+renames unless the user explicitly accepts the churn and link repair.
+
+For ADR overload, recommend aggressive but reversible cleanup when root
+`docs/adr/` is polluted by execution records. Keep the canonical ADR directory
+for durable accepted decisions. Move misfiled execution/proof records under an
+archive such as `docs/adr/archive/execution-log/`, add an archive README, shrink
+or refresh the ADR README/index, preserve git history and inbound links where
+practical, and do not delete old records, renumber ADRs, or fill numbering gaps.
+
+If the cleanup policy itself is unsettled, ask one focused batch. Once accepted,
+implement the cleanup directly instead of repeatedly grilling the same
+classification question.
+
 ## Decision-Impact Test
 
 Before asking a question, state why its answer matters. A question is worth
@@ -186,7 +232,9 @@ After each accepted batch:
 4. If an ADR is warranted, create or update it separately with clear context,
    decision, alternatives, and consequences. Link it from the plan when both
    surfaces are needed.
-5. Report exactly what changed, then run the saturation audit before asking any
+5. If ADR or plan cleanup is warranted, prefer archive moves plus README/index
+   updates over deletion, renumbering, or broad filename churn.
+6. Report exactly what changed, then run the saturation audit before asking any
    next batch.
 
 ## Language
