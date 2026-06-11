@@ -26,10 +26,44 @@ Before asking any batch, run a saturation audit:
 - If an ADR is accepted, a plan names what changes, what is out of scope, the
   important boundaries, the acceptance gates, and the next execution step, and
   local docs/code do not contradict it, answer that no more discussion is needed.
+- Classify the documentation target before proposing updates: plans and ADRs
+  answer different questions, and some tasks legitimately need both.
 
 When the user asks whether remaining questions exist, answer the yes/no first.
 Only ask a batch if at least one unresolved question would materially change the
 plan, contract, public/private boundary, or acceptance gate.
+
+## Plan vs ADR Routing
+
+Do not treat `docs/plans/*` and `docs/adr/*` as interchangeable planning
+surfaces.
+
+Use a plan file when the question is:
+
+- what will change;
+- what is out of scope;
+- what order or phases should execute;
+- which files, tests, commands, gates, or artifacts define done;
+- which open questions remain before implementation.
+
+Use an ADR when the question is:
+
+- which durable decision future agents should not relitigate;
+- which public API, MCP/tool contract, command surface, private-data boundary,
+  safety policy, or architecture layer is intentionally chosen;
+- which alternatives were rejected and what consequences maintainers accept.
+
+Some tasks need both. In that case, keep the ADR short and durable, then let the
+plan reference the ADR while owning execution details. Do not create an ADR for
+local implementation defaults, a checklist, progress notes, or a decision that
+the current plan can reverse cheaply. Do not put phase checklists, verification
+logs, or task sequencing into an ADR.
+
+Before asking "should this be an ADR?", first state whether the current issue is
+contract-shaped or execution-shaped. If it is execution-shaped, default to the
+plan file. If it is contract-shaped but the exact public shape is not selected
+yet, default to recording the current assumption in the plan and defer the ADR
+until the public contract is chosen.
 
 ## Decision-Impact Test
 
@@ -117,6 +151,7 @@ Questions:
 
 If accepted, I will update:
 - CONTEXT.md: <terms/relationships>
+- Plan: <execution details / gates / open questions, or "none">
 - ADR: <only if warranted, otherwise "none">
 ```
 
@@ -146,9 +181,12 @@ After each accepted batch:
 
 1. Apply only the resolved `CONTEXT.md` glossary/relationship updates.
 2. Keep `CONTEXT.md` free of implementation details, plans, and progress notes.
-3. If an ADR is warranted, create or update it separately with clear context,
-   decision, alternatives, and consequences.
-4. Report exactly what changed, then run the saturation audit before asking any
+3. If a plan update is warranted, keep it focused on scope, execution order,
+   acceptance gates, verification, and open implementation questions.
+4. If an ADR is warranted, create or update it separately with clear context,
+   decision, alternatives, and consequences. Link it from the plan when both
+   surfaces are needed.
+5. Report exactly what changed, then run the saturation audit before asking any
    next batch.
 
 ## Language
