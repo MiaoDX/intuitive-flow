@@ -88,10 +88,12 @@ skills; `docs/human/skill-self-improvement-audit.md` records the human-facing
 role of each installed root skill.
 `$intuitive-preflight` owns approval-ready preflight contracts before a plan or
 vague task starts: context package, scope, non-goals, definition of done,
-verification, route, worker strategy, and main-session `/goal` wording. Open-ended architecture
-discovery may route to the external `improve-codebase-architecture` skill when
-it is installed; accepted cleanup still returns to `$intuitive-refactor` for
-the scope gate and execution.
+verification, route, worker strategy, and main-session `/goal` wording.
+Open-ended architecture discovery runs the `$zoom-out` plus
+`$plan-eng-review` / `$gstack-plan-eng-review` sequence first, may use the
+allowlisted external `improve-codebase-architecture` skill for extra
+report-only candidate discovery, and returns accepted cleanup to
+`$intuitive-refactor` for the scope gate and execution.
 
 Repo-owned skills are authored directly under `skills/<name>/SKILL.md`. Large
 skills should use progressive disclosure instead of generated includes:

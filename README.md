@@ -81,7 +81,8 @@ Keep the public choice small:
 | **intuitive-squash** | Compress noisy local agent history into a clean reviewable commit story |
 
 Common routed specialists include `$intuitive-preflight`, `$intuitive-doc`,
-`$intuitive-init`, and `$intuitive-tests`; direct-use utilities such as
+`$intuitive-init`, `$intuitive-tests`, and `$improve-codebase-architecture` for
+report-only architecture discovery; direct-use utilities such as
 `$intuitive-port-worktree`, `$multica-goal-tracker`, `$skill-runner`, and
 `$simplify` are installed too. The complete default install surface lives in
 `scripts/default-skill-allowlist.txt`, with the human-facing role audit in

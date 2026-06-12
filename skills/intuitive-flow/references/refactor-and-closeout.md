@@ -7,14 +7,15 @@ parked-todo reporting.
 ## Architecture Or Refactor Goal
 
 Use when the user asks to improve architecture, refactor a module, fix broad
-known issues, run `improve-codebase-architecture`, or stop endless cleanup
-loops.
+known issues, run `improve-codebase-architecture` as report-only discovery, or
+stop endless cleanup loops.
 
 Default path:
 
 ```text
 create or read refactor scope gate
-architecture scan               # report-only unless gate accepts P0/P1 items
+zoom-out + plan-eng-review      # architecture packet before edits
+improve-codebase-architecture   # optional report-only scanner when no seam is accepted
 TDD or diagnosis                 # only when accepted checklist needs proof first
 execute accepted P0/P1 slices
 run one final $intuitive-doc doc-alignment sub-phase

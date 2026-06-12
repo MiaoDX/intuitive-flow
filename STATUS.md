@@ -54,8 +54,9 @@ The current maintenance focus is keeping the repo dogfoodable:
   turning those lessons into skill rules
 - keep the user-facing skill surface small: flow, refactor, reduce-entropy,
   planning-loop, and squash; route or directly invoke specialists from the
-  allowlist as needed, with docs/init/tests/preflight/worktree-porting/issue
-  tracking/skill-runner utilities kept out of the primary choice set
+  allowlist as needed, with docs/init/tests/preflight/architecture-scanner/
+  worktree-porting/issue tracking/skill-runner utilities kept out of the
+  primary choice set
 - keep default skill installs listed in `scripts/default-skill-allowlist.txt`
 - use `bun run audit:skill-upstreams` to review upstream skill candidates
   outside the allowlist before adding anything new

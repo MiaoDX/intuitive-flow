@@ -77,8 +77,10 @@ Record specialist owners in the selection packet:
 - $intuitive-init for AGENTS.md, CLAUDE.md, docs/agents, hooks, MCP, or skills setup
 - $intuitive-doc for README, ARCHITECTURE, STATUS, docs/human, or doc-tier drift
 - $intuitive-tests for test taxonomy, markers, pruning, fixtures, or test layout
-- host-installed improve-codebase-architecture for optional report-only
-  architecture discovery when no target seam is accepted yet
+- zoom-out plus plan-eng-review/gstack-plan-eng-review for the first
+  architecture review pass
+- improve-codebase-architecture for optional report-only architecture discovery
+  when no target seam is accepted yet
 - $intuitive-refactor for known code/module/API cleanup targets or executing an accepted architecture candidate
 
 Prefer aggressive cleanup inside accepted scope:

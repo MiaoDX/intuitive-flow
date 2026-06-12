@@ -34,6 +34,7 @@ external-skill codex skills-directory/skill-codex codex
 external-skill mattpocock https://github.com/mattpocock/skills diagnose
 external-skill mattpocock https://github.com/mattpocock/skills grill-with-docs
 external-skill mattpocock https://github.com/mattpocock/skills handoff
+external-skill mattpocock https://github.com/mattpocock/skills improve-codebase-architecture
 external-skill mattpocock https://github.com/mattpocock/skills tdd
 external-skill mattpocock https://github.com/mattpocock/skills zoom-out
 

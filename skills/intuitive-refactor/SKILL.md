@@ -256,7 +256,9 @@ through the whole repo looking for unrelated cleanup.
 
 If the target is architecture/public-contract shaped, look for an existing
 architecture packet in the user prompt, plan, ADR, or gate. If none exists, run
-`$zoom-out` and `$plan-eng-review` before producing the scope gate.
+`$zoom-out` and `$plan-eng-review` before producing the scope gate. If that
+review sequence still leaves no accepted target seam, use
+`$improve-codebase-architecture` as extra report-only candidate discovery.
 
 Check LSP before risky symbol-level edits. Use repo evidence such as manifests,
 lockfiles, compiler config, `.claude/settings.json`, `.vscode/settings.json`,
@@ -277,8 +279,8 @@ the accepted cleanup when the user has approved the target.
 Use another workflow when it materially improves the current pass:
 
 - unclear architecture or seam quality -> run `$zoom-out` plus
-  `$plan-eng-review`; use an architecture scanner only as extra report-only
-  candidate discovery
+  `$plan-eng-review`; use `$improve-codebase-architecture` only as extra
+  report-only candidate discovery
 - missing behavior coverage -> use TDD to add one public-interface proof
   before refactoring
 - bug, flake, perf regression, or known blind spot -> diagnose to build
@@ -417,8 +419,9 @@ commits.
 If the user combines this with an architecture scanner, add:
 
 ```text
-Use the scanner only for report-only candidate discovery. The accepted checklist
-and stop condition still come from the refactor scope gate.
+Use `$improve-codebase-architecture` only for report-only candidate discovery.
+The accepted checklist and stop condition still come from the refactor scope
+gate.
 ```
 
 ## Output when only advising

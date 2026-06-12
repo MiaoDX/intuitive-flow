@@ -603,6 +603,9 @@ the repo has been diagnosed:
   main-session `/goal` wording.
 - `$zoom-out` plus `$plan-eng-review` own the first architecture review pass:
   map the module/caller context, then stress-test the slice before execution.
+- `$improve-codebase-architecture` owns optional extra report-only
+  architecture/deepening candidate discovery when the review sequence still
+  leaves no accepted target seam.
 - `$intuitive-refactor` owns known code/module/API cleanup targets and
   persistent refactor gates, including execution of an accepted architecture
   candidate.
@@ -617,7 +620,7 @@ Classify the user's prompt and repo evidence into one or more entropy sources:
 | Human docs | stale README/architecture/status, missing current truth, generated evidence in human docs | `$intuitive-doc` |
 | Tests | low-signal tests, unclear markers, brittle fixtures, flat or confusing test layout, flaky or slow defaults | `$intuitive-tests` |
 | Repo surface layout | mixed human/agent/runtime/test/script surfaces, flat scripts/examples, misplaced files, stale path consumers | route by object; see Layout Routing |
-| Architecture discovery | open-ended architecture improvement, shallow modules, hard-to-test or hard-to-navigate code, unclear module depth or seams, request to find refactoring opportunities | Architecture Review Sequence first; then `$intuitive-refactor` after a candidate is accepted |
+| Architecture discovery | open-ended architecture improvement, shallow modules, hard-to-test or hard-to-navigate code, unclear module depth or seams, request to find refactoring opportunities | Architecture Review Sequence first; optionally `$improve-codebase-architecture` in report-only mode; then `$intuitive-refactor` after a candidate is accepted |
 | Known code cleanup | named module, accepted seam, stale API, compatibility shim, or target-local architecture cleanup | `$intuitive-refactor` |
 | Workflow drift | unclear source of truth between plans, GSD, issues, docs, and commits | record the drift and likely next discussion/planning owner |
 
@@ -633,7 +636,9 @@ organized:
 - Code/package/module/API layout, stale imports, wrappers, or compatibility
   surfaces -> `$intuitive-refactor`.
 - Unclear module depth, shallow seams, or broad "find architecture cleanup"
-  requests -> Architecture Review Sequence first.
+  requests -> Architecture Review Sequence first; use
+  `$improve-codebase-architecture` only if extra report-only candidate discovery
+  is still needed.
 - Mixed top-level surfaces, flat scripts/examples, agent-vs-human workspace
   separation, or unclear repo navigation -> keep the slice here and route
   subparts to the relevant specialist.
@@ -678,9 +683,10 @@ Use this route unless the user already names a specific entropy source.
    public-contract cleanup, MCP/tool boundary cleanup, lifecycle gates, or an
    unclear target seam, run `$zoom-out` and `$plan-eng-review` before
    presenting it as decision-ready.
-   Treat all discovery output as candidate evidence, not execution approval,
-   and keep it in the ranked packet unless the user already selected the
-   architecture candidate.
+   If no target seam has been accepted after that, optionally route to
+   `$improve-codebase-architecture` in report-only mode. Treat all discovery
+   output as candidate evidence, not execution approval, and keep it in the
+   ranked packet unless the user already selected the architecture candidate.
 6. **Selection packet**: when the user selects all or part of the packet,
    preserve the selected candidates, suggested review order, likely specialist owners,
    proof commands, execution risks, parked items, and stop condition. Do not
@@ -724,7 +730,9 @@ If the user names a likely area, route directly:
 - "improve architecture", "architecture cleanup", "deepening", "shallow
   module", "hard to test", "hard to navigate", "find refactoring
   opportunities", "public contract", "MCP", "tool surface", "lifecycle gate" ->
-  run the Architecture Review Sequence first.
+  run the Architecture Review Sequence first. Use
+  `$improve-codebase-architecture` only when extra report-only candidate
+  discovery is still needed after `$zoom-out` and `$plan-eng-review`.
 - "module", "API", "compatibility", "seam", "stale wrapper", "known
   architecture target" ->
   `$intuitive-refactor`.
