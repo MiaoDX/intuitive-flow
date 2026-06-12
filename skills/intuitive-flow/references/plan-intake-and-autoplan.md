@@ -8,26 +8,35 @@ to implement from a plan.
 Use when the user is still deciding what to build, why it matters, or what the
 scope should be.
 
-Choose the idea-shaping route before the first question unless the user already
-made the mode clear:
+`$intuitive-flow` is allowed to accept vague prompts as a compatibility router,
+but it should name the upstream stage instead of doing hidden idea shaping and
+execution in one pass. Choose the idea-shaping route before the first question
+unless the user already made the mode clear:
 
 ```text
 Which route should we use?
 
-A. Direct route (preferred) - plain, more detailed, and user-led. I ask the
+A. Direct route - plain, more detailed, and user-led. I ask the
    important questions directly and wait for your answers.
-B. Auto-guided route (experimental) - I auto-accept obvious defaults, save those
-   decisions into the plan, and ask only for scope, premise, or hard-to-reason
-   choices.
+B. Plan entropy route - use `$intuitive-reduce-entropy` in plan entropy mode to
+   find missing decisions or weak assumptions before drafting/revising a plan.
+C. Agent planning route - use `$agent-planning-loop` when scout workers should
+   debate options before one human review packet.
+D. Auto-guided route (experimental) - I auto-accept obvious defaults, save
+   those decisions into the plan, and ask only for scope, premise, or
+   hard-to-reason choices.
 ```
 
 Mode rules:
 
 - Direct route when the user asks for direct/manual shaping, asks to discuss the
   idea plainly, or names `$grill-with-docs` style questioning.
-- `$intuitive-planning-loop` when the user asks agents to align first, run
+- Plan entropy route when the prompt points at an idea, draft plan, or named
+  plan file and asks to reduce ambiguity, find blind spots, or improve the plan
+  before execution.
+- `$agent-planning-loop` when the user asks agents to align first, run
   reduce-entropy plus grill-batch critique, compare plans, or return one judged
-  review packet.
+  review packet. Natural-language mentions of "planning loop" route here.
 - Auto-guided route when the user asks for auto mode, says to make the
   decisions, or asks to move fast.
 - Direct route when no preference is stated.
@@ -37,7 +46,8 @@ Default paths:
 
 ```text
 direct: inline intuitive-flow shaping -> docs/plans/<slug>.md
-planning loop: intuitive-planning-loop -> review packet -> docs/plans/<slug>.md after approval
+plan entropy: intuitive-reduce-entropy plan entropy mode -> revise docs/plans/<slug>.md or draft one
+agent planning: agent-planning-loop -> review packet -> docs/plans/<slug>.md after approval
 auto-guided: intuitive-flow auto-guided shaping -> docs/plans/<slug>.md
 ```
 
@@ -101,18 +111,27 @@ Pre-plan contents:
 
 Use `templates/pre-plan.md` when drafting a new plan.
 
-## Autoplan Precheck Before Implementation
+## Unknown-Unknown Scout Before Preflight
 
-When the user asks to implement a specific plan, says "LGTM", says "impl" while
-pointing at a plan, or approves a plan-backed run, first resolve the canonical
-`docs/plans/<slug>.md` path. Then check whether `autoplan` already ran and its
-accepted decisions were reconciled into that file.
+For non-trivial plan-backed work, run or explicitly skip an unknown-unknown
+scout during planning, before grill-batch and `$intuitive-preflight`.
+`gstack-autoplan` is one scout option. It is not an implementation tool and
+must not become a hidden execution gate.
 
-Before implementation edits, also read the plan's referenced context files. If
-the repo has `CONTEXT-MAP.md`, use it to find the relevant `CONTEXT.md` section;
-otherwise read root `CONTEXT.md` when the plan depends on domain terms,
-durable boundaries, public/private data rules, MCP/tool contracts, command
-surfaces, safety policy, or acceptance criteria.
+Run the scout when the plan is broad, risky, cross-cutting, or likely to hide
+DX, test, sequencing, or execution concerns. Skip it when the task is a tiny
+direct edit, explicitly trivial plan edit, or the canonical plan already records
+a fresh scout result or skip reason.
+
+If the scout runs, use:
+
+```text
+gstack-autoplan docs/plans/<slug>.md
+```
+
+For whole-flow, review-heavy, or long-running scout runs, prefer launching
+`gstack-autoplan` through `skill-runner` so the main session can supervise and
+inspect artifacts before reconciliation.
 
 Treat as `autoplan` evidence:
 
@@ -121,6 +140,8 @@ Treat as `autoplan` evidence:
   plan body
 - recent conversation or repo history explicitly shows `autoplan` ran and the
   plan was updated in place afterward
+- the canonical plan explicitly records an unknown-unknown scout skip reason
+  for a tiny or intentionally trivial task
 
 Do not treat as evidence:
 
@@ -129,18 +150,18 @@ Do not treat as evidence:
 - raw `~/.gstack` review logs, restore files, or final-gate summaries that were
   not reconciled into the canonical plan
 
-If evidence is missing, classify as `Draft Plan Exists` and run:
+Report the scout result in the planning stage:
 
 ```text
-gstack-autoplan docs/plans/<slug>.md
+Unknown-unknown scout: <run | skipped>
+Reason: <why it ran/skipped>
+Findings:
+- accepted into plan: <items or none>
+- requires grill decision: <items or none>
+- parked: <items or none>
+- no material findings: <yes/no>
+Canonical plan updated: <yes/no>
 ```
-
-For whole-flow, implementation, or long-running review runs, prefer launching
-`autoplan` through `skill-runner` so the main session can supervise and inspect
-artifacts before reconciliation.
-
-Do not say `autoplan` was bypassed because the user approved implementation.
-Say `autoplan` is selected because pipeline review evidence is missing.
 
 ## Autoplan Reconciliation
 
@@ -158,12 +179,12 @@ If the only repo change after review is a restore comment or appended review
 report, do not hand off yet. First edit the plan body so the next stage ingests
 the approved plan, not the review artifact.
 
-Scope-change hint before implementation:
+Unknown-unknown scout scope-change hint before implementation:
 
 ```text
-Autoplan scope changes: <none | accepted changes | hard-stop changes>
+Scout scope changes: <none | accepted changes | hard-stop changes>
 Accepted into plan: <short bullets or "none">
-Parked/deferred from autoplan: <short bullets or "none">
+Parked/deferred from scout: <short bullets or "none">
 Hard-stop decisions still needing user input: <short bullets or "none">
 ```
 
@@ -172,3 +193,29 @@ paid services, data model changes, phase ownership changes, or incompatible
 requirements as hard stops. Treat clarified tests, implementation sequencing,
 DX cleanup, and risk notes that preserve original intent as accepted updates
 once reconciled into the plan.
+
+## Plan-Backed Execution Gate
+
+When the user asks to implement a specific plan, says "LGTM", says "impl" while
+pointing at a plan, or approves a plan-backed run, first resolve the canonical
+`docs/plans/<slug>.md` path. Before implementation edits, read the plan's
+referenced context files. If the repo has `CONTEXT-MAP.md`, use it to find the
+relevant `CONTEXT.md` section; otherwise read root `CONTEXT.md` when the plan
+depends on domain terms, durable boundaries, public/private data rules,
+MCP/tool contracts, command surfaces, safety policy, or acceptance criteria.
+
+Plan-backed Flow execution may start only when the canonical plan records:
+
+- accepted scope, non-goals, acceptance criteria, verification, route, and stop
+  gates;
+- an approved `$intuitive-preflight` contract or an equivalent approved
+  execution contract reconciled into the plan;
+- an unknown-unknown scout result or explicit skip reason for non-trivial
+  plan-backed work;
+- no unresolved hard-stop grill/scout decisions.
+
+If this evidence is missing, classify the state as `Draft Plan Exists` or
+`Needs Preflight` and route upstream. Do not run `gstack-autoplan` as a hidden
+execution precheck merely because the user approved implementation. Say which
+planning-stage evidence is missing and what artifact must be updated before
+Flow execution.

@@ -1,5 +1,5 @@
 ---
-name: intuitive-planning-loop
+name: agent-planning-loop
 description: |
   Run a bounded autonomous planning loop before implementation: use scout
   workers to apply intuitive-reduce-entropy and grill-with-docs-batch, keep the
@@ -9,10 +9,11 @@ description: |
   otherwise, not native subagents. Use this
   whenever the user asks to "align yourselves", "run reduce entropy and grill
   batch", "use workers to refine the plan", "give me the plans after judging
-  them", or wants faster planning without being pulled into every grill question.
+  them", mentions a "planning loop", or wants faster planning without being
+  pulled into every grill question.
 ---
 
-# Intuitive Planning Loop
+# Agent Planning Loop
 
 Use this skill when the user wants the agent system to do the planning debate
 before asking for a human decision. It is a bounded orchestration workflow, not
@@ -127,7 +128,8 @@ Ask the entropy scout to use `$intuitive-reduce-entropy` semantics without
 executing changes:
 
 ```text
-Use $intuitive-reduce-entropy in read-only discovery mode for this charter.
+Use $intuitive-reduce-entropy in plan entropy mode for this charter unless the
+charter is explicitly repo-maintenance work.
 Return 3-7 material candidates only if they prevent false confidence, live
 source drift, stale surface, real workflow friction, or recurring rediscovery.
 For each candidate include: severity, evidence, affected paths, why now, owner

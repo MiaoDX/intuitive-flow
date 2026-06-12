@@ -76,8 +76,21 @@ Each reusable workflow installs from `skills/<name>/SKILL.md`. A skill should
 describe when it activates, how it should run, and what output or side effects
 are expected.
 
+The recommended planning-to-execution workflow is staged:
+
+```text
+plan/repo entropy -> optional gstack-autoplan unknown-unknown scout
+  -> grill-batch -> preflight -> intuitive-flow execution
+```
+
+`$intuitive-flow` remains the stable user-facing trigger and compatibility
+router, but the recommended path treats it as the execution orchestrator after
+an approved plan or `$intuitive-preflight` contract exists. Vague prompts should
+be routed upstream to plan entropy mode, `$agent-planning-loop`, grill-batch, or
+preflight instead of hiding planning inside execution.
+
 The primary user-facing skills are `$intuitive-flow`, `$intuitive-refactor`,
-`$intuitive-reduce-entropy`, `$intuitive-planning-loop`, and
+`$intuitive-reduce-entropy`, `$agent-planning-loop`, and
 `$intuitive-squash`. Specialist skills such as `$intuitive-preflight`,
 `$intuitive-doc`, `$intuitive-init`, `$intuitive-tests`,
 `$intuitive-port-worktree`, `$multica-goal-tracker`, `$skill-runner`, and
@@ -89,6 +102,11 @@ role of each installed root skill.
 `$intuitive-preflight` owns approval-ready preflight contracts before a plan or
 vague task starts: context package, scope, non-goals, definition of done,
 verification, route, worker strategy, and main-session `/goal` wording.
+`$intuitive-reduce-entropy` must choose repo entropy mode or plan entropy mode
+before auditing. Repo entropy mode owns maintenance candidate discovery; plan
+entropy mode owns idea/plan blind spots before grill-batch and preflight.
+`gstack-autoplan` is a planning-stage unknown-unknown scout for non-trivial
+plan-backed work, not a hidden Flow execution precheck.
 Open-ended architecture discovery runs the `$zoom-out` plus
 `$plan-eng-review` / `$gstack-plan-eng-review` sequence first, may use the
 allowlisted external `improve-codebase-architecture` skill for extra
@@ -140,6 +158,11 @@ as Intuitive-owned but are no longer listed as `root-skill`. If the ownership
 state does not exist yet, the updater seeds it after sync and does not infer
 ownership from matching names. User-installed skills outside that owned state
 are preserved.
+
+The scout-based planning skill is installed as `agent-planning-loop`.
+`intuitive-planning-loop` is a legacy skill name only; the allowlist keeps it as
+`legacy-skill` so updater-owned stale installs and generated command wrappers
+are pruned on later syncs.
 
 External skill installs are explicit `external-skill` entries in the default
 allowlist. The updater never installs an external source in broad `all` mode by

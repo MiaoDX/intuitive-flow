@@ -51,7 +51,8 @@ Compare external findings against the current `intuitive-flow` contract:
 - conditional detail in `references/` and `templates/`
 - one source of truth per stage: `docs/plans/`, `.planning/`, then
   verification/closeout artifacts
-- `autoplan`, GSD handoff, `simplify`, verification, semantic commits, and
+- plan entropy, optional `gstack-autoplan` unknown-unknown scouting, grill-batch,
+  preflight, GSD handoff, `simplify`, verification, semantic commits, and
   parked-todo closeout routed at the correct stage
 - deterministic checks in scripts/tests/hooks when they are better than prompt
   text

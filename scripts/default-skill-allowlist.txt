@@ -13,8 +13,8 @@
 # legacy-mimocode-command <command.md>
 
 # Repo-owned root skills installed from ./skills.
+root-skill agent-planning-loop
 root-skill grill-with-docs-batch
-root-skill intuitive-planning-loop
 root-skill intuitive-preflight
 root-skill intuitive-doc
 root-skill intuitive-flow
@@ -68,6 +68,7 @@ legacy-skill intuitive-build
 legacy-skill intuitive-contract
 legacy-skill intuitive-layout
 legacy-skill intuitive-migrate
+legacy-skill intuitive-planning-loop
 legacy-skill intuitive-ut
 legacy-skill refactor-scope-gate
 

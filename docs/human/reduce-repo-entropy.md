@@ -1,14 +1,19 @@
 # Reduce Repo Entropy
 
-Use `$intuitive-reduce-entropy` when a repository needs periodic maintenance
-before future AI-agent work. This is repo-operational cleanup: agent guidance,
-human docs, tests, mixed surfaces, stale paths, and bounded cleanup. It is not a
-database/schema migration unless you explicitly add that scope.
+Use `$intuitive-reduce-entropy` in repo entropy mode when a repository needs
+periodic maintenance before future AI-agent work. This is repo-operational
+cleanup: agent guidance, human docs, tests, mixed surfaces, stale paths, and
+bounded cleanup. It is not a database/schema migration unless you explicitly add
+that scope.
 
-## Copy/Paste Prompt
+Use plan entropy mode when the input is an idea, draft plan, or named
+`docs/plans/<slug>.md` and the goal is to find blind spots before
+`gstack-autoplan`, grill-batch, preflight, or `$intuitive-flow` execution.
+
+## Repo Entropy Prompt
 
 ```text
-Use $intuitive-reduce-entropy for this repo.
+Use $intuitive-reduce-entropy in repo entropy mode for this repo.
 
 Goal: identify the ranked selection packet of high-value entropy reduction
 candidates that would make the repo easier for future AI agents and humans to
@@ -98,9 +103,51 @@ Stop when the selection packet is complete, the discovery loop is saturated, and
 remaining ideas are parked.
 ```
 
+## Plan Entropy Prompt
+
+```text
+Use $intuitive-reduce-entropy in plan entropy mode for this idea or plan:
+<paste idea or path to docs/plans/<plan>.md>
+
+Goal: identify missing decisions, weak assumptions, scope leaks, source-of-truth
+drift, proof gaps, and hidden execution/test/DX risks before grill-batch,
+preflight, or $intuitive-flow execution.
+
+Start by saying:
+Selected mode: plan entropy mode
+Why: <one sentence tied to the prompt>
+
+Inspect only the smallest context needed: the plan or idea text, referenced
+human docs/context files, acceptance criteria, verification gates, and source
+evidence named by the plan. Do not broaden into repo-wide maintenance unless
+the plan itself depends on that surface.
+
+For each candidate include:
+- severity
+- entropy source
+- affected paths
+- owner skill
+- why now
+- suggested proof
+- execution risk
+
+Classify likely next owner:
+- $grill-with-docs-batch for unresolved decision quality, terminology, product,
+  domain, or contract questions
+- gstack-autoplan for an explicit unknown-unknown scout on non-trivial
+  plan-backed work
+- $intuitive-preflight when the plan is accepted but needs execution scope,
+  acceptance, verification, stop gates, and worker strategy
+- $intuitive-flow only after the plan/preflight contract is approved and
+  reconciled into the canonical plan
+
+Stop with `Selected candidates: none` when remaining points are implementation
+defaults, weak polish, or already covered by the plan.
+```
+
 ## Expected Outcome
 
-After a successful maintenance pass, the repo should have:
+After a successful repo entropy pass, the repo should have:
 
 - a ranked selection packet of credible entropy candidates, or an explicit
   no-change report
@@ -114,3 +161,7 @@ After a successful maintenance pass, the repo should have:
   specialist owners, suggested proof, execution risks, and parked items recorded
 - discovery verification recorded, with any skipped local-only gates explained
 - remaining cleanup ideas parked instead of silently widening the scope
+
+After a successful plan entropy pass, the plan should have either a short list
+of material questions to resolve before execution or an explicit no-change
+report that it is ready for grill-batch, preflight, or execution.

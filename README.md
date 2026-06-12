@@ -32,11 +32,14 @@ what good means, and what must not break.
 evidence, retrospectives, scratch work, and low-level churn. Humans can inspect
 it when something is risky or broken. They should not have to live there.
 
-The workflow keeps the user-facing choices small: use `$intuitive-flow` for
-default shaping/build/change routing, `$intuitive-refactor` to clean a known
-target, `$intuitive-reduce-entropy` to surface repo maintenance candidates,
-`$intuitive-planning-loop` to let scouts refine contested plans before one
-review packet, and `$intuitive-squash` before branch handoff.
+The workflow keeps the user-facing choices small, with a clear planning to
+execution boundary. For ideas or draft plans, use `$intuitive-reduce-entropy`
+in plan entropy mode, optional `gstack-autoplan` unknown-unknown scouting for
+non-trivial plans, `$grill-with-docs-batch`, and `$intuitive-preflight` before
+`$intuitive-flow` executes. For repo maintenance, use `$intuitive-reduce-entropy`
+in repo entropy mode. Use `$agent-planning-loop` when scout workers should
+debate a plan before one human review packet, `$intuitive-refactor` to clean a
+known target, and `$intuitive-squash` before branch handoff.
 See [BELIEFS.md](BELIEFS.md) for the supporting doctrine behind the workflow;
 current project truth stays in the small human surface above.
 
@@ -53,6 +56,14 @@ Then run:
 Use $intuitive-reduce-entropy to make this repo easier for humans and AI agents
 to work in. If agent guidance is the first entropy source, route to
 $intuitive-init. Start with a ranked candidate batch before applying changes.
+```
+
+For a draft plan or idea, ask for plan entropy mode instead:
+
+```text
+Use $intuitive-reduce-entropy in plan entropy mode on docs/plans/<plan>.md.
+Find missing decisions, weak assumptions, proof gaps, and unknown-unknown scout
+needs before grill-batch, preflight, or execution.
 ```
 
 <p align="center">
@@ -74,10 +85,10 @@ Keep the public choice small:
 
 | Skill | Use it for |
 | --- | --- |
-| **intuitive-flow** | Default build/change entrypoint; routes tiny concrete work directly, cleanup/refactor work to `intuitive-refactor`, and broad work through plan/review/execution |
+| **intuitive-flow** | Execution router after an approved plan or preflight contract; still accepts vague prompts as a compatibility router that names the upstream planning stage |
 | **intuitive-refactor** | Directly clean a known module, seam, stale API, compatibility surface, code/package/module layout issue, or architecture target |
-| **intuitive-reduce-entropy** | Periodically inspect repo mess and produce a ranked batch of high-value maintenance candidates; routes accepted docs, agent guidance, tests, architecture discovery, and known code cleanup to the right specialist |
-| **intuitive-planning-loop** | Bounded autonomous planning loop: scouts run reduce-entropy and grill-batch style critique, while the main session judges scope and returns one review packet |
+| **intuitive-reduce-entropy** | Selects repo entropy mode for maintenance candidates or plan entropy mode for idea/plan blind spots before grill-batch and preflight |
+| **agent-planning-loop** | Bounded autonomous planning loop: scouts run reduce-entropy and grill-batch style critique, while the main session judges scope and returns one review packet |
 | **intuitive-squash** | Compress noisy local agent history into a clean reviewable commit story |
 
 Common routed specialists include `$intuitive-preflight`, `$intuitive-doc`,

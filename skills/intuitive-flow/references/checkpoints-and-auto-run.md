@@ -8,8 +8,9 @@ verification boundaries.
 
 Before starting a whole-flow or durable auto-run that may cross review, GSD
 handoff, execution, cleanup, and verification, chat with the human until the run
-contract is explicit. Do this before `autoplan`, `to-issues`, GSD ingest/plan,
-`skill-runner`, autonomous execution, or auto-confirming downstream gates.
+contract is explicit. Do this before unknown-unknown scouting with
+`gstack-autoplan`, `to-issues`, GSD ingest/plan, `skill-runner`, autonomous
+execution, or auto-confirming downstream gates.
 
 If a canonical plan already exists, inspect it first and summarize the inferred
 contract instead of asking the user to restate everything.
@@ -293,10 +294,10 @@ Hard-stop examples:
 - human/physical-world evidence, credentials, hardware, private data, or paid
   service approval that the agent cannot honestly produce
 
-For `autoplan` premise gates, auto-confirm only when premises restate the plan
-or add low-risk assumptions needed for review. Stop when a premise is new,
-contradicted by repo evidence, disputed by review voices, or changes product,
-scope, contract, security, privacy, cost, data, services, or ownership.
+For unknown-unknown scout premise gates, auto-confirm only when premises restate
+the plan or add low-risk assumptions needed for review. Stop when a premise is
+new, contradicted by repo evidence, disputed by review voices, or changes
+product, scope, contract, security, privacy, cost, data, services, or ownership.
 
 If a downstream skill asks a `Confirm`/`Revise` style question and the gate is a
 soft continuation, answer `Confirm` with a one-line rationale instead of waiting

@@ -208,7 +208,7 @@ A semantic commit boundary must have:
 
 Useful boundaries:
 
-- after `autoplan` decisions are reconciled into `docs/plans/<slug>.md`
+- after unknown-unknown scout decisions are reconciled into `docs/plans/<slug>.md`
 - after `gsd-ingest-docs` creates or merges roadmap scope
 - after `gsd-plan-phase` creates executable phase plan
 - after each coherent implementation slice and focused tests
@@ -288,7 +288,7 @@ update the plan, implement the slice, verify it, commit if files changed, and
 then perform closeout again with auto-follow-up disabled for that closeout pass.
 
 Always include the final `Scope changes` closeout category, even when no
-`autoplan` step ran. Keep accepted scope changes separate from parked/deferred
-work: accepted changes are now in the implemented plan, parked items are not
-done. Scope-change sources can include `autoplan`, plan reconciliation, GSD
-handoff, refactor gates, or execution discoveries.
+unknown-unknown scout ran. Keep accepted scope changes separate from
+parked/deferred work: accepted changes are now in the implemented plan, parked
+items are not done. Scope-change sources can include unknown-unknown scout,
+plan reconciliation, GSD handoff, refactor gates, or execution discoveries.

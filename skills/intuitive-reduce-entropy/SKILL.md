@@ -1,29 +1,47 @@
 ---
 name: intuitive-reduce-entropy
 description: |
-  Periodically inspect a repository and produce a ranked batch of high-value
-  entropy reduction candidates across agent guidance, human docs, tests, repo
-  layout, architecture depth, stale APIs, and cleanup gates. Use when the user
+  Periodically inspect a repository or plan and produce a ranked batch of
+  high-value entropy reduction candidates. Use repo entropy mode when the user
   says the repo feels messy, asks what to clean next, wants to make an old repo
-  easier for humans and AI agents to work in, or wants maintenance suggestions
-  without already knowing the target seam. This is the small public entrypoint
-  for repo maintenance; it surfaces the serious group of cleanup opportunities
-  first, records likely specialist owners for each candidate, and returns a
-  selection packet for the user to choose from. It must return a no-change
-  result instead of filling a requested count when only polish remains.
-  It is a discovery and selection-packet skill; it should not prescribe the
-  next workflow after the user selects all or part of the package.
+  easier for humans and AI agents, or wants maintenance suggestions without
+  already knowing the target seam. Use plan entropy mode when the user points
+  at an idea, draft plan, or named plan file and wants blind spots, missing
+  decisions, or weak assumptions found before grill-batch/preflight. The skill
+  must state the selected mode and why before auditing, return a no-change
+  result instead of filling a requested count when only polish remains, and
+  leave next workflow selection to the user after the packet is returned.
 ---
 
 # Intuitive Reduce Entropy
 
-Use this skill as the maintenance entrypoint when the user does not already know
-which repo surface most needs cleanup. It diagnoses likely entropy sources and
-returns a ranked selection packet of bounded candidates. It should not choose a
-"first cut", simplest slice, or favorite implementation target for the user.
-After the user selects all or part of the packet, the next step is their choice:
-more discussion, `$grill-with-docs-batch`, `$intuitive-preflight`,
-implementation, or parking the work.
+Use this skill when entropy is the problem, but make the mode explicit before
+auditing:
+
+- `repo entropy mode`: repository maintenance across agent guidance, human
+  docs, tests, repo layout, architecture depth, stale APIs, and cleanup gates.
+- `plan entropy mode`: idea or plan review before execution, focused on missing
+  decisions, weak assumptions, scope leaks, proof gaps, stale source evidence,
+  and questions that should go to grill-batch or preflight.
+
+Default to plan entropy mode when the prompt points at an idea, draft plan, or
+named plan file. Default to repo entropy mode when the prompt asks for repo
+cleanup, maintenance, stale surfaces, source-of-truth drift, or "make this repo
+easier to work in."
+
+Start by saying:
+
+```text
+Selected mode: <repo entropy mode | plan entropy mode>
+Why: <one sentence tied to the user's prompt>
+```
+
+Then diagnose likely entropy sources and return a ranked selection packet of
+bounded candidates. It should not choose a "first cut", simplest slice, or
+favorite implementation target for the user. After the user selects all or part
+of the packet, the next step is their choice: more discussion,
+`$grill-with-docs-batch`, `$intuitive-preflight`, implementation, or parking the
+work.
 
 The default goal is a repo where future agents can start quickly, humans can
 review current truth from a small doc surface, tests show real behavior, and
@@ -31,6 +49,8 @@ the next meaningful task does not require rediscovering stale paths, bloated
 agent files, mixed doc tiers, or unclear cleanup targets.
 
 ## Batch Discovery Default
+
+This section describes repo entropy mode.
 
 Default to a batch-first audit, not a single-point recommendation. When the
 user asks to "reduce entropy", "find cleanup", "make this repo easier to work
@@ -80,6 +100,46 @@ file path. A good batch might include one stale README source-of-truth issue,
 one false-green verification issue, and one confirmed leftover wrapper, because
 all three make the next human or agent less surprised. Keep speculative ideas
 out of the ranked batch and put them in `Parked items`.
+
+## Plan Entropy Mode
+
+Use plan entropy mode when the user points at an idea, draft plan, named
+`docs/plans/<slug>.md`, review packet, or preflight draft and asks to reduce
+ambiguity before execution. The output is a plan-review selection packet, not
+implementation and not approval.
+
+Inspect only the smallest context needed to test the plan's decision quality:
+the plan or idea text, referenced human docs/context files, acceptance criteria,
+verification gates, and source evidence named by the plan. Do not broaden into
+repo-wide maintenance unless the plan itself depends on that surface.
+
+Plan entropy candidates should use the same candidate shape, but prefer these
+entropy sources:
+
+- missing or conflicting user-owned decision;
+- scope/non-goal ambiguity;
+- stale source evidence or source-of-truth drift;
+- acceptance or verification gap;
+- hidden migration, install, public contract, cost, hardware, or credential
+  risk;
+- likely unknown-unknown scout finding that should run before grill-batch or
+  preflight.
+
+Classify each candidate's next owner:
+
+- `$grill-with-docs-batch` for unresolved terminology, domain, product,
+  contract, or decision-quality questions;
+- `gstack-autoplan` as an optional planning-stage unknown-unknown scout for
+  non-trivial plan-backed work when the risk is hidden execution/test/DX
+  surprise;
+- `$intuitive-preflight` when the plan is accepted but needs execution scope,
+  acceptance, verification, stop gates, and worker strategy;
+- `$intuitive-flow` only after the plan/preflight contract is approved and
+  reconciled into the canonical plan.
+
+Stop when remaining items are implementation defaults, weak polish, or already
+covered by the plan. Return `Selected candidates: none` if the plan is already
+clear enough for preflight or execution.
 
 ## Discovery Loop And Selection Handoff
 

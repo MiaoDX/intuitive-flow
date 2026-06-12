@@ -1,7 +1,8 @@
 # GSD Handoff And Execution
 
-Use this reference after a plan has passed the `autoplan` precheck or when a
-GSD phase already owns execution.
+Use this reference after a plan has an approved execution contract and any
+required unknown-unknown scout result or skip reason recorded in the canonical
+plan, or when a GSD phase already owns execution.
 
 ## Handoff Decision
 

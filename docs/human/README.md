@@ -17,8 +17,8 @@ Start here:
   official and community agent-workflow practice
 - [skill-self-improvement-audit.md](skill-self-improvement-audit.md) for the
   dated baseline review of repo-owned skills through the self-improvement lens
-- [reduce-repo-entropy.md](reduce-repo-entropy.md) for the copy/paste
-  `$intuitive-reduce-entropy` maintenance prompt
+- [reduce-repo-entropy.md](reduce-repo-entropy.md) for copy/paste
+  `$intuitive-reduce-entropy` repo entropy and plan entropy prompts
 
 ## Doc Tiers
 

@@ -54,7 +54,7 @@ Spend human attention on what matters:
 - what good means
 - what must not break
 
-Use `intuitive-flow` for ordinary idea shaping, or `intuitive-planning-loop`
+Use `intuitive-flow` for ordinary idea shaping, or `agent-planning-loop`
 when the question needs scouts to challenge options before one review packet.
 Everything else should be cheap.
 

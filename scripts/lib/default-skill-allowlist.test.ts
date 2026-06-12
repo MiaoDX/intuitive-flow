@@ -16,16 +16,18 @@ describe("default skill allowlist", () => {
       # comment
       root-skill intuitive-flow
       root-skill intuitive-flow
+      root-skill agent-planning-loop
       external-skill mattpocock https://github.com/mattpocock/skills diagnose
       external-skill mattpocock https://github.com/mattpocock/skills tdd
       gstack-skill gstack-review
       gsd-skill gsd-plan-phase
+      legacy-skill intuitive-planning-loop
       legacy-skill old-flow
       legacy-command old.md
       legacy-mimocode-command stale.md
     `);
 
-    expect(allowlist.rootSkills).toEqual(["intuitive-flow"]);
+    expect(allowlist.rootSkills).toEqual(["agent-planning-loop", "intuitive-flow"]);
     expect(allowlist.externalSources).toEqual([
       {
         label: "mattpocock",
@@ -35,7 +37,7 @@ describe("default skill allowlist", () => {
     ]);
     expect(allowlist.gstackSkills).toEqual(["gstack-review"]);
     expect(allowlist.gsdSkills).toEqual(["gsd-plan-phase"]);
-    expect(allowlist.legacySkills).toEqual(["old-flow"]);
+    expect(allowlist.legacySkills).toEqual(["intuitive-planning-loop", "old-flow"]);
     expect(allowlist.legacyCommands).toEqual(["old.md"]);
     expect(allowlist.legacyMimocodeCommands).toEqual(["stale.md"]);
   });
@@ -118,6 +120,60 @@ describe("default skill allowlist", () => {
       expect(existsSync(join(home, ".codex", "skills", "user-skill"))).toBe(true);
     } finally {
       rmSync(home, { recursive: true, force: true });
+    }
+  });
+
+  test("treats renamed planning loop as current root and old name as legacy cleanup", () => {
+    const home = mkdtempSync(join(tmpdir(), "skill-home-"));
+    try {
+      mkdirSync(join(home, ".intuitive-flow"), { recursive: true });
+      writeFileSync(
+        join(home, ".intuitive-flow", "owned-root-skills.json"),
+        JSON.stringify({ schemaVersion: 1, rootSkills: ["agent-planning-loop", "intuitive-planning-loop"] }),
+      );
+      mkdirSync(join(home, ".codex", "skills", "agent-planning-loop"), { recursive: true });
+      mkdirSync(join(home, ".codex", "skills", "intuitive-planning-loop"), { recursive: true });
+      mkdirSync(join(home, ".agents", "skills", "intuitive-planning-loop"), { recursive: true });
+      mkdirSync(join(home, ".claude", "skills", "intuitive-planning-loop"), { recursive: true });
+      mkdirSync(join(home, ".config", "mimocode", "command"), { recursive: true });
+      writeFileSync(join(home, ".config", "mimocode", "command", "intuitive-planning-loop.md"), "");
+
+      const allowlist = parseDefaultSkillAllowlistText(`
+        root-skill agent-planning-loop
+        legacy-skill intuitive-planning-loop
+      `);
+
+      expect(pruneRemovedOwnedRootSkills(allowlist, home)).toBe(3);
+      expect(pruneLegacyArtifacts(allowlist, home)).toBe(1);
+      expect(existsSync(join(home, ".codex", "skills", "agent-planning-loop"))).toBe(true);
+      expect(existsSync(join(home, ".codex", "skills", "intuitive-planning-loop"))).toBe(false);
+      expect(existsSync(join(home, ".agents", "skills", "intuitive-planning-loop"))).toBe(false);
+      expect(existsSync(join(home, ".claude", "skills", "intuitive-planning-loop"))).toBe(false);
+      expect(existsSync(join(home, ".config", "mimocode", "command", "intuitive-planning-loop.md"))).toBe(false);
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+    }
+  });
+
+  test("flags the legacy planning loop if it remains as a repo root skill", () => {
+    const root = mkdtempSync(join(tmpdir(), "root-skills-"));
+    try {
+      mkdirSync(join(root, "agent-planning-loop"), { recursive: true });
+      writeFileSync(join(root, "agent-planning-loop", "SKILL.md"), "");
+      mkdirSync(join(root, "intuitive-planning-loop"), { recursive: true });
+      writeFileSync(join(root, "intuitive-planning-loop", "SKILL.md"), "");
+
+      const errors = checkRootSkills(
+        parseDefaultSkillAllowlistText(`
+          root-skill agent-planning-loop
+          legacy-skill intuitive-planning-loop
+        `),
+        root,
+      );
+
+      expect(errors).toEqual(["root skill missing from default allowlist: intuitive-planning-loop"]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
     }
   });
 

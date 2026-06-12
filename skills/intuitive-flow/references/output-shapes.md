@@ -111,8 +111,8 @@ Include:
 - goal ownership result: root goal adopted/created/not used, and any
   worker-local goals closed or blocked
 - scope changes, always, including `none`; include accepted scope changes from
-  `autoplan`, plan reconciliation, GSD handoff, refactor gates, or execution
-  discoveries, and keep them separate from parked/deferred work
+  unknown-unknown scout, plan reconciliation, GSD handoff, refactor gates, or
+  execution discoveries, and keep them separate from parked/deferred work
 - `STATUS.md` check/update result for non-trivial durable runs
 - Serena memory check/update result when Serena memories are configured, or
   `not configured/not available`

@@ -102,7 +102,7 @@ Load only the reference needed for the selected route:
 | --- | --- |
 | Active-goal resume/debug, context budget, loop breaker, experiment contract | `references/context-budget-and-loop-guard.md` |
 | Source-of-truth, `STATUS.md`, `CONTEXT.md`, provenance, phase granularity | `references/source-of-truth.md` |
-| Fuzzy idea shaping, single plan-file intake, `autoplan` precheck/reconciliation | `references/plan-intake-and-autoplan.md` |
+| Fuzzy idea shaping, single plan-file intake, unknown-unknown scout/reconciliation | `references/plan-intake-and-autoplan.md` |
 | GSD ingest vs plan-phase routing, committed phase execution, `simplify` scope | `references/gsd-handoff.md` |
 | Whole-run preflight, goal ownership, soft continuation vs hard stop, checkpoint policy, tmux/goal/clear policy | `references/checkpoints-and-auto-run.md` |
 | Broad refactor route, semantic commits, final `$intuitive-doc` doc-alignment sub-phase, parked-todo closeout | `references/refactor-and-closeout.md` |
@@ -152,9 +152,12 @@ the boundary. Do not preload every reference by default.
 - Use a single `docs/plans/<slug>.md` as the canonical pre-GSD plan. Treat a
   single plan-like file under `docs/adr/`, `docs/adrs/`, or `docs/human/` as
   source evidence to refactor into `docs/plans/`, not as the review ledger.
-- Do not implement a plan-backed request until `autoplan` evidence exists and
-  accepted decisions have been reconciled into the canonical plan. Tiny direct
-  edits that are not using a plan as source of truth may bypass this.
+- Do not implement a plan-backed request until the canonical plan records an
+  approved `$intuitive-preflight` contract and either an explicit
+  unknown-unknown scout result or a skip reason. `gstack-autoplan` is one
+  planning-stage scout option; it is not a hidden execution gate after
+  grill-batch and preflight approval. Tiny direct edits that are not using a
+  plan as source of truth may bypass this.
 - Do not create competing `.planning/phases/*` artifacts while the team is still
   brainstorming in `docs/plans/*.md`.
 - For plan-backed implementation, treat the canonical plan and relevant context
@@ -245,10 +248,10 @@ Stop gate: <repo command/artifact that decides complete | blocked | continue, or
 Stop/continue point: <where work pauses or what will run now>
 ```
 
-Name plausible but skipped stages such as `$intuitive-planning-loop`,
-`grill-with-docs`, `autoplan`, `to-issues`, GSD handoff, `simplify`, or
-verification. This makes shortcuts visible without turning every task into a
-ceremony.
+Name plausible but skipped stages such as `$agent-planning-loop`,
+`grill-with-docs`, unknown-unknown scouting with `gstack-autoplan`, `to-issues`,
+GSD handoff, `simplify`, or verification. This makes shortcuts visible without
+turning every task into a ceremony.
 
 ## Stable Entry Router
 
@@ -283,9 +286,9 @@ and run the shortest safe route.
 
 | Current state | Default route | Reference |
 | --- | --- | --- |
-| Fuzzy idea | direct `$intuitive-flow` shaping or auto-guided shaping -> `docs/plans/<slug>.md`; use `$intuitive-planning-loop` when scoped planning scouts should critique options before user review | `plan-intake-and-autoplan.md` |
-| Draft plan exists | single plan-file intake if needed -> `gstack-autoplan docs/plans/<slug>.md` -> reconcile accepted decisions into the plan | `plan-intake-and-autoplan.md` |
-| Reviewed plan, not under GSD | pass `autoplan` precheck -> optional `to-issues` -> `gsd-plan-phase --prd` or manifest + `gsd-ingest-docs` then `gsd-plan-phase` | `gsd-handoff.md` |
+| Fuzzy idea | route upstream to plan entropy mode, direct shaping, or `$agent-planning-loop`; Flow execution waits for an approved plan/preflight unless the task is tiny and direct | `plan-intake-and-autoplan.md` |
+| Draft plan exists | single plan-file intake if needed -> optional explicit `gstack-autoplan` unknown-unknown scout for non-trivial plan-backed work -> reconcile accepted findings into the plan | `plan-intake-and-autoplan.md` |
+| Reviewed plan, not under GSD | confirm approved preflight plus scout result/skip reason in the canonical plan -> optional `to-issues` -> `gsd-plan-phase --prd` or manifest + `gsd-ingest-docs` then `gsd-plan-phase` | `gsd-handoff.md` |
 | Committed GSD phase | `gsd-execute-phase <phase>` -> `simplify <changed-scope>` -> `gsd-verify-work <phase>` -> final `$intuitive-doc` doc-alignment sub-phase when significant human truth may have changed | `gsd-handoff.md` |
 | Architecture/refactor goal | route to `$intuitive-refactor` for scope gate -> execute accepted P0/P1 slices -> final `$intuitive-doc` doc-alignment sub-phase -> parked-todo closeout | `refactor-and-closeout.md` |
 | Changed code cleanup | `simplify <changed-scope>` -> rerun relevant proof | `gsd-handoff.md` |
@@ -461,8 +464,8 @@ closeout must include:
   work, including doc updates, moves, removals, or checked-and-left-unchanged
 - semantic commit ids created, or why commits were disabled
 - scope changes, always, including `none`; include accepted scope changes from
-  `autoplan`, plan reconciliation, GSD handoff, refactor gates, or execution
-  discoveries
+  unknown-unknown scout, plan reconciliation, GSD handoff, refactor gates, or
+  execution discoveries
 - source plan freshness result for plan-backed implementation: updated
   `<docs/plans/...>`, checked and left unchanged with reason, or not applicable
 - `STATUS.md` check/update result for non-trivial durable runs
@@ -481,9 +484,9 @@ imply them. If any category is empty, still print the category with `none`.
 ## Anti-Patterns
 
 - Do not run every downstream skill just because it exists.
-- Do not silently bypass plausible idea shaping, `autoplan`, GSD handoff,
-  cleanup, or verification; say what was skipped and why.
-- Do not use `autoplan` as implementation or refactor execution.
+- Do not silently bypass plausible idea shaping, unknown-unknown scouting,
+  GSD handoff, cleanup, or verification; say what was skipped and why.
+- Do not use `gstack-autoplan` as implementation or refactor execution.
 - Do not treat `gsd-ingest-docs` and `gsd-plan-phase` as interchangeable.
 - Do not pass one markdown file as a `gsd-ingest-docs` scan path; use a manifest.
 - Do not manually copy a plan into phase `CONTEXT.md`; use
