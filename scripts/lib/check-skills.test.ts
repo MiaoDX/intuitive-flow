@@ -3,6 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { checkSkills } from "./check-skills";
+import { skillSizeReport } from "./check-skills";
 
 const withTempProject = async (callback: (root: string) => Promise<void> | void) => {
   const root = mkdtempSync(join(tmpdir(), "skill-check-project-"));
@@ -160,6 +161,38 @@ describe("skill checker", () => {
       expect(errors).toContain(
         "GitHub Actions pins Bun 1.3.12 but package.json does not declare packageManager: bun@<version>",
       );
+    });
+  });
+
+  test("reports skill entrypoint sizes without failing structural checks", async () => {
+    await withTempProject((root) => {
+      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill alpha\nroot-skill beta\n");
+      writeFixtureFile(
+        root,
+        "skills/alpha/SKILL.md",
+        "---\nname: alpha\ndescription: Alpha.\n---\n\n" + "detail\n".repeat(4),
+      );
+      writeFixtureFile(
+        root,
+        "skills/beta/SKILL.md",
+        "---\nname: beta\ndescription: Beta.\n---\n\n" + "detail\n".repeat(12),
+      );
+
+      expect(checkSkills(optionsFor(root))).toEqual([]);
+      expect(skillSizeReport(join(root, "skills"), { maxChars: 80, maxLines: 10 })).toEqual([
+        {
+          skillName: "beta",
+          chars: 123,
+          lines: 17,
+          overBudget: true,
+        },
+        {
+          skillName: "alpha",
+          chars: 69,
+          lines: 9,
+          overBudget: false,
+        },
+      ]);
     });
   });
 });

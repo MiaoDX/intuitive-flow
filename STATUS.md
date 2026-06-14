@@ -1,6 +1,6 @@
 # Status
 
-Last reviewed: 2026-06-12
+Last reviewed: 2026-06-14
 
 ## Current State
 
@@ -11,6 +11,8 @@ currently provides:
 - a human-facing agent harness reference ledger in
   `docs/human/agent-harness-references.md`
 - reusable installed skills under `skills/`
+- compact runtime skill entrypoints backed by on-demand `references/`,
+  `templates/`, and `scripts/`
 - a single default skill install allowlist at
   `scripts/default-skill-allowlist.txt`
 - update and sync automation under `scripts/`
@@ -68,6 +70,8 @@ The current maintenance focus is keeping the repo dogfoodable:
 - keep installed global skill surfaces pruned by owner state: Intuitive root
   skills, managed external sources, GSD wrappers, and GStack wrappers
 - edit repo-owned skills directly under `skills/`
+- keep `SKILL.md` entrypoints compact and watch size drift through the
+  non-failing `check:skills` size budget report
 - keep local hooks enabled with `bun run setup:hooks` so skill structure,
   allowlist coverage, and local resource references are checked before commit
 - keep CI and local `bun run verify` aligned

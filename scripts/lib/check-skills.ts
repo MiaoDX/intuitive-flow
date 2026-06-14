@@ -10,6 +10,19 @@ export type SkillCheckOptions = {
   deprecatedSourceRoot: string;
   packageJsonPath?: string;
   githubVerifyWorkflowPath?: string;
+  skillSizeBudget?: SkillSizeBudget;
+};
+
+export type SkillSizeBudget = {
+  maxChars: number;
+  maxLines: number;
+};
+
+export type SkillSizeReport = {
+  skillName: string;
+  chars: number;
+  lines: number;
+  overBudget: boolean;
 };
 
 const defaultOptions = (): SkillCheckOptions => ({
@@ -18,6 +31,10 @@ const defaultOptions = (): SkillCheckOptions => ({
   deprecatedSourceRoot: join(process.cwd(), "skills-src"),
   packageJsonPath: join(process.cwd(), "package.json"),
   githubVerifyWorkflowPath: join(process.cwd(), ".github", "workflows", "verify.yml"),
+  skillSizeBudget: {
+    maxChars: 18_000,
+    maxLines: 300,
+  },
 });
 
 const sortedDirEntries = (dir: string) => readdirSync(dir).sort((a, b) => a.localeCompare(b));
@@ -227,6 +244,24 @@ const checkToolingVersions = (options: SkillCheckOptions): string[] => {
   return errors;
 };
 
+export const skillSizeReport = (
+  skillsRoot: string,
+  budget: SkillSizeBudget = { maxChars: 18_000, maxLines: 300 },
+): SkillSizeReport[] =>
+  skillNames(skillsRoot)
+    .map((skillName) => {
+      const text = readFileSync(join(skillsRoot, skillName, "SKILL.md"), "utf8");
+      const chars = text.length;
+      const lines = text.split("\n").length - (text.endsWith("\n") ? 1 : 0);
+      return {
+        skillName,
+        chars,
+        lines,
+        overBudget: chars > budget.maxChars || lines > budget.maxLines,
+      };
+    })
+    .sort((a, b) => b.chars - a.chars || a.skillName.localeCompare(b.skillName));
+
 export const checkSkills = (options = defaultOptions()): string[] => {
   const errors: string[] = [];
 
@@ -263,12 +298,28 @@ export const checkSkills = (options = defaultOptions()): string[] => {
 };
 
 const main = () => {
-  const errors = checkSkills();
+  const options = defaultOptions();
+  const errors = checkSkills(options);
   for (const error of errors) {
     console.error(`  ! ${error}`);
   }
   if (errors.length > 0) {
     process.exit(1);
+  }
+  const budget = options.skillSizeBudget;
+  if (budget) {
+    const report = skillSizeReport(options.skillsRoot, budget);
+    const overBudget = report.filter((item) => item.overBudget);
+    const summary = report
+      .slice(0, 5)
+      .map((item) => `${item.skillName}=${item.lines}l/${item.chars}c`)
+      .join(", ");
+    console.log(
+      `  skill size budget: ${overBudget.length}/${report.length} over ${budget.maxLines} lines or ${budget.maxChars} chars`,
+    );
+    if (summary) {
+      console.log(`  largest skill entrypoints: ${summary}`);
+    }
   }
   console.log("  ✓ skills are structurally valid");
 };
