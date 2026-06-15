@@ -97,8 +97,9 @@ The primary user-facing skills are `$intuitive-flow`, `$intuitive-refactor`,
 `$simplify` remain available for direct or routed use, but are not the default
 choice a user must make up front. `scripts/default-skill-allowlist.txt` is the
 complete default install list across repo-owned, external, GStack, and GSD
-skills; `docs/human/skill-self-improvement-audit.md` records the human-facing
-role of each installed root skill.
+skills; its comments mark the role tier for each default-visible group.
+`docs/human/skill-self-improvement-audit.md` records the human-facing role of
+the complete default surface, including external and managed wrappers.
 `$intuitive-preflight` owns approval-ready preflight contracts before a plan or
 vague task starts: context package, scope, non-goals, definition of done,
 verification, route, worker strategy, and main-session `/goal` wording.
@@ -151,6 +152,12 @@ The install surface is controlled by `scripts/default-skill-allowlist.txt`:
 - The allowlist check fails if a root skill exists but is not listed, or if the
   allowlist lists a missing root skill.
 
+The allowlist also carries lightweight role-tier comments. Those comments are
+human-facing governance, not parser input: primary choices, routed specialists,
+direct utilities, managed GStack tooling, and GSD status/resume helpers should
+stay visibly distinct even though the parser still reads the simple entry
+kinds above.
+
 During `scripts/update.sh`, the local sync writes
 `~/.intuitive-flow/owned-root-skills.json` after a successful root-skill sync.
 On later runs, it removes only skill directories that were previously recorded
@@ -182,9 +189,12 @@ that were previously recorded for that label but are no longer desired.
 
 GSD setup remains upstream-owned, but exposed GSD wrappers are pruned back to
 the `gsd-skill` entries in the default allowlist after each installer run. The
-wrapper still passes `--profile=standard` to the upstream installer for install
-mechanics, but the visible default surface is the allowlist, not the upstream
-profile.
+default visible GSD surface is limited to status and continuation helpers. Full
+phase machinery such as project creation, import, planning, execution, and
+verification remains routed by `$intuitive-flow` or explicit GSD use instead of
+being default-visible. The wrapper still passes `--profile=standard` to the
+upstream installer for install mechanics, but the visible default surface is the
+allowlist, not the upstream profile.
 
 GStack installation is upstream-owned but wrapped by this updater. After a
 successful GStack setup, the wrapper records generated Codex `gstack-*` skills in

@@ -63,12 +63,18 @@ The current maintenance focus is keeping the repo dogfoodable:
   architecture-scanner/worktree-porting/issue tracking/skill-runner utilities
   kept out of the primary choice set
 - keep default skill installs listed in `scripts/default-skill-allowlist.txt`
+  with role-tier comments that distinguish primary choices, routed specialists,
+  direct utilities, managed GStack tooling, and GSD status/resume helpers
 - keep `agent-planning-loop` as the canonical scout-planning root skill and
   `intuitive-planning-loop` as legacy cleanup only
 - use `bun run audit:skill-upstreams` to review upstream skill candidates
   outside the allowlist before adding anything new
 - keep installed global skill surfaces pruned by owner state: Intuitive root
   skills, managed external sources, GSD wrappers, and GStack wrappers
+- keep `$gstack-investigate` as the default root-cause/debugging route instead
+  of also default-installing `$diagnose`
+- keep GSD phase machinery routed by `$intuitive-flow` or explicit GSD use;
+  only GSD status/resume/pause helpers are default-visible
 - edit repo-owned skills directly under `skills/`
 - keep `SKILL.md` entrypoints compact and watch size drift through the
   non-failing `check:skills` size budget report

@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import {
   checkRootSkills,
+  readDefaultSkillAllowlist,
   parseDefaultSkillAllowlistText,
   pruneLegacyArtifacts,
   pruneRemovedOwnedRootSkills,
@@ -17,7 +18,7 @@ describe("default skill allowlist", () => {
       root-skill intuitive-flow
       root-skill intuitive-flow
       root-skill agent-planning-loop
-      external-skill mattpocock https://github.com/mattpocock/skills diagnose
+      external-skill mattpocock https://github.com/mattpocock/skills handoff
       external-skill mattpocock https://github.com/mattpocock/skills tdd
       gstack-skill gstack-review
       gsd-skill gsd-plan-phase
@@ -32,7 +33,7 @@ describe("default skill allowlist", () => {
       {
         label: "mattpocock",
         repo: "https://github.com/mattpocock/skills",
-        skills: ["diagnose", "tdd"],
+        skills: ["handoff", "tdd"],
       },
     ]);
     expect(allowlist.gstackSkills).toEqual(["gstack-review"]);
@@ -40,6 +41,15 @@ describe("default skill allowlist", () => {
     expect(allowlist.legacySkills).toEqual(["intuitive-planning-loop", "old-flow"]);
     expect(allowlist.legacyCommands).toEqual(["old.md"]);
     expect(allowlist.legacyMimocodeCommands).toEqual(["stale.md"]);
+  });
+
+  test("current default surface keeps debugging and GSD visibility narrow", () => {
+    const allowlist = readDefaultSkillAllowlist(join(process.cwd(), "scripts", "default-skill-allowlist.txt"));
+    const externalSkills = allowlist.externalSources.flatMap((source) => source.skills);
+
+    expect(externalSkills).not.toContain("diagnose");
+    expect(allowlist.gstackSkills).toContain("gstack-investigate");
+    expect(allowlist.gsdSkills).toEqual(["gsd-pause-work", "gsd-progress", "gsd-resume-work"]);
   });
 
   test("rejects unsafe values and duplicate labels pointing at different repos", () => {

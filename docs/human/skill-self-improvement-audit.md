@@ -1,13 +1,13 @@
 # Skill Self-Improvement Audit
 
-Last reviewed: 2026-06-08
+Last reviewed: 2026-06-15
 
 This audit applies the self-improvement lens from
-[`agent-harness-references.md`](agent-harness-references.md) to every current
-repo-owned root skill listed in `scripts/default-skill-allowlist.txt`. The goal is
-not to paste a maintenance prompt into every skill. The goal is to find which
-skill texts should become smaller, clearer, or better routed across docs,
-scripts, hooks, tests, and skills.
+[`agent-harness-references.md`](agent-harness-references.md) to the default
+installed skill surface listed in `scripts/default-skill-allowlist.txt`. The
+goal is not to paste a maintenance prompt into every skill. The goal is to find
+which visible skills should be primary, routed, direct utilities, external
+fallbacks, or pruned from defaults.
 
 Scope: this is a dated baseline audit result, not the recurring research
 prompt. For a fresh Codex or Claude Code session that should compare
@@ -24,9 +24,22 @@ Completed baseline correction:
 - Runtime `Skill Self-Improvement Rule` blocks are absent from repo-owned
   skills.
 - Keep the WHY / WHAT / HOW lens in human docs.
-- Use this audit as the baseline for later skill-specific cleanup.
+- Use this audit as the baseline for default-surface cleanup.
 
-## Audit Table
+Current default-surface correction:
+
+- `scripts/default-skill-allowlist.txt` now names tiers with comments:
+  primary public choices, routed specialists, direct utilities, external
+  specialists, managed GStack tooling, and GSD status/resume helpers.
+- `$diagnose` is no longer installed by default. `$gstack-investigate` is the
+  default root-cause/debugging entrypoint because the GStack skill set already
+  owns browser-visible investigation and QA workflows.
+- GSD phase machinery (`gsd-new-project`, `gsd-import`, `gsd-plan-phase`,
+  `gsd-execute-phase`, and `gsd-verify-work`) is no longer default-visible.
+  `$intuitive-flow` remains the route that names those commands when a committed
+  GSD phase is actually needed.
+
+## Repo-Owned Root Skills
 
 | Skill | WHY Clarity | WHAT Boundary | HOW / Stop Condition | Recommendation |
 | --- | --- | --- | --- | --- |
@@ -45,24 +58,53 @@ Completed baseline correction:
 | `simplify` | Strong: review changed code for reuse, quality, efficiency. | Medium: owns diff-scoped review; adapter block is large and mechanical. | Medium: process is clear, but the codex adapter and reviewer prompts dominate the file. | Do not add meta text. Future candidate: move adapter/mechanics to shared adapter docs or generator if more skills use it. |
 | `skill-runner` | Strong: supervise real skill-driven development runs. | Strong: owns runner orchestration and reusable-skill defect detection. | Strong: verdicts, policy, and stop conditions are explicit. | Already has skill-change policy. Do not add another meta block. |
 
+## External And Managed Defaults
+
+| Surface | Default role | Recommendation |
+| --- | --- | --- |
+| `skill-creator` | External authoring utility from Anthropic's skills source. | Keep default-visible for skill creation and maintenance tasks. |
+| `codex` | External utility for Codex CLI workflows. | Keep default-visible because this repo supports Codex as a first-class host. |
+| `grill-with-docs` | External one-question-at-a-time discussion specialist. | Keep as a fallback behind `grill-with-docs-batch`; batch remains the preferred routed skill. |
+| `handoff` | External context handoff utility. | Keep as direct utility for compacting long agent sessions. |
+| `improve-codebase-architecture` | External report-only architecture discovery. | Keep routed behind reduce-entropy or architecture review. |
+| `tdd` | External test-first workflow. | Keep as direct specialist when the user explicitly wants TDD. |
+| `zoom-out` | External architecture/context map. | Keep routed as the first architecture review pass before plan-eng-review. |
+| `gstack-browse`, `gstack-open-gstack-browser` | Browser launch and browser QA helpers. | Keep for visual/runtime dogfooding that text checks miss. |
+| `gstack-plan-eng-review`, `gstack-review`, `gstack-qa` | Managed review and QA wrappers. | Keep default-visible for plan, PR, and app QA gates. |
+| `gstack-investigate` | Managed root-cause investigation workflow. | Keep as the default debugging/investigation route; do not also default-install `$diagnose`. |
+| `gsd-progress`, `gsd-resume-work`, `gsd-pause-work` | GSD status and continuation helpers. | Keep as low-risk recovery/status commands. |
+
+Removed from the default surface:
+
+- `diagnose`: overlapped with `gstack-investigate` for bug/root-cause reports.
+  Re-add only if a future audit shows the GStack route is unavailable or too
+  heavy for common debugging tasks.
+- `gsd-new-project`, `gsd-import`, `gsd-plan-phase`, `gsd-execute-phase`, and
+  `gsd-verify-work`: useful phase machinery, but too broad for the default
+  visible surface. `$intuitive-flow` and GSD docs should name them only when a
+  committed phase exists or a plan explicitly enters GSD.
+
 ## What The Lens Changes
 
 - It makes `docs/human/agent-harness-references.md` the durable place for
   external lessons and skill-maintenance doctrine.
 - It argues against adding self-maintenance sections to runtime skill text.
+- It keeps the installed default surface tiered: primary choices stay small,
+  specialists remain routed, and phase machinery is hidden until the workflow
+  actually needs it.
 - It exposed `intuitive-layout` as a boundary-smell after user review; layout is
   now treated as a symptom routed by object instead of a root skill.
 - It exposes two remaining future cleanup candidates: `intuitive-flow` because
   it is necessarily broad, and `simplify` because its adapter/mechanics are large.
-- It does not justify broad rewrites today. Most skills already have clear
-  execution contracts and stop conditions.
+- It does not justify broad rewrites today. Most retained defaults already have
+  clear execution contracts and stop conditions.
 
 ## Parked Follow-Ups
 
 - Add a lightweight manifest check later if the repo wants to enforce that each
   root skill has a clear WHY / WHAT / HOW shape without requiring a literal
   section heading.
-- Evaluate whether `simplify`'s Codex adapter block should be generated or
-  moved to a shared reference if more adapted skills appear.
+- Revisit whether `simplify` still has adapter/mechanics bulk after the next
+  real changed-code review; the current entrypoint is compact enough.
 - Consider splitting long `intuitive-flow` reference material only after a real
   task shows that its size hurts execution quality.

@@ -96,7 +96,9 @@ Common routed specialists include `$intuitive-preflight`, `$intuitive-doc`,
 report-only architecture discovery; direct-use utilities such as
 `$intuitive-port-worktree`, `$multica-goal-tracker`, `$skill-runner`, and
 `$simplify` are installed too. The complete default install surface lives in
-`scripts/default-skill-allowlist.txt`, with the human-facing role audit in
+`scripts/default-skill-allowlist.txt`, whose comments mark primary choices,
+routed specialists, direct utilities, managed GStack tooling, and GSD status
+helpers. The human-facing role audit is in
 `docs/human/skill-self-improvement-audit.md`.
 
 ## Human Docs

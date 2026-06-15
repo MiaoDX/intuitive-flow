@@ -16,7 +16,8 @@ Start here:
   minimal copy/paste prompt for comparing `$intuitive-flow` with current
   official and community agent-workflow practice
 - [skill-self-improvement-audit.md](skill-self-improvement-audit.md) for the
-  dated baseline review of repo-owned skills through the self-improvement lens
+  dated baseline review of the default installed skill surface through the
+  self-improvement lens
 - [reduce-repo-entropy.md](reduce-repo-entropy.md) for copy/paste
   `$intuitive-reduce-entropy` repo entropy and plan entropy prompts
 
