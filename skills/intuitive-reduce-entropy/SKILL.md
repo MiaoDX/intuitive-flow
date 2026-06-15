@@ -9,8 +9,10 @@ description: |
   at an idea, draft plan, or named plan file and wants blind spots, missing
   decisions, or weak assumptions found before grill-batch/preflight. The skill
   must state the selected mode and why before auditing, return a no-change
-  result instead of filling a requested count when only polish remains, and
-  leave next workflow selection to the user after the packet is returned.
+  result instead of filling a requested count when only polish remains, choose
+  an explicit discovery intensity, run saturation discovery when the user asks
+  for all directions or unknown unknowns, and end with one recommended next
+  action plus a short reply shortcut.
 ---
 
 # Intuitive Reduce Entropy
@@ -34,12 +36,41 @@ Start by saying:
 ```text
 Selected mode: <repo entropy mode | plan entropy mode>
 Why: <one sentence tied to the user's prompt>
+Discovery intensity: <quick scan | selection scan | saturation scan>
 ```
 
 This is the compact runtime entrypoint. Read
 `references/detailed-guidance.md` only when the compact rules below are not
 enough to decide materiality, discovery depth, architecture review sequence,
 layout routing, delegation, plan-review ownership, or output shape.
+
+## Discovery Intensity
+
+Choose the scan intensity explicitly before auditing. This is the main lever
+that prevents the user from having to ask "is that everything?" after a partial
+packet.
+
+- `quick scan`: use for simple, local, low-risk prompts. Inspect the narrow
+  surface, return at most 1-3 material candidates, and do not create or require
+  a plan document unless the evidence shows cross-session or multi-surface
+  risk.
+- `selection scan`: use when the user has already selected one or more
+  directions and wants related gaps, adjacent risks, or supporting work found
+  around those directions. Keep the selected directions as the anchor, update
+  the existing plan when one exists, and park unrelated repo-wide ideas.
+- `saturation scan`: use when the user asks for all directions, unknown
+  unknowns, a loop, "continue until no more", "find all reduce entropy points",
+  or when the user does not know what they should choose. Run fresh bounded
+  rounds until a new round finds no P0/P1 or materially useful P2 candidate.
+
+If the prompt is ambiguous, default to `quick scan` for tiny implementation
+questions and `saturation scan` for architecture, workflow, skill, docs/source
+of truth, or plan-backed work where missing a direction would likely cause
+another discussion loop.
+
+Do not present a small starter list when the user asked for saturation. Return
+the complete serious group that passes the materiality bar, plus parked items
+that were checked and rejected.
 
 ## Repo Entropy Route
 
@@ -93,6 +124,39 @@ Classify each candidate's next owner:
 Stop when remaining items are implementation defaults, weak polish, or already
 covered by the plan. Return `Selected candidates: none` if the plan is already
 clear enough for preflight or execution.
+
+## Plan Artifact And Handoff
+
+For complex tasks, anchor the discussion in a plan document. Use or create a
+plan when the work spans multiple directions, multiple sessions, architecture or
+public-contract decisions, non-trivial verification, or a later grill/preflight
+step. Keep simple local fixes inline.
+
+When a plan exists, update it with a compact lifecycle block when useful:
+
+```text
+Status: Draft | Entropy-reviewed | Grilled | Preflighted | Approved | Executing | Verified
+Last reviewed:
+Current decision:
+Next step:
+Open questions:
+Parked:
+```
+
+At the end of every run, name exactly one recommended next action unless there
+is genuinely no useful next action. Prefer the route that follows from the
+packet:
+
+- unresolved product/domain/public-contract questions ->
+  `$grill-with-docs-batch`;
+- accepted direction but missing execution contract -> `$intuitive-preflight`;
+- preflighted and approved contract -> `$intuitive-flow`;
+- no material candidates -> stop or park.
+
+Accept short replies as approval for the single recommended next action. If the
+last output says `Shortcut: reply "LGTM" to run grill batch and update the
+plan`, then a later "LGTM", "sounds good", "do it", or equivalent should start
+that next action instead of asking the user to restate the workflow.
 
 ## Context Budget
 
@@ -206,6 +270,7 @@ End broad discovery with:
 
 ```text
 Entropy source:
+Discovery intensity:
 Recommended packet:
 Selected candidates:
 Specialist owners:
@@ -215,13 +280,16 @@ Pattern hint:
 Changes:
 Verification:
 Parked items:
-Next options:
+Saturation status:
+Recommended next action:
+Shortcut:
 ```
 
 For no-change runs:
 
 ```text
 Entropy source:
+Discovery intensity:
 Selected candidates: none
 Why no change:
 Verification:

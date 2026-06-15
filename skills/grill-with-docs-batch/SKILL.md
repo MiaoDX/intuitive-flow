@@ -33,6 +33,36 @@ When the user asks whether remaining questions exist, answer the yes/no first.
 Only ask a batch if at least one unresolved question would materially change the
 plan, contract, public/private boundary, or acceptance gate.
 
+## Convergence Loop
+
+This skill should remove the burden of asking "are we done yet?" from the user.
+After every accepted batch, do the loop yourself:
+
+1. Interpret the user's reply, including shorthand such as "LGTM", "all agree",
+   "others are fine", "2 no because...", or "do it".
+2. Apply the resolved updates to the plan, context doc, or ADR surface named in
+   the batch. If no document update is warranted, say why.
+3. Re-read the updated target and run a fresh saturation audit.
+4. Either ask the next material batch or stop with the no-more-discussion
+   response.
+
+Do not wait for the user to ask whether there are more questions. The user
+answers batches; the skill owns convergence.
+
+When the previous assistant message offered exactly one next action, treat a
+short approval reply such as "LGTM", "sounds good", "可以", or "do it" as
+permission to perform that action. Examples:
+
+- after a proposed batch, apply the accepted answers and continue the
+  convergence loop;
+- after a stop response that recommends preflight, run or prepare
+  `$intuitive-preflight` instead of asking the user to restate it;
+- after a stop response that recommends execution, hand off to
+  `$intuitive-flow` only when the plan/preflight contract is already approved.
+
+If the user's short reply is ambiguous because multiple next actions were
+listed, ask one concise clarification and then continue.
+
 ## Plan vs ADR Routing
 
 Do not treat `docs/plans/*` and `docs/adr/*` as interchangeable planning
@@ -171,7 +201,9 @@ What is already decided:
 Remaining items are implementation defaults:
 - <default the implementer can choose>
 
-Next step: <execute / convert to tasks / patch the plan narrowly>
+Plan state: <updated file or "no plan update needed">
+Recommended next action: <preflight / execute via intuitive-flow / patch the plan narrowly / park>
+Shortcut: <e.g. reply "LGTM" to run preflight and update the plan>
 ```
 
 Do not convert implementation defaults into another batch. If the user wants the
@@ -199,6 +231,9 @@ If accepted, I will update:
 - CONTEXT.md: <terms/relationships>
 - Plan: <execution details / gates / open questions, or "none">
 - ADR: <only if warranted, otherwise "none">
+
+After your reply, I will apply the accepted updates and rerun the saturation
+audit before deciding whether another batch is needed.
 ```
 
 Wait for the user's response before applying docs or moving to the next batch.
@@ -235,7 +270,24 @@ After each accepted batch:
 5. If ADR or plan cleanup is warranted, prefer archive moves plus README/index
    updates over deletion, renumbering, or broad filename churn.
 6. Report exactly what changed, then run the saturation audit before asking any
-   next batch.
+   next batch. If the audit finds no more decision-impact questions, stop and
+   recommend the next workflow step.
+
+For plan-backed work, prefer updating the existing plan over scattering
+resolved decisions through chat. If the target repo uses a lifecycle header, set
+or refresh concise fields such as:
+
+```text
+Status: Grilled
+Last reviewed:
+Current decision:
+Next step:
+Open questions:
+Parked:
+```
+
+Do not create a plan for tiny local changes where the implementation can happen
+cleanly in the same session and no cross-session decision needs preserving.
 
 ## Language
 

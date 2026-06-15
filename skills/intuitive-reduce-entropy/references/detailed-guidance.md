@@ -145,6 +145,19 @@ clear enough for preflight or execution.
 
 Discovery and implementation have different boundaries:
 
+- Name the discovery intensity before auditing:
+  `quick scan`, `selection scan`, or `saturation scan`.
+  - Use `quick scan` for simple, local, low-risk prompts. Return at most 1-3
+    material candidates and usually avoid creating a plan document.
+  - Use `selection scan` when the user has already selected one or more
+    directions and wants related gaps, adjacent risks, or supporting work found
+    around those directions. Keep the selected directions as the anchor and
+    park unrelated repo-wide ideas.
+  - Use `saturation scan` when the user asks for all directions, unknown
+    unknowns, a loop, "continue until no more", or "find all reduce entropy
+    points", or when missing a direction would likely cause another planning
+    loop. Run fresh bounded rounds until the next round finds no P0/P1 or
+    materially useful P2.
 - Discovery should surface the complete serious group of current candidates so
   the user can choose all, choose a subset, or defer everything with full
   context.
@@ -154,7 +167,7 @@ Discovery and implementation have different boundaries:
 - For narrow prompts, run one broad-enough pass and return the ranked batch.
 - For repo-wide prompts, old-repo cleanup, "as much as possible", "all big
   directions", "again and again", "continue until no more", or similar
-  saturation language, enter discovery-loop mode by default.
+  saturation language, enter saturation scan / discovery-loop mode by default.
 - In discovery-loop mode, run fresh rounds from current `HEAD` until another
   round no longer finds a P0/P1 or materially useful P2 direction. A typical
   loop is code/test/script surface, docs/agent/backlog surface, then saturation
@@ -183,6 +196,20 @@ Discovery and implementation have different boundaries:
   packet if asked. Do not implement the candidates inside this skill unless the
   user explicitly changes the task from discovery to implementation and
   confirms the selected set.
+- For complex work, use or update a plan document as the state anchor when the
+  work spans multiple directions, sessions, architecture/public-contract
+  decisions, non-trivial verification, or later grill/preflight. Keep simple
+  local fixes inline.
+- End every discovery run with one recommended next action and a shortcut. If
+  the packet has unresolved product, terminology, public-contract, or
+  decision-quality questions, recommend `$grill-with-docs-batch`. If the
+  direction is accepted but lacks an execution contract, recommend
+  `$intuitive-preflight`. If the plan is preflighted and approved, recommend
+  `$intuitive-flow`. If no material candidates remain, recommend stopping or
+  parking. When the previous assistant message names exactly one recommended
+  next action, treat "LGTM", "sounds good", "do it", and equivalent short
+  replies as approval to run that next action rather than asking the user to
+  restate the workflow.
 
 ## High-Noise Surface Budget
 
@@ -640,17 +667,19 @@ are migration targets, not contracts.
 
 ## Public Entry Model
 
-Keep the reduce-entropy output focused on discovery, not on choosing the next
-workflow:
+Keep the reduce-entropy output focused on discovery and handoff, not
+implementation:
 
 - `$intuitive-reduce-entropy` -> find what repo maintenance would pay off most
-  now.
+  now, name the discovery intensity, and recommend one next workflow action.
 - `$intuitive-refactor` -> likely owner for known module, seam, API, or
   architecture cleanup targets.
 - `$intuitive-doc`, `$intuitive-init`, and `$intuitive-tests` -> likely owners
   for docs, agent guidance, and test-suite surfaces.
 - `$grill-with-docs-batch`, `$intuitive-preflight`, implementation planning, or
-  backlog parking may all be valid next steps after the user selects candidates.
+  backlog parking may all be valid next steps after the user selects candidates,
+  but the output should still choose the single best next action for the current
+  packet.
 
 Specialist skills still exist, but the user should not need to pick one before
 the repo has been diagnosed:
@@ -729,10 +758,11 @@ Use this route unless the user already names a specific entropy source.
    profile registries. For high-noise surfaces, orient with indexes and
    references rather than full-body reads.
 2. **Classify**: map observed friction to the entropy sources above.
-3. **Choose discovery depth**: for narrow prompts, run one broad-enough pass.
-   For repo-wide or saturation language, run discovery-loop mode and record the
-   rounds in one artifact when the repo convention allows it. Each round should
-   name the surface, bounded probes used, candidate-level evidence found, parked
+3. **Choose discovery intensity**: classify the pass as `quick scan`,
+   `selection scan`, or `saturation scan`. For repo-wide, unknown-unknown, or
+   saturation language, run discovery-loop mode and record the rounds in one
+   artifact when the repo convention allows it. Each round should name the
+   surface, bounded probes used, candidate-level evidence found, parked
    observations, and why deeper reading did or did not continue.
 4. **Recommend packet**: present the complete ranked candidate packet. Include a
    suggested review order and attach `Zen hint:`, `Pattern hint:`,
@@ -753,6 +783,10 @@ Use this route unless the user already names a specific entropy source.
    preserve the selected candidates, suggested review order, likely specialist owners,
    proof commands, execution risks, parked items, and stop condition. Do not
    silently narrow the selected set to one small slice.
+7. **Handoff**: end with `Recommended next action:` and `Shortcut:`. If a plan
+   document exists, state whether it was updated or should be updated by the
+   next action. Do not list many equally weighted next options unless the user
+   explicitly asked to compare routes.
 
 When the user asks for a compact selected-candidates packet, use this shape so
 the next stage does not repeat the whole audit:
