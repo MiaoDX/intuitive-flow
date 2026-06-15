@@ -140,13 +140,18 @@ Commit owned verified slices as the flow progresses; stage only owned files.
 Before final closeout for significant implementation/refactor work:
 
 - verify the requested behavior with relevant commands or artifact inspection;
+- report a proof card with claim level, commands/checks run, skipped or blocked
+  required gates, and artifact paths for any evidence that is not visible in the
+  final message;
 - run final `$intuitive-doc` alignment for root human docs and `docs/human/**`;
 - refresh the source plan status/evidence when plan-backed work shipped;
 - triage parked todos and run at most one automatic bounded follow-up slice
   inside the original objective.
 
 Final responses for completed Flow implementation/refactor work must explicitly
-include `What changed`, `Scope changes`, and `Parked todos`, even when empty.
+include `What changed`, `Proof`, `Scope changes`, and `Parked todos`, even when
+empty. Do not claim full completion when a required product-run, local/live, or
+manual gate is skipped or blocked.
 
 Read `references/refactor-and-closeout.md` and `references/output-shapes.md`
 for detailed commit, doc-alignment, and closeout shapes.

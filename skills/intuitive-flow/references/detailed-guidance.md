@@ -463,6 +463,8 @@ closeout must include:
 
 - what changed
 - verification run and result, or what was not run
+- proof card with claim level, required gates run, required gates
+  skipped/blocked, and evidence artifacts
 - final `$intuitive-doc` sub-phase result for significant implementation/refactor
   work, including doc updates, moves, removals, or checked-and-left-unchanged
 - semantic commit ids created, or why commits were disabled
@@ -479,10 +481,12 @@ closeout must include:
 - parked todos, always, including `none found`
 
 At the very end of any completed Flow implementation/refactor, explicitly list
-`What changed`, `Scope changes`, and `Parked todos` as visible headings or
-clearly labeled bullets in the final user-facing response. Do not rely on a
+`What changed`, `Proof`, `Scope changes`, and `Parked todos` as visible headings
+or clearly labeled bullets in the final user-facing response. Do not rely on a
 brief prose summary, commit message, worker handoff, or verification log to
-imply them. If any category is empty, still print the category with `none`.
+imply them. If any category is empty, still print the category with `none`. If a
+required product-run, local/live, or manual gate was skipped or blocked, the
+proof claim level must be `partial` or `blocked`, not full completion.
 
 ## Anti-Patterns
 

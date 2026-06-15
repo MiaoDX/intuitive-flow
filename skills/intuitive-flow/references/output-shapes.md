@@ -104,6 +104,8 @@ Include:
 
 - what changed
 - verification run and result
+- proof card with claim level, required gates run, required gates
+  skipped/blocked, and evidence artifacts
 - documentation status check and any doc updates/moves/removals when code or
   refactor work changed human-facing truth
 - semantic commit ids created, or why commits were disabled
@@ -125,10 +127,12 @@ Include:
   occurred
 
 The final user-facing response after completed implementation/refactor work must
-visibly enumerate `What changed`, `Scope changes`, and `Parked todos`. Do not
-bury these categories inside prose, verification logs, commit messages, worker
-handoffs, or "follow-ups available" language. If a category is empty, print it
-with `none`.
+visibly enumerate `What changed`, `Proof`, `Scope changes`, and `Parked todos`.
+Do not bury these categories inside prose, verification logs, commit messages,
+worker handoffs, or "follow-ups available" language. If a category is empty,
+print it with `none`. If any required product-run, local/live, or manual gate
+was skipped or blocked, set the proof claim level to `partial` or `blocked`
+instead of implying full completion.
 
 ## Repo Guidance Updates
 

@@ -195,4 +195,27 @@ describe("skill checker", () => {
       ]);
     });
   });
+
+  test("requires convergence handoff markers on primary workflow skills", async () => {
+    await withTempProject((root) => {
+      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill agent-planning-loop\n");
+      writeFixtureFile(
+        root,
+        "skills/agent-planning-loop/SKILL.md",
+        "---\nname: agent-planning-loop\ndescription: Planning loop.\n---\n\nNext execution route:\n- $intuitive-flow\n",
+      );
+
+      const errors = checkSkills(optionsFor(root));
+
+      expect(errors).toContain(
+        "missing workflow handoff marker in skills/agent-planning-loop/SKILL.md: Plan artifact:",
+      );
+      expect(errors).toContain(
+        "missing workflow handoff marker in skills/agent-planning-loop/SKILL.md: Recommended next action:",
+      );
+      expect(errors).toContain(
+        "missing workflow handoff marker in skills/agent-planning-loop/SKILL.md: Shortcut:",
+      );
+    });
+  });
 });

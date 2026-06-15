@@ -118,6 +118,14 @@ const skillRelativePath = (path: string): string => normalize(path).replace(/\\/
 const isMarkdownFile = (file: string): boolean => file.endsWith(".md");
 const localCheckoutPathPattern = /\/home\/mi\/ws\/intuitive-flow\b/;
 
+const requiredWorkflowMarkers: Record<string, string[]> = {
+  "agent-planning-loop": ["Plan artifact:", "Recommended next action:", "Shortcut:"],
+  "grill-with-docs-batch": ["Plan state:", "Recommended next action:", "Shortcut:"],
+  "intuitive-flow": ["Proof", "What changed", "Scope changes", "Parked todos"],
+  "intuitive-preflight": ["To execute:", "Optional tracking:", "Approval:"],
+  "intuitive-reduce-entropy": ["Recommended next action:", "Shortcut:"],
+};
+
 const localResourceMentions = (text: string, sourceFile: string): ResourceMention[] => {
   const mentions = new Map<string, ResourceMention>();
   const addMention = (displayPath: string, resolvedPath = displayPath) => {
@@ -193,6 +201,13 @@ const checkSkill = (skillsRoot: string, skillName: string): string[] => {
           errors.push(`missing referenced skill resource in skills/${skillName}/${file}: ${mention.displayPath}`);
         }
       }
+    }
+  }
+
+  const markers = requiredWorkflowMarkers[skillName] ?? [];
+  for (const marker of markers) {
+    if (!text.includes(marker)) {
+      errors.push(`missing workflow handoff marker in skills/${skillName}/SKILL.md: ${marker}`);
     }
   }
 

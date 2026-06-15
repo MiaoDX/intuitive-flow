@@ -4,6 +4,12 @@ What changed:
 Verification:
 - <command/check> - <result>
 
+Proof:
+- Claim level: <complete | partial | blocked | not-run>
+- Required gates run: <commands/checks and pass/fail summary, or none>
+- Required gates skipped/blocked: <gate - reason - impact on completion claim, or none>
+- Evidence artifacts: <paths/URLs/log summaries/screenshots, or none>
+
 Intuitive-doc alignment:
 - <updated/moved/removed/checked-left-unchanged/skipped with reason; include doc paths>
 

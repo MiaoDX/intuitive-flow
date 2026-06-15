@@ -219,17 +219,28 @@ Alternatives:
 User decisions:
 - <decision, why it matters, recommended default>
 
-Next execution route:
-- <main direct | $intuitive-refactor | durable $intuitive-flow | skill-runner>
+Plan artifact:
+- <updated docs/plans/... | create docs/plans/... before execution | no durable artifact needed because ...>
+
+Recommended next action:
+- <run $intuitive-preflight | execute via $intuitive-flow | execute via $intuitive-refactor | patch the plan narrowly | park>
+
+Shortcut:
+- <e.g. reply "LGTM" to run preflight and update the plan>
 ```
 
 If no material plan remains, say so directly and explain what evidence caused
-the stop. Do not fill the packet with weak alternatives.
+the stop. Do not fill the packet with weak alternatives. Still include
+`Recommended next action` and `Shortcut`; use `park/none` when there is genuinely
+no useful next step.
 
 ## Approval Handling
 
 If the user approves the review packet, do not rerun the planning loop unless
-their approval changes scope. Route to the named execution path.
+their approval changes scope. Route to the single `Recommended next action`.
+Treat short replies such as `LGTM`, `approve`, `sounds good`, or `do it` as
+approval for that action and preserve the packet's plan artifact, scope,
+verification, user decisions, parked items, and stop condition.
 
 If the user pushes back on part of the recommendation, treat that as new charter
 input. Rerun only the affected scout stage, not the whole loop.

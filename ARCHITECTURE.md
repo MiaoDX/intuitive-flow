@@ -242,8 +242,9 @@ bun run setup:hooks
 The pre-commit hook delegates to `scripts/dev/pre-commit.sh` and runs
 `bun run check:skills`. This catches missing manifest entries, stale generated
 include syntax, invalid frontmatter, broken local skill resource references,
-default allowlist drift, and GitHub Actions Bun pin drift before commit without
-making every commit run the full TypeScript and test proof.
+default allowlist drift, required workflow handoff marker drift, and GitHub
+Actions Bun pin drift before commit without making every commit run the full
+TypeScript and test proof.
 
 ## Codex Adapter Contract
 
@@ -275,17 +276,18 @@ bun run verify
 ```
 
 That validates repo-owned skill structure, default allowlist coverage, local
-skill resource references, and Bun toolchain pin alignment, runs
+skill resource references, required workflow handoff markers, and Bun toolchain
+pin alignment, runs
 ShellCheck error-level checks for Bash orchestration scripts, runs TypeScript
 checking, and runs Bun tests. GitHub Actions mirrors the same proof in
 `.github/workflows/verify.yml`, so broken skill allowlists, frontmatter, resource
-references, deprecated `skills-src/` files, or CI/local Bun version drift fail
-CI.
+references, required handoff markers, deprecated `skills-src/` files, or
+CI/local Bun version drift fail CI.
 
 At the moment, the test suite covers the default skill allowlist parser,
 root-skill allowlist checks, direct skill validation, deprecated source
-rejection, resource reference checks, external skill entry validation, GitHub Actions Bun pin
-alignment, and pruning of
+rejection, resource reference checks, primary workflow handoff marker checks,
+external skill entry validation, GitHub Actions Bun pin alignment, and pruning of
 allowlist-owned legacy artifacts, stale previously owned root skills, stale
 managed external skills, stale managed GStack skill links, managed GSD wrapper
 pruning, upstream skill audit output, and installer wrapper calls that enforce

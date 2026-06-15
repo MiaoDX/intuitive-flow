@@ -148,6 +148,7 @@ Acceptance:
 Verification: deterministic=<lint/type/unit/focused contract commands>; integration=<catalog/route/report/artifact commands>; product-run=<public command/flow/script/harness>; local-live-manual=<provider/Docker/simulator/GPU/hardware/browser/human checks, or unavailable reason>; optional=<non-blocking checks>
 Execution: main=<root supervisor role>; worker=<none | Paseo scope | skill-runner scope>; worker-goal=<none | exact bounded goal>
 To execute: /goal execute <canonical source> with intuitive-flow
+Optional tracking: <none | run $multica-goal-tracker create-from-preflight with --preflight-file <file> --workspace-id <workspace> after approval and before executing>
 Approval: LGTM/approve/go ahead approves; edits request revision.
 ```
 
@@ -167,6 +168,12 @@ If the canonical source is conversation-only, first recommend writing or
 updating a plan file with this contract. Add that as one short
 `Plan-file recommendation:` line before `To execute:` so context compression
 cannot erase the approved scope and acceptance criteria.
+
+For durable runs that should be tracked as Multica issues, include
+`Optional tracking` with the exact `create-from-preflight` handoff after
+approval and before execution. Keep it optional unless the user asked for issue
+tracking; never replace `To execute` with tracking, because the tracker records
+provenance and start state but does not execute the goal or prove completion.
 
 If blocked, replace `Execution`, `To execute`, and `Approval` with:
 
