@@ -159,6 +159,11 @@ state does not exist yet, the updater seeds it after sync and does not infer
 ownership from matching names. User-installed skills outside that owned state
 are preserved.
 
+For each allowlisted repo-owned root skill, the Codex install directory is a
+fresh mirror of `skills/<name>/` on every sync. The updater replaces the
+installed skill contents before copying so deleted or renamed `references/`,
+`templates/`, or `scripts/` resources cannot survive as stale installed files.
+
 The scout-based planning skill is installed as `agent-planning-loop`.
 `intuitive-planning-loop` is a legacy skill name only; the allowlist keeps it as
 `legacy-skill` so updater-owned stale installs and generated command wrappers

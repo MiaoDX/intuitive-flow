@@ -177,12 +177,10 @@ the boundary. Do not preload every reference by default.
   the route brief explicitly explains why the work is tiny, bounded, and safe
   for main-session context; otherwise launch a bounded `skill-runner`/tmux
   worker and babysit from the main session.
-- On Codex, follow `$skill-runner`'s Codex delegation policy: avoid native
-  subagents by default, keep tiny work in the main session, use Paseo subagents
-  for parallel read-heavy scouts or short bounded independent tasks when the
-  host-provided Paseo subagent tool is available and probed, and use
-  `skill-runner`/tmux workers for isolated
-  durable sub-phases.
+- On Codex, follow the `$skill-runner` Codex delegation reference for worker
+  selection. Flow decides whether work stays in the main session, moves to a
+  short read/review/verification worker, or needs a durable `skill-runner`/tmux
+  sub-phase.
 - For durable runs that change local code, create semantic commits along the
   way after each coherent proof-backed slice. Do not wait until the entire flow
   is done unless commits are explicitly disabled or staging cannot be made safe.
@@ -364,14 +362,8 @@ subagent, or moves to a `skill-runner`/tmux worker.
 | Stateful, interactive, durable, or long-running skill pipelines | `skill-runner` / tmux worker per sub-phase |
 | Canonical source-of-truth edits and route decisions | main session |
 
-For Paseo subagents, require a structured final summary and inspect the
-host-provided Paseo subagent activity/status surface before trusting the result.
-Do not invoke `paseo run` or `paseo agent run` from skills because those create
-separate user-visible sessions/tabs.
-
-For `skill-runner`, inspect compact artifacts such as `result.md`, `eval.md`,
-`last-message.md`, targeted logs, the actual diff, and verification evidence
-before trusting final status.
+For any worker, inspect structured summaries, compact artifacts, targeted logs,
+the actual diff, and verification evidence before trusting final status.
 
 When a worker uses `/goal`, clear, close, or block only that worker-local goal
 inside the worker after the sub-phase leaves durable state. Prefer exiting the

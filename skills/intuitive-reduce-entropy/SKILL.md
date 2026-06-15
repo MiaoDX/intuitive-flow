@@ -82,13 +82,8 @@ that were checked and rejected.
 
 1. Orient from the repo's thin source of truth first: root agent guidance and
    current human docs named by the repo.
-2. Before searching high-noise surfaces, run the bundled summary script from the
-   target repo root:
-
-   ```bash
-   node "$HOME/.codex/skills/intuitive-reduce-entropy/scripts/high-noise-summary.mjs"
-   ```
-
+2. Before searching high-noise surfaces, run the bundled high-noise summary
+   script from the target repo root.
 3. Classify observations by entropy source:
    agent guidance, human docs, tests, repo layout, architecture discovery, known
    code cleanup, or workflow drift.
@@ -147,27 +142,10 @@ Treat history, generated output, planning workspaces, test collections, profile
 registries, and local artifacts as high-noise surfaces. Enter them through
 bounded indexes, counts, references, and samples, not full-body reads.
 
-For broad discovery, prefer:
-
-- the high-noise summary script above;
-- specific `rg -n <token> <paths>` searches;
-- small `sed` windows;
-- temp logs with bounded summaries for tests, linters, or generated reports.
-
-For noisy commands, use the bundled command summarizer instead of pasting raw
-output:
-
-```bash
-node "$HOME/.codex/skills/intuitive-reduce-entropy/scripts/bounded-command-summary.mjs" \
-  --kind generic --timeout 180 -- \
-  <command> <args...>
-```
-
-For `pytest --collect-only`, use `--kind pytest-collect`.
-
-Read `references/detailed-guidance.md` for the full high-noise surface budget,
-including `.planning`, `docs/plans`, `output`, `logs`, large tests, profiles,
-and generated artifacts.
+For broad or noisy discovery, prefer the bundled summary scripts, specific
+searches, small windows, and bounded command summaries. Read
+`references/detailed-guidance.md` for exact commands and the full high-noise
+surface budget.
 
 ## Candidate Bar
 
@@ -197,13 +175,8 @@ P0/P1 candidates are usually commit-worthy when backed by current evidence. P2
 candidates need explicit impact radius and a maintainer test that justifies a
 standalone review.
 
-For open-ended loops, write candidates to JSON and run:
-
-```bash
-node "$HOME/.codex/skills/intuitive-reduce-entropy/scripts/materiality-gate.mjs" candidates.json
-```
-
-If the gate recommends stopping, stop instead of filling quota.
+For open-ended loops, run the bundled materiality gate before adding another
+group. If the gate recommends stopping, stop instead of filling quota.
 
 ## Architecture And Specialist Routing
 
@@ -218,10 +191,8 @@ Route accepted work by object: human docs to `$intuitive-doc`, agent guidance to
 
 ## Packet Shape
 
-Return a compact ranked packet. Each candidate must be decision-complete, but
-use terse fields instead of a full template: target, severity, entropy source,
-materiality, evidence, affected paths, owner skill, entity budget, proof, and
-execution risk.
+Return a compact ranked packet. Each candidate must be decision-complete with
+target, severity, entropy source, materiality, evidence, owner, proof, and risk.
 
 End every broad discovery or no-change result with these handoff markers:
 

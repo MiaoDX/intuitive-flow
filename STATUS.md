@@ -98,7 +98,8 @@ There is no active `.planning/` roadmap or GSD phase in this checkout.
   broad `all` mode by default.
 - GSD and GStack setup may create upstream wrappers temporarily, but the updater
   prunes managed wrappers back to the default allowlist.
-- `skills/` is the canonical repo-owned skill source and install surface.
+- `skills/` is the canonical repo-owned skill source; `scripts/update.sh`
+  mirrors allowlisted repo-owned skills into installed host surfaces.
 - `.githooks/pre-commit` is opt-in per checkout through `bun run setup:hooks`
   because Git does not version local hook configuration.
 

@@ -159,13 +159,9 @@ reuses, removes, or narrows existing entities. Do not route to a broader
 executor to create room for speculative cleanup, extra planning artifacts, or
 new abstractions.
 
-Do not use a Paseo subagent merely because the tool exists. Use it when the
-Paseo subagent no-edit probe succeeds and parallelism or isolated context is
-valuable, then inspect the host-provided Paseo subagent activity/status surface
-before trusting the result.
-
-Do not invoke `paseo run` or `paseo agent run` from skills. Those commands
-create separate user-visible sessions/tabs rather than subordinate workers.
+Codex worker selection follows the `$skill-runner` Codex delegation reference.
+This skill only records why a worker route is justified for the preflight
+contract.
 
 Do not use `skill-runner` merely because it exists. Use it when isolated state,
 long runtime, worker-local goal, or post-run artifacts will materially improve

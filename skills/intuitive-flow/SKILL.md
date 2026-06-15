@@ -63,6 +63,11 @@ boundary. Do not preload every reference.
 
 ## Route Selection
 
+- Routing precedence for overlapping prompts:
+  unknown owner or "what should we clean" -> `$intuitive-reduce-entropy`;
+  known code/API/module seam -> `$intuitive-refactor`;
+  accepted direction without an execution contract -> `$intuitive-preflight`;
+  approved execution contract or tiny concrete task -> `$intuitive-flow`.
 - Read-only diagnostics, status checks, and tiny concrete fixes: stay in the
   main session with a short route note and focused evidence.
 - Refactor, cleanup, stale API, compatibility, module layout, or known
@@ -114,6 +119,9 @@ with `gstack-autoplan`, `to-issues`, GSD handoff, `simplify`, or verification.
 ## Execution Surface
 
 Keep the main session as route owner, integration point, and final verifier.
+
+Codex worker selection follows the `$skill-runner` Codex delegation reference;
+do not repeat the host-specific Paseo/native-subagent policy here.
 
 Use the main session for tiny direct edits and read-only probes only when the
 route brief names why that is safe for context. For durable multi-stage work,

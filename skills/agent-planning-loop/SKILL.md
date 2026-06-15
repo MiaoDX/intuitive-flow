@@ -74,11 +74,11 @@ Keep the main session as the control plane.
   `needs_user_review`; it does not decide. Do not treat ordinary compatibility
   removal as a user-review decision by itself.
 
-Follow `$skill-runner`'s Codex delegation policy. On Codex, scouts are
-main-session work, Paseo subagents when available and probed,
-`$skill-runner`, or explicit tmux-backed `codex exec` workers, not native
-subagents. If no worker mechanism is available, run the same stages inline and
-state that delegation was unavailable.
+Follow the `$skill-runner` Codex delegation reference for worker selection. This
+skill chooses scout scope and acceptance; the delegation reference owns
+host-specific Paseo, native-subagent, and fallback rules. If no worker mechanism
+is available, run the same stages inline and state that delegation was
+unavailable.
 
 ## Loop Shape
 

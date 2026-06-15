@@ -208,6 +208,59 @@ describe("local command and skill sync task", () => {
     }
   });
 
+  test("removes stale nested resources from installed Codex root skills", () => {
+    const home = mkdtempSync(join(tmpdir(), "sync-skills-stale-resource-home-"));
+    const fixture = mkdtempSync(join(tmpdir(), "sync-skills-project-"));
+    try {
+      const { stubBin } = createCliStubs(home);
+      mkdirSync(join(home, ".codex", "skills"), { recursive: true });
+      mkdirSync(join(fixture, "scripts", "lib"), { recursive: true });
+      mkdirSync(join(fixture, "skills", "alpha", "references"), { recursive: true });
+      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill alpha\n");
+      writeFileSync(join(fixture, "skills", "alpha", "SKILL.md"), "---\nname: alpha\ndescription: Alpha skill.\n---\n");
+      writeFileSync(join(fixture, "skills", "alpha", "references", "old.md"), "# Old reference\n");
+      copyFileSync(
+        join(repoRoot, "scripts", "lib", "default-skill-allowlist.ts"),
+        join(fixture, "scripts", "lib", "default-skill-allowlist.ts"),
+      );
+
+      const runSync = () => spawnSync(
+        "bash",
+        [
+          "-c",
+          'SCRIPT_DIR="$1"; source scripts/tasks/sync-local-commands-skills.sh; run_sync_local_commands_skills',
+          "bash",
+          join(fixture, "scripts"),
+        ],
+        {
+          cwd: repoRoot,
+          encoding: "utf8",
+          env: syncEnv(home, stubBin),
+        },
+      );
+
+      const first = runSync();
+      if (first.status !== 0) {
+        throw new Error(`first sync failed\nstdout:\n${first.stdout}\nstderr:\n${first.stderr}`);
+      }
+      expect(existsSync(join(home, ".codex", "skills", "alpha", "references", "old.md"))).toBe(true);
+
+      rmSync(join(fixture, "skills", "alpha", "references", "old.md"));
+      writeFileSync(join(fixture, "skills", "alpha", "references", "new.md"), "# New reference\n");
+
+      const second = runSync();
+      if (second.status !== 0) {
+        throw new Error(`second sync failed\nstdout:\n${second.stdout}\nstderr:\n${second.stderr}`);
+      }
+
+      expect(existsSync(join(home, ".codex", "skills", "alpha", "references", "old.md"))).toBe(false);
+      expect(existsSync(join(home, ".codex", "skills", "alpha", "references", "new.md"))).toBe(true);
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+      rmSync(fixture, { recursive: true, force: true });
+    }
+  });
+
   test("fails through the sync path when root skill allowlist drift exists", () => {
     const home = mkdtempSync(join(tmpdir(), "sync-skills-drift-home-"));
     const fixture = mkdtempSync(join(tmpdir(), "sync-skills-project-"));

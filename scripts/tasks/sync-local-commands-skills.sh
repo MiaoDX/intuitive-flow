@@ -9,7 +9,7 @@ if ! declare -F task_notice >/dev/null 2>&1; then
     task_notice() { :; }
 fi
 
-_copy_dir_contents() {
+_replace_dir_contents() {
     local src_dir="$1"
     local dest_dir="$2"
 
@@ -18,19 +18,9 @@ _copy_dir_contents() {
         return 1
     fi
 
+    rm -rf "$dest_dir"
     mkdir -p "$dest_dir"
     cp -R "$src_dir"/. "$dest_dir"/
-}
-
-_remove_stale_nested_root_skill_copy() {
-    local src_dir="$1"
-    local dest_dir="$2"
-    local skill_name="$3"
-    local stale_nested="$dest_dir/$skill_name"
-
-    if [ -d "$stale_nested" ] && [ -f "$stale_nested/SKILL.md" ] && [ ! -e "$src_dir/$skill_name/SKILL.md" ]; then
-        rm -rf "$stale_nested"
-    fi
 }
 
 _manifest_tool() {
@@ -137,12 +127,11 @@ run_sync_local_commands_skills() {
             fi
 
             if [ -d "$codex_dest" ]; then
-                # Copy contents in place so reruns update the existing skill
-                # directory instead of nesting skill_dir/skill_dir.
-                if ! _copy_dir_contents "$skill_dir" "$codex_dest/$skill_name"; then
+                # Replace contents so deleted or renamed skill resources do not
+                # survive in the installed Codex mirror.
+                if ! _replace_dir_contents "$skill_dir" "$codex_dest/$skill_name"; then
                     return 1
                 fi
-                _remove_stale_nested_root_skill_copy "$skill_dir" "$codex_dest/$skill_name" "$skill_name"
                 root_skills_codex_synced=$((root_skills_codex_synced + 1))
             fi
 

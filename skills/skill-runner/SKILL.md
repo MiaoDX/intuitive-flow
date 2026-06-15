@@ -65,13 +65,10 @@ long-running skill work. The main session should stay responsible for route
 decisions, source-of-truth edits, integration, and final verification.
 
 Codex delegation policy lives in
-[references/codex-delegation.md](references/codex-delegation.md). In short:
-keep tiny work in the main session, use Paseo subagents for parallel
-read-heavy scouts or short bounded independent tasks when the host-provided
-Paseo subagent tool is available and a no-edit provider/model probe succeeds,
-use this runner or explicit tmux-backed `codex exec` workers for durable or
-artifact-sensitive sub-phases, and do not use native Codex subagents by default.
-Do not invoke `paseo run` or `paseo agent run` from skills.
+[references/codex-delegation.md](references/codex-delegation.md). Other skills
+should link to that reference instead of repeating host-specific Paseo,
+native-subagent, model, or fallback rules. This runner remains the isolation
+backend for durable or artifact-sensitive sub-phases.
 
 Do not assume a separate git worktree or custom model selection for runner jobs.
 Organize work to be safe in the current worktree unless the user chose a

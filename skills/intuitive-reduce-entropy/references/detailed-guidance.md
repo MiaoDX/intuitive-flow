@@ -9,8 +9,10 @@ description: |
   at an idea, draft plan, or named plan file and wants blind spots, missing
   decisions, or weak assumptions found before grill-batch/preflight. The skill
   must state the selected mode and why before auditing, return a no-change
-  result instead of filling a requested count when only polish remains, and
-  leave next workflow selection to the user after the packet is returned.
+  result instead of filling a requested count when only polish remains, choose
+  an explicit discovery intensity, run saturation discovery when the user asks
+  for all directions or unknown unknowns, and end with one recommended next
+  action plus a short reply shortcut.
 ---
 
 # Intuitive Reduce Entropy
@@ -34,14 +36,13 @@ Start by saying:
 ```text
 Selected mode: <repo entropy mode | plan entropy mode>
 Why: <one sentence tied to the user's prompt>
+Discovery intensity: <quick scan | selection scan | saturation scan>
 ```
 
 Then diagnose likely entropy sources and return a ranked selection packet of
-bounded candidates. It should not choose a "first cut", simplest slice, or
-favorite implementation target for the user. After the user selects all or part
-of the packet, the next step is their choice: more discussion,
-`$grill-with-docs-batch`, `$intuitive-preflight`, implementation, or parking the
-work.
+bounded candidates. It should recommend one next workflow action for the packet,
+but must not silently narrow the selected candidate set or start implementation
+until the user approves that action.
 
 The default goal is a repo where future agents can start quickly, humans can
 review current truth from a small doc surface, tests show real behavior, and
@@ -606,14 +607,9 @@ Keep the main session as the coordinator, decision point, and canonical
 artifact editor. Use delegation to keep route evidence, worker logs, and
 implementation detail out of the main context when the work naturally separates.
 
-Follow `$skill-runner`'s Codex delegation policy. On Codex, keep tiny probes in
-the main session, use Paseo subagents for parallel read-heavy scouts,
-review passes, verification/log probes, and short bounded independent tasks
-when the Paseo subagent tool is available and a no-edit provider/model probe
-succeeds, and use `skill-runner`/tmux when durable artifacts or stronger
-isolation are worth it. Do not use native Codex subagents by default. On stable
-non-Codex hosts, native subagents are acceptable for independent probes or
-explicitly disjoint edits.
+Follow the `$skill-runner` Codex delegation reference for worker selection. This
+skill decides which discovery probes are worth delegating; the delegation
+reference owns host-specific Paseo, native-subagent, model, and fallback rules.
 
 Use `skill-runner` only for discovery probes or later selected work that is
 stateful, interactive, long-running, artifact-sensitive, or better supervised
@@ -633,13 +629,9 @@ Open risks:
 Suggested next action:
 ```
 
-For Paseo subagents, require a structured final summary and inspect the
-host-provided Paseo subagent activity/status surface before trusting the worker's
-final status. Do not invoke `paseo run` or `paseo agent run` from skills because
-those create separate user-visible sessions/tabs. For `skill-runner`, inspect
-`result.md`, `eval.md`, `last-message.md`
-when available, targeted logs, the actual diff, and verification evidence
-before trusting the worker's final status.
+For delegated probes or later selected work, inspect the worker's structured
+summary, compact artifacts, targeted logs, actual diff, and verification
+evidence before trusting final status.
 
 Model policy: prefer the current best/default model for normal delegated work.
 Use smaller or quicker models only for truly easy probes where mistakes are
@@ -670,6 +662,11 @@ are migration targets, not contracts.
 Keep the reduce-entropy output focused on discovery and handoff, not
 implementation:
 
+- Routing precedence for overlapping cleanup prompts:
+  unknown owner or "what should we clean" -> `$intuitive-reduce-entropy`;
+  known code/API/module seam -> `$intuitive-refactor`;
+  accepted direction without an execution contract -> `$intuitive-preflight`;
+  approved execution contract or tiny concrete task -> `$intuitive-flow`.
 - `$intuitive-reduce-entropy` -> find what repo maintenance would pay off most
   now, name the discovery intensity, and recommend one next workflow action.
 - `$intuitive-refactor` -> likely owner for known module, seam, API, or
