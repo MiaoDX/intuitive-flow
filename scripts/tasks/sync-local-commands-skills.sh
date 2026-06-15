@@ -22,6 +22,17 @@ _copy_dir_contents() {
     cp -R "$src_dir"/. "$dest_dir"/
 }
 
+_remove_stale_nested_root_skill_copy() {
+    local src_dir="$1"
+    local dest_dir="$2"
+    local skill_name="$3"
+    local stale_nested="$dest_dir/$skill_name"
+
+    if [ -d "$stale_nested" ] && [ -f "$stale_nested/SKILL.md" ] && [ ! -e "$src_dir/$skill_name/SKILL.md" ]; then
+        rm -rf "$stale_nested"
+    fi
+}
+
 _manifest_tool() {
     if ! command -v bun >/dev/null 2>&1; then
         echo "  ! bun not found; run scripts/update.sh after fixing the environment pre-check"
@@ -131,6 +142,7 @@ run_sync_local_commands_skills() {
                 if ! _copy_dir_contents "$skill_dir" "$codex_dest/$skill_name"; then
                     return 1
                 fi
+                _remove_stale_nested_root_skill_copy "$skill_dir" "$codex_dest/$skill_name" "$skill_name"
                 root_skills_codex_synced=$((root_skills_codex_synced + 1))
             fi
 

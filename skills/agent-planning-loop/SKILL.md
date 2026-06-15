@@ -84,16 +84,6 @@ state that delegation was unavailable.
 
 Default to at most two rounds.
 
-```text
-charter
- -> entropy scout
- -> main-session materiality filter
- -> grill scout
- -> main-session synthesis
- -> optional second round
- -> user review packet
-```
-
 Round 1 discovers and challenges. Round 2 is only for a narrowed target where
 the first round found a materially better question or split the work into
 competing plans. A third round is a smell: stop and ask the user, unless the
@@ -101,66 +91,38 @@ user explicitly requested deeper autonomous planning.
 
 ## Charter
 
-Start every loop with a compact charter.
-
-```text
-Planning loop charter:
-Goal: <what decision or plan must become clear>
-Non-goals: <what will not be planned or executed>
-Context to inspect: <docs, code, artifacts, issues, logs>
-Allowed worker actions: <read-only | docs draft | code audit | no network | no paid probes>
-User-review gates:
-- <contract/product/cost/safety decisions that cannot be made autonomously>
-Stop when:
-- <clear plan exists | no material candidates | user decision required>
-```
+Start every loop with a compact charter: goal, non-goals, context to inspect,
+allowed worker actions, user-review gates, and stop condition.
 
 If the charter cannot be written without guessing the user's product intent,
 ask one concise question instead of running the loop.
 
 ## Worker Prompts
 
-Use one scout per independent concern. Keep prompts short and bounded.
+Use one scout per independent concern. Keep prompts short and bounded; invoke
+the named skill semantics instead of pasting full instructions.
 
 ### Entropy Scout
 
-Ask the entropy scout to use `$intuitive-reduce-entropy` semantics without
-executing changes:
-
-```text
-Use $intuitive-reduce-entropy in plan entropy mode for this charter unless the
-charter is explicitly repo-maintenance work.
-Return 3-7 material candidates only if they prevent false confidence, live
-source drift, stale surface, real workflow friction, or recurring rediscovery.
-For each candidate include: severity, evidence, affected paths, why now, owner
-skill, suggested proof, execution risk, and whether it needs user review.
-Do not propose wording polish or implementation-only details.
-```
+Use `$intuitive-reduce-entropy` without executing changes. Return only material
+candidates with severity, evidence, paths, owner, proof, execution risk, and
+whether user review is needed.
 
 ### Grill Scout
 
-Ask the grill scout to use `$grill-with-docs-batch` semantics against the
-surviving candidates or draft plan:
-
-```text
-Use $grill-with-docs-batch in read-only critique mode. First run a saturation
-audit. Ask no user-facing questions. Instead classify unresolved points as:
-implementation default, maintainer preference, user-review decision, or stop
-gate. Challenge terms against the repo glossary/context, public contracts,
-private-data boundaries, acceptance gates, and verification.
-Return recommended defaults and the exact decisions that still need the user.
-```
+Use `$grill-with-docs-batch` in read-only critique mode against surviving
+candidates or a draft plan. Ask no user-facing questions; classify unresolved
+points as implementation defaults, maintainer preferences, user-review
+decisions, or stop gates.
 
 ### Skeptic Scout
 
 Use this only for high-risk or broad plans:
 
-```text
 Review the current recommended plan as a skeptic. Look for over-design,
 scope drift, missing proof, hidden cost, user-preference assumptions, and
 alternatives that preserve more optionality. Return blockers first, then the
 smallest safer plan if the recommendation is too broad.
-```
 
 ## Main-Session Filter
 
@@ -192,42 +154,10 @@ Stop the loop and report when any of these is true:
 
 Return a review packet, not a transcript.
 
-```text
-Planning loop status: READY_FOR_REVIEW | NO_MATERIAL_PLAN | NEEDS_USER_DECISION
-
-What I ran:
-- <entropy scout scope>
-- <grill scout scope>
-- <optional skeptic scout scope>
-
-Rejected or parked:
-- <candidate> - <reason>
-
-Recommended plan:
-Goal:
-Scope:
-Non-goals:
-Acceptance criteria:
-Verification:
-Risk:
-Why this plan:
-
-Alternatives:
-- Conservative: <what it does, why not recommended>
-- Exploratory: <what it tests, why not first>
-
-User decisions:
-- <decision, why it matters, recommended default>
-
-Plan artifact:
-- <updated docs/plans/... | create docs/plans/... before execution | no durable artifact needed because ...>
-
-Recommended next action:
-- <run $intuitive-preflight | execute via $intuitive-flow | execute via $intuitive-refactor | patch the plan narrowly | park>
-
-Shortcut:
-- <e.g. reply "LGTM" to run preflight and update the plan>
-```
+Include: planning loop status, what ran, rejected/parked items, one recommended
+plan with scope/non-goals/acceptance/verification/risk, alternatives only when
+material, user decisions, `Plan artifact:`, `Recommended next action:`, and
+`Shortcut:`.
 
 If no material plan remains, say so directly and explain what evidence caused
 the stop. Do not fill the packet with weak alternatives. Still include

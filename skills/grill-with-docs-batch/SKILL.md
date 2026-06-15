@@ -68,20 +68,11 @@ listed, ask one concise clarification and then continue.
 Do not treat `docs/plans/*` and `docs/adr/*` as interchangeable planning
 surfaces.
 
-Use a plan file when the question is:
-
-- what will change;
-- what is out of scope;
-- what order or phases should execute;
-- which files, tests, commands, gates, or artifacts define done;
-- which open questions remain before implementation.
-
-Use an ADR when the question is:
-
-- which durable decision future agents should not relitigate;
-- which public API, MCP/tool contract, command surface, private-data boundary,
-  safety policy, or architecture layer is intentionally chosen;
-- which alternatives were rejected and what consequences maintainers accept.
+Use a plan file for execution scope, non-goals, order, files, tests, gates, and
+open implementation questions. Use an ADR only for durable decisions future
+agents should not relitigate: public contracts, command surfaces, private-data
+boundaries, safety policy, architecture layers, rejected alternatives, and
+accepted consequences.
 
 Some tasks need both. In that case, keep the ADR short and durable, then let the
 plan reference the ADR while owning execution details. Do not create an ADR for
@@ -95,19 +86,9 @@ plan file. If it is contract-shaped but the exact public shape is not selected
 yet, default to recording the current assumption in the plan and defer the ADR
 until the public contract is chosen.
 
-For new plan files, prefer a date-prefixed slug such as
-`docs/plans/YYYY-MM-DD-short-topic.md` when the target repo does not already have
-a stronger convention. Do not bulk-rename old plans only to add dates. Mixed
-legacy and dated plan filenames are acceptable if an index or `docs/plans/README.md`
-explains the convention. For active or recently reviewed plans, prefer metadata
-near the top over filename churn:
-
-- `Status`
-- `Created`
-- `Last reviewed`
-- `Current implementation contract`
-- `Related ADRs`
-- `Supersedes` / `Superseded by`
+For new plan files, prefer the repo convention; otherwise use a date-prefixed
+slug. Do not bulk-rename old plans only to add dates. Prefer concise plan
+metadata over filename churn for active or recently reviewed plans.
 
 Keep ADR numbering for durable decisions, but make the creation threshold strict.
 Do not create ADRs for proof loops, reruns, local-dev evidence, benchmark runs,
@@ -125,17 +106,9 @@ Classify the existing files into:
 - durable ADRs future agents should obey;
 - ADR-shaped execution records, proof logs, rerun notes, or status snapshots.
 
-For plan overload, default to reversible organization: add or update
-`docs/plans/README.md`, document the date-prefixed convention for new plan files,
-add plan metadata where it changes implementation behavior, and avoid broad
-renames unless the user explicitly accepts the churn and link repair.
-
-For ADR overload, recommend aggressive but reversible cleanup when root
-`docs/adr/` is polluted by execution records. Keep the canonical ADR directory
-for durable accepted decisions. Move misfiled execution/proof records under an
-archive such as `docs/adr/archive/execution-log/`, add an archive README, shrink
-or refresh the ADR README/index, preserve git history and inbound links where
-practical, and do not delete old records, renumber ADRs, or fill numbering gaps.
+For plan or ADR overload, default to reversible organization: index/metadata
+updates, archive moves for misfiled execution/proof records, and no deletion,
+renumbering, gap filling, or broad filename churn unless explicitly accepted.
 
 If the cleanup policy itself is unsettled, ask one focused batch. Once accepted,
 implement the cleanup directly instead of repeatedly grilling the same
@@ -189,22 +162,9 @@ Stop grilling and say so when any of these are true:
 - The user shows process-fatigue signals such as "we have done this multiple
   times", "is this just not stopping", or "can we move on".
 
-Default response at a stop condition:
-
-```text
-No more discussion is needed before implementation.
-
-What is already decided:
-- <durable decision>
-- <boundary/gate>
-
-Remaining items are implementation defaults:
-- <default the implementer can choose>
-
-Plan state: <updated file or "no plan update needed">
-Recommended next action: <preflight / execute via intuitive-flow / patch the plan narrowly / park>
-Shortcut: <e.g. reply "LGTM" to run preflight and update the plan>
-```
+At a stop condition, answer directly that no more discussion is needed, name
+what is already decided, list remaining implementation defaults, then include
+`Plan state:`, `Recommended next action:`, and `Shortcut:`.
 
 Do not convert implementation defaults into another batch. If the user wants the
 defaults recorded, patch the plan directly with concise defaults instead of
@@ -215,26 +175,9 @@ asking more questions.
 Each batch should contain 3-6 tightly related questions. Use fewer when the
 decision is risky or highly dependent.
 
-```text
-Batch N: <short theme>
-
-Assumptions from docs/code:
-- <what was verified locally>
-
-Questions:
-1. <decision question>
-   Recommended answer: <clear default and why>
-2. <decision question>
-   Recommended answer: <clear default and why>
-
-If accepted, I will update:
-- CONTEXT.md: <terms/relationships>
-- Plan: <execution details / gates / open questions, or "none">
-- ADR: <only if warranted, otherwise "none">
-
-After your reply, I will apply the accepted updates and rerun the saturation
-audit before deciding whether another batch is needed.
-```
+For each batch, include theme, assumptions verified from docs/code, 3-6
+numbered decision questions with recommended answers, update targets, and a
+promise to apply accepted updates before rerunning the saturation audit.
 
 Wait for the user's response before applying docs or moving to the next batch.
 Accept shorthand answers such as "all agree", "1 yes, 2 no because...", or
@@ -274,20 +217,8 @@ After each accepted batch:
    recommend the next workflow step.
 
 For plan-backed work, prefer updating the existing plan over scattering
-resolved decisions through chat. If the target repo uses a lifecycle header, set
-or refresh concise fields such as:
-
-```text
-Status: Grilled
-Last reviewed:
-Current decision:
-Next step:
-Open questions:
-Parked:
-```
-
-Do not create a plan for tiny local changes where the implementation can happen
-cleanly in the same session and no cross-session decision needs preserving.
+resolved decisions through chat. Refresh any existing lifecycle header
+concisely; do not add one for tiny local changes.
 
 ## Language
 

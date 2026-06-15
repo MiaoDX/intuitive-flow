@@ -55,20 +55,6 @@ bun skills/multica-goal-tracker/scripts/track_goal.ts \
   --workspace-id roboclaws
 ```
 
-The script:
-
-- parses the preflight contract;
-- extracts the exact `/goal` from `Main-session /goal prompt` or `To execute`;
-- requires an explicit target workspace for issue creation and resolves
-  `--workspace-id` from a workspace UUID, display name, URL slug, or full
-  workspace URL;
-- generates a concise issue title from the canonical source unless `--title` is
-  supplied;
-- creates a Multica issue whose description contains only the tracker marker,
-  a short bilingual goal summary, the plan/canonical source, the proof
-  expectation, and the exact `/goal`;
-- appends the normal `multica-goal-tracker:start` comment to the created issue.
-
 Never rely on the Multica CLI default workspace when creating an issue from a
 preflight. The default workspace may point at another product. If the user gives
 a URL such as `https://multica.evad.mioffice.cn/roboclaws/`, pass
@@ -81,23 +67,9 @@ the source of truth for detailed scope, non-goals, context, and verification.
 Humans should be able to scan the issue quickly, then open the plan only when
 they need the full contract.
 
-Use `--dry-run` first when validating a new preflight shape:
-
-```bash
-bun skills/multica-goal-tracker/scripts/track_goal.ts \
-  create-from-preflight \
-  --preflight-file /tmp/preflight.md \
-  --workspace-id roboclaws \
-  --dry-run
-```
-
-Useful create options:
-
-- `--title "..."` overrides the generated issue title.
-- `--status`, `--priority`, `--parent`, `--project`, `--assignee`, and
-  `--assignee-id` are forwarded to `multica issue create`.
-- `--allow-duplicate` is forwarded to `multica issue create`. Leave it off by
-  default so Multica can stop active duplicate issues.
+Use `--dry-run` first when validating a new preflight shape. Run
+`bun skills/multica-goal-tracker/scripts/track_goal.ts --help` for the current
+option surface.
 
 Do not use `create-from-preflight` for conversation-only work unless the
 preflight body contains the full approved contract; otherwise context
@@ -117,7 +89,7 @@ bun skills/multica-goal-tracker/scripts/track_goal.ts \
   --issue MIA-40
 ```
 
-If the goal is not already in the issue description:
+If the goal is not already in the issue description, pass `--goal-file`.
 
 ```bash
 bun skills/multica-goal-tracker/scripts/track_goal.ts \
@@ -125,15 +97,6 @@ bun skills/multica-goal-tracker/scripts/track_goal.ts \
   --issue MIA-40 \
   --goal-file /tmp/goal.txt
 ```
-
-The script:
-
-- fetches the issue via `multica issue get`;
-- extracts the first fenced or visible `/goal` block when no goal is supplied;
-- summarizes the goal into a short Chinese purpose, route, source artifacts, and
-  proof expectation;
-- appends a normalized Chinese "Goal tracking start" comment with the original
-  goal.
 
 Pass `--update-description` only when the user asks to normalize the issue
 description itself. The script inserts or replaces a marked summary block and
@@ -157,39 +120,11 @@ bun skills/multica-goal-tracker/scripts/track_goal.ts \
   --issue MIA-40
 ```
 
-The script:
-
-- fetches the current issue status and title;
-- reuses the supplied goal, otherwise uses the latest tracked start comment,
-  otherwise uses the initial `/goal` in the issue description;
-- reads the latest Multica execution run via `multica issue runs` and
-  `multica issue run-messages`;
-- when a Codex JSONL session contains multiple terminal goals, matches the
-  terminal goal back to the active goal objective; if it cannot match without
-  guessing, it fails and asks for the exact `--goal`/`--goal-file`;
-- records this finish as one goal attempt with hidden structured metadata in the
-  finish details comment;
-- reads earlier tracker attempt metadata from issue comments and renders an
-  issue-level card with cumulative duration, issue start/end, current attempt,
-  and the full attempt timeline under `~/.cache/multica-goal-tracker/`. The
-  card height is content-driven so goal rows and outcomes are not cut off;
-- uses Google Chrome headless to produce a PNG when available, with SVG
-  fallback;
-- uploads the rendered PNG when possible, then posts a Chinese evidence-card
-  parent comment whose final block is `![completion-card.png](...)`. This
-  parent comment is the thread entry for the Agent-generated record and must
-  include a short issue-level summary: issue status, goal count, cumulative
-  duration, what the issue tried, the current/final conclusion, and a compact
-  attempt list. Keep this summary scannable; full raw output belongs in the
-  details reply;
-- reads the Multica comment-add response and posts one finish-details reply in
-  the same thread. The details reply is text-only by default: a short overview,
-  goal details, then the real selected session attempt output as a Markdown
-  code block. Reviewers should be able to read only the parent comment for the
-  issue summary and card, then open the child reply only for deeper evidence;
-- labels `complete` attempts as completion records; labels `partial`,
-  `blocked`, and `failed` attempts as execution records so they do not
-  masquerade as finished work.
+The script picks the active goal, extracts real run/session evidence, records
+attempt metadata, renders a cumulative issue-level card, posts a scannable
+parent comment, and puts raw selected output in one details reply. `complete`
+attempts are completion records; `partial`, `blocked`, and `failed` attempts are
+execution records.
 
 If the issue has no Multica run history, finish fails fast instead of creating a
 fake proof card. In that case pass a real Codex session JSONL for the finished
@@ -202,9 +137,8 @@ bun skills/multica-goal-tracker/scripts/track_goal.ts \
   --session-file ~/.codex/sessions/2026/06/04/rollout-....jsonl
 ```
 
-Or pass a real skill-runner run directory. This uses `result.md`, `eval.md`,
-`last-message.md`, and `rewritten-prompt.md`; it intentionally avoids noisy
-`terminal.log` output.
+Or pass a real skill-runner run directory. It uses compact artifacts and avoids
+noisy `terminal.log` output.
 
 ```bash
 bun skills/multica-goal-tracker/scripts/track_goal.ts \
@@ -216,19 +150,9 @@ bun skills/multica-goal-tracker/scripts/track_goal.ts \
 Use `--allow-manual-summary --summary "..."` only when the user explicitly
 accepts a manual fallback. Manual fallback is not a real session screenshot.
 
-If the first attempt was incomplete, preserve it as an incomplete attempt:
-
-```bash
-bun skills/multica-goal-tracker/scripts/track_goal.ts \
-  finish \
-  --issue MIA-40 \
-  --session-file ~/.codex/sessions/...jsonl \
-  --attempt-status partial
-```
-
-Then run `start` again with the follow-up goal and run `finish` again when that
-follow-up completes. The next finish will become attempt #2 and the card will
-show cumulative issue time across both attempts.
+If an attempt is incomplete, finish it with `--attempt-status partial|blocked|failed`,
+then run `start` again for the follow-up goal. The next finish becomes the next
+attempt and the card shows cumulative issue time.
 
 ## Final Review
 
@@ -236,21 +160,6 @@ Use this when the human wants one final review thread for an issue that already
 has multiple goal attempts, especially when an earlier attempt was partial and a
 follow-up goal completed the issue. Do not hand-compose the comment. Put the
 attempt data in JSON and let the script own the format.
-
-```json
-[
-  {
-    "goal": "/goal ...",
-    "status": "partial",
-    "sessionFile": "/home/mi/.codex/sessions/...jsonl"
-  },
-  {
-    "goal": "/goal ...",
-    "status": "complete",
-    "sessionFile": "/home/mi/.codex/sessions/...jsonl"
-  }
-]
-```
 
 ```bash
 bun skills/multica-goal-tracker/scripts/track_goal.ts \
@@ -268,26 +177,9 @@ recover cumulative duration even if older Agent comments are cleaned up.
 
 ## Useful Options
 
-- `--goal "..."` supplies inline goal text.
-- `--goal-file -` reads the goal from stdin.
-- `--attempts-file -` reads `final-review` attempt JSON from stdin.
-- `--run-id <task-id>` uses a specific Multica execution run instead of the
-  latest issue run.
-- `--session-file -` reads real session transcript/output from stdin.
-- `--session-dir <path>` reads real skill-runner artifacts from a run
-  directory.
-- `--summary-file -` reads manual finish summary from stdin, only with
-  `--allow-manual-summary`.
-- `--proof "..."` adds short verification notes to the finish card/comment.
-- `--attempt-status complete|partial|blocked|failed` marks the current goal
-  attempt. The default is `complete`; use `partial` when the session produced
-  useful progress but did not satisfy the issue yet.
-- `--allow-manual-summary` permits manual summary fallback when no session
-  history exists.
-- `--profile <name>` forwards a Multica profile.
-- `--workspace-id <id-or-slug>` forwards an explicit workspace.
-- `--dry-run` prints planned updates and renders local evidence without writing
-  to Multica.
+Use `--help` for full syntax. The high-value knobs are `--workspace-id`,
+`--goal-file`, `--session-file`, `--session-dir`, `--run-id`,
+`--attempt-status`, `--proof`, `--dry-run`, and `--allow-manual-summary`.
 
 ## Style
 

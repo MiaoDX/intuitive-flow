@@ -71,36 +71,19 @@ read-heavy scouts or short bounded independent tasks when the host-provided
 Paseo subagent tool is available and a no-edit provider/model probe succeeds,
 use this runner or explicit tmux-backed `codex exec` workers for durable or
 artifact-sensitive sub-phases, and do not use native Codex subagents by default.
-Do not invoke `paseo run` or `paseo agent run` from skills because those create
-separate user-visible sessions/tabs. Claude Code native subagents are separate
-and may be used on stable hosts with clear ownership.
+Do not invoke `paseo run` or `paseo agent run` from skills.
 
-Do not assume a separate git worktree for runner jobs. Many target repos have
-large dependencies or heavyweight setup, so organize work to be safe in the
-current worktree by default.
-
-Use the current CLI/model defaults for normal runner jobs. The runner script
-does not currently orchestrate model selection. Leave multi-run fan-out/fan-in
-for a later runner feature after real tasks prove the need.
+Do not assume a separate git worktree or custom model selection for runner jobs.
+Organize work to be safe in the current worktree unless the user chose a
+different workspace.
 
 For detached or long-running umbrella runs, the parent skill may create a
 repo-local progress file at `docs/status/active/<task-slug>.md`. For waited
 runs, runner artifacts are usually enough.
 
-Worker handoff shape for umbrella consumption:
-
-```text
-Scope:
-Changed files:
-Decisions made:
-Verification:
-Open risks:
-Suggested next action:
-```
-
-The script's `RESULT_STATUS` final response is still the machine-readable
-status contract. The main session should inspect the compact artifacts and the
-actual diff before trusting that status.
+The script's `RESULT_STATUS` final response is the machine-readable status
+contract, but the main session must inspect compact artifacts and actual diff
+before trusting it.
 
 Every completed run writes `skill-review.md` as the default post-run skill
 feedback artifact. It records the selected skills, the worker's
@@ -127,65 +110,15 @@ grounded in that repo and patch `/path/to/intuitive-flow/skills/...` as a
 separate follow-up. Use the Intuitive Flow checkout as `--cwd` only when the
 task is solely custom skill maintenance.
 
-Useful options:
+Use script help for the option surface instead of memorizing it:
+`python3 .../run_skill_runner.py --help`. Common options are `--agent`,
+`--cwd`, `--detach`, `--interactive --goal`, `--timeout-min`,
+`--idle-timeout-min`, `--owned-path`, `--dry-run`, `--finalize-run`,
+`--require-sandbox`, and `--dangerous`.
 
-- `--agent codex|claude` chooses the worker CLI.
-- `--detach` starts tmux and returns immediately. By default, the runner
-  double-forks a background supervisor that still watches the worker artifacts,
-  closes interactive sessions on `RESULT_STATUS`, and rewrites `result.md` /
-  `eval.md` / `skill-review.md` with the real outcome when the worker exits.
-  Pass `--no-detached-supervisor` to opt out and keep the legacy
-  fire-and-forget behavior (`result.md: DETACHED` can then leak).
-- `--timeout-min N` caps total runtime. Default is 600 minutes, so long
-  refactors and slow verification can run when the supervisor deliberately
-  allows them.
-- `--idle-timeout-min N` stops when logs are quiet too long.
-- `--interactive --goal "..."` starts the worker in an interactive tmux agent
-  session, injects `/goal ...`, sends a short task prompt pointing to
-  `rewritten-prompt.md`, watches `terminal.log` for `RESULT_STATUS`, then closes
-  the tmux session. The session is killed once `RESULT_STATUS` lands;
-  `--clear-goal-on-exit` and `--clear-context-on-exit` send `/goal clear` or
-  `/clear` into the worker *before* the kill, which only matters when the
-  agent persists goal or context state outside the tmux session.
-  `--goal` is only consumed when `--interactive` is also set (passing `--goal`
-  alone is a silent no-op).
-  For claude workers the runner auto-passes `--add-dir <run_dir>`,
-  `--add-dir $HOME/.claude/jobs`, and `--add-dir $CLAUDE_JOB_DIR` (when set)
-  plus `--permission-mode bypassPermissions` so the supervised worker does
-  not stall on Write/Bash prompts during a detached run. Risk detection
-  (`Action Required`, sandbox-loopback, auth) still fires, the rewritten
-  prompt still bounds scope, and the tmux session still isolates state.
-  Pass `--dangerous` to also bypass sandbox/approval at the CLI layer
-  (different gate from prompts).
-- For goal-driven `intuitive-flow` sub-phases, set the babysitter review
-  interval from the task: 10-20 minutes for small delegated edits, 30-60 minutes
-  for normal implementation, 60-120 minutes for broad refactors, or the natural
-  proof checkpoint for slow verification. This is a steering cadence, not a hard
-  timeout. Let healthy long-running refactors continue under the longer timeout.
-- `--dangerous` lets Codex run without sandbox/approval checks. Use only when
-  the surrounding environment is already trusted.
-- Codex runs preflight `--sandbox workspace-write` once per host/toolchain
-  fingerprint and caches the result under
-  `~/.cache/skill-runner/sandbox-capability.json`. When the cache records the
-  known `bwrap` loopback failure, the runner starts the worker bypassed by
-  default instead of spending a doomed sandbox attempt.
-- `--require-sandbox` blocks the run if the Codex sandbox is unavailable or
-  cannot be proven available.
-- `--refresh-sandbox-preflight` forces a fresh capability check when the host
-  has changed or the cache looks stale.
-- Known Codex `bwrap` loopback sandbox failures are retried once automatically
-  without sandboxing when the worktree status is unchanged. Disable with
-  `--no-auto-retry-sandbox-failure`.
-  The retry detector checks compact worker artifacts, including
-  `last-message.md`, because some Codex runs report the sandbox failure there
-  even when `stderr.log` only contains transport noise.
-- `--dry-run` writes the rewritten prompt and artifacts without starting tmux.
-- `--finalize-run <run_dir>` rewrites compact artifacts for an existing run
-  directory. Use it on older detached runs when `last-message.md` or
-  `exit_code` appeared after the parent already returned `DETACHED`.
-- `--owned-path <path>` can be repeated to record which paths the worker owns.
-  `eval.md` then splits current diff into owned and outside-owned sections so
-  supervisors can spot accidental scope expansion in dirty worktrees.
+For goal-driven `intuitive-flow` sub-phases, set a babysitter review cadence
+from the task: short for small edits, longer for broad refactors or slow proof.
+This is a steering cadence, not a hard timeout.
 
 Batch review helper:
 
@@ -208,21 +141,10 @@ The runner treats the worker's final `RESULT_STATUS` as authoritative:
 - `BLOCKED_NEEDS_DECISION` maps to `BLOCKED` even when the CLI exits 0.
 - `FAILED` maps to `FAILED` even when the CLI exits 0.
 
-Exec-mode runs source `RESULT_STATUS` from the agent-written `last-message.md`.
-Interactive runs detect it by scanning `terminal.log` (ANSI escape sequences
-are stripped first so cursor moves and syntax-highlighting do not break the
-regex), then reconstruct `last-message.md` from the terminal scrape so
-downstream artifact consumers see the same shape as exec-mode runs. If tmux
-disappears before the wrapper's `exit_code` file is visible, the supervisor
-waits briefly for artifacts to settle and classifies from `RESULT_STATUS`
-before falling back to `FAILED`.
-
-Automatic blocker detection is intentionally narrow. In exec mode it scans
-`stderr.log` only, so normal repo documentation mentioning auth, API keys, or
-setup instructions does not look like a live authentication failure.
-Interactive runs additionally include `terminal.log` (with ANSI stripped) so
-injected slash commands and pane output participate in risk detection.
-Inspect `terminal.log` manually when debugging a run.
+Exec and interactive runs normalize status through compact artifacts. Automatic
+blocker detection is intentionally narrow so normal docs mentioning auth, API
+keys, or setup do not look like live failures. Inspect `terminal.log` only when
+debugging a run.
 
 For goal-driven workers, the main session should choose a review cadence before
 launch and adjust it when task evidence changes. Do not stop a healthy
@@ -232,10 +154,7 @@ scope. Use captured logs, current diff, commits, and the canonical artifact to
 decide whether to continue, steer with a follow-up prompt, or kill and relaunch
 with a corrected goal.
 
-Codex sandbox selection is recorded in `sandbox-preflight.md` and `run.json`.
-Cache hits, preflight results, bypass decisions, and strict sandbox blocks must
-leave enough audit trail for the main session to understand why the worker ran
-sandboxed or bypassed.
+Sandbox selection is recorded in `sandbox-preflight.md` and `run.json`.
 
 ## Prompt Rewrite Rules
 
@@ -260,16 +179,12 @@ must not silently invent a broad success definition. It should stop with
 approval.
 
 Context package should name what the worker must inspect first and what should
-stay out unless needed. If the prompt or approved plan does not identify the
-needed files, issue, plan, logs, artifacts, or commands, the worker should stop
-with `BLOCKED_NEEDS_DECISION` or propose a `$intuitive-preflight` draft instead
-of spending a long run on guessed context.
+stay out unless needed. If required files, issue, plan, logs, artifacts, or
+commands are unknown, stop with `BLOCKED_NEEDS_DECISION` or propose
+`$intuitive-preflight`.
 
-For `$intuitive-flow`, require coherent phase scope. Do not create many
-micro-phases unless the worker first stops and asks for grouping approval.
-
-For `$simplify`, scope review to the actual diff or path. Do not expand into a
-broad architecture review.
+For `$intuitive-flow`, require coherent phase scope. For `$simplify`, review the
+actual diff or path only.
 
 ## Run Evaluation
 
@@ -297,13 +212,7 @@ Evaluate behavior using stable invariants that apply across different tasks:
 Default verdict: `NO_SKILL_CHANGE`.
 
 The default storage location for skill-performance feedback is the run's
-`skill-review.md`. Use that file when reviewing one run immediately or when
-batch-reviewing many past runs. It should make the decision cheap:
-
-- what skill(s) were in scope
-- what the worker said about skill behavior
-- whether repo-local or shared custom skill files changed
-- which follow-up options are plausible
+`skill-review.md`. Use it when reviewing one run or batch-reviewing many runs.
 
 Runner-generated recommendations are advisory. A human or supervising session
 chooses whether to record a learning, patch a repo-local skill, patch a shared
@@ -348,14 +257,9 @@ After a custom skill change, keep the boundary clear:
 - Commit separately from product-task changes only when the user or repo
   workflow asks for a commit.
 
-Useful local boundaries in this repo, when those side effects are intended:
-
-- `scripts/tasks/sync-local-commands-skills.sh` refreshes installed local skill
-  surfaces.
-- Stage only the changed skill source/generated files and supporting scripts or
-  docs that belong to the skill change.
-- Use a commit message that names the skill change and follows the repo's
-  commit policy.
+When side effects are intended, `scripts/tasks/sync-local-commands-skills.sh`
+refreshes installed local skill surfaces. Stage only owned skill changes and use
+a commit message that names the skill change.
 
 ## Stop Conditions
 

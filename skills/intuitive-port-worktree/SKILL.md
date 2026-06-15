@@ -30,22 +30,8 @@ overwrite unrelated work.
 
 Collect this before editing:
 
-```bash
-git -C <source> status --short --branch
-git -C <target> status --short --branch
-git -C <source> rev-parse --show-toplevel
-git -C <target> rev-parse --show-toplevel
-git -C <target> worktree list --porcelain
-git -C <source> log --oneline --decorate -10
-git -C <target> log --oneline --decorate -10
-```
-
-Confirm whether the source and target share a git object database:
-
-```bash
-git -C <source> rev-parse --path-format=absolute --git-common-dir
-git -C <target> rev-parse --path-format=absolute --git-common-dir
-```
+- status, root path, branch, recent commits, and target worktree list;
+- whether source and target share `rev-parse --path-format=absolute --git-common-dir`.
 
 If they do not share a git common dir, the workflow can still use patches, but
 commit refs from the source may not resolve in the target.
@@ -61,15 +47,8 @@ Prefer the smallest faithful payload:
    confirming they are intentional from `git status` and `git diff --stat`.
 4. If both commits and dirty changes exist, port commits first, then dirty diffs.
 
-Useful inspection commands:
-
-```bash
-base=$(git -C <target> merge-base HEAD <source-ref>)
-git -C <target> log --oneline --reverse "$base..<source-ref>"
-git -C <target> diff --stat "$base..<source-ref>"
-git -C <source> diff --stat
-git -C <source> diff --cached --stat
-```
+Inspect commit ranges and dirty diffs with `git log --oneline --reverse` and
+`git diff --stat` before selecting the payload.
 
 ## Safety Gate
 
@@ -78,11 +57,7 @@ Before modifying the target:
 - Read the target status. Do not overwrite unrelated target changes.
 - If target is dirty, check whether changed paths overlap the port. If they do,
   stop and ask; otherwise keep the edits separate.
-- Create a lightweight backup branch in the target:
-
-```bash
-git -C <target> branch backup-before-port-$(date +%Y%m%d-%H%M%S) HEAD
-```
+- Create a lightweight `backup-before-port-<timestamp>` branch in the target.
 
 Never run destructive cleanup commands. Do not remove remote folders.
 
@@ -93,41 +68,18 @@ Choose the least manual method that preserves intent.
 ### Direct Cherry-Pick
 
 Use when the source commits are clean, relevant as commits, and likely to apply
-to the target branch:
+to the target branch. Use `git cherry-pick --no-commit <commit-or-range>` first
+so verification can happen before creating a new commit.
 
-```bash
-git -C <target> cherry-pick --no-commit <commit-or-range>
-```
-
-Use `--no-commit` first so verification can happen before creating a new commit.
 If conflicts show the target code has materially diverged, abort and move to
-manual patch port:
-
-```bash
-git -C <target> cherry-pick --abort
-```
+manual patch port.
 
 ### Patch Apply
 
 Use when the source and target share history but a direct cherry-pick is too
-broad or the user wants tree changes rather than commit history:
-
-```bash
-git -C <target> diff --binary <base>..<source-ref> > /tmp/worktree-port.patch
-git -C <target> apply --check --3way /tmp/worktree-port.patch
-git -C <target> apply --3way /tmp/worktree-port.patch
-```
-
-For dirty source changes:
-
-```bash
-git -C <source> diff --binary > /tmp/worktree-port-unstaged.patch
-git -C <source> diff --cached --binary > /tmp/worktree-port-staged.patch
-git -C <target> apply --check --3way /tmp/worktree-port-staged.patch
-git -C <target> apply --3way /tmp/worktree-port-staged.patch
-git -C <target> apply --check --3way /tmp/worktree-port-unstaged.patch
-git -C <target> apply --3way /tmp/worktree-port-unstaged.patch
-```
+broad or the user wants tree changes rather than commit history. Generate a
+binary patch from source, run `git apply --check --3way`, then apply. For dirty
+source changes, handle staged and unstaged patches separately.
 
 ### Manual Patch Port
 
@@ -177,11 +129,8 @@ a clean or clearly paused state, report the decision needed, and do not commit.
 
 After applying changes:
 
-```bash
-git -C <target> diff --stat
-git -C <target> diff --check
-git -C <target> status --short
-```
+Run `git diff --stat`, `git diff --check`, and `git status --short` in the
+target.
 
 Run the smallest relevant project verification. Prefer repo-native commands
 from docs, Makefile, or AGENTS.md. If the target is a Python worktree that uses
@@ -242,48 +191,24 @@ any of these hold (they mirror and extend the auto-commit gate):
 
 ### How to sync
 
-Discover the remote and its rules before acting — never assume:
-
-```bash
-git -C <target> remote -v                       # which remote is the GitHub/default origin
-gh repo view --json nameWithOwner,defaultBranchRef
-```
+Discover the remote and default branch before acting; never assume `origin/main`.
 
 Pick the integration route by branch shape and remote policy:
 
 - **Target branch IS the remote default branch, fast-forward only** (the common
   clean-port case where the port sits directly on top of the default branch):
-  push directly.
-
-  ```bash
-  git -C <target> push origin HEAD:<default-branch>
-  ```
+  push `HEAD:<default-branch>` directly.
 
 - **Target is a topic branch the user wants merged into the default branch**:
-  push the branch, open one PR, then merge via the route the repo allows. Probe
-  which merge methods are enabled rather than hardcoding — repos disable squash
-  or merge-commit and may allow only rebase:
-
-  ```bash
-  git -C <target> push -u origin <branch>
-  gh pr create --base <default-branch> --head <branch> --title "<result>" --body "..."
-  gh pr checks <n>                                # surface CI/required-check state
-  # try the allowed method; fall back on "not allowed" errors:
-  gh pr merge <n> --squash --auto --delete-branch \
-    || gh pr merge <n> --merge --auto --delete-branch \
-    || gh pr merge <n> --rebase --auto --delete-branch
-  ```
+  push the branch, open one PR, inspect checks, then merge via the route the
+  repo allows. Probe allowed merge methods rather than hardcoding one.
 
   Use `--auto` so the merge waits on required checks. If required checks are
   pending or a protection rule blocks the merge, leave auto-merge armed and
   report that it will land when checks pass — do not bypass the gate.
 
-After integration, fast-forward the local default branch and confirm parity:
-
-```bash
-git -C <target> pull --ff-only           # or fetch + reset to origin/<default> if detached
-git -C <target> rev-list --left-right --count origin/<default-branch>...HEAD
-```
+After integration, fast-forward the local default branch and confirm
+`origin/<default>` vs `HEAD` parity.
 
 A local post-merge hook may already fast-forward the checkout during the merge;
 verify the actual `origin/<default>` vs `HEAD` state rather than assuming either

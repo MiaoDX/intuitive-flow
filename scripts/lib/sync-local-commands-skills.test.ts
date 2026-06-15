@@ -165,6 +165,49 @@ describe("local command and skill sync task", () => {
     }
   });
 
+  test("prunes stale nested copies when resyncing owned root skills", () => {
+    const home = mkdtempSync(join(tmpdir(), "sync-skills-nested-home-"));
+    const fixture = mkdtempSync(join(tmpdir(), "sync-skills-project-"));
+    try {
+      const { stubBin } = createCliStubs(home);
+      mkdirSync(join(home, ".codex", "skills", "alpha", "alpha"), { recursive: true });
+      writeFileSync(join(home, ".codex", "skills", "alpha", "alpha", "SKILL.md"), "# stale nested copy\n");
+      mkdirSync(join(fixture, "scripts", "lib"), { recursive: true });
+      mkdirSync(join(fixture, "skills", "alpha"), { recursive: true });
+      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill alpha\n");
+      writeFileSync(join(fixture, "skills", "alpha", "SKILL.md"), "---\nname: alpha\ndescription: Alpha skill.\n---\n");
+      copyFileSync(
+        join(repoRoot, "scripts", "lib", "default-skill-allowlist.ts"),
+        join(fixture, "scripts", "lib", "default-skill-allowlist.ts"),
+      );
+
+      const result = spawnSync(
+        "bash",
+        [
+          "-c",
+          'SCRIPT_DIR="$1"; source scripts/tasks/sync-local-commands-skills.sh; run_sync_local_commands_skills',
+          "bash",
+          join(fixture, "scripts"),
+        ],
+        {
+          cwd: repoRoot,
+          encoding: "utf8",
+          env: syncEnv(home, stubBin),
+        },
+      );
+
+      if (result.status !== 0) {
+        throw new Error(`sync failed\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`);
+      }
+
+      expect(existsSync(join(home, ".codex", "skills", "alpha", "SKILL.md"))).toBe(true);
+      expect(existsSync(join(home, ".codex", "skills", "alpha", "alpha"))).toBe(false);
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+      rmSync(fixture, { recursive: true, force: true });
+    }
+  });
+
   test("fails through the sync path when root skill allowlist drift exists", () => {
     const home = mkdtempSync(join(tmpdir(), "sync-skills-drift-home-"));
     const fixture = mkdtempSync(join(tmpdir(), "sync-skills-project-"));
