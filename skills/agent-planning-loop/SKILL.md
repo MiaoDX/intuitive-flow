@@ -5,7 +5,7 @@ description: |
   workers to apply intuitive-reduce-entropy and grill-with-docs-batch, keep the
   main session as judge, iterate until the scope is clear, then present one
   recommended plan plus alternatives for a single user review. On Codex, scout
-  workers are Paseo-managed agents when available or tmux/skill-runner sessions
+  workers are Paseo subagents when available or tmux/skill-runner sessions
   otherwise, not native subagents. Use this
   whenever the user asks to "align yourselves", "run reduce entropy and grill
   batch", "use workers to refine the plan", "give me the plans after judging
@@ -75,7 +75,7 @@ Keep the main session as the control plane.
   removal as a user-review decision by itself.
 
 Follow `$skill-runner`'s Codex delegation policy. On Codex, scouts are
-main-session work, Paseo-managed agents when available and probed,
+main-session work, Paseo subagents when available and probed,
 `$skill-runner`, or explicit tmux-backed `codex exec` workers, not native
 subagents. If no worker mechanism is available, run the same stages inline and
 state that delegation was unavailable.

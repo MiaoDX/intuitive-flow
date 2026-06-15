@@ -110,7 +110,7 @@ prefer a control-plane split:
 
 - main session: route, decide, inspect artifacts/diffs/logs, verify claims,
   own the root goal, and synthesize next stage;
-- Paseo-managed agents: parallel read-heavy scouts, review passes, verification
+- Paseo subagents: parallel read-heavy scouts, review passes, verification
   probes, or short bounded tasks when available and probed;
 - `skill-runner`/tmux: stateful, artifact-sensitive, mutating, durable, or
   long-running sub-phases.

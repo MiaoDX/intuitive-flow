@@ -580,9 +580,9 @@ artifact editor. Use delegation to keep route evidence, worker logs, and
 implementation detail out of the main context when the work naturally separates.
 
 Follow `$skill-runner`'s Codex delegation policy. On Codex, keep tiny probes in
-the main session, use Paseo-managed agents for parallel read-heavy scouts,
+the main session, use Paseo subagents for parallel read-heavy scouts,
 review passes, verification/log probes, and short bounded independent tasks
-when the Paseo MCP surface is available and a no-edit provider/model probe
+when the Paseo subagent tool is available and a no-edit provider/model probe
 succeeds, and use `skill-runner`/tmux when durable artifacts or stronger
 isolation are worth it. Do not use native Codex subagents by default. On stable
 non-Codex hosts, native subagents are acceptable for independent probes or
@@ -606,9 +606,11 @@ Open risks:
 Suggested next action:
 ```
 
-For Paseo-managed agents, require a structured final summary and inspect
-`get_agent_activity` plus `get_agent_status` before trusting the worker's final
-status. For `skill-runner`, inspect `result.md`, `eval.md`, `last-message.md`
+For Paseo subagents, require a structured final summary and inspect the
+host-provided Paseo subagent activity/status surface before trusting the worker's
+final status. Do not invoke `paseo run` or `paseo agent run` from skills because
+those create separate user-visible sessions/tabs. For `skill-runner`, inspect
+`result.md`, `eval.md`, `last-message.md`
 when available, targeted logs, the actual diff, and verification evidence
 before trusting the worker's final status.
 

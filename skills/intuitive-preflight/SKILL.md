@@ -131,7 +131,7 @@ needed.
 Preflight status: <DRAFT | BLOCKED_NEEDS_DECISION | BLOCKED_NEEDS_LOCAL_VALIDATION>
 Task source: <user prompt | plan path | issue | mixed>
 Canonical source: <docs/plans/... | issue URL | conversation only>
-Route: <main direct | $intuitive-refactor | durable $intuitive-flow | Paseo-managed agent | skill-runner worker>
+Route: <main direct | $intuitive-refactor | durable $intuitive-flow | Paseo subagent | skill-runner worker>
 Goal: <one sentence>
 
 Scope: <included work; use short bullets only if needed>
@@ -185,13 +185,16 @@ Choose the smallest honest route:
 | Read-only diagnosis or one-file/two-file concrete fix | main direct |
 | Known cleanup, stale API, obsolete compatibility shim, module layout, or architecture seam | `$intuitive-refactor` |
 | Plan-backed, broad, stateful, or multi-stage work | durable `$intuitive-flow` |
-| Parallel read-heavy scout, review pass, verification/log probe, or short bounded independent task on Codex with probed Paseo MCP | Paseo-managed agent under main-session supervision |
+| Parallel read-heavy scout, review pass, verification/log probe, or short bounded independent task on Codex with a probed host-provided Paseo subagent tool | Paseo subagent under main-session supervision |
 | Long-running implementation, review pipeline, GSD, broad refactor, or slow verification | `skill-runner` worker under main-session supervision |
 
-Do not use a Paseo-managed agent merely because the MCP exists. Use it when the
-Paseo provider/model probe succeeds and parallelism or isolated context is
-valuable, then inspect `get_agent_activity` plus `get_agent_status` before
-trusting the result.
+Do not use a Paseo subagent merely because the tool exists. Use it when the
+Paseo subagent no-edit probe succeeds and parallelism or isolated context is
+valuable, then inspect the host-provided Paseo subagent activity/status surface
+before trusting the result.
+
+Do not invoke `paseo run` or `paseo agent run` from skills. Those commands
+create separate user-visible sessions/tabs rather than subordinate workers.
 
 Do not use `skill-runner` merely because it exists. Use it when isolated state,
 long runtime, worker-local goal, or post-run artifacts will materially improve

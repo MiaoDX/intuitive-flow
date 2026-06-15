@@ -46,18 +46,21 @@ Follow \`$skill-runner\`'s bundled Codex delegation policy
 Codex fallback mapping:
 - Small read-only probes or tiny edits → run inline in the main session.
 - Parallel read-heavy scouts, review passes, verification/log probes, or short
-  bounded independent tasks → use a Paseo-managed agent when the Paseo MCP
-  surface is available and a no-edit provider/model probe succeeds.
+  bounded independent tasks → use the host-provided Paseo subagent tool when it
+  is available and a no-edit probe succeeds. Do not invoke \`paseo run\` or
+  \`paseo agent run\` from a skill; those create new user-visible agent sessions
+  and tabs instead of subordinate workers.
 - Stateful, long-running, mutating, artifact-sensitive, or isolated durable
   worker work → use \`$skill-runner\` or an explicit tmux-backed \`codex exec\`
   worker.
 - Claude Code hosts may still use their native \`Task(...)\`/subagent behavior.
 
-If a copied workflow requires structured worker results, ask the Paseo or
-tmux/runner worker to return compact markers such as \`CHECKPOINT\`,
-\`PLAN COMPLETE\`, or \`SUMMARY\`. For Paseo-managed agents, inspect
-\`get_agent_activity\` plus \`get_agent_status\`; for tmux/runner workers,
-inspect the worker artifact or final message in the main session.
+If a copied workflow requires structured worker results, ask the Paseo subagent
+or tmux/runner worker to return compact markers such as \`CHECKPOINT\`,
+\`PLAN COMPLETE\`, or \`SUMMARY\`. For Paseo subagents, inspect the subagent
+activity/status surface exposed by the host before trusting the result; for
+tmux/runner workers, inspect the worker artifact or final message in the main
+session.
 </codex_skill_adapter>
 ADAPTER
 }

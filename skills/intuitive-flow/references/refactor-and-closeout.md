@@ -37,7 +37,7 @@ It is the source of truth for the pass and must name:
 
 Follow `$skill-runner`'s Codex delegation policy for report-only scans,
 stale-path searches, test discovery, independent verification probes, and
-worker handoffs. Use Paseo-managed agents for parallel short/read-heavy probes
+worker handoffs. Use Paseo subagents for parallel short/read-heavy probes
 when available and probed; use `skill-runner`/tmux for broad or long-running
 `$intuitive-refactor` execution. Direct edits from any worker require disjoint
 ownership and main-session integration.

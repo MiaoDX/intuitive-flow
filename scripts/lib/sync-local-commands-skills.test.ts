@@ -104,10 +104,14 @@ describe("local command and skill sync task", () => {
 
       const skillText = readFileSync(join(home, ".codex", "skills", "sample", "SKILL.md"), "utf8");
       expect(skillText).toContain("skill-runner/references/codex-delegation.md");
-      expect(skillText).toContain("Paseo-managed agent");
+      expect(skillText).toContain("Paseo subagent");
+      expect(skillText).toContain("host-provided Paseo subagent tool");
+      expect(skillText).toContain("Do not invoke `paseo run`");
+      expect(skillText).toContain("`paseo agent run` from a skill");
       expect(skillText).toContain("do not use native subagents by default");
       expect(skillText).not.toContain("spawn_agent(agent_type=");
       expect(skillText).not.toContain("collect agent IDs");
+      expect(skillText).not.toContain("Paseo-managed agent");
     } finally {
       rmSync(home, { recursive: true, force: true });
       rmSync(fixture, { recursive: true, force: true });

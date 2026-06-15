@@ -14,7 +14,7 @@
 - Keep the main thread focused on requirements, architecture decisions, integration, and final synthesis.
 - Delegate when a task has 2+ independent workstreams, requires reading many files, logs, or test outputs, or when verification can run in parallel with implementation.
 - Return summaries to the main thread, not raw notes or long log dumps.
-- On Codex, use Paseo-managed agents for parallel read-heavy scouts, review passes, verification/log probes, and short bounded independent tasks when the Paseo MCP surface is available and a no-edit provider/model probe succeeds.
+- On Codex, use the host-provided Paseo subagent tool for parallel read-heavy scouts, review passes, verification/log probes, and short bounded independent tasks when it is available and a no-edit provider/model probe succeeds. Do not invoke `paseo run` or `paseo agent run` from skills; those create separate user-visible sessions/tabs.
 - If Paseo is unavailable or the provider/model probe fails, use main-session probes or `$skill-runner` / tmux-backed `codex exec` workers instead of `spawn_agent` or native subagents until local revalidation proves the installed release is stable.
 - On Claude Code, native subagents remain acceptable when the host supports them reliably and file ownership is explicit.
 - Prefer 2-4 delegated workers by default. Scale up only for clearly partitioned work.
