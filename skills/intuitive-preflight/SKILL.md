@@ -16,6 +16,13 @@ Use this skill to make execution intent explicit before work starts. The output
 is a preflight contract the user can approve, revise, or reject. It is not an
 implementation step.
 
+Preflight should make the smallest honest contract approvable. Before allowing
+new files, APIs, modules, commands, workers, plans, tests, docs, compatibility
+bridges, or persistent workflow surfaces into scope, first test whether the same
+observable outcome can be achieved by deleting, merging, narrowing, reusing, or
+documenting existing behavior. Record any necessary new entity with its reason
+and re-approval trigger.
+
 ## Boundary
 
 `$intuitive-preflight` owns:
@@ -55,6 +62,8 @@ when any of these are unclear and materially change the work:
 - destructive action or broad file movement
 - user-explicit temporary compatibility or migration bridge requirement
 - paid, credentialed, hardware, Docker, GPU, real simulator, or provider gate
+- any new durable entity whose necessity is unclear or whose addition would
+  expand the accepted objective
 
 Ask only for hard-stop decisions. If the missing detail is mechanical,
 low-risk, reversible, and implied by repo conventions, make it an assumption and
@@ -136,6 +145,7 @@ Goal: <one sentence>
 
 Scope: <included work; use short bullets only if needed>
 Non-goals: <explicit exclusions>
+Entity budget: reuse=<existing surfaces to use>; remove/merge=<existing surfaces to delete, narrow, or consolidate>; new=<only necessary new entities with reason>; expansion triggers=<what requires re-approval>
 Context: must-read=<canonical files/plans/issues/logs/artifacts>; useful=<optional evidence>; avoid-unless-needed=<large/stale/noisy/historical sources>
 
 Acceptance:
@@ -194,6 +204,11 @@ Choose the smallest honest route:
 | Plan-backed, broad, stateful, or multi-stage work | durable `$intuitive-flow` |
 | Parallel read-heavy scout, review pass, verification/log probe, or short bounded independent task on Codex with a probed host-provided Paseo subagent tool | Paseo subagent under main-session supervision |
 | Long-running implementation, review pipeline, GSD, broad refactor, or slow verification | `skill-runner` worker under main-session supervision |
+
+When two routes can satisfy the same acceptance criteria, choose the one that
+reuses, removes, or narrows existing entities. Do not route to a broader
+executor to create room for speculative cleanup, extra planning artifacts, or
+new abstractions.
 
 Do not use a Paseo subagent merely because the tool exists. Use it when the
 Paseo subagent no-edit probe succeeds and parallelism or isolated context is

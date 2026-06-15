@@ -16,6 +16,13 @@ description: |
 then choose the smallest executor that preserves source-of-truth clarity,
 verification, and stop gates.
 
+Default to less. Before recommending or implementing a new file, API, module,
+workflow, test layer, worker, plan, or compatibility surface, check whether the
+same user-visible outcome can be reached by narrowing scope, deleting stale
+surface, merging duplicate behavior, reusing an existing route, or documenting
+current truth. Add a new entity only when that smaller option cannot satisfy the
+accepted behavior and proof gate.
+
 This is the compact runtime entrypoint. Existing detailed behavior is preserved
 in `references/detailed-guidance.md`; read it only when the route crosses
 multiple stages or the compact gates below do not decide the next action.
@@ -72,6 +79,10 @@ boundary. Do not preload every reference.
 - Changed-code cleanup: use `simplify <changed-scope>` then rerun relevant
   proof.
 
+When the route is ambiguous, prefer the path that removes or reuses existing
+entities over the path that adds a new one. If a proposal adds an entity, name
+the existing surfaces considered and why they are insufficient.
+
 For whole-flow or durable auto-runs, read
 `references/checkpoints-and-auto-run.md` and state the run contract unless the
 latest user message already supplies goal, success criteria, stop condition,
@@ -124,7 +135,8 @@ Stop and ask the user when a choice would materially change product direction,
 scope boundary, public contract, data model, roadmap ownership, security,
 privacy, paid infrastructure, external-service dependency, destructive action,
 broad file moves/deletes, unavailable local hardware/services, or locked
-docs/ADRs.
+docs/ADRs. Also stop before expanding the accepted objective with a new durable
+entity that was not in the approved scope.
 
 If a stop gate says the next required evidence is blocked by a human action,
 local hardware, paid account, external service, or another outside actor, stop

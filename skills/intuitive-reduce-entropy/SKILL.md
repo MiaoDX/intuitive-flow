@@ -31,6 +31,12 @@ named plan file. Default to repo entropy mode when the prompt asks for repo
 cleanup, maintenance, stale surfaces, source-of-truth drift, or "make this repo
 easier to work in."
 
+Recommend less before more. For every material candidate, first ask whether the
+maintainer surprise is best removed by deleting stale surface, merging duplicate
+guidance, narrowing scope, reusing an existing route, or documenting current
+truth. Recommend a new durable entity only when the shrink/reuse path cannot
+make the evidence honest.
+
 Start by saying:
 
 ```text
@@ -89,7 +95,10 @@ that were checked and rejected.
 4. Deep-read only the smallest window needed to prove a candidate. If a probe
    would mostly increase transcript size, stop and report the candidate, parked
    observation, or saturation reason.
-5. Return a ranked packet of decision-complete candidates, or a no-change
+5. Prefer candidates that reduce the number of live surfaces or clarify which
+   existing surface owns the behavior. Treat "add a new mechanism" as justified
+   only when cleanup/reuse cannot remove the surprise.
+6. Return a ranked packet of decision-complete candidates, or a no-change
    result when no candidate passes the materiality bar.
 
 For broad repo-wide or "continue until no more" requests, run discovery-loop
@@ -124,6 +133,11 @@ Classify each candidate's next owner:
 Stop when remaining items are implementation defaults, weak polish, or already
 covered by the plan. Return `Selected candidates: none` if the plan is already
 clear enough for preflight or execution.
+
+When reviewing a plan, suggest shrinking the existing plan before adding new
+phases, components, tests, workers, docs, compatibility bridges, or tracking
+artifacts. If a new entity remains necessary, state what existing option was
+rejected and what proof makes the addition unavoidable.
 
 ## Plan Artifact And Handoff
 
@@ -206,6 +220,10 @@ Reject wording polish, isolated neatness, speculative future cleanup, tiny
 single-file metadata fixes, and support work counted separately from its parent
 behavioral slice.
 
+Reject candidates that primarily add a new abstraction, document, workflow, or
+test layer unless they replace, remove, or clearly constrain a larger existing
+surface.
+
 P0/P1 candidates are usually commit-worthy when backed by current evidence. P2
 candidates need explicit impact radius and a maintainer test that justifies a
 standalone review.
@@ -262,6 +280,7 @@ Affected paths: <paths>
 Owner skill: <specialist or this skill>
 Zen hint: <clarity principle advanced>
 Pattern hint: <pattern fit, or direct cleanup is clearer>
+Entity budget: <reuse/remove/merge first; new entities only with reason>
 Suggested proof: <commands/searches>
 Execution risk: <safe | needs approval because ...>
 ```
@@ -277,6 +296,7 @@ Specialist owners:
 Discovery artifact:
 Zen hint:
 Pattern hint:
+Entity budget:
 Changes:
 Verification:
 Parked items:

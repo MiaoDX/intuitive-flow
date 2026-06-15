@@ -13,6 +13,12 @@ last_verified: 2026-05-17
 
 DONE
 
+Current note, 2026-06-15: the generated `skills-src/` authoring model described
+in the original execution log has since been retired. The live source of truth
+is now `skills/<name>/SKILL.md`; `bun run check:skills` rejects non-empty
+`skills-src/` as deprecated source. Keep the historical log below as provenance,
+not as current implementation guidance.
+
 ## Target
 
 The repo-owned `intuitive-*` skills under `skills/`, specifically the repeated
