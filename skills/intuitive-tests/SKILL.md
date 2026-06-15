@@ -49,14 +49,6 @@ implementation trivia. Those checks belong in contract tests only when
 packaging, runtime discovery, CLI behavior, plugin registration, schemas, or a
 documented public artifact actually depends on them.
 
-Good unit tests are:
-
-- **Readable**: Arrange, Act, Assert is visually obvious.
-- **Behavior-focused**: the test name states the capability or failure mode.
-- **Deterministic**: no real network, clock, random seed, database, or test-order dependency.
-- **Small but meaningful**: narrow setup, one main action, specific assertions.
-- **Refactor-tolerant**: internal renames and helper extraction should not break them.
-
 Avoid tests that only prove:
 
 - dataclass/record fields store values
@@ -75,50 +67,16 @@ Avoid tests that only prove:
 - a mock saw an internal call that does not affect caller-visible behavior
 - coverage increased without a meaningful assertion
 
-## Useful Community Patterns
-
-Use these patterns deliberately:
-
-- **AAA / Given-When-Then** for test shape.
-- **Parameterized or table-driven tests** for parsers, validators, edge-case matrices, and pure logic.
-- **Fixtures, factories, and builders** for reusable setup; keep them explicit and local until duplication is real.
-- **Test doubles vocabulary**: dummy, stub, fake, spy, mock. Prefer fakes/stubs for state and use mocks mainly for external collaborations.
-- **Coverage literacy**: coverage is a signal, not the goal. Weak assertions can produce high coverage.
-- **Mutation testing** for critical pure logic when line coverage looks high but confidence is low.
-- **Property-based testing** for algorithms and invariants with broad input space.
-- **TDD tracer bullets**: one behavior test, one implementation step, then refactor.
-
 ## Organization Taxonomy
 
 Classify tests by the confidence they provide and the cost to run them.
 
-Recommended layers:
-
-```text
-unit        fast, isolated logic through public module APIs
-contract    schemas, CLI output, file formats, public tools, report/replay payloads
-integration process, Docker, network, external CLI, provider, or simulator boundaries
-regression  reproduces a known bug or protects a high-level artifact/output shape
-local       requires local GPU, paid API key, real simulator, or real gateway
-slow        CI-safe but expensive enough to exclude from tight loops
-```
+Recommended layers: `unit`, `contract`, `integration`, `regression`, `local`,
+and `slow`. Keep shared helpers under `tests/support/` only after reuse is real.
 
 If the suite is already large and many commands reference exact paths, add
 markers first. Move files into directories only after the marker split is green
 and path consumers have been updated.
-
-Good eventual layout:
-
-```text
-tests/
-  unit/
-  contract/
-  integration/
-  regression/
-  support/
-    factories.py
-    fixtures.py
-```
 
 ## Modes
 
@@ -126,25 +84,9 @@ tests/
 
 Default for broad or ambiguous test-suite refactors.
 
-**Steps:**
-1. Inventory test files with `rg --files`, `find`, or the repo's test index.
-2. Identify current runners and path consumers: `pyproject.toml`, `pytest.ini`,
-   `tox.ini`, CI workflows, `just` recipes, scripts, docs, pre-commit hooks.
-3. Classify each file as `unit`, `contract`, `integration`, `regression`,
-   `local`, or `slow`.
-4. Identify low-signal candidates, repeated setup, table-driven opportunities,
-   implementation-coupled tests, shape/metadata/wiring-only assertions, and
-   external-boundary tests.
-5. Recommend one primary path and one fallback:
-   - **Marker-first**: safest when path consumers are many or CI is fragile.
-   - **Layout-first**: good when file names already map cleanly to layers and
-     path consumers are easy to update.
-   - **Pruning-first**: good when many tests duplicate stronger behavior tests.
-   - **Fixture/factory-first**: good when setup noise hides test intent.
-   - **Parametrization-first**: good for validators, parsers, edge matrices, and
-     repeated one-case tests.
-6. Stop and ask the user which path to apply unless the prompt already makes
-   the choice explicit.
+Inventory test files and current path consumers, classify the suite, identify
+low-signal tests and setup/table opportunities, then recommend one primary path
+and one fallback. Stop and ask for the slice unless the prompt already chooses.
 
 Use this decision prompt:
 
@@ -177,15 +119,7 @@ Use when the user approves a folder layout migration or explicitly asks to move
 tests into a layer-based structure.
 
 **Steps:**
-1. Confirm the target layout and preserve importability:
-   ```text
-   tests/
-     unit/
-     contract/
-     integration/
-     regression/
-     support/
-   ```
+1. Confirm the target layer layout and preserve importability.
 2. Move only the classified files in the approved slice.
 3. Update path consumers found during AUDIT / PROPOSE mode: CI, recipes,
    scripts, docs, hooks, `pytest` config, and imports.
@@ -238,23 +172,6 @@ Use when repeated tests differ only by input/expected output or edge case.
 3. Keep separate tests when setup, behavior, or failure diagnosis meaningfully
    differs.
 
-## Refactor Workflow
-
-Use a small, reversible sequence:
-
-1. **Inventory** test files with `rg`/`find` and identify current runners (`pytest`, `just`, CI).
-2. **Classify** each file as unit, contract, integration, regression, local, or slow.
-3. **Preserve entrypoints** before moving files: explicit CI/recipe paths, docs, hooks, and developer commands.
-4. **Prompt for slice choice** when the request is broad or the best path is not obvious.
-5. **Add markers** and strict marker checking before directory moves unless the
-   user approved a layout-first migration.
-6. **Prune low-signal tests** aggressively. Keep or replace them only when they
-   prove real behavior or a real contract.
-7. **Extract factories** when three or more tests build the same dense object/dict.
-8. **Run focused tests** for touched modules, then the relevant layer (`-m unit`, `-m contract`, etc.).
-
-Stop after one useful slice. Do not "clean up the entire test suite" by drift.
-
 ## Low-Signal Pruning Checklist
 
 For each candidate test, ask:
@@ -283,48 +200,19 @@ Actions:
 
 ## Pytest Implementation Notes
 
-Register custom markers in `pyproject.toml` or `pytest.ini` and use
-`--strict-markers`.
-
-Example:
-
-```toml
-[tool.pytest.ini_options]
-addopts = "--tb=short -q --strict-markers"
-markers = [
-  "unit: fast isolated behavior tests",
-  "contract: public schema/CLI/report/tool compatibility tests",
-  "integration: process, Docker, provider, simulator, or external CLI tests",
-  "regression: known-bug or artifact-regression tests",
-  "local: requires local GPU, paid API key, simulator, or gateway",
-  "slow: CI-safe but expensive tests",
-]
-```
-
-Use `tests/conftest.py` to auto-mark legacy flat files while migrating:
-
-```python
-def pytest_collection_modifyitems(config, items):
-    for item in items:
-        name = item.path.name
-        if "contract" in name or "mcp" in name:
-            item.add_marker("contract")
-        else:
-            item.add_marker("unit")
-```
-
-Keep the hook boring and transparent. It is a bridge, not a permanent mystery
-router.
+For pytest, register custom markers in `pyproject.toml` or `pytest.ini` and use
+`--strict-markers`. If a temporary `pytest_collection_modifyitems` bridge is
+needed for legacy flat files, keep it explicit, boring, and marked with a
+removal trigger.
 
 ## Report Format
 
-When applying this skill, report:
+When applying this skill, report only what changed or what needs a decision:
 
 ```text
 Target:
 Change type:
-Classification:
-Recommended slice:
+Classification / recommended slice:
 Low-signal tests changed:
 Entry points preserved:
 Commands run:

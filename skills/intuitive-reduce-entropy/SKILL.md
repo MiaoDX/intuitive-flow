@@ -118,17 +118,9 @@ the plan or idea text, referenced human docs/context files, acceptance criteria,
 verification gates, and source evidence named by the plan. Do not broaden into
 repo-wide maintenance unless the plan itself depends on that surface.
 
-Classify each candidate's next owner:
-
-- `$grill-with-docs-batch` for unresolved terminology, domain, product,
-  contract, or decision-quality questions;
-- `gstack-autoplan` as an optional planning-stage unknown-unknown scout for
-  non-trivial plan-backed work when the risk is hidden execution/test/DX
-  surprise;
-- `$intuitive-preflight` when the plan is accepted but needs execution scope,
-  acceptance, verification, stop gates, and worker strategy;
-- `$intuitive-flow` only after the plan/preflight contract is approved and
-  reconciled into the canonical plan.
+Route the next owner by the unresolved object: domain/product/public-contract
+questions to `$grill-with-docs-batch`, accepted plans without execution gates to
+`$intuitive-preflight`, and approved contracts to `$intuitive-flow`.
 
 Stop when remaining items are implementation defaults, weak polish, or already
 covered by the plan. Return `Selected candidates: none` if the plan is already
@@ -141,36 +133,13 @@ rejected and what proof makes the addition unavoidable.
 
 ## Plan Artifact And Handoff
 
-For complex tasks, anchor the discussion in a plan document. Use or create a
-plan when the work spans multiple directions, multiple sessions, architecture or
-public-contract decisions, non-trivial verification, or a later grill/preflight
-step. Keep simple local fixes inline.
+Use or update a plan document only when the work spans multiple directions,
+sessions, architecture/public-contract decisions, non-trivial verification, or a
+later grill/preflight step. Keep simple local fixes inline.
 
-When a plan exists, update it with a compact lifecycle block when useful:
-
-```text
-Status: Draft | Entropy-reviewed | Grilled | Preflighted | Approved | Executing | Verified
-Last reviewed:
-Current decision:
-Next step:
-Open questions:
-Parked:
-```
-
-At the end of every run, name exactly one recommended next action unless there
-is genuinely no useful next action. Prefer the route that follows from the
-packet:
-
-- unresolved product/domain/public-contract questions ->
-  `$grill-with-docs-batch`;
-- accepted direction but missing execution contract -> `$intuitive-preflight`;
-- preflighted and approved contract -> `$intuitive-flow`;
-- no material candidates -> stop or park.
-
-Accept short replies as approval for the single recommended next action. If the
-last output says `Shortcut: reply "LGTM" to run grill batch and update the
-plan`, then a later "LGTM", "sounds good", "do it", or equivalent should start
-that next action instead of asking the user to restate the workflow.
+End every run with exactly one recommended next action unless there is genuinely
+no useful action. Accept short replies such as `LGTM`, `sounds good`, or `do it`
+as approval for that named next action.
 
 ## Context Budget
 
@@ -238,83 +207,34 @@ If the gate recommends stopping, stop instead of filling quota.
 
 ## Architecture And Specialist Routing
 
-If a candidate is architecture-shaped, public-contract cleanup, MCP/tool
-boundary cleanup, lifecycle gates, or unclear module depth, run the architecture
-review sequence before presenting it as decision-ready:
+For architecture-shaped candidates, public-contract cleanup, MCP/tool boundary
+cleanup, lifecycle gates, or unclear module depth, cite existing equivalent
+evidence or run the review sequence from `references/detailed-guidance.md`
+before calling the candidate decision-ready.
 
-1. `$zoom-out`: map relevant modules, callers, contracts, data flow, and
-   invariants.
-2. `$plan-eng-review`: stress-test fit, edge cases, gates, performance/cost,
-   and rollout risk.
-3. `$intuitive-refactor`: only after the accepted seam, evidence ladder, and
-   stop condition are explicit.
-
-Use `$improve-codebase-architecture` only as optional extra report-only
-architecture/deepening candidate discovery when the review sequence still
-leaves no accepted target seam.
-
-Skip this sequence only when a current plan, ADR, or gate already contains
-equivalent evidence; cite that source.
-
-Route accepted specialist work by object:
-
-- human docs -> `$intuitive-doc`;
-- agent guidance, hooks, skills setup, MCP/LSP guidance -> `$intuitive-init`;
-- tests, markers, fixtures, pruning -> `$intuitive-tests`;
-- code/module/API cleanup and stale wrappers -> `$intuitive-refactor`;
-- execution contracts -> `$intuitive-preflight`.
+Route accepted work by object: human docs to `$intuitive-doc`, agent guidance to
+`$intuitive-init`, tests to `$intuitive-tests`, code/API cleanup to
+`$intuitive-refactor`, and execution contracts to `$intuitive-preflight`.
 
 ## Packet Shape
 
-Each candidate should be decision-complete:
+Return a compact ranked packet. Each candidate must be decision-complete, but
+use terse fields instead of a full template: target, severity, entropy source,
+materiality, evidence, affected paths, owner skill, entity budget, proof, and
+execution risk.
 
-```text
-Candidate N: <short target>
-Severity: <P0 | P1 | P2>
-Entropy source: <source>
-Materiality: <false confidence | live source drift | stale surface | real workflow friction | recurring rediscovery>
-Why now: <repo evidence, not taste>
-Impact radius: <repo-wide | workflow | module | single-file>
-Maintainer test: <why this deserves review now>
-Affected paths: <paths>
-Owner skill: <specialist or this skill>
-Zen hint: <clarity principle advanced>
-Pattern hint: <pattern fit, or direct cleanup is clearer>
-Entity budget: <reuse/remove/merge first; new entities only with reason>
-Suggested proof: <commands/searches>
-Execution risk: <safe | needs approval because ...>
-```
-
-End broad discovery with:
+End every broad discovery or no-change result with these handoff markers:
 
 ```text
 Entropy source:
 Discovery intensity:
-Recommended packet:
-Selected candidates:
-Specialist owners:
-Discovery artifact:
-Zen hint:
-Pattern hint:
+Selected candidates: <ranked list | none>
 Entity budget:
-Changes:
 Verification:
 Parked items:
 Saturation status:
 Recommended next action:
 Shortcut:
-```
-
-For no-change runs:
-
-```text
-Entropy source:
-Discovery intensity:
-Selected candidates: none
-Why no change:
-Verification:
-Parked items:
-Next safe task:
 ```
 
 ## Stop Rules

@@ -25,25 +25,10 @@ and re-approval trigger.
 
 ## Boundary
 
-`$intuitive-preflight` owns:
-
-- turning rough intent into scope, non-goals, and acceptance criteria
-- packaging the execution context the worker should inspect first: files,
-  plans, issues, logs, artifacts, commands, and known non-sources
-- deciding the likely route: direct, `$intuitive-refactor`, durable
-  `$intuitive-flow`, or `skill-runner`
-- naming the exact `/goal execute ... with intuitive-flow` command for
-  long-running supervised work
-- defining worker prompts and worker-local goals when a bounded worker is useful
-- identifying missing user-owned decisions before execution
-
-It does not own:
-
-- executing the task
-- creating or clearing `/goal`
-- launching `skill-runner`
-- editing product files
-- approving its own contract
+`$intuitive-preflight` owns scope, non-goals, acceptance criteria, context
+packaging, route choice, `/goal execute ... with intuitive-flow` wording, worker
+scope, and missing user-owned decisions. It does not execute, create or clear
+`/goal`, launch `skill-runner`, edit product files, or approve itself.
 
 After approval, execution normally returns to `$intuitive-flow`. For known
 refactor or cleanup preflight contracts, execution may route to
@@ -84,8 +69,8 @@ requires a real simulator. Instead classify it explicitly:
 
 - required deterministic gate;
 - required integration gate;
-- required local/live acceptance gate;
-- required manual acceptance gate;
+- required product-run gate;
+- required local/live/manual gate;
 - optional exploratory gate.
 
 ### Runnable Product Proof Rule
@@ -97,29 +82,15 @@ preflight must name the cheapest public command or manual flow that actually
 exercises the changed behavior end to end, then add any higher-fidelity local
 or human-only proof needed before claiming success.
 
-Use a proof ladder:
-
-1. deterministic gates: lint, type, unit, focused contract tests;
-2. integration gates: catalog resolution, route launch construction, report or
-   artifact checker tests;
-3. product run gates: the public `just ...` command, console flow, script, or
-   harness command that drives the changed route;
-4. local/live/manual gates: provider-backed, Docker-backed, simulator-backed,
-   browser-observed, hardware, GPU, paid, or human-judged proof.
-
 For every affected public route or task intent, include at least one product
-run gate unless the plan is explicitly docs-only or test-only. If the task
-changes a coding-agent cleanup route, for example, the Verification section
-should include an appropriate `just run::surface ... driver=codex intent=cleanup`
-or operator-console launch proof in addition to unit tests. If the run requires
-credentials, Docker, simulator assets, GPU, hardware, or a human watching the
-UI, keep it in the contract as a required local/live or manual acceptance gate
-and mark completion `BLOCKED_NEEDS_LOCAL_VALIDATION` when it cannot be run in
-the current environment.
+run gate unless the plan is explicitly docs-only or test-only. If the run needs
+credentials, Docker, simulator assets, GPU, hardware, a provider, or human UI
+judgment, keep that gate in the contract as local/live/manual proof and mark it
+unavailable here when needed.
 
-Required integration, local/live, and manual acceptance gates are completion
-gates, not decoration. If a required gate validates the changed behavior and
-cannot run in the current environment, default to
+Required integration, product-run, local/live, and manual acceptance gates are
+completion gates, not decoration. If a required gate validates the changed
+behavior and cannot run in the current environment, default to
 `BLOCKED_NEEDS_LOCAL_VALIDATION` rather than `PARTIAL`; the work may produce an
 intermediate branch, but it is not complete, merge-ready, or no-regression until
 the required gate passes. Use `INTERMEDIATE_ONLY` only when the user explicitly
@@ -131,10 +102,9 @@ must run or explicitly report as unavailable.
 
 ## Output
 
-Return a compact contract suitable for pasting into a plan file. Preserve the
-same decision semantics, but avoid nested bullets and repeated boilerplate. Use
-`none` for empty or non-applicable items. Prefer one-line fields; wrap only when
-needed.
+Return a compact contract suitable for pasting into a plan file. Use one-line
+fields where possible, `none` for empty items, and short bullets only when a
+field would otherwise be unreadable.
 
 ```text
 Preflight status: <DRAFT | BLOCKED_NEEDS_DECISION | BLOCKED_NEEDS_LOCAL_VALIDATION>
@@ -162,28 +132,11 @@ Optional tracking: <none | run $multica-goal-tracker create-from-preflight with 
 Approval: LGTM/approve/go ahead approves; edits request revision.
 ```
 
-The `To execute` command should normally be the compact durable command:
-
-```text
-/goal execute <canonical source> with intuitive-flow
-```
-
-Use a real durable artifact when available, for example:
-
-```text
-To execute: /goal execute docs/plans/foo.md with intuitive-flow
-```
-
-If the canonical source is conversation-only, first recommend writing or
-updating a plan file with this contract. Add that as one short
-`Plan-file recommendation:` line before `To execute:` so context compression
-cannot erase the approved scope and acceptance criteria.
-
-For durable runs that should be tracked as Multica issues, include
-`Optional tracking` with the exact `create-from-preflight` handoff after
-approval and before execution. Keep it optional unless the user asked for issue
-tracking; never replace `To execute` with tracking, because the tracker records
-provenance and start state but does not execute the goal or prove completion.
+Use a real durable artifact in `To execute:` when available. If the canonical
+source is conversation-only, add one `Plan-file recommendation:` line before
+`To execute:` so context compression cannot erase the approved contract. Keep
+`Optional tracking` optional unless the user asked for issue tracking; it records
+provenance but does not execute or prove completion.
 
 If blocked, replace `Execution`, `To execute`, and `Approval` with:
 
@@ -195,15 +148,11 @@ Recommended default: <only when safe; otherwise none>
 
 ## Route Rules
 
-Choose the smallest honest route:
-
-| Contract shape | Route |
-| --- | --- |
-| Read-only diagnosis or one-file/two-file concrete fix | main direct |
-| Known cleanup, stale API, obsolete compatibility shim, module layout, or architecture seam | `$intuitive-refactor` |
-| Plan-backed, broad, stateful, or multi-stage work | durable `$intuitive-flow` |
-| Parallel read-heavy scout, review pass, verification/log probe, or short bounded independent task on Codex with a probed host-provided Paseo subagent tool | Paseo subagent under main-session supervision |
-| Long-running implementation, review pipeline, GSD, broad refactor, or slow verification | `skill-runner` worker under main-session supervision |
+Choose the smallest honest route: main direct for tiny concrete work,
+`$intuitive-refactor` for known cleanup or architecture seams, durable
+`$intuitive-flow` for plan-backed/stateful/multi-stage work, Paseo for probed
+parallel read/review/verification scopes, and `skill-runner` for long-running or
+isolated worker execution.
 
 When two routes can satisfy the same acceptance criteria, choose the one that
 reuses, removes, or narrows existing entities. Do not route to a broader
@@ -238,14 +187,7 @@ If the user approves a DRAFT preflight contract in the next turn, do not
 rewrite the contract unless their approval includes changes. Execute or route
 according to the approved contract.
 
-Approval phrases include:
-
-- `LGTM`
-- `approve`
-- `go ahead`
-- `do this`
-- `looks good`
-
-If the user edits the contract, update only the affected sections and show the
-changed contract before execution when the edit changes scope, acceptance,
-route, or verification.
+Approval phrases include `LGTM`, `approve`, `go ahead`, `do this`, and
+`looks good`. If the user edits the contract, update only affected sections and
+show the changed contract before execution when scope, acceptance, route, or
+verification changes.
