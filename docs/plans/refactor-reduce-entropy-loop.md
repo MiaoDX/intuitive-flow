@@ -171,15 +171,16 @@ Current state:
 - `bun run verify` passes from current HEAD.
 - The repo-owned skill manifest matches the live `skills/*/SKILL.md` surface.
 - Human docs now agree on the small public skill surface and specialist routing,
-  including `intuitive-planning-loop` as the bounded autonomous planning
-  entrypoint.
+  including `agent-planning-loop` as the bounded autonomous planning entrypoint
+  and `intuitive-planning-loop` as legacy cleanup only.
 - The reduce-entropy skill's public entry model now matches the human docs:
-  flow, refactor, reduce-entropy, planning-loop, and squash are the user-facing
-  choices, while preflight remains a specialist pre-execution contract skill.
+  flow, refactor, reduce-entropy, agent-planning-loop, and squash are the
+  user-facing choices, while preflight remains a specialist pre-execution
+  contract skill.
 - `BELIEFS.md` is consistently marked as supporting doctrine rather than the
   active source for current commands, installed surfaces, or maintenance state.
 - `docs/human/skill-self-improvement-audit.md` covers every current root skill
-  listed in `scripts/local-skill-manifest.txt`.
+  listed in `scripts/default-skill-allowlist.txt`.
 - Tests no longer depend on a live npm registry for local skill sync coverage,
   and tmux-dependent tests skip when tmux cannot create a detached session.
 - Fuzzy idea routing and supporting doctrine no longer advertise `office-hours`

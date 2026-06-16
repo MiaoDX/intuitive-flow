@@ -746,14 +746,16 @@ For any layout-shaped slice, keep the safety rules:
 
 Use this route unless the user already names a specific entropy source.
 
-1. **Orient**: launch parallel native probes for root guidance, human docs,
+1. **Orient**: launch parallel bounded probes for root guidance, human docs,
    package/test config, automation, top-level layout, and the current
-   verification command when two or more surfaces need inspection. For tiny
-   repos or precise prompts, inspect the relevant surface directly. For broad
-   prompts, run the high-noise summary preflight before searching `.planning`,
-   `docs/plans`, `.scratch`, generated/log/tmp surfaces, large tests, or
-   profile registries. For high-noise surfaces, orient with indexes and
-   references rather than full-body reads.
+   verification command when two or more surfaces need inspection. Use the
+   current host's approved delegation policy for those probes; do not imply
+   Codex native subagents are the default. For tiny repos or precise prompts,
+   inspect the relevant surface directly. For broad prompts, run the high-noise
+   summary preflight before searching `.planning`, `docs/plans`, `.scratch`,
+   generated/log/tmp surfaces, large tests, or profile registries. For
+   high-noise surfaces, orient with indexes and references rather than
+   full-body reads.
 2. **Classify**: map observed friction to the entropy sources above.
 3. **Choose discovery intensity**: classify the pass as `quick scan`,
    `selection scan`, or `saturation scan`. For repo-wide, unknown-unknown, or

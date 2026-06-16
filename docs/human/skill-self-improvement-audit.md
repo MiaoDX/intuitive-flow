@@ -38,6 +38,14 @@ Current default-surface correction:
   `gsd-execute-phase`, and `gsd-verify-work`) is no longer default-visible.
   `$intuitive-flow` remains the route that names those commands when a committed
   GSD phase is actually needed.
+- Keep `$grill-with-docs` default-visible as the one-question interactive
+  fallback for domain-language and ADR conversations. `$grill-with-docs-batch`
+  remains the preferred routed convergence path, but the upstream single-question
+  skill is not a stale duplicate.
+- Keep `$improve-codebase-architecture` default-visible as the optional
+  report-only deepening scanner after the architecture review route. It is not
+  a removal candidate unless a future audit shows the route no longer needs a
+  visual/deepening architecture report.
 
 ## Repo-Owned Root Skills
 
@@ -55,7 +63,7 @@ Current default-surface correction:
 | `intuitive-squash` | Strong: rewrite noisy agent history safely. | Strong: owns commit grouping and safety protocol only. | Strong: explicit confirmation and verify commands. | No immediate change. |
 | `intuitive-tests` | Strong: improve test suite signal. | Strong: owns test taxonomy, pruning, fixture/layout cleanup. | Strong but long: many examples are useful runtime guidance. | Specialist skill; route from reduce-entropy when tests are the issue. |
 | `multica-goal-tracker` | Strong: keeps goal-driven Multica issues tied to execution proof. | Strong: owns issue goal summaries, tracked start/finish comments, and rendered completion evidence only. | Strong after tracker harness: defaults fail fast without real session history, and pure parsing/rendering behavior is covered by skill-local tests. | Specialist issue-workflow utility; not part of the small public planning/build surface. |
-| `simplify` | Strong: review changed code for reuse, quality, efficiency. | Medium: owns diff-scoped review; adapter block is large and mechanical. | Medium: process is clear, but the codex adapter and reviewer prompts dominate the file. | Do not add meta text. Future candidate: move adapter/mechanics to shared adapter docs or generator if more skills use it. |
+| `simplify` | Strong: review changed code for reuse, quality, efficiency. | Strong: owns diff-scoped review; previous adapter/mechanics bulk has been removed from the current entrypoint. | Strong: process is compact enough for direct review work. | No immediate change; revisit only if a real changed-code review exposes a reusable workflow defect. |
 | `skill-runner` | Strong: supervise real skill-driven development runs. | Strong: owns runner orchestration and reusable-skill defect detection. | Strong: verdicts, policy, and stop conditions are explicit. | Already has skill-change policy. Do not add another meta block. |
 
 ## External And Managed Defaults
@@ -64,9 +72,9 @@ Current default-surface correction:
 | --- | --- | --- |
 | `skill-creator` | External authoring utility from Anthropic's skills source. | Keep default-visible for skill creation and maintenance tasks. |
 | `codex` | External utility for Codex CLI workflows. | Keep default-visible because this repo supports Codex as a first-class host. |
-| `grill-with-docs` | External one-question-at-a-time discussion specialist. | Keep as a fallback behind `grill-with-docs-batch`; batch remains the preferred routed skill. |
+| `grill-with-docs` | External one-question-at-a-time discussion specialist. | Keep default-visible as the interactive fallback for domain-language and ADR sharpening; do not re-suggest removal merely because batch is preferred for grouped convergence. |
 | `handoff` | External context handoff utility. | Keep as direct utility for compacting long agent sessions. |
-| `improve-codebase-architecture` | External report-only architecture discovery. | Keep routed behind reduce-entropy or architecture review. |
+| `improve-codebase-architecture` | External report-only architecture discovery. | Keep default-visible behind reduce-entropy or architecture review for visual/deepening candidate reports; do not re-suggest removal without evidence that this report-only scanner is no longer used. |
 | `tdd` | External test-first workflow. | Keep as direct specialist when the user explicitly wants TDD. |
 | `zoom-out` | External architecture/context map. | Keep routed as the first architecture review pass before plan-eng-review. |
 | `gstack-browse`, `gstack-open-gstack-browser` | Browser launch and browser QA helpers. | Keep for visual/runtime dogfooding that text checks miss. |
@@ -94,8 +102,8 @@ Removed from the default surface:
   actually needs it.
 - It exposed `intuitive-layout` as a boundary-smell after user review; layout is
   now treated as a symptom routed by object instead of a root skill.
-- It exposes two remaining future cleanup candidates: `intuitive-flow` because
-  it is necessarily broad, and `simplify` because its adapter/mechanics are large.
+- It exposes one remaining future cleanup candidate: `intuitive-flow` because
+  it is necessarily broad.
 - It does not justify broad rewrites today. Most retained defaults already have
   clear execution contracts and stop conditions.
 
@@ -104,7 +112,5 @@ Removed from the default surface:
 - Add a lightweight manifest check later if the repo wants to enforce that each
   root skill has a clear WHY / WHAT / HOW shape without requiring a literal
   section heading.
-- Revisit whether `simplify` still has adapter/mechanics bulk after the next
-  real changed-code review; the current entrypoint is compact enough.
 - Consider splitting long `intuitive-flow` reference material only after a real
   task shows that its size hurts execution quality.

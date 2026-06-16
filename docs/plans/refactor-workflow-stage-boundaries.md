@@ -47,26 +47,29 @@ after an approved plan or preflight contract exists.
 
 direct discussion
 
-## Source Evidence
+## Original Source Evidence
+
+This section records the drift observed before implementation. It is historical
+evidence for why the refactor happened, not a current-state checklist.
 
 - User discussion on 2026-06-12 - approved the staged A/B/C/D workflow and the
   principle that explicit mode selection is better than implicit routing.
-- `README.md` - still presents `$intuitive-flow` as the default
+- `README.md` - originally presented `$intuitive-flow` as the default
   shaping/build/change entrypoint.
-- `ARCHITECTURE.md` and `STATUS.md` - still list the old primary skill surface
-  and active focus.
-- `skills/intuitive-flow/references/plan-intake-and-autoplan.md` - still allows
-  inline `intuitive-flow` idea shaping as a default path.
-- `skills/intuitive-reduce-entropy/SKILL.md` - currently describes repo
-  maintenance only, while actual usage also includes plan/idea entropy review.
-- `skills/intuitive-planning-loop/SKILL.md` - behavior is agent-scout planning,
-  but the public name does not expose that distinction.
+- `ARCHITECTURE.md` and `STATUS.md` - originally listed the old primary skill
+  surface and active focus.
+- `skills/intuitive-flow/references/plan-intake-and-autoplan.md` - originally
+  allowed inline `intuitive-flow` idea shaping as a default path.
+- `skills/intuitive-reduce-entropy/SKILL.md` - originally described repo
+  maintenance only, while actual usage also included plan/idea entropy review.
+- historical `skills/intuitive-planning-loop/SKILL.md` - behavior was
+  agent-scout planning, but the public name did not expose that distinction.
 - `scripts/default-skill-allowlist.txt` and
   `scripts/lib/default-skill-allowlist*.ts` - renaming a root skill changes the
   installed skill surface and must be handled through root-skill plus
   legacy-skill ownership cleanup.
-- `skills/intuitive-flow/references/plan-intake-and-autoplan.md` - still treats
-  `gstack-autoplan` evidence as a hard precheck before plan-backed
+- `skills/intuitive-flow/references/plan-intake-and-autoplan.md` - originally
+  treated `gstack-autoplan` evidence as a hard precheck before plan-backed
   implementation, which conflicts with using grill-batch plus preflight as the
   explicit approval boundary.
 
@@ -336,9 +339,9 @@ existing phase: gsd-plan-phase <phase> --prd docs/plans/refactor-workflow-stage-
 missing planning or phase: manifest + gsd-ingest-docs, then gsd-plan-phase --prd docs/plans/refactor-workflow-stage-boundaries.md
 ```
 
-## Preflight Contract
+## Historical Preflight Contract
 
-Preflight status: DRAFT
+Preflight status: IMPLEMENTED (original draft retained as execution evidence)
 Task source: plan path plus user discussion
 Canonical source: docs/plans/refactor-workflow-stage-boundaries.md
 Route: durable `$intuitive-flow`
@@ -379,7 +382,7 @@ Non-goals:
 
 Context:
 
-- must-read=`docs/plans/refactor-workflow-stage-boundaries.md`,
+- original must-read=`docs/plans/refactor-workflow-stage-boundaries.md`,
   `README.md`, `ARCHITECTURE.md`, `STATUS.md`,
   `docs/human/reduce-repo-entropy.md`,
   `docs/human/skill-self-improvement-audit.md`,
@@ -388,7 +391,7 @@ Context:
   `skills/intuitive-flow/references/plan-intake-and-autoplan.md`,
   `skills/intuitive-flow/references/gsd-handoff.md`,
   `skills/intuitive-flow/references/source-of-truth.md`,
-  `skills/intuitive-planning-loop/SKILL.md`,
+  `skills/agent-planning-loop/SKILL.md`,
   `skills/intuitive-preflight/SKILL.md`,
   `scripts/default-skill-allowlist.txt`,
   `scripts/lib/default-skill-allowlist.test.ts`,
@@ -451,5 +454,5 @@ Execution:
   rename plus allowlist legacy cleanup, targeted tests, verification, and plan
   freshness.
 
-To execute: /goal execute docs/plans/refactor-workflow-stage-boundaries.md with intuitive-flow
-Approval: LGTM/approve/go ahead approves; edits request revision.
+Historical execution request: `/goal execute docs/plans/refactor-workflow-stage-boundaries.md with intuitive-flow`
+Approval record: LGTM/approve/go ahead approved the original draft; edits requested revision before implementation.
