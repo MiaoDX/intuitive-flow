@@ -16,6 +16,7 @@
 #
 # Primary public choices:
 root-skill agent-planning-loop
+root-skill architecture-ratchet-refactor
 root-skill intuitive-flow
 root-skill intuitive-reduce-entropy
 root-skill intuitive-refactor

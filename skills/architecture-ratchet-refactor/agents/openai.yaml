@@ -1,0 +1,4 @@
+interface:
+  display_name: "Architecture Ratchet Refactor"
+  short_description: "Reduce code size by simplifying architecture"
+  default_prompt: "Use $architecture-ratchet-refactor to simplify this codebase while reducing oversized modules."
