@@ -167,13 +167,18 @@ authority.
 Authoritative inputs, in order:
 
 1. System/developer/user instructions for the current session.
-2. Existing project-local `AGENTS.md` and `CLAUDE.md`.
-3. Root orientation docs such as `README.md`, `ARCHITECTURE.md`, `STATUS.md`,
-   `docs/agents/**`, and command docs.
-4. Actual repo commands, scripts, package metadata, CI config, and tests.
-5. Agent `/init`, `codex init` when available, or stdin-bundled init-style
+2. Repo-local human truth such as `README.md`, `ARCHITECTURE.md`,
+   `STATUS.md`, `docs/human/**`, equivalent files named by the repo, and
+   executable repo evidence such as commands, scripts, package metadata, CI
+   config, and tests.
+3. Existing project-local `AGENTS.md`, `CLAUDE.md`, and `docs/agents/**`
+   operational runbooks.
+4. Agent `/init`, `codex init` when available, or stdin-bundled init-style
    discovery from a read-only Codex run.
-6. Intuitive Flow defaults and skill-routing conventions.
+5. Intuitive Flow defaults and skill-routing conventions.
+
+Existing agent guidance is important evidence for local operational hazards,
+but it does not override current human truth or executable repo behavior.
 
 `/init`, `codex init` when the installed Codex interface exposes it, and
 similar generated discovery are starting points, not finished harnesses. Expect

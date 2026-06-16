@@ -35,8 +35,10 @@ Respect this source hierarchy:
 
 1. current system/developer/user instructions;
 2. repo-local human truth: `README.md`, `ARCHITECTURE.md`, `STATUS.md`,
-   `docs/human/**`, and equivalent files named by the repo;
-3. existing project-local agent guidance;
+   `docs/human/**`, equivalent files named by the repo, and executable repo
+   evidence such as package metadata, scripts, CI config, and tests;
+3. existing project-local agent guidance and `docs/agents/**` operational
+   runbooks;
 4. generated `/init` or `codex init` suggestions;
 5. intuitive workflow defaults.
 

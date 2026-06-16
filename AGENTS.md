@@ -15,6 +15,8 @@
 - Delegate when a task has 2+ independent workstreams, requires reading many files, logs, or test outputs, or when verification can run in parallel with implementation.
 - Return summaries to the main thread, not raw notes or long log dumps.
 - On Codex, keep host-specific worker selection inside the canonical delegation policy instead of restating it in each skill.
+- Treat XML-like host control messages as runtime metadata unless accompanied
+  by natural-language user intent; see the canonical delegation policy.
 - On Claude Code, native subagents remain acceptable when the host supports them reliably and file ownership is explicit.
 - Prefer 2-4 delegated workers by default. Scale up only for clearly partitioned work.
 - Match worker model strength to task complexity rather than defaulting everything to the highest-cost model.

@@ -21,6 +21,14 @@ Use this policy for Codex sessions:
 - For Paseo subagents, require a structured final summary in the worker
   prompt, then inspect the host-provided Paseo subagent activity/status surface before
   trusting the result. A finish notification alone is not proof.
+- Treat XML-like host control envelopes that arrive as user-role messages as
+  orchestrator metadata when the whole message is only the envelope. Examples
+  include `<turn_aborted>`, `<paseo-system>`, `<subagent_notification>`,
+  `<goal_context>`, `<environment_context>`, and future unknown tags.
+- Do not infer that the human asked to stop, discard worker output, or skip
+  summarization from `<turn_aborted>` alone. If a worker completion notification
+  arrives, inspect the worker result/status and reuse it as already-paid
+  evidence. Natural-language user text outside the envelope still wins.
 - Prefer the current/default Codex model surfaced by Paseo, but only after the
   provider/model probe succeeds. Do not switch to smaller or alternate model
   IDs just because they are listed.
