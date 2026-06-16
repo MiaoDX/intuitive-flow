@@ -41,6 +41,23 @@ const MICRO_WORK_TYPES = new Set([
   'wording_alignment',
 ])
 
+const DEMAND_GATED_CHANGE_TYPES = new Set([
+  'add_feature',
+  'add_surface',
+  'new_feature',
+  'new_surface',
+  'feature_addition',
+  'surface_addition',
+  'remove_feature',
+  'remove_surface',
+  'reduce_scope',
+  'scope_reduction',
+  'feature_removal',
+  'surface_removal',
+  'delete_feature',
+  'delete_surface',
+])
+
 const WEAK_MAINTAINER_TERMS = [
   'consistency',
   'cleanup',
@@ -52,8 +69,23 @@ const WEAK_MAINTAINER_TERMS = [
   'formatting',
 ]
 
+const WEAK_DEMAND_TERMS = [
+  'user_asked',
+  'asked_for_it',
+  'could_be_useful',
+  'might_be_useful',
+  'nice_to_have',
+  'consistency',
+  'cleanup',
+  'polish',
+  'tidy',
+]
+
 const IMPACT_RE =
   /\b(prevent|avoid|stop|unblock|catch|protect|remove|reduce|fix|fail|publish|trust|review|hide|mislead|drift|stale|broken|error|dead|rediscover)\b/i
+
+const DEMAND_IMPACT_RE =
+  /\b(reuse|narrow|document|delete|remove|replace|stale|mislead|unsupported|out[-_\s]?of[-_\s]?scope|scope|intent|value|workflow|surface|maintainer|agent|consumer|caller|drift|false[-_\s]?confidence|no[-_\s]?longer|cannot|keeping|kept)\b/i
 
 function normalizeToken(value) {
   return String(value ?? '')
@@ -94,6 +126,13 @@ function weakMaintainerTest(value) {
   if (!text) return true
   const token = normalizeToken(text)
   return WEAK_MAINTAINER_TERMS.some((term) => token.includes(term)) && !IMPACT_RE.test(text)
+}
+
+function weakDemandGate(value) {
+  const text = String(value ?? '').trim()
+  if (!text) return true
+  const token = normalizeToken(text)
+  return WEAK_DEMAND_TERMS.some((term) => token.includes(term)) && !DEMAND_IMPACT_RE.test(text)
 }
 
 function isOpenEndedLoop(payload) {
@@ -138,6 +177,9 @@ function evaluateCandidate(candidate, index, context = {}) {
   const workTypes = normalizeList(
     candidate.work_type ?? candidate.workType ?? candidate.change_type ?? candidate.changeType ?? candidate.category,
   )
+  const changeTypes = normalizeList(candidate.change_type ?? candidate.changeType ?? candidate.work_type ?? candidate.workType)
+  const demandGate = candidate.demand_gate ?? candidate.demandGate
+  const needsDemandGate = changeTypes.some((type) => DEMAND_GATED_CHANGE_TYPES.has(type))
   const lowImpactScope = LOW_IMPACT_SCOPES.has(impactRadius)
   const microWork = workTypes.some((type) => MICRO_WORK_TYPES.has(type))
   const errors = []
@@ -159,6 +201,14 @@ function evaluateCandidate(candidate, index, context = {}) {
 
   if (evidence.length === 0) {
     errors.push(`${id}: missing repo evidence`)
+  }
+
+  if (needsDemandGate) {
+    if (!String(demandGate ?? '').trim()) {
+      errors.push(`${id}: feature additions/removals need demand_gate explaining why the request itself should be done`)
+    } else if (weakDemandGate(demandGate)) {
+      errors.push(`${id}: demand_gate is too weak; justify the add/remove against reuse, narrowing, documentation, deletion, or keeping the behavior`)
+    }
   }
 
   if (parent && eligible.length === 0) {

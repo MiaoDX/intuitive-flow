@@ -43,6 +43,81 @@ describe("reduce entropy materiality gate", () => {
     expect(result.eligible_count).toBe(1);
   });
 
+  test("accepts feature additions when the demand gate justifies the new surface", async () => {
+    const { evaluate } = await loadGate();
+
+    const result = evaluate({
+      requested_groups: 1,
+      candidates: [
+        {
+          id: "placeholder-link-gate",
+          severity: "P1",
+          change_type: "add_surface",
+          demand_gate:
+            "A docs gate already claims scoped links are trustworthy; adding this check is justified because reuse cannot expose placeholder links.",
+          materiality: ["false confidence"],
+          impact_radius: "workflow",
+          maintainer_test:
+            "The docs gate can pass while publishing placeholder links, so reviewers need this protection before trusting link checks.",
+          evidence: ["link-check ignores scoped [text](#) links"],
+        },
+      ],
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.stop_recommended).toBe(false);
+    expect(result.eligible_count).toBe(1);
+  });
+
+  test("rejects feature additions without a demand gate", async () => {
+    const { evaluate } = await loadGate();
+
+    const result = evaluate({
+      requested_groups: 1,
+      candidates: [
+        {
+          id: "new-report-artifact",
+          severity: "P1",
+          change_type: "add_feature",
+          materiality: ["real_workflow_friction"],
+          impact_radius: "workflow",
+          maintainer_test:
+            "Maintainers currently rediscover report status by reading logs, so this would prevent repeated workflow friction.",
+          evidence: ["current status workflow has no durable report"],
+        },
+      ],
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.stop_recommended).toBe(true);
+    expect(result.errors.join("\n")).toContain("feature additions/removals need demand_gate");
+  });
+
+  test("rejects feature removals with weak demand justification", async () => {
+    const { evaluate } = await loadGate();
+
+    const result = evaluate({
+      requested_groups: 1,
+      candidates: [
+        {
+          id: "delete-legacy-command",
+          severity: "P1",
+          change_type: "remove_feature",
+          demand_gate: "User asked for cleanup.",
+          materiality: ["stale_surface"],
+          impact_radius: "workflow",
+          maintainer_test:
+            "The legacy command remains reachable after callers moved, so removing it prevents users from following stale docs.",
+          evidence: ["current docs no longer reference legacy command"],
+        },
+      ],
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.stop_recommended).toBe(true);
+    expect(result.errors.join("\n")).toContain("demand_gate is too weak");
+  });
+
   test("rejects polish-only work as an entropy group", async () => {
     const { evaluate } = await loadGate();
 
