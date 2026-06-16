@@ -80,7 +80,9 @@ The current maintenance focus is keeping the repo dogfoodable:
   only GSD status/resume/pause helpers are default-visible
 - edit repo-owned skills directly under `skills/`
 - keep `SKILL.md` entrypoints compact and watch size drift through the
-  non-failing `check:skills` size budget report
+  non-failing `check:skills` size budget report; `check:skills` also rejects
+  skill-style frontmatter in non-entrypoint Markdown so references and templates
+  cannot drift as shadow skill manifests
 - keep local hooks enabled with `bun run setup:hooks` so skill structure,
   allowlist coverage, local resource references, and completed-plan archival
   markers are checked before commit

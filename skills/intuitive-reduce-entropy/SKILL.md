@@ -37,6 +37,15 @@ guidance, narrowing scope, reusing an existing route, or documenting current
 truth. Recommend a new durable entity only when the shrink/reuse path cannot
 make the evidence honest.
 
+Before proposing any candidate, run a `Demand sanity gate`: decide whether the
+requested change itself is worth doing. For feature additions, ask whether the
+feature creates enough user or maintainer value to justify a new surface instead
+of reusing, narrowing, or documenting an existing one. For feature removals or
+scope cuts, ask whether the removed behavior is genuinely stale, misleading, or
+out of scope rather than still valuable. If the gate fails or is uncertain, push
+back and park the request instead of converting it into implementation work.
+Every selected candidate should include `Demand gate:` with the pass reason.
+
 ## Modes
 
 | Mode | Use when | Output | Redirect when |
@@ -59,10 +68,15 @@ Redirect: <none | better mode/skill and why>
 Discovery intensity: <quick scan | selection scan | saturation scan>
 ```
 
-This is the compact runtime entrypoint. Read
-`references/detailed-guidance.md` only when the compact rules below are not
-enough to decide materiality, discovery depth, architecture review sequence,
-layout routing, delegation, plan-review ownership, or output shape.
+This is the compact runtime entrypoint. Read the narrow reference only when the
+compact rules below are not enough:
+
+| Need | Read |
+| --- | --- |
+| Repo entropy, plan entropy, discovery-loop behavior, and selection handoff | `references/discovery-modes.md` |
+| High-noise budgets, bounded command summaries, materiality gate, and no-change threshold | `references/high-noise-and-materiality.md` |
+| Zen ranking, pattern fit, architecture review sequence, delegation, public entry model, and layout routing | `references/ranking-and-routing.md` |
+| Default route, user-input routing, decision policy, stop condition, and report shapes | `references/handoff-and-reporting.md` |
 
 ## Discovery Intensity
 
@@ -158,13 +172,13 @@ bounded indexes, counts, references, and samples, not full-body reads.
 
 For broad or noisy discovery, prefer the bundled summary scripts, specific
 searches, small windows, and bounded command summaries. Read
-`references/detailed-guidance.md` for exact commands and the full high-noise
-surface budget.
+`references/high-noise-and-materiality.md` for exact commands and the full
+high-noise surface budget.
 
 ## Candidate Bar
 
 A candidate is eligible only when it prevents a future surprise a maintainer
-would notice. It must show at least one of:
+would notice and passes the demand sanity gate. It must show at least one of:
 
 - false confidence: a gate, test, script, build, report, or link check can pass
   while hiding a current misleading state;
@@ -182,8 +196,8 @@ single-file metadata fixes, and support work counted separately from its parent
 behavioral slice.
 
 Reject candidates that primarily add a new abstraction, document, workflow, or
-test layer unless they replace, remove, or clearly constrain a larger existing
-surface.
+test layer unless their demand gate shows why the new surface is necessary and
+they replace, remove, or clearly constrain a larger existing surface.
 
 P0/P1 candidates are usually commit-worthy when backed by current evidence. P2
 candidates need explicit impact radius and a maintainer test that justifies a
@@ -196,7 +210,7 @@ group. If the gate recommends stopping, stop instead of filling quota.
 
 For architecture-shaped candidates, public-contract cleanup, MCP/tool boundary
 cleanup, lifecycle gates, or unclear module depth, cite existing equivalent
-evidence or run the review sequence from `references/detailed-guidance.md`
+evidence or run the review sequence from `references/ranking-and-routing.md`
 before calling the candidate decision-ready.
 
 Route accepted work by object: human docs to `$intuitive-doc`, agent guidance to
@@ -206,7 +220,8 @@ Route accepted work by object: human docs to `$intuitive-doc`, agent guidance to
 ## Packet Shape
 
 Return a compact ranked packet. Each candidate must be decision-complete with
-target, severity, entropy source, materiality, evidence, owner, proof, and risk.
+target, demand gate, severity, entropy source, materiality, evidence, owner,
+proof, and risk.
 
 End every broad discovery or no-change result with these handoff markers:
 
@@ -233,6 +248,7 @@ After the user selects candidates, preserve the selection, likely owners, proof
 commands, risks, parked items, and stop condition. Do not silently narrow the
 selection to one small slice.
 
-Use `references/detailed-guidance.md` for full rules on Zen ranking, pattern
-fit, layout routing, delegation, canonical cleanup, decision policy, and
-selection handoff.
+Use `references/ranking-and-routing.md` for Zen ranking, pattern fit, layout
+routing, delegation, and canonical cleanup. Use
+`references/handoff-and-reporting.md` for decision policy and selection
+handoff.

@@ -60,7 +60,7 @@ Current default-surface correction:
 | `grill-with-docs-batch` | Strong: improves decision quality before implementation. | Strong: owns batched plan/domain grilling and stops when docs already answer the durable questions. | Strong: decision-impact test and convergence rules are explicit. | Keep as a specialist discussion skill; no runtime self-improvement block. |
 | `intuitive-doc` | Strong: keep human docs current and small. | Strong: owns human-facing docs and boundary drift, skips agent files by default. | Strong: audit/update/guard modes and claim verification are clear. | No runtime self-improvement block. Later slim examples if the doc keeps growing. |
 | `agent-planning-loop` | Strong: moves contested planning critique into bounded agent scouts before user review. | Strong: owns read-only planning debate and synthesis, not implementation or self-approval. | Strong: charter, scout prompts, materiality filtering, stop gates, and review-packet output are explicit. | Primary planning entrypoint for "align yourselves" and planning-loop style requests; no runtime self-improvement block. |
-| `intuitive-flow` | Strong but broad: routes approved plans and execution contracts to verified work. | Medium: owns staging and handoffs, but the file is long because it encodes many downstream gates and compatibility routing. | Strong: checkpoints and routing are explicit. | Candidate for future extraction into smaller references or subflow docs, but do not add meta text. |
+| `intuitive-flow` | Strong: routes approved plans and execution contracts to verified work. | Strong: owns staging and handoffs through a compact entrypoint plus route-specific references. | Strong: checkpoints and routing are explicit without loading the legacy full manual by default. | Keep as the execution router; only read `legacy-runtime-detail.md` when diagnosing a split-reference regression. |
 | `intuitive-init` | Strong after harness refresh: builds repo-local agent harness. | Strong: owns `AGENTS.md`, `CLAUDE.md`, `docs/agents/**`, init discovery, hooks, skills, and MCP routing. | Strong: modes and stop conditions are explicit. | Specialist skill; route from reduce-entropy when agent guidance is the issue. |
 | `intuitive-port-worktree` | Strong: move worktree changes without switching the target branch. | Strong: owns porting/cherry-pick/patch transfer only. | Strong: source/target discovery, payload selection, and safety gates are explicit. | Keep as a specialist handoff utility; no meta text needed. |
 | `intuitive-preflight` | Strong: make vague execution intent approval-ready before implementation. | Strong: owns context package, scope, non-goals, acceptance, verification, route, and goal wording. | Strong: draft contract and approval boundary are explicit. | Specialist skill; route from flow or direct use before vague execution. |
@@ -110,8 +110,12 @@ Removed from the default surface:
   actually needs it.
 - It exposed `intuitive-layout` as a boundary-smell after user review; layout is
   now treated as a symptom routed by object instead of a root skill.
-- It exposes one remaining future cleanup candidate: `intuitive-flow` because
-  it is necessarily broad.
+- It moved `intuitive-flow` away from a parallel runtime manual: the entrypoint
+  is a router, `references/detailed-guidance.md` is an index, and the historical
+  full detail is parked as `legacy-runtime-detail.md` for regression diagnosis.
+- It split the largest reduce-entropy detailed guidance into purpose-specific
+  references so agents can load discovery, materiality, ranking/routing, or
+  handoff detail independently.
 - It does not justify broad rewrites today. Most retained defaults already have
   clear execution contracts and stop conditions.
 
@@ -120,5 +124,5 @@ Removed from the default surface:
 - Add a lightweight manifest check later if the repo wants to enforce that each
   root skill has a clear WHY / WHAT / HOW shape without requiring a literal
   section heading.
-- Consider splitting long `intuitive-flow` reference material only after a real
-  task shows that its size hurts execution quality.
+- Consider splitting other long `detailed-guidance.md` files only after a real
+  task shows that their size hurts execution quality.

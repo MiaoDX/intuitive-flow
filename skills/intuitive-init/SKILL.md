@@ -86,16 +86,19 @@ When the task is LSP, language-server, Serena, or MCP setup:
 
 ## Modes
 
-- Audit: report current guidance health, drift, duplication, and missing local
-  hazards. Do not edit unless asked.
-- Apply/create: produce local `AGENTS.md` and `CLAUDE.md` from repo evidence and
-  accepted defaults.
-- Refresh: merge current repo truth and generated init suggestions into
-  existing local guidance.
-- Slim/cleanup: remove stale, duplicated, generic, or overgrown root guidance
-  while preserving local invariants.
-- Symlink migration: replace linked or external guidance files with
-  project-local files that preserve the target repo's rules.
+| Mode | Use when | Output | Redirect when |
+| --- | --- | --- | --- |
+| Audit | Existing guidance may be stale, bloated, or missing local hazards. | Guidance health report and recommended edits; no changes unless asked. | The issue is human docs, tests, or code layout. |
+| Apply/create | A repo lacks local `AGENTS.md` / `CLAUDE.md` or needs initial setup. | Project-local guidance from repo evidence and accepted defaults. | The user wants only current-state human docs. |
+| Refresh | Existing local guidance needs current repo truth or init suggestions merged. | Updated guidance with stale/generic content removed. | Generated init output should only be reviewed, not applied. |
+| Slim/cleanup | Root guidance is overgrown, generic, duplicated, or stale. | Shorter root guidance with long detail routed to durable homes. | The long detail belongs in human docs owned by `$intuitive-doc`. |
+| Symlink migration | Root guidance is linked to shared/external files. | Project-local files preserving target repo rules. | The repo intentionally owns external guidance as its contract. |
+| LSP/MCP setup | The request names LSP, language server, Serena, or MCP setup. | Agent-facing setup or a concrete blocked/parked reason. | The target already has a better concrete setup. |
+
+For non-trivial runs, state `Selected mode:`, `Why:`, and `Redirect:` before
+auditing or editing. For tiny direct changes, one sentence can carry the same
+information. Add a final `Mode note:` only when manual invocation, ambiguity, or
+a better owner matters.
 
 ## Stop Conditions
 

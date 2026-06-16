@@ -77,6 +77,22 @@ describe("skill checker", () => {
     });
   });
 
+  test("rejects skill frontmatter outside SKILL.md entrypoints", async () => {
+    await withTempProject((root) => {
+      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill alpha\n");
+      writeFixtureFile(root, "skills/alpha/SKILL.md", "---\nname: alpha\ndescription: Alpha.\n---\n");
+      writeFixtureFile(
+        root,
+        "skills/alpha/references/guide.md",
+        "---\nname: alpha\ndescription: Drift-prone duplicate metadata.\n---\n\n# Guide\n",
+      );
+
+      expect(checkSkills(optionsFor(root))).toContain(
+        "non-entrypoint markdown must not have skill frontmatter: skills/alpha/references/guide.md",
+      );
+    });
+  });
+
   test("rejects machine-local checkout paths in skill markdown", async () => {
     await withTempProject((root) => {
       writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill alpha\n");

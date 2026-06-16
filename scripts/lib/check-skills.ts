@@ -190,6 +190,9 @@ const checkSkill = (skillsRoot: string, skillName: string): string[] => {
   for (const file of listFiles(skillDir)) {
     const filePath = join(skillDir, file);
     const fileText = readFileSync(filePath, "utf8");
+    if (isMarkdownFile(file) && file !== "SKILL.md" && frontmatter(fileText)) {
+      errors.push(`non-entrypoint markdown must not have skill frontmatter: skills/${skillName}/${file}`);
+    }
     if (fileText.includes("{{>")) {
       errors.push(`template include left in canonical skill file: skills/${skillName}/${file}`);
     }

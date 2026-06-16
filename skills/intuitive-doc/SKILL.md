@@ -35,29 +35,17 @@ Use this skill when:
 
 ## Modes
 
-Audit mode:
+| Mode | Use when | Output | Redirect when |
+| --- | --- | --- | --- |
+| Audit | The user asks whether docs are current, bloated, or misplaced. | Findings, recommended changes, parked items, verification. | The issue is agent guidance, tests, or code layout. |
+| Update | Current behavior, commands, architecture, or status changed. | Focused doc edits tied to current source evidence. | The requested change is only planning/evidence archival. |
+| Cleanup | Human docs contain stale, duplicated, or over-detailed material. | Moved, archived, shortened, or removed docs with links preserved. | The material belongs in agent guidance or execution plans. |
+| Guard | A proposed doc change needs placement review. | Placement decision and reason. | The user already selected the doc target and asks to edit. |
 
-- inspect the human surface and named current source-of-truth files;
-- report stale, missing, duplicated, or over-detailed documentation;
-- do not edit unless asked.
-
-Update mode:
-
-- update only the docs needed to reflect current truth;
-- keep root docs thin and route detail to `docs/human/**`;
-- preserve useful existing structure and links.
-
-Cleanup mode:
-
-- move, archive, or remove stale human-facing docs only when current truth has a
-  better home;
-- do not delete planning or evidence just because it is old;
-- prefer reversible moves and clear indexes for historical material.
-
-Guard mode:
-
-- check whether a proposed doc change belongs in human docs, agent docs,
-  planning/evidence, ADRs, or code comments.
+For non-trivial runs, state `Selected mode:`, `Why:`, and `Redirect:` before
+auditing or editing. For tiny doc edits, one sentence can carry the same
+information. Add a final `Mode note:` only when manual invocation, ambiguity, or
+a better owner matters.
 
 ## Human Surface Rules
 

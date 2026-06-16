@@ -80,6 +80,20 @@ and path consumers have been updated.
 
 ## Modes
 
+| Mode | Use when | Output | Redirect when |
+| --- | --- | --- | --- |
+| Audit / propose | The test-suite cleanup target is broad or ambiguous. | Inventory, classification, recommended slice, fallback, verification plan. | The user already selected a precise implementation slice. |
+| Marker | The approved path is marker-first or directory movement is risky. | Registered markers, marked touched tests, focused collection/tests. | The suite does not need layer selection. |
+| Layout | The approved path moves tests into a layer-based structure. | Moved classified files, updated path consumers, collection/tests proof. | Path consumers are unknown or the user has not approved movement. |
+| Prune / consolidate | The target is unnecessary, redundant, or low-signal tests. | Kept/merged/deleted/reclassified tests with behavior proof. | Deletion would remove the last meaningful behavior check. |
+| Fixture / factory | Repeated setup obscures behavior or appears across tests. | Local fixture/factory extraction with focused tests. | Reuse is speculative. |
+| Parameterize | Repeated cases differ only by input, expected output, or edge case. | Table-driven tests with readable case ids. | Separate tests give better diagnosis. |
+
+For non-trivial runs, state `Selected mode:`, `Why:`, and `Redirect:` before
+auditing or editing. For tiny direct changes, one sentence can carry the same
+information. Add a final `Mode note:` only when manual invocation, ambiguity, or
+a better owner matters.
+
 ### 1. AUDIT / PROPOSE mode
 
 Default for broad or ambiguous test-suite refactors.

@@ -1,8 +1,3 @@
----
-name: intuitive-refactor
-description: Set a bounded aggressive refactor goal before architecture or cleanup work starts, including checking target-repo LSP setup before risky symbol-level edits. Use whenever the user wants to improve architecture, clean up aggressively, "fix all big issues", avoid endless refactors, decide what is in/out of scope, classify P0/P1/P2/Parked findings, remove stale APIs or compatibility shims, or define the tests and stop condition before changing code. This skill works standalone and can also be combined with architecture scanners, intuitive-flow, TDD, or diagnosis skills.
----
-
 # Intuitive Refactor
 
 Use this skill to set the goal, scope, evidence, and stop condition for a

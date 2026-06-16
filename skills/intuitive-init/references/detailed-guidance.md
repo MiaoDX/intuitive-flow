@@ -1,8 +1,3 @@
----
-name: intuitive-init
-description: Initialize, audit, aggressively slim, merge, and refresh project-local AGENTS.md and CLAUDE.md files from existing repo guidance, agent /init suggestions, stdin-bundled Codex init-style discovery, and intuitive workflow defaults, including target-repo LSP and agent-facing Serena MCP setup. Use when setting up a repo for Claude Code/Codex, replacing symlinked agent files with local guidance, rerunning agent init after weeks of drift, cleaning overgrown root agent files, or aligning a repo to intuitive-doc, intuitive-tests, intuitive-flow, intuitive-refactor, and intuitive-reduce-entropy without overwriting project-specific hints. When the user asks to "setup LSP" for a coding-agent repo, treat Serena MCP as the preferred agent-facing LSP path unless it is already configured or concretely blocked.
----
-
 # Intuitive Init
 
 Set up repo-local AI agent guidance without turning shared defaults into a

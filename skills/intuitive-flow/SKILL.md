@@ -22,9 +22,8 @@ surface, merging duplicate behavior, reusing an existing route, or documenting
 current truth. Add a new entity only when that smaller option cannot satisfy the
 accepted behavior and proof gate.
 
-This is the compact runtime entrypoint. Existing detailed behavior is preserved
-in `references/detailed-guidance.md`; read it only when the route crosses
-multiple stages or the compact gates below do not decide the next action.
+This is the compact runtime entrypoint. Use the `Read First` table below to load
+the narrow reference needed for the selected route.
 
 ## Modes
 
@@ -55,6 +54,9 @@ Before reading more context, launching workers, or editing files:
 4. When changing `intuitive-flow` itself, audit first and patch only the named
    smallest delta after current-turn user permission.
 
+For durable or resumed runs, read `references/context-budget-and-loop-guard.md`
+before deciding whether to continue, relaunch, or stop.
+
 ## Read First
 
 Load only the reference needed for the selected route:
@@ -68,7 +70,8 @@ Load only the reference needed for the selected route:
 | Whole-run preflight, goal ownership, soft continuation vs hard stop, checkpoint policy, tmux/goal/clear policy | `references/checkpoints-and-auto-run.md` |
 | Broad refactor route, semantic commits, final `$intuitive-doc` doc-alignment sub-phase, parked-todo closeout | `references/refactor-and-closeout.md` |
 | Exact response and artifact templates | `references/output-shapes.md` and `templates/` |
-| Full legacy entrypoint detail | `references/detailed-guidance.md` |
+| Reference index | `references/detailed-guidance.md` |
+| Historical full runtime detail, only for split-reference regression diagnosis | `references/legacy-runtime-detail.md` |
 
 If a route crosses multiple concerns, read the next reference just before that
 boundary. Do not preload every reference.
@@ -107,7 +110,8 @@ boundaries, and tells you to use them as-is.
 
 ## Route Brief
 
-Before non-trivial artifacts or edits, show a compact route brief:
+Before non-trivial artifacts or edits, show a compact route brief. The full
+shape lives in `templates/route-brief.md`; keep it short and route-specific.
 
 ```text
 Current state:
@@ -118,8 +122,6 @@ Selected path:
 Why:
 Bypassed/left behind:
 Execution surface:
-Babysitter cadence:
-Commit rhythm:
 Stop gate:
 Stop/continue point:
 ```
@@ -132,22 +134,9 @@ verification.
 ## Execution Surface
 
 Keep the main session as route owner, integration point, and final verifier.
-
-Codex worker selection follows the `$skill-runner` Codex delegation reference;
-do not repeat host-specific worker policy here.
-
-Use the main session for tiny direct edits and read-only probes only when the
-route brief names why that is safe for context. For durable multi-stage work,
-prefer a control-plane split:
-
-- main session: route, decide, inspect artifacts/diffs/logs, verify claims,
-  own the root goal, and synthesize next stage;
-- delegated workers: parallel read-heavy scouts, review passes, verification
-  probes, or stateful/durable sub-phases according to the canonical delegation
-  reference.
-
-Workers may use worker-local goals only for their assigned bounded scope and
-must leave the main-session root goal untouched.
+Use main-session edits for tiny direct work. For durable, stateful, long-running,
+or parallel work, read `references/checkpoints-and-auto-run.md` and the
+`$skill-runner` Codex delegation reference before launching workers.
 
 ## Hard Stops
 
@@ -158,32 +147,18 @@ broad file moves/deletes, unavailable local hardware/services, or locked
 docs/ADRs. Also stop before expanding the accepted objective with a new durable
 entity that was not in the approved scope.
 
-If a stop gate says the next required evidence is blocked by a human action,
-local hardware, paid account, external service, or another outside actor, stop
-instead of looking for adjacent cleanup work. Mark the root goal blocked when
-host policy allows.
+If the next required evidence is blocked by a human action, local hardware, paid
+account, external service, or another outside actor, stop instead of looking for
+adjacent cleanup work.
 
 ## Commit And Closeout
 
-Semantic commits are enabled by default for durable implementation/refactor
-runs that change local code unless current user/repo instructions disable them.
-Commit owned verified slices as the flow progresses; stage only owned files.
-
-Before final closeout for significant implementation/refactor work:
-
-- verify the requested behavior with relevant commands or artifact inspection;
-- report a proof card with claim level, commands/checks run, skipped or blocked
-  required gates, and artifact paths for any evidence that is not visible in the
-  final message;
-- run final `$intuitive-doc` alignment for root human docs and `docs/human/**`;
-- refresh the source plan status/evidence when plan-backed work shipped;
-- triage parked todos and run at most one automatic bounded follow-up slice
-  inside the original objective.
+For significant implementation/refactor work, use
+`references/refactor-and-closeout.md` and `references/output-shapes.md` for
+semantic commits, final `$intuitive-doc` alignment, plan status updates, proof
+cards, and parked-todo closeout.
 
 Final responses for completed Flow implementation/refactor work must explicitly
 include `What changed`, `Proof`, `Scope changes`, and `Parked todos`, even when
 empty. Do not claim full completion when a required product-run, local/live, or
 manual gate is skipped or blocked.
-
-Read `references/refactor-and-closeout.md` and `references/output-shapes.md`
-for detailed commit, doc-alignment, and closeout shapes.
