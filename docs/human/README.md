@@ -36,7 +36,6 @@ Supporting doctrine:
 
 Evidence or history:
 
-- `docs/release-notes/**`
 - generated reports, planning logs, retrospectives, and proof bundles
 
 Implementation detail:

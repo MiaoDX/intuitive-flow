@@ -117,22 +117,19 @@ promotion. Retired local artifacts that the updater may prune live separately in
 - [Reduce repo entropy](docs/human/reduce-repo-entropy.md): copy/paste prompt
   for periodic repo maintenance
 
-Generated diagrams, release-note analysis, vendored tools, planning scratchpads,
-and implementation evidence are context, not current truth unless a human doc
-promotes them.
+Generated diagrams, vendored tools, planning scratchpads, and implementation
+evidence are context, not current truth unless a human doc promotes them.
 
 ## Scripts
 
 | Script | Purpose |
 | --- | --- |
 | `bun run audit:skill-upstreams` | Read-only audit for candidate skills in upstream skill repos that are outside the default allowlist |
-| `bun run check:skills` | Validate repo-owned skills, default allowlist coverage, frontmatter, local resource links, completed-plan archival markers, and Bun toolchain pin alignment |
+| `bun run check:skills` | Validate repo-owned skills, default allowlist coverage, frontmatter, local resource links, and Bun toolchain pin alignment |
 | `bun run check:shell` | Run ShellCheck error-level validation for the updater, Bash helper scripts, and the Git hook entrypoint |
 | `bun run setup:hooks` | Configure this checkout to use repo-owned Git hooks from `.githooks/` |
 | `scripts/update.sh` | Install or update agent surfaces, skills, commands, GSD, and gstack |
 | `scripts/dev/*.sh` | Local developer utilities for tmux and workstation sessions |
-| `scripts/support/tmp-fix.sh` | Idempotent updater patch hook used by `scripts/update.sh --tmp-fix` |
-
 `scripts/update.sh` uses the direct npm registry by default. If Codex is already
 running, the updater warns and continues; pass `--require-no-running-codex` when
 you want that condition to block the run. Pass `--npm-mirror` to force mirror

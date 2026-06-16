@@ -181,11 +181,11 @@ Discovery and implementation have different boundaries:
   be entered through a budgeted probe first: list/index, find live references,
   sample the smallest evidence needed, and only deep-read when a candidate
   already has a materiality reason.
-- For large loops, create or update one discovery artifact such as
-  `docs/plans/refactor-reduce-entropy-loop.md` when the target repo convention
-  allows planning docs. Record audit rounds, selected candidates, parked items,
-  suggested proof, and the stop condition in that one artifact instead of
-  scattering partial batches through chat.
+- For large loops, create or update one discovery artifact under
+  `docs/plans/` when the target repo convention allows planning docs. Record
+  audit rounds, selected candidates, parked items, suggested proof, and the stop
+  condition in that one artifact instead of scattering partial batches through
+  chat.
 - Before adding another group in a loop, run a saturation audit: name the next
   candidate, its materiality reason, and why it still deserves review after the
   previous rounds. If that sentence is weak, stop with `Selected candidates:

@@ -71,7 +71,6 @@ Load only the reference needed for the selected route:
 | Broad refactor route, semantic commits, final `$intuitive-doc` doc-alignment sub-phase, parked-todo closeout | `references/refactor-and-closeout.md` |
 | Exact response and artifact templates | `references/output-shapes.md` and `templates/` |
 | Reference index | `references/detailed-guidance.md` |
-| Historical full runtime detail, only for split-reference regression diagnosis | `references/legacy-runtime-detail.md` |
 
 If a route crosses multiple concerns, read the next reference just before that
 boundary. Do not preload every reference.

@@ -2,4 +2,12 @@
 set -euo pipefail
 
 ROOT=$(git rev-parse --show-toplevel)
-exec "$ROOT/scripts/dev/pre-commit.sh"
+cd "$ROOT"
+
+if ! command -v bun >/dev/null 2>&1; then
+    echo "pre-commit: bun is required to check repo skills" >&2
+    exit 1
+fi
+
+echo "pre-commit: checking repo skills"
+exec bun run check:skills

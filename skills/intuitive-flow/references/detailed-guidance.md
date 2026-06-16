@@ -11,6 +11,5 @@ This file is an index. Read only the reference needed for the selected route:
 | Whole-run preflight, goal ownership, soft continuation vs hard stop, checkpoint policy, tmux/goal/clear policy | references/checkpoints-and-auto-run.md |
 | Broad refactor route, semantic commits, final $intuitive-doc doc-alignment sub-phase, parked-todo closeout | references/refactor-and-closeout.md |
 | Exact response and artifact templates | references/output-shapes.md and templates/ |
-| Historical full runtime detail, only when diagnosing a regression in the split references | references/legacy-runtime-detail.md |
 
 Keep SKILL.md as the runtime router and load the narrow reference at the boundary where it becomes relevant.

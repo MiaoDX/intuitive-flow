@@ -23,7 +23,6 @@ currently provides:
 - a GitHub Actions verification workflow under `.github/workflows/verify.yml`
 - local workstation utilities under `scripts/dev/`
 - vendored GSD and gstack tooling under `vendor/`
-- generated Claude Code release-note visualizations under `docs/release-notes/`
 
 The authoritative human surface is `README.md`, `ARCHITECTURE.md`, `STATUS.md`,
 and `docs/human/**`.
@@ -93,8 +92,7 @@ The current maintenance focus is keeping the repo dogfoodable:
   skill-style frontmatter in non-entrypoint Markdown so references and templates
   cannot drift as shadow skill manifests
 - keep local hooks enabled with `bun run setup:hooks` so skill structure,
-  allowlist coverage, local resource references, and completed-plan archival
-  markers are checked before commit
+  allowlist coverage, and local resource references are checked before commit
 - keep CI and local `bun run verify` aligned
 - keep Bash as the ShellCheck-gated orchestration layer and Bun TypeScript as
   the structured validation layer
@@ -106,8 +104,6 @@ There is no active `.planning/` roadmap or GSD phase in this checkout.
 
 ## Known Boundaries
 
-- `docs/release-notes/**` is generated or historical context, not current repo
-  truth.
 - `docs/assets/**` supports rendered docs and should not carry authoritative
   prose by itself.
 - `vendor/**`, `node_modules/**`, and `.venv/**` are dependency or local

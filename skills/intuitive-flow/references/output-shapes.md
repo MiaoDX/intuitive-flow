@@ -1,7 +1,11 @@
 # Output Shapes
 
-Use these compact shapes for `intuitive-flow` responses and artifacts. Prefer
-the files in `templates/` when creating durable artifacts.
+Use these compact shapes for inline `intuitive-flow` responses. Use the files
+in `templates/` when creating durable artifacts:
+
+- `templates/route-brief.md`
+- `templates/pre-plan.md`
+- `templates/closeout.md`
 
 ## Upfront Route Brief
 
@@ -63,31 +67,7 @@ state says to stop. Emit a read-only status/decision summary instead.
 
 ## Pre-Plan
 
-Write to:
-
-```text
-docs/plans/<slug>.md
-```
-
-Include:
-
-- problem / goal
-- idea-shaping mode: direct or auto-guided
-- decisions already made
-- idea shaping decisions table when auto-guided mode was used
-- source evidence
-- non-goals
-- smallest demo
-- fuller demo
-- success criteria and acceptance criteria
-- verification expectations
-- proposed vertical slices
-- risks and assumptions
-- GSD handoff trigger:
-  - existing phase -> `gsd-plan-phase <phase> --prd docs/plans/<slug>.md`
-  - missing `.planning/` or missing roadmap phase -> create/use ingest manifest,
-    run `gsd-ingest-docs --manifest <manifest>`, then
-    `gsd-plan-phase <created-phase> --prd docs/plans/<slug>.md`
+Use `templates/pre-plan.md`.
 
 ## Workflow Recommendation
 
@@ -100,31 +80,7 @@ Stop condition: <what should be true before the next stage>
 
 ## Implementation Closeout
 
-Include:
-
-- what changed
-- verification run and result
-- proof card with claim level, required gates run, required gates
-  skipped/blocked, and evidence artifacts
-- documentation status check and any doc updates/moves/removals when code or
-  refactor work changed human-facing truth
-- semantic commit ids created, or why commits were disabled
-- stop gate checked, with result when this was a durable auto-run
-- goal ownership result: root goal adopted/created/not used, and any
-  worker-local goals closed or blocked
-- scope changes, always, including `none`; include accepted scope changes from
-  unknown-unknown scout, plan reconciliation, GSD handoff, refactor gates, or
-  execution discoveries, and keep them separate from parked/deferred work
-- `STATUS.md` check/update result for non-trivial durable runs
-- Serena memory check/update result when Serena memories are configured, or
-  `not configured/not available`
-- parked todo triage: classification summary and whether one automatic
-  parked-follow-up slice ran, was not applicable, or was skipped with reason
-- parked todos, always, including `none found`
-- verification explicitly not run
-- worker handoff inspected when execution ran in tmux
-- worker drift or timeout intervention, including revised goal, when one
-  occurred
+Use `templates/closeout.md`.
 
 The final user-facing response after completed implementation/refactor work must
 visibly enumerate `What changed`, `Proof`, `Scope changes`, and `Parked todos`.

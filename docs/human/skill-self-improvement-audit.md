@@ -63,7 +63,7 @@ Current default-surface correction:
 | `grill-with-docs-batch` | Strong: improves decision quality before implementation. | Strong: owns batched plan/domain grilling and stops when docs already answer the durable questions. | Strong: decision-impact test and convergence rules are explicit. | Keep as a specialist discussion skill; no runtime self-improvement block. |
 | `intuitive-doc` | Strong: keep human docs current and small. | Strong: owns human-facing docs and boundary drift, skips agent files by default. | Strong: audit/update/guard modes and claim verification are clear. | No runtime self-improvement block. Later slim examples if the doc keeps growing. |
 | `agent-planning-loop` | Strong: moves contested planning critique into bounded agent scouts before user review. | Strong: owns read-only planning debate and synthesis, not implementation or self-approval. | Strong: charter, scout prompts, materiality filtering, stop gates, and review-packet output are explicit. | Primary planning entrypoint for "align yourselves" and planning-loop style requests; no runtime self-improvement block. |
-| `intuitive-flow` | Strong: routes approved plans and execution contracts to verified work. | Strong: owns staging and handoffs through a compact entrypoint plus route-specific references. | Strong: checkpoints and routing are explicit without loading the legacy full manual by default. | Keep as the execution router; only read `legacy-runtime-detail.md` when diagnosing a split-reference regression. |
+| `intuitive-flow` | Strong: routes approved plans and execution contracts to verified work. | Strong: owns staging and handoffs through a compact entrypoint plus route-specific references. | Strong: checkpoints and routing are explicit without loading a parallel runtime manual. | Keep as the execution router. |
 | `intuitive-init` | Strong after harness refresh: builds repo-local agent harness. | Strong: owns `AGENTS.md`, `CLAUDE.md`, `docs/agents/**`, init discovery, hooks, skills, and MCP routing. | Strong: modes and stop conditions are explicit. | Specialist skill; route from reduce-entropy when agent guidance is the issue. |
 | `intuitive-port-worktree` | Strong: move worktree changes without switching the target branch. | Strong: owns porting/cherry-pick/patch transfer only. | Strong: source/target discovery, payload selection, and safety gates are explicit. | Keep as a specialist handoff utility; no meta text needed. |
 | `intuitive-preflight` | Strong: make vague execution intent approval-ready before implementation. | Strong: owns context package, scope, non-goals, acceptance, verification, route, and goal wording. | Strong: draft contract and approval boundary are explicit. | Specialist skill; route from flow or direct use before vague execution. |
@@ -115,8 +115,7 @@ Removed from the default surface:
 - It exposed `intuitive-layout` as a boundary-smell after user review; layout is
   now treated as a symptom routed by object instead of a root skill.
 - It moved `intuitive-flow` away from a parallel runtime manual: the entrypoint
-  is a router, `references/detailed-guidance.md` is an index, and the historical
-  full detail is parked as `legacy-runtime-detail.md` for regression diagnosis.
+  is a router, and `references/detailed-guidance.md` is an index.
 - It split the largest reduce-entropy detailed guidance into purpose-specific
   references so agents can load discovery, materiality, ranking/routing, or
   handoff detail independently.

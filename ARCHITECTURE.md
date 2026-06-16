@@ -22,14 +22,14 @@ reusable workflows
         |
         v
 install and sync pipeline
-  scripts/update.sh -> scripts/tasks/* + scripts/support/* -> scripts/lib/*
+  scripts/update.sh -> scripts/tasks/* -> scripts/lib/*
         |
         v
 local/global agent surfaces
   ~/.claude, ~/.codex, ~/.agents, ~/.gstack, vendor/gstack
 
 local git hooks
-  .githooks/pre-commit -> scripts/dev/pre-commit.sh
+  .githooks/pre-commit
 ```
 
 The root docs define what the project is. Agent guidance files define how
@@ -52,9 +52,8 @@ The current human-facing source of truth is intentionally small:
   this repo's harness.
 
 Everything else is lower tier by default. `docs/assets/**` supports root docs,
-`docs/release-notes/**` is generated or historical analysis, `vendor/**` is
-external tooling, and planning or execution artifacts are evidence unless a
-human doc promotes them.
+`vendor/**` is external tooling, and planning or execution artifacts are
+evidence unless a human doc promotes them.
 
 `BELIEFS.md` is supporting doctrine: it explains the philosophy behind the
 workflow, but it is not the active source for current commands, installed
@@ -256,8 +255,8 @@ The updater currently handles these phases:
 - local command and root-skill sync
 
 Task execution is centralized in `scripts/lib/task-runner.sh`. Individual phases
-live under `scripts/tasks/`. Updater-only patch hooks live under
-`scripts/support/`. TypeScript helpers and their tests live under `scripts/lib/`.
+live under `scripts/tasks/`. TypeScript helpers and their tests live under
+`scripts/lib/`.
 Local workstation utilities that are not part of the updater contract live under
 `scripts/dev/`.
 
@@ -278,12 +277,11 @@ Repo-owned Git hooks live under `.githooks/` and are enabled per checkout with:
 bun run setup:hooks
 ```
 
-The pre-commit hook delegates to `scripts/dev/pre-commit.sh` and runs
-`bun run check:skills`. This catches missing manifest entries, stale generated
-include syntax, invalid frontmatter, broken local skill resource references,
-default allowlist drift, required workflow handoff marker drift, and GitHub
-Actions Bun pin drift before commit without making every commit run the full
-TypeScript and test proof.
+The pre-commit hook runs `bun run check:skills`. This catches missing manifest
+entries, stale generated include syntax, invalid frontmatter, broken local skill
+resource references, default allowlist drift, required workflow handoff marker
+drift, and GitHub Actions Bun pin drift before commit without making every
+commit run the full TypeScript and test proof.
 
 ## Codex Adapter Contract
 
@@ -315,9 +313,8 @@ bun run verify
 ```
 
 That validates repo-owned skill structure, default allowlist coverage, local
-skill resource references, required workflow handoff markers, completed-plan
-archival markers for active-looking historical wording, and Bun toolchain pin
-alignment, runs
+skill resource references, required workflow handoff markers, and Bun toolchain
+pin alignment, runs
 ShellCheck error-level checks for Bash orchestration scripts, runs TypeScript
 checking, and runs Bun tests. GitHub Actions mirrors the same proof in
 `.github/workflows/verify.yml`, so broken skill allowlists, frontmatter, resource
@@ -327,8 +324,7 @@ CI/local Bun version drift fail CI.
 At the moment, the test suite covers the default skill allowlist parser,
 root-skill allowlist checks, direct skill validation, deprecated source
 rejection, resource reference checks, primary workflow handoff marker checks,
-completed-plan archival marker checks, external skill entry validation, GitHub
-Actions Bun pin alignment, separation of install allowlist and prune-only
+external skill entry validation, GitHub Actions Bun pin alignment, separation of install allowlist and prune-only
 ledger, and pruning of prune-ledger legacy artifacts, stale previously owned
 root skills, stale managed external skills, stale managed GStack skill links,
 managed GSD wrapper pruning, upstream skill audit output, and installer wrapper

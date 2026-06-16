@@ -25,7 +25,6 @@ const optionsFor = (root: string) => ({
   allowlistPath: join(root, "scripts", "default-skill-allowlist.txt"),
   pruneLedgerPath: join(root, "scripts", "default-skill-prune-ledger.txt"),
   deprecatedSourceRoot: join(root, "skills-src"),
-  plansRoot: join(root, "docs", "plans"),
   gstackCodexSkillsRoot: join(root, "vendor", "gstack", ".agents", "skills"),
 });
 
@@ -266,52 +265,6 @@ describe("skill checker", () => {
       expect(errors).toContain(
         "missing workflow handoff marker in skills/agent-planning-loop/SKILL.md: Shortcut:",
       );
-    });
-  });
-
-  test("requires archival markers on completed plans with stale source-of-truth wording", async () => {
-    await withTempProject((root) => {
-      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill alpha\n");
-      writeFixtureFile(root, "skills/alpha/SKILL.md", "---\nname: alpha\ndescription: Alpha.\n---\n");
-      writeFixtureFile(
-        root,
-        "docs/plans/refactor-old.md",
-        "---\nstatus: DONE\n---\n\n# Old\n\nUse this as the implementation source of truth.\n",
-      );
-
-      expect(checkSkills(optionsFor(root))).toContain(
-        "completed plan has active-looking historical guidance without an archival marker: docs/plans/refactor-old.md",
-      );
-    });
-  });
-
-  test("requires archival markers on completed plans that mention retired manifest paths", async () => {
-    await withTempProject((root) => {
-      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill alpha\n");
-      writeFixtureFile(root, "skills/alpha/SKILL.md", "---\nname: alpha\ndescription: Alpha.\n---\n");
-      writeFixtureFile(
-        root,
-        "docs/plans/refactor-old-manifest.md",
-        "---\nstatus: DONE\n---\n\n# Old\n\nProof: scripts/local-skill-manifest.txt check-root-skills.\n",
-      );
-
-      expect(checkSkills(optionsFor(root))).toContain(
-        "completed plan has active-looking historical guidance without an archival marker: docs/plans/refactor-old-manifest.md",
-      );
-    });
-  });
-
-  test("accepts archived completed plans with historical source wording", async () => {
-    await withTempProject((root) => {
-      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill alpha\n");
-      writeFixtureFile(root, "skills/alpha/SKILL.md", "---\nname: alpha\ndescription: Alpha.\n---\n");
-      writeFixtureFile(
-        root,
-        "docs/plans/refactor-old.md",
-        "---\nstatus: DONE\n---\n\nArchived note: historical provenance only; not current implementation guidance.\n\nUse this as the implementation source of truth.\n",
-      );
-
-      expect(checkSkills(optionsFor(root))).toEqual([]);
     });
   });
 });

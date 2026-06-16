@@ -10,7 +10,6 @@ export type SkillCheckOptions = {
   pruneLedgerPath?: string;
   deprecatedSourceRoot: string;
   gstackCodexSkillsRoot?: string;
-  plansRoot?: string;
   packageJsonPath?: string;
   githubVerifyWorkflowPath?: string;
   skillSizeBudget?: SkillSizeBudget;
@@ -34,7 +33,6 @@ const defaultOptions = (): SkillCheckOptions => ({
   pruneLedgerPath: join(process.cwd(), "scripts", "default-skill-prune-ledger.txt"),
   deprecatedSourceRoot: join(process.cwd(), "skills-src"),
   gstackCodexSkillsRoot: join(process.cwd(), "vendor", "gstack", ".agents", "skills"),
-  plansRoot: join(process.cwd(), "docs", "plans"),
   packageJsonPath: join(process.cwd(), "package.json"),
   githubVerifyWorkflowPath: join(process.cwd(), ".github", "workflows", "verify.yml"),
   skillSizeBudget: {
@@ -356,33 +354,6 @@ const checkPruneLedger = (
   return errors;
 };
 
-const completedPlanPattern = /(?:^status:\s*(?:DONE|IMPLEMENTED)\b|^Status:\s*(?:DONE|Implemented)\b)/m;
-const stalePlanTruthPattern =
-  /Use this as the implementation source of truth|Canonical source:|Historical Preflight Contract|Historical execution request|GSD Handoff Trigger|scripts\/local-skill-manifest\.txt|skills-src|build:skills|build:skills:check|generated skills up to date/;
-const historicalPlanMarkerPattern =
-  /historical|provenance|shipped history|not current implementation guidance|not current-state|archived/i;
-
-const checkCompletedPlans = (plansRoot: string | undefined): string[] => {
-  const errors: string[] = [];
-  if (!plansRoot || !existsSync(plansRoot)) {
-    return errors;
-  }
-
-  for (const file of listFiles(plansRoot).filter((entry) => entry.endsWith(".md"))) {
-    const text = readFileSync(join(plansRoot, file), "utf8");
-    if (
-      completedPlanPattern.test(text) &&
-      stalePlanTruthPattern.test(text) &&
-      !historicalPlanMarkerPattern.test(text)
-    ) {
-      errors.push(
-        `completed plan has active-looking historical guidance without an archival marker: docs/plans/${file}`,
-      );
-    }
-  }
-  return errors;
-};
-
 export const skillSizeReport = (
   skillsRoot: string,
   budget: SkillSizeBudget = { maxChars: 18_000, maxLines: 300 },
@@ -434,7 +405,6 @@ export const checkSkills = (options = defaultOptions()): string[] => {
 
   errors.push(...checkToolingVersions(options));
   errors.push(...checkManagedGstackSkills(allowlist, options.gstackCodexSkillsRoot));
-  errors.push(...checkCompletedPlans(options.plansRoot));
 
   return errors;
 };

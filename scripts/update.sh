@@ -9,7 +9,7 @@ UPDATE_LOCK_HELD=false
 NPM_REGISTRY_MODE="${NPM_REGISTRY_MODE:-direct}"
 
 usage() {
-    echo "Usage: ${0##*/} [--tmp-fix] [--require-no-running-codex] [--skip-codex-running-check] [--npm-mirror]"
+    echo "Usage: ${0##*/} [--require-no-running-codex] [--skip-codex-running-check] [--npm-mirror]"
 }
 
 codex_running_hint() {
@@ -41,22 +41,6 @@ print_npm_source() {
             NPM_REGISTRY_MODE=direct
             ;;
     esac
-}
-
-active_legacy_update_runs() {
-    local project_dir pid cwd command
-
-    project_dir=$(cd "$SCRIPT_DIR/.." && pwd)
-    while IFS= read -r pid; do
-        [ -n "$pid" ] || continue
-        [ "$pid" != "$$" ] || continue
-        [ "$pid" != "${BASHPID:-}" ] || continue
-        cwd=$(readlink -f "/proc/$pid/cwd" 2>/dev/null || true)
-        [ "$cwd" = "$project_dir" ] || continue
-        command=$(ps -o command= -p "$pid" 2>/dev/null || true)
-        [[ "$command" == *"/bin/bash "*"scripts/update.sh"* || "$command" == bash\ *"scripts/update.sh"* ]] || continue
-        ps -o pid=,etime=,command= -p "$pid"
-    done < <(pgrep -f '(^|[[:space:]])([^[:space:]]*/)?scripts/update\.sh([[:space:]]|$)' 2>/dev/null || true)
 }
 
 cleanup_update_lock() {
@@ -113,14 +97,8 @@ acquire_update_lock() {
     trap cleanup_update_lock EXIT
 }
 
-# --tmp-fix → run only the dirty-patch script (scripts/support/tmp-fix.sh) and exit.
-# Used to repair upstream-version drift (e.g. codex schema changes) without
-# re-running the full update. Drop fixes from tmp-fix.sh when upstream catches up.
 for arg in "$@"; do
     case "$arg" in
-        --tmp-fix)
-            exec "$SCRIPT_DIR/support/tmp-fix.sh"
-            ;;
         --require-no-running-codex)
             REQUIRE_NO_RUNNING_CODEX=true
             ;;
@@ -150,13 +128,6 @@ export NPM_REGISTRY_MODE
 
 acquire_update_lock
 
-legacy_runs=$(active_legacy_update_runs)
-if [ -n "$legacy_runs" ]; then
-    echo "Another update.sh run is already active:"
-    echo "$legacy_runs"
-    exit 1
-fi
-
 # Source nvm if available (needed when running from bash but nvm is configured in zsh)
 if [ -n "${NVM_DIR:-}" ] && [ -f "$NVM_DIR/nvm.sh" ]; then
     source "$NVM_DIR/nvm.sh"
@@ -170,7 +141,6 @@ source "$SCRIPT_DIR/lib/ensure-no-running-codex.sh"
 source "$SCRIPT_DIR/lib/ensure-clean-env.sh"
 source "$SCRIPT_DIR/lib/task-runner.sh"
 source "$SCRIPT_DIR/tasks/update-cli.sh"
-source "$SCRIPT_DIR/tasks/update-agent-deck.sh"
 source "$SCRIPT_DIR/tasks/update-skills.sh"
 source "$SCRIPT_DIR/tasks/update-gstack.sh"
 source "$SCRIPT_DIR/tasks/sync-local-commands-skills.sh"
@@ -224,7 +194,7 @@ fi
 
 # Agent Deck installs Codex notify hooks into the shared merged hook surface.
 if task_succeeded "Global CLI tools"; then
-    task_run "Agent Deck" run_agent_deck
+    task_run "Agent Deck" "$SCRIPT_DIR/dev/agent-deck-richer.sh"
     task_await "Agent Deck"
 else
     task_skip "Agent Deck" "skipped because Global CLI tools failed"
