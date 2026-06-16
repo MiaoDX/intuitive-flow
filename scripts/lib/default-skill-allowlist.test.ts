@@ -62,6 +62,22 @@ describe("default skill allowlist", () => {
     ).toThrow("external skill source label maps to multiple repos");
   });
 
+  test("rejects entries that are both current and legacy", () => {
+    expect(() =>
+      parseDefaultSkillAllowlistText(`
+        root-skill intuitive-flow
+        legacy-skill intuitive-flow
+      `),
+    ).toThrow("skill listed as both current and legacy: intuitive-flow");
+
+    expect(() =>
+      parseDefaultSkillAllowlistText(`
+        gstack-skill gstack-review
+        legacy-mimocode-command gstack-review.md
+      `),
+    ).toThrow("command listed as both current and legacy: gstack-review.md");
+  });
+
   test("checks root skill folders against the allowlist", () => {
     const root = mkdtempSync(join(tmpdir(), "root-skills-"));
     try {

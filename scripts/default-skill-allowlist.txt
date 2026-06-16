@@ -8,9 +8,6 @@
 # external-skill <label> <repo> <skill>
 # gstack-skill <gstack-skill>
 # gsd-skill <gsd-skill>
-# legacy-skill <skill>
-# legacy-command <command.md>
-# legacy-mimocode-command <command.md>
 
 # Repo-owned root skills installed from ./skills.
 #
@@ -62,23 +59,3 @@ gstack-skill gstack-investigate
 gsd-skill gsd-progress
 gsd-skill gsd-resume-work
 gsd-skill gsd-pause-work
-
-# Legacy repo-owned skill names that update.sh may remove from local installs.
-legacy-skill agent-teams-impl-ralph-refactor
-legacy-skill agent-teams-plan-ralph-refactor
-legacy-skill codex-impl-ralph-refactor
-legacy-skill codex-plan-ralph-refactor
-legacy-skill gsd-squash
-legacy-skill gsd_squash
-legacy-skill hybrid-phase-pipeline
-legacy-skill intuitive-build
-legacy-skill intuitive-contract
-legacy-skill intuitive-layout
-legacy-skill intuitive-migrate
-legacy-skill intuitive-planning-loop
-legacy-skill intuitive-ut
-legacy-skill refactor-scope-gate
-legacy-skill simplify
-
-# Legacy repo-owned Claude command files that update.sh may remove.
-legacy-command gsd_squash.md

@@ -13,6 +13,12 @@ last_verified: 2026-06-08
 
 DONE
 
+Archived note: historical provenance only. This plan predates the current
+`scripts/default-skill-allowlist.txt` plus
+`scripts/default-skill-prune-ledger.txt` split; references to
+`scripts/local-skill-manifest.txt`, generated skill build checks, or
+allowlist-held `legacy-*` cleanup are not current implementation guidance.
+
 ## Target
 
 Run `$intuitive-reduce-entropy` against the current repo until fresh audits no

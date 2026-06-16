@@ -100,6 +100,11 @@ const pushUnique = (values: string[], value: string) => {
   }
 };
 
+const intersection = (left: string[], right: string[]): string[] => {
+  const rightSet = new Set(right);
+  return left.filter((value) => rightSet.has(value)).sort();
+};
+
 const sourceKey = (label: string, repo: string) => `${label}\0${repo}`;
 
 export const normalizeSource = (source: string) => source
@@ -221,6 +226,30 @@ export const parseDefaultSkillAllowlistText = (text: string): DefaultSkillAllowl
   allowlist.legacyMimocodeCommands.sort();
   allowlist.gstackSkills.sort();
   allowlist.gsdSkills.sort();
+
+  const liveSkillNames = [
+    ...allowlist.rootSkills,
+    ...allowlist.externalSources.flatMap((source) => source.skills),
+    ...allowlist.gstackSkills,
+    ...allowlist.gsdSkills,
+  ];
+  const conflictingLegacySkills = intersection(allowlist.legacySkills, liveSkillNames);
+  if (conflictingLegacySkills.length > 0) {
+    throw new Error(`skill listed as both current and legacy: ${conflictingLegacySkills.join(", ")}`);
+  }
+
+  const liveCommandNames = [
+    ...allowlist.rootSkills.map((skillName) => `${skillName}.md`),
+    ...allowlist.gstackSkills.map((skillName) => `${skillName}.md`),
+    ...allowlist.gsdSkills.map((skillName) => `${skillName}.md`),
+  ];
+  const conflictingLegacyCommands = intersection(
+    [...allowlist.legacyCommands, ...allowlist.legacyMimocodeCommands],
+    liveCommandNames,
+  );
+  if (conflictingLegacyCommands.length > 0) {
+    throw new Error(`command listed as both current and legacy: ${conflictingLegacyCommands.join(", ")}`);
+  }
 
   return allowlist;
 };

@@ -4,45 +4,26 @@ Use this reference before whole-flow, durable, auto-guided, tmux-worker, or
 `/goal` runs and before crossing review, GSD, execution, cleanup, or
 verification boundaries.
 
-## Whole-Run Goal Preflight
+## Execution Contract Gate
 
 Before starting a whole-flow or durable auto-run that may cross review, GSD
-handoff, execution, cleanup, and verification, chat with the human until the run
-contract is explicit. Do this before unknown-unknown scouting with
-`gstack-autoplan`, `to-issues`, GSD ingest/plan, `skill-runner`, autonomous
-execution, or auto-confirming downstream gates.
+handoff, execution, cleanup, and verification, locate the approved execution
+contract instead of drafting a second Flow-owned preflight.
 
-If a canonical plan already exists, inspect it first and summarize the inferred
-contract instead of asking the user to restate everything.
+Acceptable contract sources:
 
-Required run contract:
+- an approved `$intuitive-preflight` contract;
+- an equivalent approved contract already reconciled into `docs/plans/<slug>.md`
+  or an issue;
+- a tiny direct task where the latest user message itself supplies goal,
+  boundaries, verification, and stop condition.
 
-- Goal: concrete outcome
-- Success criteria: observable done signals and required verification when known
-- Stop condition: reviewed plan, GSD plan, implemented and verified code,
-  PR-ready branch, or another boundary
-- Stop gate: repo-local command or canonical artifact that can decide
-  `complete`, `blocked`, or `continue` when available
-- Boundaries/non-goals: only when needed to prevent scope, cost, safety, or
-  compatibility drift
-
-Prompt shape:
-
-```text
-Before I start the whole run, I want to lock the run contract.
-
-Goal: <inferred or missing>
-Success criteria: <inferred or missing>
-Stop condition: <inferred or missing>
-Stop gate: <inferred command/artifact or "none found">
-Boundaries/non-goals: <inferred or "none stated">
-
-Is this the goal and success criteria you want me to execute against? If not,
-what should change?
-```
-
-Start only after the user confirms/corrects the contract, or when their latest
-message explicitly supplied the full contract and told you to use it as-is.
+The contract must cover goal, scope/non-goals, acceptance, verification, route,
+worker strategy when relevant, and stop gate. If any material field is missing,
+route to `$intuitive-preflight` and stop before unknown-unknown scouting,
+`to-issues`, GSD ingest/plan, `skill-runner`, autonomous execution, or
+auto-confirming downstream gates. Flow may summarize the missing fields, but it
+does not own the approval-ready contract template.
 
 ## Latest User Intent Gate
 
@@ -334,8 +315,9 @@ doc conflicts, or changes to roadmap ownership beyond the accepted plan.
 
 Apply decision triage before crossing these boundaries:
 
-1. Whole-run goal preflight: always human-owned unless the latest message
-   supplied the full run contract and told you to use it as-is.
+1. Execution contract: require an approved `$intuitive-preflight` contract or an
+   equivalent approved execution contract. If missing, route to preflight instead
+   of drafting a Flow-specific contract.
 2. Idea-shaping route: ask direct vs auto-guided for fuzzy ideas unless already
    clear.
 3. Auto-guided user-owned decision: ask before target user, demand premise,

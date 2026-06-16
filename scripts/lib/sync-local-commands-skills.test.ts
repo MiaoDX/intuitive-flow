@@ -104,14 +104,12 @@ describe("local command and skill sync task", () => {
 
       const skillText = readFileSync(join(home, ".codex", "skills", "sample", "SKILL.md"), "utf8");
       expect(skillText).toContain("skill-runner/references/codex-delegation.md");
-      expect(skillText).toContain("Paseo subagent");
-      expect(skillText).toContain("host-provided Paseo subagent tool");
-      expect(skillText).toContain("Do not invoke `paseo run`");
-      expect(skillText).toContain("`paseo agent run` from a skill");
-      expect(skillText).toContain("do not use native subagents by default");
+      expect(skillText).toContain("That reference is the canonical source");
       expect(skillText).not.toContain("spawn_agent(agent_type=");
       expect(skillText).not.toContain("collect agent IDs");
-      expect(skillText).not.toContain("Paseo-managed agent");
+      expect(skillText).not.toContain("host-provided Paseo subagent tool");
+      expect(skillText).not.toContain("Do not invoke `paseo run`");
+      expect(skillText).not.toContain("Codex fallback mapping:");
     } finally {
       rmSync(home, { recursive: true, force: true });
       rmSync(fixture, { recursive: true, force: true });
@@ -124,6 +122,7 @@ describe("local command and skill sync task", () => {
       mkdirSync(join(home, ".codex", "skills"), { recursive: true });
       const { npmLog, npxLog, stubBin } = createCliStubs(home);
       const allowlist = parseDefaultSkillAllowlistText(await Bun.file(join(repoRoot, "scripts", "default-skill-allowlist.txt")).text());
+      const pruneLedger = parseDefaultSkillAllowlistText(await Bun.file(join(repoRoot, "scripts", "default-skill-prune-ledger.txt")).text());
 
       const result = spawnSync("bash", ["scripts/tasks/sync-local-commands-skills.sh"], {
         cwd: repoRoot,
@@ -138,7 +137,8 @@ describe("local command and skill sync task", () => {
       expect(allowlist.rootSkills.length).toBeGreaterThan(0);
       expect(allowlist.rootSkills).toContain("agent-planning-loop");
       expect(allowlist.rootSkills).not.toContain("intuitive-planning-loop");
-      expect(allowlist.legacySkills).toContain("intuitive-planning-loop");
+      expect(allowlist.legacySkills).toEqual([]);
+      expect(pruneLedger.legacySkills).toContain("intuitive-planning-loop");
       const npmCalls = await Bun.file(npmLog).text();
       expect(npmCalls).toContain("view skills version");
       const npxCalls = await Bun.file(npxLog).text();
@@ -384,6 +384,52 @@ describe("local command and skill sync task", () => {
       expect(npxCalls).not.toContain("legacy-local");
       expect(existsSync(join(home, ".codex", "skills", "alpha", "SKILL.md"))).toBe(true);
       expect(existsSync(join(home, ".codex", "skills", "legacy-local"))).toBe(false);
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+      rmSync(fixture, { recursive: true, force: true });
+    }
+  });
+
+  test("prunes explicit legacy artifacts from the separate prune ledger", () => {
+    const home = mkdtempSync(join(tmpdir(), "sync-skills-prune-ledger-home-"));
+    const fixture = mkdtempSync(join(tmpdir(), "sync-skills-project-"));
+    try {
+      const { stubBin } = createCliStubs(home);
+      mkdirSync(join(home, ".codex", "skills", "old-skill"), { recursive: true });
+      mkdirSync(join(home, ".config", "mimocode", "command"), { recursive: true });
+      writeFileSync(join(home, ".config", "mimocode", "command", "old-skill.md"), "");
+      mkdirSync(join(fixture, "scripts", "lib"), { recursive: true });
+      mkdirSync(join(fixture, "skills", "alpha"), { recursive: true });
+      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill alpha\n");
+      writeFileSync(join(fixture, "scripts", "default-skill-prune-ledger.txt"), "legacy-skill old-skill\n");
+      writeFileSync(join(fixture, "skills", "alpha", "SKILL.md"), "---\nname: alpha\ndescription: Alpha skill.\n---\n");
+      copyFileSync(
+        join(repoRoot, "scripts", "lib", "default-skill-allowlist.ts"),
+        join(fixture, "scripts", "lib", "default-skill-allowlist.ts"),
+      );
+
+      const result = spawnSync(
+        "bash",
+        [
+          "-c",
+          'SCRIPT_DIR="$1"; source scripts/tasks/sync-local-commands-skills.sh; run_sync_local_commands_skills',
+          "bash",
+          join(fixture, "scripts"),
+        ],
+        {
+          cwd: repoRoot,
+          encoding: "utf8",
+          env: syncEnv(home, stubBin),
+        },
+      );
+
+      if (result.status !== 0) {
+        throw new Error(`sync failed\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`);
+      }
+
+      expect(existsSync(join(home, ".codex", "skills", "old-skill"))).toBe(false);
+      expect(existsSync(join(home, ".config", "mimocode", "command", "old-skill.md"))).toBe(false);
+      expect(existsSync(join(home, ".codex", "skills", "alpha", "SKILL.md"))).toBe(true);
     } finally {
       rmSync(home, { recursive: true, force: true });
       rmSync(fixture, { recursive: true, force: true });

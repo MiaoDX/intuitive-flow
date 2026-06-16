@@ -160,7 +160,9 @@ When this page gains a source that changes repo practice:
    sync pipeline project it into Claude Code, Codex, and shared install
    surfaces. Do not change source layout merely because a host exposes another
    discovery path.
-5. Keep default skill installs in `scripts/default-skill-allowlist.txt`; use
+5. Keep default skill installs in `scripts/default-skill-allowlist.txt`, and
+   keep retired local artifact cleanup in
+   `scripts/default-skill-prune-ledger.txt`; use
    `bun run audit:skill-upstreams` to inspect upstream candidates before adding
    anything outside the current list.
 6. Run `bun run check:skills` after skill or allowlist edits.

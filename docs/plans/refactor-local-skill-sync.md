@@ -13,6 +13,10 @@ last_verified: 2026-05-12
 
 DONE
 
+Archived note: historical provenance only. This plan predates the current
+`scripts/default-skill-allowlist.txt` install surface; references to
+`scripts/local-skill-manifest.txt` are not current implementation guidance.
+
 ## Target
 
 Local skill sync from repo-owned `skills/*` through

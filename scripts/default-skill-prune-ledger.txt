@@ -1,0 +1,29 @@
+# Canonical prune-only ledger for retired local skill and command artifacts.
+#
+# This file is not an install allowlist. It only records stale artifacts that
+# scripts/update.sh may remove from user-level tool surfaces.
+#
+# Format:
+# legacy-skill <skill>
+# legacy-command <command.md>
+# legacy-mimocode-command <command.md>
+
+# Legacy repo-owned skill names that update.sh may remove from local installs.
+legacy-skill agent-teams-impl-ralph-refactor
+legacy-skill agent-teams-plan-ralph-refactor
+legacy-skill codex-impl-ralph-refactor
+legacy-skill codex-plan-ralph-refactor
+legacy-skill gsd-squash
+legacy-skill gsd_squash
+legacy-skill hybrid-phase-pipeline
+legacy-skill intuitive-build
+legacy-skill intuitive-contract
+legacy-skill intuitive-layout
+legacy-skill intuitive-migrate
+legacy-skill intuitive-planning-loop
+legacy-skill intuitive-ut
+legacy-skill refactor-scope-gate
+legacy-skill simplify
+
+# Legacy repo-owned Claude command files that update.sh may remove.
+legacy-command gsd_squash.md

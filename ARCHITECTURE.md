@@ -155,12 +155,19 @@ The install surface is controlled by `scripts/default-skill-allowlist.txt`:
   after upstream setup.
 - `gsd-skill` entries name the managed GSD wrappers that remain visible after
   upstream setup.
+- The allowlist check fails if a root skill exists but is not listed, or if the
+  allowlist lists a missing root skill. It also fails if prune-only `legacy-*`
+  entries are added back to this install list.
+
+Retired local artifacts are controlled by
+`scripts/default-skill-prune-ledger.txt`:
+
 - `legacy-skill` entries identify old repo-owned skill installs and their
   generated MiMoCode command wrappers that the updater may prune.
 - `legacy-command` and `legacy-mimocode-command` entries identify old standalone
   command files that the updater may prune.
-- The allowlist check fails if a root skill exists but is not listed, or if the
-  allowlist lists a missing root skill.
+- The skill checker rejects prune-ledger entries that collide with current
+  root, external, GStack, or GSD install entries.
 
 The allowlist also carries lightweight role-tier comments. Those comments are
 human-facing governance, not parser input: primary choices, routed specialists,
@@ -182,9 +189,9 @@ installed skill contents before copying so deleted or renamed `references/`,
 `templates/`, or `scripts/` resources cannot survive as stale installed files.
 
 The scout-based planning skill is installed as `agent-planning-loop`.
-`intuitive-planning-loop` is a legacy skill name only; the allowlist keeps it as
-`legacy-skill` so updater-owned stale installs and generated command wrappers
-are pruned on later syncs.
+`intuitive-planning-loop` is a legacy skill name only; the prune ledger keeps it
+as `legacy-skill` so updater-owned stale installs and generated command
+wrappers are pruned on later syncs.
 
 External skill installs are explicit `external-skill` entries in the default
 allowlist. The updater never installs an external source in broad `all` mode by
@@ -314,11 +321,11 @@ At the moment, the test suite covers the default skill allowlist parser,
 root-skill allowlist checks, direct skill validation, deprecated source
 rejection, resource reference checks, primary workflow handoff marker checks,
 completed-plan archival marker checks, external skill entry validation, GitHub
-Actions Bun pin alignment, and pruning of
-allowlist-owned legacy artifacts, stale previously owned root skills, stale
-managed external skills, stale managed GStack skill links, managed GSD wrapper
-pruning, upstream skill audit output, and installer wrapper calls that enforce
-managed state.
+Actions Bun pin alignment, separation of install allowlist and prune-only
+ledger, and pruning of prune-ledger legacy artifacts, stale previously owned
+root skills, stale managed external skills, stale managed GStack skill links,
+managed GSD wrapper pruning, upstream skill audit output, and installer wrapper
+calls that enforce managed state.
 
 The repo-owned pre-commit hook repeats the skill structure check locally when
 `core.hooksPath` points at `.githooks/`.

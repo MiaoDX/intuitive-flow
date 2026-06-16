@@ -31,6 +31,8 @@ Current default-surface correction:
 - `scripts/default-skill-allowlist.txt` now names tiers with comments:
   primary public choices, routed specialists, direct utilities, external
   specialists, managed GStack tooling, and GSD status/resume helpers.
+- Retired local artifacts are kept out of the install allowlist and listed in
+  `scripts/default-skill-prune-ledger.txt` for updater-owned cleanup.
 - `$diagnose` is no longer installed by default. `$gstack-investigate` is the
   default root-cause/debugging entrypoint because the GStack skill set already
   owns browser-visible investigation and QA workflows.

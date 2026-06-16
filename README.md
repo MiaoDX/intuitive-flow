@@ -100,7 +100,8 @@ installed too. Changed-code reuse/quality/efficiency review now lives in
 `$simplify` skill. The complete default install surface lives in
 `scripts/default-skill-allowlist.txt`, whose comments mark primary choices,
 routed specialists, direct utilities, managed GStack tooling, and GSD status
-helpers. The human-facing role audit is in
+helpers. Retired local artifacts that the updater may prune live separately in
+`scripts/default-skill-prune-ledger.txt`. The human-facing role audit is in
 `docs/human/skill-self-improvement-audit.md`.
 
 ## Human Docs
@@ -150,7 +151,9 @@ bun run verify
 Human docs define repo truth, `AGENTS.md` and `CLAUDE.md` stay project-local,
 `skills/` is the canonical repo-owned skill surface, and `scripts/update.sh`
 syncs Claude Code, Codex, GSD, gstack, external skills, and repo-owned skills
-into user-level tooling according to `scripts/default-skill-allowlist.txt`. See
+into user-level tooling according to `scripts/default-skill-allowlist.txt`;
+explicit retired artifacts are pruned from
+`scripts/default-skill-prune-ledger.txt`. See
 [ARCHITECTURE.md](ARCHITECTURE.md) for subsystem contracts and proof
 boundaries.
 

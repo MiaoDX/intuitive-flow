@@ -15,6 +15,8 @@ currently provides:
   `templates/`, and `scripts/`
 - a single default skill install allowlist at
   `scripts/default-skill-allowlist.txt`
+- a separate prune-only ledger for retired local artifacts at
+  `scripts/default-skill-prune-ledger.txt`
 - update and sync automation under `scripts/`
 - repo-owned Git hooks under `.githooks/`
 - Bun TypeScript helpers and tests under `scripts/lib/`
@@ -66,10 +68,12 @@ The current maintenance focus is keeping the repo dogfoodable:
 - keep default skill installs listed in `scripts/default-skill-allowlist.txt`
   with role-tier comments that distinguish primary choices, routed specialists,
   direct utilities, managed GStack tooling, and GSD status/resume helpers
+- keep retired local artifact cleanup in
+  `scripts/default-skill-prune-ledger.txt`, not in the install allowlist
 - keep the optional `gstack-autoplan` planning scout default-visible because the
   staged workflow names it as an unknown-unknown route
 - keep `agent-planning-loop` as the canonical scout-planning root skill and
-  `intuitive-planning-loop` as legacy cleanup only
+  `intuitive-planning-loop` as prune-ledger cleanup only
 - use `bun run audit:skill-upstreams` to review upstream skill candidates
   outside the allowlist before adding anything new
 - keep installed global skill surfaces pruned by owner state: Intuitive root
@@ -107,7 +111,8 @@ There is no active `.planning/` roadmap or GSD phase in this checkout.
   and user config.
 - Default skill visibility is controlled by
   `scripts/default-skill-allowlist.txt`; external sources are never installed in
-  broad `all` mode by default.
+  broad `all` mode by default, and prune-only `legacy-*` entries belong in
+  `scripts/default-skill-prune-ledger.txt`.
 - GSD and GStack setup may create upstream wrappers temporarily, but the updater
   prunes managed wrappers back to the default allowlist.
 - `skills/` is the canonical repo-owned skill source; `scripts/update.sh`

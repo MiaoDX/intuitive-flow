@@ -7,7 +7,9 @@ import { checkRootSkills, readDefaultSkillAllowlist } from "./default-skill-allo
 export type SkillCheckOptions = {
   skillsRoot: string;
   allowlistPath: string;
+  pruneLedgerPath?: string;
   deprecatedSourceRoot: string;
+  gstackCodexSkillsRoot?: string;
   plansRoot?: string;
   packageJsonPath?: string;
   githubVerifyWorkflowPath?: string;
@@ -29,7 +31,9 @@ export type SkillSizeReport = {
 const defaultOptions = (): SkillCheckOptions => ({
   skillsRoot: join(process.cwd(), "skills"),
   allowlistPath: join(process.cwd(), "scripts", "default-skill-allowlist.txt"),
+  pruneLedgerPath: join(process.cwd(), "scripts", "default-skill-prune-ledger.txt"),
   deprecatedSourceRoot: join(process.cwd(), "skills-src"),
+  gstackCodexSkillsRoot: join(process.cwd(), "vendor", "gstack", ".agents", "skills"),
   plansRoot: join(process.cwd(), "docs", "plans"),
   packageJsonPath: join(process.cwd(), "package.json"),
   githubVerifyWorkflowPath: join(process.cwd(), ".github", "workflows", "verify.yml"),
@@ -264,9 +268,97 @@ const checkToolingVersions = (options: SkillCheckOptions): string[] => {
   return errors;
 };
 
+const checkManagedGstackSkills = (allowlist: ReturnType<typeof readDefaultSkillAllowlist>, root: string | undefined): string[] => {
+  const errors: string[] = [];
+  if (!root || !existsSync(root)) {
+    return errors;
+  }
+
+  for (const skillName of allowlist.gstackSkills) {
+    if (!existsSync(join(root, skillName, "SKILL.md"))) {
+      errors.push(`default allowlist lists missing vendored GStack skill: ${skillName}`);
+    }
+  }
+
+  return errors;
+};
+
+const listIntersection = (left: string[], right: string[]): string[] => {
+  const rightSet = new Set(right);
+  return left.filter((value) => rightSet.has(value)).sort();
+};
+
+const liveSkillNames = (allowlist: ReturnType<typeof readDefaultSkillAllowlist>): string[] => [
+  ...allowlist.rootSkills,
+  ...allowlist.externalSources.flatMap((source) => source.skills),
+  ...allowlist.gstackSkills,
+  ...allowlist.gsdSkills,
+];
+
+const liveCommandNames = (allowlist: ReturnType<typeof readDefaultSkillAllowlist>): string[] => [
+  ...allowlist.rootSkills.map((skillName) => `${skillName}.md`),
+  ...allowlist.gstackSkills.map((skillName) => `${skillName}.md`),
+  ...allowlist.gsdSkills.map((skillName) => `${skillName}.md`),
+];
+
+const checkPruneLedger = (
+  allowlist: ReturnType<typeof readDefaultSkillAllowlist>,
+  allowlistPath: string,
+  pruneLedgerPath: string | undefined,
+): string[] => {
+  const errors: string[] = [];
+  if (
+    allowlist.legacySkills.length > 0 ||
+    allowlist.legacyCommands.length > 0 ||
+    allowlist.legacyMimocodeCommands.length > 0
+  ) {
+    errors.push("default skill allowlist must not contain prune-only legacy entries; use scripts/default-skill-prune-ledger.txt");
+  }
+
+  if (!pruneLedgerPath || !existsSync(pruneLedgerPath)) {
+    return errors;
+  }
+
+  let pruneLedger;
+  try {
+    pruneLedger = readDefaultSkillAllowlist(pruneLedgerPath);
+  } catch (error) {
+    errors.push(error instanceof Error ? error.message : String(error));
+    return errors;
+  }
+
+  if (
+    pruneLedger.rootSkills.length > 0 ||
+    pruneLedger.externalSources.length > 0 ||
+    pruneLedger.gstackSkills.length > 0 ||
+    pruneLedger.gsdSkills.length > 0
+  ) {
+    errors.push("default skill prune ledger must contain only legacy entries");
+  }
+
+  const currentLegacySkills = listIntersection(pruneLedger.legacySkills, liveSkillNames(allowlist));
+  if (currentLegacySkills.length > 0) {
+    errors.push(`prune ledger lists current skill as legacy: ${currentLegacySkills.join(", ")}`);
+  }
+
+  const currentLegacyCommands = listIntersection(
+    [...pruneLedger.legacyCommands, ...pruneLedger.legacyMimocodeCommands],
+    liveCommandNames(allowlist),
+  );
+  if (currentLegacyCommands.length > 0) {
+    errors.push(`prune ledger lists current command as legacy: ${currentLegacyCommands.join(", ")}`);
+  }
+
+  if (allowlistPath === pruneLedgerPath) {
+    errors.push("default skill allowlist and prune ledger must be separate files");
+  }
+
+  return errors;
+};
+
 const completedPlanPattern = /(?:^status:\s*(?:DONE|IMPLEMENTED)\b|^Status:\s*(?:DONE|Implemented)\b)/m;
 const stalePlanTruthPattern =
-  /Use this as the implementation source of truth|Canonical source:|Historical Preflight Contract|Historical execution request|GSD Handoff Trigger|skills-src|build:skills|build:skills:check|generated skills up to date/;
+  /Use this as the implementation source of truth|Canonical source:|Historical Preflight Contract|Historical execution request|GSD Handoff Trigger|scripts\/local-skill-manifest\.txt|skills-src|build:skills|build:skills:check|generated skills up to date/;
 const historicalPlanMarkerPattern =
   /historical|provenance|shipped history|not current implementation guidance|not current-state|archived/i;
 
@@ -334,12 +426,14 @@ export const checkSkills = (options = defaultOptions()): string[] => {
     return errors;
   }
   errors.push(...checkRootSkills(allowlist, options.skillsRoot));
+  errors.push(...checkPruneLedger(allowlist, options.allowlistPath, options.pruneLedgerPath));
 
   for (const skillName of skillNames(options.skillsRoot)) {
     errors.push(...checkSkill(options.skillsRoot, skillName));
   }
 
   errors.push(...checkToolingVersions(options));
+  errors.push(...checkManagedGstackSkills(allowlist, options.gstackCodexSkillsRoot));
   errors.push(...checkCompletedPlans(options.plansRoot));
 
   return errors;

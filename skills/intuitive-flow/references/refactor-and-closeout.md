@@ -6,24 +6,25 @@ parked-todo reporting.
 
 ## Architecture Or Refactor Goal
 
-Use when the user asks to improve architecture, refactor a module, fix broad
-known issues, run `improve-codebase-architecture` as report-only discovery, or
-stop endless cleanup loops.
+Use when a Flow run needs to hand off, supervise, verify, or close out a
+refactor-shaped slice. `$intuitive-refactor` owns refactor scope gates, accepted
+severities, cleanup expansion, changed-code review, and stop conditions; Flow
+keeps the route and closeout honest.
 
 Default path:
 
 ```text
-create or read refactor scope gate
+create or read refactor scope gate through $intuitive-refactor
 zoom-out + plan-eng-review      # architecture packet before edits
 improve-codebase-architecture   # optional report-only scanner when no seam is accepted
 TDD or diagnosis                 # only when accepted checklist needs proof first
-execute accepted P0/P1 slices
+execute only the $intuitive-refactor accepted slice
 run one final $intuitive-doc doc-alignment sub-phase
 record P2/Parked ideas instead of implementing them
 ```
 
-The refactor scope gate may be produced inline or by a dedicated refactor skill.
-It is the source of truth for the pass and must name:
+The refactor scope gate comes from `$intuitive-refactor` or an equivalent
+approved refactor contract. It is the source of truth for the pass and must name:
 
 - target module or boundary
 - status marker: `DONE`, `CONTINUE`, `REOPEN`, or `PARK`
@@ -256,35 +257,34 @@ Parked todos:
 - <item> - parked because <reason>; source: <plan/review/doc>; unpark when <trigger>
 ```
 
-Before final closeout, classify each parked item:
+Before final closeout, classify each parked item for reporting:
 
 | Class | Meaning | Action |
 | --- | --- | --- |
 | `in-scope-required` | Original objective is not actually complete without this item. | Continue before marking complete. |
-| `in-scope-high-value` | Same objective/scope, bounded, likely useful, and has a clear verification gate. | Run at most one automatic parked-follow-up slice. |
+| `in-scope-high-value` | Same objective/scope, bounded, likely useful, and has a clear verification gate. | Report as a candidate follow-up unless `$intuitive-refactor` already accepted it. |
 | `deferred-by-policy` | Explicitly excluded by user, plan, safety rule, or acceptance boundary. | Report only. |
 | `scope-expansion` | New product/architecture direction or materially broader than the original goal. | Report only. |
 | `needs-human-decision` | Technically plausible, but changes authority, UX, product promise, dependency policy, or risk profile. | Ask before execution. |
 
-Automatic parked-follow-up rules:
+Parked-follow-up rules:
 
-- Run automatic follow-up only for `in-scope-required`, or for one
-  `in-scope-high-value` item when the current flow already has verified commits
-  or no-file-change evidence.
+- Continue only for `in-scope-required`, because the original objective is not
+  complete. For `in-scope-high-value`, route back through `$intuitive-refactor`
+  unless that item is already inside the accepted checklist.
 - The follow-up must be a coherent slice with an explicit verification command
   or durable evidence artifact.
 - Do not auto-run `scope-expansion`, `deferred-by-policy`, or
   `needs-human-decision` items.
-- Do not run more than one automatic parked-follow-up slice during a closeout.
-  After that slice, list remaining parked work and stop unless the user
-  explicitly asks to continue.
+- Do not turn closeout into a new cleanup loop. List remaining parked work and
+  stop unless the user explicitly approves the next `$intuitive-refactor` slice.
 - If the follow-up would require a new plan, new dependency policy, baseline
   blessing, broad migration, or external/human-owned evidence, classify it as
   `needs-human-decision` or `scope-expansion` instead of auto-running it.
 
-When an automatic parked-follow-up runs, treat it as part of the same root flow:
+When an accepted refactor follow-up runs, treat it as part of the same root flow:
 update the plan, implement the slice, verify it, commit if files changed, and
-then perform closeout again with auto-follow-up disabled for that closeout pass.
+then perform closeout again.
 
 Always include the final `Scope changes` closeout category, even when no
 unknown-unknown scout ran. Keep accepted scope changes separate from

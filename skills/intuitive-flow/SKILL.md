@@ -89,9 +89,11 @@ boundary. Do not preload every reference.
   architecture work: route to `$intuitive-refactor` for accepted severities,
   evidence ladder, and stop condition.
 - Vague tasks, plan-backed work, broad durable implementation, or long-running
-  refactors: use durable Flow; run `$intuitive-preflight` first if the current
+  refactors: use durable Flow only after an approved `$intuitive-preflight`
+  contract or equivalent approved execution contract exists. If the current
   plan/conversation lacks context package, scope, non-goals, definition of done,
-  verification, route, worker strategy, and root-goal wording.
+  verification, route, worker strategy, and root-goal wording, route to
+  `$intuitive-preflight` instead of drafting a second Flow contract.
 - Plan-backed implementation must have an approved preflight contract plus an
   explicit unknown-unknown scout result or skip reason in the canonical plan,
   unless the task is tiny direct work that is not using a plan as source of
@@ -104,9 +106,9 @@ entities over the path that adds a new one. If a proposal adds an entity, name
 the existing surfaces considered and why they are insufficient.
 
 For whole-flow or durable auto-runs, read
-`references/checkpoints-and-auto-run.md` and state the run contract unless the
-latest user message already supplies goal, success criteria, stop condition,
-boundaries, and tells you to use them as-is.
+`references/checkpoints-and-auto-run.md` and identify the approved execution
+contract. If none exists, route to `$intuitive-preflight`; do not maintain a
+separate Flow-owned contract prompt.
 
 ## Route Brief
 

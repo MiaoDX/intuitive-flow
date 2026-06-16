@@ -6,8 +6,9 @@
 #   Codex:   <name>/SKILL.md             (dir with frontmatter + adapter + body)
 #
 # The adapter block tells Codex how to translate AskUserQuestion →
-# request_user_input and how to avoid Claude-native Task() fanout on Codex. It
-# is appended verbatim ahead of the original body.
+# request_user_input. Delegation policy lives in the synced skill-runner
+# reference; keep this adapter as a pointer so policy does not drift in generated
+# command wrappers.
 
 # Emit the Codex skill adapter heredoc for a given skill name.
 _codex_skill_adapter_block() {
@@ -38,29 +39,11 @@ Execute mode fallback:
 - When \`request_user_input\` is rejected (Execute mode), present a plain-text numbered list and pick a reasonable default.
 
 ## C. Task() / Subagent Policy
-GSD workflows may mention \`Task(...)\` (Claude Code syntax). On Codex, do not
-translate it to \`spawn_agent\` and do not use native subagents by default.
-Follow \`$skill-runner\`'s bundled Codex delegation policy
+GSD workflows may mention \`Task(...)\` (Claude Code syntax). On Codex, follow
+\`$skill-runner\`'s bundled Codex delegation policy
 (\`skill-runner/references/codex-delegation.md\` in the synced skills tree).
-
-Codex fallback mapping:
-- Small read-only probes or tiny edits → run inline in the main session.
-- Parallel read-heavy scouts, review passes, verification/log probes, or short
-  bounded independent tasks → use the host-provided Paseo subagent tool when it
-  is available and a no-edit probe succeeds. Do not invoke \`paseo run\` or
-  \`paseo agent run\` from a skill; those create new user-visible agent sessions
-  and tabs instead of subordinate workers.
-- Stateful, long-running, mutating, artifact-sensitive, or isolated durable
-  worker work → use \`$skill-runner\` or an explicit tmux-backed \`codex exec\`
-  worker.
-- Claude Code hosts may still use their native \`Task(...)\`/subagent behavior.
-
-If a copied workflow requires structured worker results, ask the Paseo subagent
-or tmux/runner worker to return compact markers such as \`CHECKPOINT\`,
-\`PLAN COMPLETE\`, or \`SUMMARY\`. For Paseo subagents, inspect the subagent
-activity/status surface exposed by the host before trusting the result; for
-tmux/runner workers, inspect the worker artifact or final message in the main
-session.
+That reference is the canonical source for native-subagent disablement, Paseo
+probing, model choice, tmux/runner fallback, and worker-result inspection.
 </codex_skill_adapter>
 ADAPTER
 }

@@ -22,10 +22,11 @@ B. Plan entropy route - use `$intuitive-reduce-entropy` in plan entropy mode to
    find missing decisions or weak assumptions before drafting/revising a plan.
 C. Agent planning route - use `$agent-planning-loop` when scout workers should
    debate options before one human review packet.
-D. Auto-guided route (experimental) - use Flow only to draft the plan: I
+D. Auto-guided route (explicit only) - use Flow only to draft the plan: I
    auto-accept obvious defaults, save those decisions into the plan, and ask
-   only for scope, premise, or
-   hard-to-reason choices.
+   only for scope, premise, or hard-to-reason choices. Do not offer this route
+   unless the user asks for auto mode or asks the agent to make planning
+   decisions.
 ```
 
 Mode rules:
@@ -38,8 +39,9 @@ Mode rules:
 - `$agent-planning-loop` when the user asks agents to align first, run
   reduce-entropy plus grill-batch critique, compare plans, or return one judged
   review packet. Natural-language mentions of "planning loop" route here.
-- Auto-guided route when the user asks for auto mode, says to make the
-  decisions, or asks to move fast.
+- Auto-guided route only when the user asks for auto mode, says to make the
+  decisions, or explicitly asks Flow to draft the plan with agent-chosen
+  defaults.
 - Direct route when no preference is stated.
 - Skip the prompt when a draft plan already exists and the next step is review.
 
@@ -59,7 +61,7 @@ Default paths:
 direct: inline intuitive-flow shaping -> docs/plans/<slug>.md
 plan entropy: intuitive-reduce-entropy plan entropy mode -> revise docs/plans/<slug>.md or draft one
 agent planning: agent-planning-loop -> review packet -> docs/plans/<slug>.md after approval
-auto-guided: intuitive-flow auto-guided shaping -> docs/plans/<slug>.md
+auto-guided: explicit-only intuitive-flow shaping -> docs/plans/<slug>.md
 ```
 
 If the question is product direction, wedge, audience, demand, or "is this worth

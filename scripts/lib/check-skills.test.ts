@@ -23,8 +23,10 @@ const writeFixtureFile = (root: string, relativePath: string, text: string) => {
 const optionsFor = (root: string) => ({
   skillsRoot: join(root, "skills"),
   allowlistPath: join(root, "scripts", "default-skill-allowlist.txt"),
+  pruneLedgerPath: join(root, "scripts", "default-skill-prune-ledger.txt"),
   deprecatedSourceRoot: join(root, "skills-src"),
   plansRoot: join(root, "docs", "plans"),
+  gstackCodexSkillsRoot: join(root, "vendor", "gstack", ".agents", "skills"),
 });
 
 describe("skill checker", () => {
@@ -132,6 +134,37 @@ describe("skill checker", () => {
       const errors = checkSkills(optionsFor(root));
 
       expect(errors).toContain("unsupported external skill repo on line 2: https://example.com/demo");
+    });
+  });
+
+  test("keeps prune-only legacy entries out of the default allowlist", async () => {
+    await withTempProject((root) => {
+      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill alpha\nlegacy-skill old-alpha\n");
+      writeFixtureFile(root, "skills/alpha/SKILL.md", "---\nname: alpha\ndescription: Alpha.\n---\n");
+
+      expect(checkSkills(optionsFor(root))).toContain(
+        "default skill allowlist must not contain prune-only legacy entries; use scripts/default-skill-prune-ledger.txt",
+      );
+    });
+  });
+
+  test("rejects prune ledger entries that target current skills", async () => {
+    await withTempProject((root) => {
+      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill alpha\n");
+      writeFixtureFile(root, "scripts/default-skill-prune-ledger.txt", "legacy-skill alpha\n");
+      writeFixtureFile(root, "skills/alpha/SKILL.md", "---\nname: alpha\ndescription: Alpha.\n---\n");
+
+      expect(checkSkills(optionsFor(root))).toContain("prune ledger lists current skill as legacy: alpha");
+    });
+  });
+
+  test("rejects allowlisted GStack skills missing from the vendored wrapper surface", async () => {
+    await withTempProject((root) => {
+      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill alpha\ngstack-skill gstack-review\n");
+      writeFixtureFile(root, "skills/alpha/SKILL.md", "---\nname: alpha\ndescription: Alpha.\n---\n");
+      writeFixtureFile(root, "vendor/gstack/.agents/skills/gstack-browse/SKILL.md", "# Browse\n");
+
+      expect(checkSkills(optionsFor(root))).toContain("default allowlist lists missing vendored GStack skill: gstack-review");
     });
   });
 
@@ -248,6 +281,22 @@ describe("skill checker", () => {
 
       expect(checkSkills(optionsFor(root))).toContain(
         "completed plan has active-looking historical guidance without an archival marker: docs/plans/refactor-old.md",
+      );
+    });
+  });
+
+  test("requires archival markers on completed plans that mention retired manifest paths", async () => {
+    await withTempProject((root) => {
+      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill alpha\n");
+      writeFixtureFile(root, "skills/alpha/SKILL.md", "---\nname: alpha\ndescription: Alpha.\n---\n");
+      writeFixtureFile(
+        root,
+        "docs/plans/refactor-old-manifest.md",
+        "---\nstatus: DONE\n---\n\n# Old\n\nProof: scripts/local-skill-manifest.txt check-root-skills.\n",
+      );
+
+      expect(checkSkills(optionsFor(root))).toContain(
+        "completed plan has active-looking historical guidance without an archival marker: docs/plans/refactor-old-manifest.md",
       );
     });
   });

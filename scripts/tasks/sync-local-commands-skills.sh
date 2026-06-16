@@ -34,6 +34,9 @@ _manifest_tool() {
 
 _remove_stale_local_artifacts() {
     local manifest="$1"
+    if [ ! -f "$manifest" ]; then
+        return 0
+    fi
     _manifest_tool prune "$manifest"
 }
 
@@ -60,13 +63,14 @@ _check_root_skill_manifest() {
 #   Claude Code + ~/.codex/skills/  (skills)
 #   ~/.config/mimocode/command/     (MiMoCode slash-command wrappers)
 run_sync_local_commands_skills() {
-    local project_dir commands_src default_skill_allowlist
+    local project_dir commands_src default_skill_allowlist default_skill_prune_ledger
     project_dir=$(cd "$SCRIPT_DIR/.." && pwd)
     commands_src="$project_dir/.claude/commands"
     default_skill_allowlist="$project_dir/scripts/default-skill-allowlist.txt"
+    default_skill_prune_ledger="$project_dir/scripts/default-skill-prune-ledger.txt"
 
     task_notice "Repo-local commands & skills: pruning stale artifacts"
-    _remove_stale_local_artifacts "$default_skill_allowlist" || return 1
+    _remove_stale_local_artifacts "$default_skill_prune_ledger" || return 1
     _remove_stale_owned_root_skills "$default_skill_allowlist" || return 1
 
     local claude_dest="$HOME/.claude/commands"
