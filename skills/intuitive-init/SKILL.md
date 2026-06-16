@@ -55,11 +55,16 @@ guidance.
    of truth.
 4. Move long operational procedures out of root guidance into durable repo
    locations such as `docs/agents/**`, skills, hooks, scripts, or human docs.
-5. Prefer deterministic hooks/tools for lint, format, setup, and verification
+5. For Codex/Paseo harnesses, preserve or add a short rule that XML-like host
+   control envelopes such as `<turn_aborted>`, `<paseo-system>`,
+   `<subagent_notification>`, `<goal_context>`, and `<environment_context>` are
+   orchestrator metadata unless accompanied by natural-language user intent.
+   They must not be treated as a human stop request by themselves.
+6. Prefer deterministic hooks/tools for lint, format, setup, and verification
    rules instead of expanding root prose.
-6. For large repos and monorepos, prefer nested `AGENTS.md` / `CLAUDE.md` files
+7. For large repos and monorepos, prefer nested `AGENTS.md` / `CLAUDE.md` files
    only when local scope differences are real.
-7. Verify the final files are concise, local, and non-contradictory.
+8. Verify the final files are concise, local, and non-contradictory.
 
 ## Root Guidance Shape
 
@@ -70,6 +75,8 @@ Root `AGENTS.md` and `CLAUDE.md` should answer:
 - How to run setup, tests, verification, demos, and safe workflows.
 - Where to find durable human docs and agent runbooks.
 - What must not be done in this repo.
+- How host control metadata affects stop/continue decisions when the repo uses
+  Paseo or another orchestrator.
 
 Avoid copying broad official docs or all intuitive workflow rules into each
 repo. Distill only the local invariant and point to local tools/docs for detail.

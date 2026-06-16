@@ -11,6 +11,15 @@ files, reusable skills, hooks, MCP configuration, target-repo LSP setup, and
 local verification commands. `$intuitive-init` builds or refreshes that harness
 from repo evidence, official tool guidance, and init-style suggestions.
 
+For Codex sessions running under Paseo or a similar orchestrator, the harness
+also needs a small stop/continue guard: XML-like host control envelopes that
+arrive as user-role messages are runtime metadata when the whole message is only
+the envelope. Examples include `<turn_aborted>`, `<paseo-system>`,
+`<subagent_notification>`, `<goal_context>`, `<environment_context>`, and future
+unknown tags. Root guidance should tell agents not to infer that the human asked
+to stop, discard worker output, or skip summarization from those labels alone;
+natural-language user text outside the envelope still wins.
+
 Default posture: keep root agent files aggressively small. Correct but lengthy
 procedures should usually move out of `AGENTS.md` and `CLAUDE.md` into
 `docs/agents/**`, reusable skills, or scripts, with the root files keeping only
@@ -110,6 +119,8 @@ Root `AGENTS.md` and `CLAUDE.md` should contain only:
 - canonical install/test/verify commands or the pointer to them
 - source-of-truth boundaries
 - short skill routing
+- host/orchestrator control-message hazards that can change stop/continue
+  behavior, especially Paseo XML-like envelopes in Codex sessions
 - pointers to longer `docs/agents/**` runbooks when needed
 
 ## Compatibility Posture
@@ -212,7 +223,9 @@ Use this workflow unless the user asks for report-only or a specific file.
      supports it. Missing nested-agent support is not a blocker.
 4. Classify current guidance:
    - **Preserve**: project commands, env setup, permissions, local hazards,
-     workflow source-of-truth rules, domain vocabulary, test gates.
+     workflow source-of-truth rules, domain vocabulary, test gates, and
+     host/orchestrator control-message rules such as treating Paseo XML-like
+     labels as metadata rather than user stop requests.
    - **Merge**: concise shared behavior that still fits this repo.
    - **Replace**: stale setup steps, symlink-first instructions for root agent
      files, generic advice duplicated by system behavior.
@@ -246,6 +259,9 @@ Use this workflow unless the user asks for report-only or a specific file.
    - `.claude/settings.json`, `.codex/hooks/**`, or equivalent hook config for
      deterministic checks that must run after edits
    - checked-in `.mcp.json` or project-scoped MCP docs for shared external tools
+   - Codex/Paseo delegation policy docs, when present; root guidance should
+     point to the policy and keep only the short XML-envelope rule that prevents
+     false auto-stop behavior
 7. Set up or verify target-repo LSP:
    - Detect the repo's primary language stack from manifests and lockfiles.
    - Verify or create the repo-local language-server config first.
