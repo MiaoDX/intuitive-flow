@@ -94,8 +94,10 @@ Keep the public choice small:
 Common routed specialists include `$intuitive-preflight`, `$intuitive-doc`,
 `$intuitive-init`, `$intuitive-tests`, and `$improve-codebase-architecture` for
 report-only architecture discovery; direct-use utilities such as
-`$intuitive-port-worktree`, `$multica-goal-tracker`, `$skill-runner`, and
-`$simplify` are installed too. The complete default install surface lives in
+`$intuitive-port-worktree`, `$multica-goal-tracker`, and `$skill-runner` are
+installed too. Changed-code reuse/quality/efficiency review now lives in
+`$intuitive-refactor` as changed-code cleanup instead of a separate
+`$simplify` skill. The complete default install surface lives in
 `scripts/default-skill-allowlist.txt`, whose comments mark primary choices,
 routed specialists, direct utilities, managed GStack tooling, and GSD status
 helpers. The human-facing role audit is in

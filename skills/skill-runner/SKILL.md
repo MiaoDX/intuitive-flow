@@ -98,7 +98,7 @@ python3 /path/to/intuitive-flow/skills/skill-runner/scripts/run_skill_runner.py 
   --agent <codex|claude> \
   --cwd "$PWD" \
   -- \
-  'impl <task> with $intuitive-flow then $simplify'
+  'impl <task> with $intuitive-flow then run $intuitive-refactor changed-code review'
 ```
 
 The selected skill must be applied to the `--cwd` workspace. If a run in a
@@ -180,8 +180,8 @@ stay out unless needed. If required files, issue, plan, logs, artifacts, or
 commands are unknown, stop with `BLOCKED_NEEDS_DECISION` or propose
 `$intuitive-preflight`.
 
-For `$intuitive-flow`, require coherent phase scope. For `$simplify`, review the
-actual diff or path only.
+For `$intuitive-flow`, require coherent phase scope. For `$intuitive-refactor`
+changed-code review, review the actual diff or path only.
 
 ## Run Evaluation
 

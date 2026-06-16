@@ -53,10 +53,10 @@ expands scope or real usage shows repeated failure in that area.
 ## Final Documentation Alignment Sub-Phase
 
 For significant code changes and every big refactor, run one explicit final
-`$intuitive-doc` sub-phase after implementation, simplify, and verification, and
-before parked-todo closeout. This is part of the flow, not an optional cleanup
-note. The goal is to leave the human-facing documentation surface aligned after
-a large code change.
+`$intuitive-doc` sub-phase after implementation, changed-code cleanup, and
+verification, and before parked-todo closeout. This is part of the flow, not an
+optional cleanup note. The goal is to leave the human-facing documentation
+surface aligned after a large code change.
 
 The sub-phase must compare the changed implementation surface to `README.md`,
 `ARCHITECTURE.md`, `STATUS.md`, and `docs/human/**`.
@@ -212,7 +212,7 @@ Useful boundaries:
 - after `gsd-plan-phase` creates executable phase plan
 - after each coherent implementation slice and focused tests
 - after standalone test/verification harness lands
-- after `simplify` changes code outside the preceding slice
+- after changed-code cleanup changes code outside the preceding slice
 - after material verification, docs/status, or closeout updates
 
 Before each commit, inspect `git status` and the staged diff, run or record
@@ -241,7 +241,7 @@ or the active phase plan. Extract anything explicitly parked, deferred,
 out-of-scope, future-only, or left for focused follow-up.
 
 Also include newly discovered but intentionally unimplemented work from
-execution notes, simplify/review output, and verification gaps.
+execution notes, changed-code review output, and verification gaps.
 
 Always show parked work. If empty, say:
 

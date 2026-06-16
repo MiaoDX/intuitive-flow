@@ -93,11 +93,12 @@ The primary user-facing skills are `$intuitive-flow`, `$intuitive-refactor`,
 `$intuitive-reduce-entropy`, `$agent-planning-loop`, and
 `$intuitive-squash`. Specialist skills such as `$intuitive-preflight`,
 `$intuitive-doc`, `$intuitive-init`, `$intuitive-tests`,
-`$intuitive-port-worktree`, `$multica-goal-tracker`, `$skill-runner`, and
-`$simplify` remain available for direct or routed use, but are not the default
-choice a user must make up front. `scripts/default-skill-allowlist.txt` is the
-complete default install list across repo-owned, external, GStack, and GSD
-skills; its comments mark the role tier for each default-visible group.
+`$intuitive-port-worktree`, `$multica-goal-tracker`, and `$skill-runner` remain
+available for direct or routed use, but are not the default choice a user must
+make up front. Changed-code reuse/quality/efficiency review is a mode of
+`$intuitive-refactor`, not a separate default skill. `scripts/default-skill-allowlist.txt`
+is the complete default install list across repo-owned, external, GStack, and
+GSD skills; its comments mark the role tier for each default-visible group.
 `docs/human/skill-self-improvement-audit.md` records the human-facing role of
 the complete default surface, including external and managed wrappers.
 `$intuitive-preflight` owns approval-ready preflight contracts before a plan or

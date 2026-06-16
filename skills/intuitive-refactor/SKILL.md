@@ -1,6 +1,6 @@
 ---
 name: intuitive-refactor
-description: Set a bounded aggressive refactor goal before architecture or cleanup work starts, including checking target-repo LSP setup before risky symbol-level edits. Use whenever the user wants to improve architecture, clean up aggressively, "fix all big issues", avoid endless refactors, decide what is in/out of scope, classify P0/P1/P2/Parked findings, remove stale APIs or compatibility shims, define tests and stop conditions, or run a long code-size/complexity ratchet that should simplify architecture instead of merely moving lines. This skill works standalone and can also be combined with architecture scanners, intuitive-flow, TDD, or diagnosis skills.
+description: Set a bounded aggressive refactor or changed-code cleanup goal before architecture or cleanup work starts, including checking target-repo LSP setup before risky symbol-level edits. Use whenever the user wants to improve architecture, clean up aggressively, review changed code for reuse/quality/efficiency, "fix all big issues", avoid endless refactors, decide what is in/out of scope, classify P0/P1/P2/Parked findings, remove stale APIs or compatibility shims, define tests and stop conditions, or run a long code-size/complexity ratchet that should simplify architecture instead of merely moving lines. This skill works standalone and can also be combined with architecture scanners, intuitive-flow, TDD, or diagnosis skills.
 ---
 
 # Intuitive Refactor
@@ -20,6 +20,10 @@ complexity, oversized-module, backend/report/test-sprawl, or entropy ratchet.
 That mode tightens the normal refactor loop around concept reduction rather
 than pure extraction.
 
+Read `references/changed-code-review.md` when the request is diff-scoped
+cleanup, post-implementation review, reuse/quality/efficiency review, or when
+`$intuitive-flow` asks for changed-code cleanup before final verification.
+
 ## Operating Rule
 
 Start from a target and a stop condition, not from "make it cleaner." When the
@@ -35,6 +39,10 @@ For ratchet-shaped work, prefer concept reduction over code motion: delete
 stale surfaces, merge duplicate concepts, move callers to an existing owner,
 and create a new module only when the architecture lacks a true home. Line-count
 relief is useful evidence, not the goal.
+
+For changed-code review, stay diff-scoped. Review the changed files through the
+reuse, quality, and efficiency lenses, report findings first, and fix only when
+the user or approved flow has clearly authorized an implementation pass.
 
 ## Default Workflow
 

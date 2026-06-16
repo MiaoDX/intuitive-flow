@@ -51,7 +51,7 @@ Load only the reference needed for the selected route:
 | Active-goal resume/debug, context budget, loop breaker, experiment contract | `references/context-budget-and-loop-guard.md` |
 | Source-of-truth, `STATUS.md`, `CONTEXT.md`, provenance, phase granularity | `references/source-of-truth.md` |
 | Fuzzy idea shaping, single plan-file intake, unknown-unknown scout/reconciliation | `references/plan-intake-and-autoplan.md` |
-| GSD ingest vs plan-phase routing, committed phase execution, `simplify` scope | `references/gsd-handoff.md` |
+| GSD ingest vs plan-phase routing, committed phase execution, changed-code cleanup scope | `references/gsd-handoff.md` |
 | Whole-run preflight, goal ownership, soft continuation vs hard stop, checkpoint policy, tmux/goal/clear policy | `references/checkpoints-and-auto-run.md` |
 | Broad refactor route, semantic commits, final `$intuitive-doc` doc-alignment sub-phase, parked-todo closeout | `references/refactor-and-closeout.md` |
 | Exact response and artifact templates | `references/output-shapes.md` and `templates/` |
@@ -80,8 +80,8 @@ boundary. Do not preload every reference.
   explicit unknown-unknown scout result or skip reason in the canonical plan,
   unless the task is tiny direct work that is not using a plan as source of
   truth.
-- Changed-code cleanup: use `simplify <changed-scope>` then rerun relevant
-  proof.
+- Changed-code cleanup: use `$intuitive-refactor` changed-code review on the
+  changed scope, then rerun relevant proof.
 
 When the route is ambiguous, prefer the path that removes or reuses existing
 entities over the path that adds a new one. If a proposal adds an entity, name
@@ -113,7 +113,8 @@ Stop/continue point:
 
 For tiny direct work, one sentence is enough. Name plausible but skipped stages
 such as `$agent-planning-loop`, `grill-with-docs`, unknown-unknown scouting
-with `gstack-autoplan`, `to-issues`, GSD handoff, `simplify`, or verification.
+with `gstack-autoplan`, `to-issues`, GSD handoff, changed-code cleanup, or
+verification.
 
 ## Execution Surface
 

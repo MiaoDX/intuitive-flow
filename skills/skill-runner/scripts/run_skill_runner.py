@@ -656,7 +656,7 @@ Operating contract:
 
 Skill-specific guardrails:
 - For $intuitive-flow: one phase is one coherent delivery unit. Do not create more than three phases from this prompt without stopping for grouping approval. Use tasks/checklists for blockers, proof retries, diagnostics, and small report/checker changes.
-- For $simplify: review the actual changed scope only. Do not expand into broad architecture discovery.
+- For $intuitive-refactor changed-code review: review the actual changed scope only. Do not expand into broad architecture discovery.
 - For GSD work: do not hand-write .planning artifacts and claim a downstream GSD skill produced them.
 
 Verification:

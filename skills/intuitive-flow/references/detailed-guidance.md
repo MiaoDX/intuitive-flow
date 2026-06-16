@@ -103,7 +103,7 @@ Load only the reference needed for the selected route:
 | Active-goal resume/debug, context budget, loop breaker, experiment contract | `references/context-budget-and-loop-guard.md` |
 | Source-of-truth, `STATUS.md`, `CONTEXT.md`, provenance, phase granularity | `references/source-of-truth.md` |
 | Fuzzy idea shaping, single plan-file intake, unknown-unknown scout/reconciliation | `references/plan-intake-and-autoplan.md` |
-| GSD ingest vs plan-phase routing, committed phase execution, `simplify` scope | `references/gsd-handoff.md` |
+| GSD ingest vs plan-phase routing, committed phase execution, changed-code cleanup scope | `references/gsd-handoff.md` |
 | Whole-run preflight, goal ownership, soft continuation vs hard stop, checkpoint policy, tmux/goal/clear policy | `references/checkpoints-and-auto-run.md` |
 | Broad refactor route, semantic commits, final `$intuitive-doc` doc-alignment sub-phase, parked-todo closeout | `references/refactor-and-closeout.md` |
 | Exact response and artifact templates | `references/output-shapes.md` and `templates/` |
@@ -192,8 +192,8 @@ the boundary. Do not preload every reference by default.
   verification run, final `$intuitive-doc` doc-alignment result for significant
   changes/refactors, and parked todos even when none were found.
 - Before closing a significant implementation or big refactor, run one explicit
-  final `$intuitive-doc` sub-phase after code/simplify/verification and before
-  parked-todo closeout. It must check `README.md`, `ARCHITECTURE.md`,
+  final `$intuitive-doc` sub-phase after code/changed-code cleanup/verification
+  and before parked-todo closeout. It must check `README.md`, `ARCHITECTURE.md`,
   `STATUS.md`, and `docs/human/**`, update drifted human truth, and move or
   remove obsolete legacy docs when they are no longer needed, especially stale
   files under `docs/human/`.
@@ -249,8 +249,8 @@ Stop/continue point: <where work pauses or what will run now>
 
 Name plausible but skipped stages such as `$agent-planning-loop`,
 `grill-with-docs`, unknown-unknown scouting with `gstack-autoplan`, `to-issues`,
-GSD handoff, `simplify`, or verification. This makes shortcuts visible without
-turning every task into a ceremony.
+GSD handoff, changed-code cleanup, or verification. This makes shortcuts
+visible without turning every task into a ceremony.
 
 ## Stable Entry Router
 
@@ -288,9 +288,9 @@ and run the shortest safe route.
 | Fuzzy idea | route upstream to plan entropy mode, direct shaping, or `$agent-planning-loop`; Flow execution waits for an approved plan/preflight unless the task is tiny and direct | `plan-intake-and-autoplan.md` |
 | Draft plan exists | single plan-file intake if needed -> optional explicit `gstack-autoplan` unknown-unknown scout for non-trivial plan-backed work -> reconcile accepted findings into the plan | `plan-intake-and-autoplan.md` |
 | Reviewed plan, not under GSD | confirm approved preflight plus scout result/skip reason in the canonical plan -> optional `to-issues` -> `gsd-plan-phase --prd` or manifest + `gsd-ingest-docs` then `gsd-plan-phase` | `gsd-handoff.md` |
-| Committed GSD phase | `gsd-execute-phase <phase>` -> `simplify <changed-scope>` -> `gsd-verify-work <phase>` -> final `$intuitive-doc` doc-alignment sub-phase when significant human truth may have changed | `gsd-handoff.md` |
+| Committed GSD phase | `gsd-execute-phase <phase>` -> `$intuitive-refactor` changed-code review on `<changed-scope>` -> `gsd-verify-work <phase>` -> final `$intuitive-doc` doc-alignment sub-phase when significant human truth may have changed | `gsd-handoff.md` |
 | Architecture/refactor goal | route to `$intuitive-refactor` for scope gate -> execute accepted P0/P1 slices -> final `$intuitive-doc` doc-alignment sub-phase -> parked-todo closeout | `refactor-and-closeout.md` |
-| Changed code cleanup | `simplify <changed-scope>` -> rerun relevant proof | `gsd-handoff.md` |
+| Changed code cleanup | `$intuitive-refactor` changed-code review on `<changed-scope>` -> rerun relevant proof | `gsd-handoff.md` |
 | Direct concrete edit | implement locally -> focused verification -> closeout; bypass planning stages with reason | `output-shapes.md` as needed |
 
 Treat direct routing as an internal `$intuitive-flow` decision, not a refusal of
@@ -491,7 +491,7 @@ proof claim level must be `partial` or `blocked`, not full completion.
 - Do not manually copy a plan into phase `CONTEXT.md`; use
   `gsd-plan-phase <phase> --prd docs/plans/<slug>.md`.
 - Do not create an ADR for routine implementation progress.
-- Do not use `simplify` as a broad architecture scanner.
+- Do not use changed-code cleanup as a broad architecture scanner.
 - Do not close significant implementation/refactor work without verification,
   final `$intuitive-doc` doc alignment, and parked-todo visibility.
 - Do not finish a completed Flow with only a narrative summary; final responses

@@ -76,7 +76,7 @@ Default path:
 
 ```text
 gsd-execute-phase <phase>
-simplify <changed-scope>
+$intuitive-refactor changed-code review <changed-scope>
 gsd-verify-work <phase>
 ```
 
@@ -108,20 +108,20 @@ Use `tdd` inside individual risky slices:
 
 `tdd` is not a phase planner.
 
-## Simplify Scope
+## Changed-Code Cleanup Scope
 
-Run `simplify` after implementation produces code changes and before final
-verification or final commit.
+Run `$intuitive-refactor` in changed-code review mode after implementation
+produces code changes and before final verification or final commit.
 
 Pick scope from the actual diff:
 
-- uncommitted changes -> `simplify`
-- committed slice -> `simplify <base-ref>`
-- focused package/module -> `simplify <path>`
+- uncommitted changes -> changed-code review with no argument;
+- committed slice -> changed-code review against `<base-ref>`;
+- focused package/module -> changed-code review on `<path>`;
 - docs/plans-only change -> skip unless the user explicitly asks
 
-`simplify` reviews changed code for reuse, quality, and efficiency. It is not a
-broad architecture discovery tool and does not replace `gsd-verify-work`.
+Changed-code review checks reuse, quality, and efficiency. It is not a broad
+architecture discovery tool and does not replace `gsd-verify-work`.
 
-After `simplify` changes code, rerun the relevant tests or verification gates
-before declaring work done.
+After changed-code cleanup changes code, rerun the relevant tests or
+verification gates before declaring work done.

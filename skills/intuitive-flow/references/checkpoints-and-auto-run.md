@@ -378,8 +378,8 @@ Apply decision triage before crossing these boundaries:
 17. Code slice -> Next slice/cleanup: when local code changed and commits are
    enabled, create a semantic slice commit after focused proof before starting
    the next slice or cleanup pass.
-18. Simplify -> Verify: skip only for docs-only/trivial changes or explicit user
-   instruction.
+18. Changed-code cleanup -> Verify: skip only for docs-only/trivial changes or
+   explicit user instruction.
 19. Refactor scope -> Execute: require accepted P0/P1 checklist and stop
    condition.
 20. Refactor doc cleanup: auto-run focused doc status; ask before broad

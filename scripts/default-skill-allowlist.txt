@@ -31,7 +31,6 @@ root-skill intuitive-tests
 # Direct utilities:
 root-skill intuitive-port-worktree
 root-skill multica-goal-tracker
-root-skill simplify
 root-skill skill-runner
 
 # External skills installed through the skills CLI.
@@ -79,6 +78,7 @@ legacy-skill intuitive-migrate
 legacy-skill intuitive-planning-loop
 legacy-skill intuitive-ut
 legacy-skill refactor-scope-gate
+legacy-skill simplify
 
 # Legacy repo-owned Claude command files that update.sh may remove.
 legacy-command gsd_squash.md

@@ -61,11 +61,10 @@ Current default-surface correction:
 | `intuitive-port-worktree` | Strong: move worktree changes without switching the target branch. | Strong: owns porting/cherry-pick/patch transfer only. | Strong: source/target discovery, payload selection, and safety gates are explicit. | Keep as a specialist handoff utility; no meta text needed. |
 | `intuitive-preflight` | Strong: make vague execution intent approval-ready before implementation. | Strong: owns context package, scope, non-goals, acceptance, verification, route, and goal wording. | Strong: draft contract and approval boundary are explicit. | Specialist skill; route from flow or direct use before vague execution. |
 | `intuitive-reduce-entropy` | Strong: explicit repo entropy mode for maintenance and plan entropy mode for idea/plan blind spots. | Strong: owns entropy diagnosis and routes to doc/init/tests/refactor or grill-batch/preflight instead of forcing the user to choose first. | Strong: mode declaration, candidate list, gate, route, verify, and park. | Primary entropy entrypoint. |
-| `intuitive-refactor` | Strong: bound aggressive cleanup. | Strong: owns scope gates, severities, evidence, parked ideas. | Strong: persistent gate and ladder are clear. | No immediate change. |
+| `intuitive-refactor` | Strong: bound aggressive cleanup plus changed-code review. | Strong: owns scope gates, severities, evidence, parked ideas, ratchet mode, and diff-scoped reuse/quality/efficiency review. | Strong: persistent gate, ladder, and changed-code review scope are clear. | Absorbed the former `simplify` workflow; keep as the cleanup/refactor owner. |
 | `intuitive-squash` | Strong: rewrite noisy agent history safely. | Strong: owns commit grouping and safety protocol only. | Strong: explicit confirmation and verify commands. | No immediate change. |
 | `intuitive-tests` | Strong: improve test suite signal. | Strong: owns test taxonomy, pruning, fixture/layout cleanup. | Strong but long: many examples are useful runtime guidance. | Specialist skill; route from reduce-entropy when tests are the issue. |
 | `multica-goal-tracker` | Strong: keeps goal-driven Multica issues tied to execution proof. | Strong: owns issue goal summaries, tracked start/finish comments, and rendered completion evidence only. | Strong after tracker harness: defaults fail fast without real session history, and pure parsing/rendering behavior is covered by skill-local tests. | Specialist issue-workflow utility; not part of the small public planning/build surface. |
-| `simplify` | Strong: review changed code for reuse, quality, efficiency. | Strong: owns diff-scoped review; previous adapter/mechanics bulk has been removed from the current entrypoint. | Strong: process is compact enough for direct review work. | No immediate change; revisit only if a real changed-code review exposes a reusable workflow defect. |
 | `skill-runner` | Strong: supervise real skill-driven development runs. | Strong: owns runner orchestration and reusable-skill defect detection. | Strong: verdicts, policy, and stop conditions are explicit. | Already has skill-change policy. Do not add another meta block. |
 
 ## External And Managed Defaults
@@ -86,6 +85,9 @@ Current default-surface correction:
 
 Removed from the default surface:
 
+- `simplify`: folded into `$intuitive-refactor` changed-code review so Flow can
+  trigger cleanup through the refactor owner instead of a separate diff-review
+  skill.
 - `diagnose`: overlapped with `gstack-investigate` for bug/root-cause reports.
   Re-add only if a future audit shows the GStack route is unavailable or too
   heavy for common debugging tasks.
