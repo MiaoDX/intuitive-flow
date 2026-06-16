@@ -43,6 +43,14 @@ external-skill mattpocock https://github.com/mattpocock/skills improve-codebase-
 external-skill mattpocock https://github.com/mattpocock/skills tdd
 external-skill mattpocock https://github.com/mattpocock/skills zoom-out
 
+# Trial community skills installed for dogfooding before promotion into flow.
+# Keep these explicit; do not broad-install whole community repos by default.
+external-skill ponytail https://github.com/DietrichGebert/ponytail ponytail
+external-skill ponytail https://github.com/DietrichGebert/ponytail ponytail-audit
+external-skill ponytail https://github.com/DietrichGebert/ponytail ponytail-debt
+external-skill ponytail https://github.com/DietrichGebert/ponytail ponytail-help
+external-skill ponytail https://github.com/DietrichGebert/ponytail ponytail-review
+
 # Managed GStack wrappers kept after setup.
 # Unknown-unknown planning, browser, QA, review, and root-cause tooling:
 gstack-skill gstack-autoplan

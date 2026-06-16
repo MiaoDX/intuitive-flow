@@ -30,7 +30,8 @@ Current default-surface correction:
 
 - `scripts/default-skill-allowlist.txt` now names tiers with comments:
   primary public choices, routed specialists, direct utilities, external
-  specialists, managed GStack tooling, and GSD status/resume helpers.
+  specialists, trial community skills, managed GStack tooling, and GSD
+  status/resume helpers.
 - Retired local artifacts are kept out of the install allowlist and listed in
   `scripts/default-skill-prune-ledger.txt` for updater-owned cleanup.
 - `$diagnose` is no longer installed by default. `$gstack-investigate` is the
@@ -84,6 +85,7 @@ Current default-surface correction:
 | `improve-codebase-architecture` | External report-only architecture discovery. | Keep default-visible behind reduce-entropy or architecture review for visual/deepening candidate reports; do not re-suggest removal without evidence that this report-only scanner is no longer used. |
 | `tdd` | External test-first workflow. | Keep as direct specialist when the user explicitly wants TDD. |
 | `zoom-out` | External architecture/context map. | Keep routed as the first architecture review pass before plan-eng-review. |
+| `ponytail`, `ponytail-review`, `ponytail-audit`, `ponytail-debt`, `ponytail-help` | Trial community simplicity and over-engineering skill set. | Install for dogfooding, but do not route from core flow until real use shows whether it should remain a direct utility, replace a local cleanup path, or be removed. |
 | `gstack-browse`, `gstack-open-gstack-browser` | Browser launch and browser QA helpers. | Keep for visual/runtime dogfooding that text checks miss. |
 | `gstack-autoplan`, `gstack-plan-eng-review`, `gstack-review`, `gstack-qa` | Managed review and QA wrappers. | Keep default-visible for unknown-unknown plan scouting, plan review, PR review, and app QA gates. |
 | `gstack-investigate` | Managed root-cause investigation workflow. | Keep as the default debugging/investigation route; do not also default-install `$diagnose`. |

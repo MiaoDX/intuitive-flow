@@ -199,6 +199,13 @@ default. `bun run audit:skill-upstreams` is the read-only discovery path for
 new upstream candidates: it reports skills outside the allowlist but does not
 install them or edit the allowlist.
 
+Trial community skills use the same explicit `external-skill` entries and are
+grouped by allowlist comments. Trial means default-installed for dogfooding, but
+not wired into `$intuitive-flow`, primary choices, or routing docs as a preferred
+path. After real use, promote the skill by updating the relevant route/docs,
+keep it as a direct utility, or remove the entries and let external-source state
+prune the managed install.
+
 External source cleanup uses the same ownership rule. After each successful
 external install, the updater writes
 `~/.intuitive-flow/external-skills-<label>.json`. Later runs remove only skills

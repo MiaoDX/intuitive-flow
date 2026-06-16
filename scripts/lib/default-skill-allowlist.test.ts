@@ -52,6 +52,17 @@ describe("default skill allowlist", () => {
     expect(allowlist.gsdSkills).toEqual(["gsd-pause-work", "gsd-progress", "gsd-resume-work"]);
   });
 
+  test("current default surface installs ponytail trial skills explicitly", () => {
+    const allowlist = readDefaultSkillAllowlist(join(process.cwd(), "scripts", "default-skill-allowlist.txt"));
+    const ponytail = allowlist.externalSources.find((source) => source.label === "ponytail");
+
+    expect(ponytail).toEqual({
+      label: "ponytail",
+      repo: "https://github.com/DietrichGebert/ponytail",
+      skills: ["ponytail", "ponytail-audit", "ponytail-debt", "ponytail-help", "ponytail-review"],
+    });
+  });
+
   test("rejects unsafe values and duplicate labels pointing at different repos", () => {
     expect(() => parseDefaultSkillAllowlistText("legacy-skill ../not-owned")).toThrow("unsafe skill name");
     expect(() =>

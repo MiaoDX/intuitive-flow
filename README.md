@@ -99,8 +99,10 @@ installed too. Changed-code reuse/quality/efficiency review now lives in
 `$intuitive-refactor` as changed-code cleanup instead of a separate
 `$simplify` skill. The complete default install surface lives in
 `scripts/default-skill-allowlist.txt`, whose comments mark primary choices,
-routed specialists, direct utilities, managed GStack tooling, and GSD status
-helpers. Retired local artifacts that the updater may prune live separately in
+routed specialists, direct utilities, trial community skills, managed GStack
+tooling, and GSD status helpers. Trial community skills are installed for
+dogfooding, not treated as core workflow routes until real use justifies
+promotion. Retired local artifacts that the updater may prune live separately in
 `scripts/default-skill-prune-ledger.txt`. The human-facing role audit is in
 `docs/human/skill-self-improvement-audit.md`.
 

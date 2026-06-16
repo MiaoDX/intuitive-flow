@@ -67,9 +67,12 @@ The current maintenance focus is keeping the repo dogfoodable:
   `intuitive-refactor`
 - keep default skill installs listed in `scripts/default-skill-allowlist.txt`
   with role-tier comments that distinguish primary choices, routed specialists,
-  direct utilities, managed GStack tooling, and GSD status/resume helpers
+  direct utilities, trial community skills, managed GStack tooling, and GSD
+  status/resume helpers
 - keep retired local artifact cleanup in
   `scripts/default-skill-prune-ledger.txt`, not in the install allowlist
+- use the trial community section for promising external skill sets that should
+  be dogfooded before they are promoted into flow routes or removed
 - keep the optional `gstack-autoplan` planning scout default-visible because the
   staged workflow names it as an unknown-unknown route
 - keep `agent-planning-loop` as the canonical scout-planning root skill and
@@ -111,7 +114,8 @@ There is no active `.planning/` roadmap or GSD phase in this checkout.
   and user config.
 - Default skill visibility is controlled by
   `scripts/default-skill-allowlist.txt`; external sources are never installed in
-  broad `all` mode by default, and prune-only `legacy-*` entries belong in
+  broad `all` mode by default, trial community skills are visible for dogfooding
+  rather than core routing, and prune-only `legacy-*` entries belong in
   `scripts/default-skill-prune-ledger.txt`.
 - GSD and GStack setup may create upstream wrappers temporarily, but the updater
   prunes managed wrappers back to the default allowlist.
