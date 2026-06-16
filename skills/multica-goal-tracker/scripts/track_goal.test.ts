@@ -14,6 +14,7 @@ import {
   extractGoalFromPreflight,
   extractTrackedGoalFromComments,
   imageAttachmentUrlFromCommentOutput,
+  issueWorkspaceIdFromCreateOutput,
   markdownCodeBlock,
   markdownForEvidenceCardUpload,
   markdownForFinalReview,
@@ -26,6 +27,7 @@ import {
   normalizeLines,
   parseWorkspaceListOutput,
   parsePreflightContract,
+  multicaEnv,
   replaceMarkedBlock,
   resolveWorkspaceIdFromList,
   selectLatestRunId,
@@ -163,13 +165,52 @@ d5025f68-febd-4b06-a55a-339fd07c357d  Robomanipulation
 88005f8f-1a22-4452-b744-29e196d4cb5e  Robo Harness
 `);
 
-    expect(resolveWorkspaceIdFromList("roboclaws", workspaces)).toBe("0b57f23e-6d3a-4721-91fc-060c16d92eec");
     expect(resolveWorkspaceIdFromList("Roboclaws", workspaces)).toBe("0b57f23e-6d3a-4721-91fc-060c16d92eec");
-    expect(resolveWorkspaceIdFromList("https://multica.evad.mioffice.cn/roboclaws/issues/ROB-39", workspaces)).toBe(
-      "0b57f23e-6d3a-4721-91fc-060c16d92eec",
-    );
     expect(resolveWorkspaceIdFromList("88005f8f-1a22-4452-b744-29e196d4cb5e", workspaces)).toBe(
       "88005f8f-1a22-4452-b744-29e196d4cb5e",
+    );
+  });
+
+  test("resolves workspace slugs from current Multica JSON and full table output", () => {
+    const jsonWorkspaces = parseWorkspaceListOutput(JSON.stringify([
+      { id: "d5025f68-febd-4b06-a55a-339fd07c357d", name: "Robomanipulation", slug: "miaodx" },
+      { id: "0b57f23e-6d3a-4721-91fc-060c16d92eec", name: "Roboclaws", slug: "roboclaws" },
+    ]));
+
+    expect(resolveWorkspaceIdFromList("roboclaws", jsonWorkspaces)).toBe("0b57f23e-6d3a-4721-91fc-060c16d92eec");
+    expect(resolveWorkspaceIdFromList("https://multica.evad.mioffice.cn/roboclaws/issues/ROB-39", jsonWorkspaces)).toBe(
+      "0b57f23e-6d3a-4721-91fc-060c16d92eec",
+    );
+
+    const tableWorkspaces = parseWorkspaceListOutput(`
+   ID                                    NAME              SLUG
+*  d5025f68-febd-4b06-a55a-339fd07c357d  Robomanipulation  miaodx
+   0b57f23e-6d3a-4721-91fc-060c16d92eec  Roboclaws         roboclaws
+`);
+
+    expect(resolveWorkspaceIdFromList("miaodx", tableWorkspaces)).toBe("d5025f68-febd-4b06-a55a-339fd07c357d");
+    expect(resolveWorkspaceIdFromList("roboclaws", tableWorkspaces)).toBe("0b57f23e-6d3a-4721-91fc-060c16d92eec");
+  });
+
+  test("overrides inherited Multica workspace env when an explicit target is supplied", () => {
+    const previous = process.env.MULTICA_WORKSPACE_ID;
+    process.env.MULTICA_WORKSPACE_ID = "d5025f68-febd-4b06-a55a-339fd07c357d";
+    try {
+      expect(multicaEnv({ command: "start", attemptStatus: "complete", allowManualSummary: false, allowDuplicate: false, updateDescription: false, dryRun: false, workspaceId: "0b57f23e-6d3a-4721-91fc-060c16d92eec" }).MULTICA_WORKSPACE_ID).toBe(
+        "0b57f23e-6d3a-4721-91fc-060c16d92eec",
+      );
+    } finally {
+      if (previous === undefined) {
+        delete process.env.MULTICA_WORKSPACE_ID;
+      } else {
+        process.env.MULTICA_WORKSPACE_ID = previous;
+      }
+    }
+  });
+
+  test("extracts workspace id from issue create output for post-create verification", () => {
+    expect(issueWorkspaceIdFromCreateOutput('{"identifier":"RM-45","workspace_id":"d5025f68-febd-4b06-a55a-339fd07c357d"}')).toBe(
+      "d5025f68-febd-4b06-a55a-339fd07c357d",
     );
   });
 

@@ -8,6 +8,8 @@ import { basename, dirname, join } from "node:path";
 type Issue = {
   identifier?: string;
   id?: string;
+  workspace_id?: string;
+  workspaceId?: string;
   title?: string;
   description?: string | null;
   status?: string;
@@ -38,6 +40,7 @@ export type GoalSummary = {
 export type MulticaWorkspace = {
   id: string;
   name: string;
+  slug?: string;
 };
 
 export type SessionEvidence = {
@@ -314,6 +317,14 @@ function readInput(inline?: string, file?: string): string {
   return readFileSync(file, "utf8");
 }
 
+export function multicaEnv(opts: Options): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = { ...process.env, PATH: `${homedir()}/.local/bin:${process.env.PATH ?? ""}` };
+  if (opts.workspaceId) {
+    env.MULTICA_WORKSPACE_ID = opts.workspaceId;
+  }
+  return env;
+}
+
 function runMultica(opts: Options, args: string[], input?: string): string {
   const globalArgs: string[] = [];
   if (opts.profile) globalArgs.push("--profile", opts.profile);
@@ -322,7 +333,7 @@ function runMultica(opts: Options, args: string[], input?: string): string {
   const result = spawnSync("multica", [...globalArgs, ...args], {
     input,
     encoding: "utf8",
-    env: { ...process.env, PATH: `${homedir()}/.local/bin:${process.env.PATH ?? ""}` },
+    env: multicaEnv(opts),
   });
   if (result.error) {
     throw new Error(`failed to run multica: ${result.error.message}`);
@@ -392,14 +403,34 @@ function workspaceTokenFromUrlOrPath(value: string): string {
 }
 
 export function parseWorkspaceListOutput(output: string): MulticaWorkspace[] {
+  try {
+    const parsed = JSON.parse(output.trim()) as unknown;
+    const items = Array.isArray(parsed) ? parsed : nestedArray(parsed, ["workspaces", "items"]);
+    return items.reduce<MulticaWorkspace[]>((workspaces, item) => {
+      const record = asRecord(item);
+      const id = textFromUnknown(record?.id).trim();
+      const name = textFromUnknown(record?.name).trim();
+      const slug = textFromUnknown(record?.slug).trim();
+      if (id && name) {
+        workspaces.push({ id, name, slug: slug || undefined });
+      }
+      return workspaces;
+    }, []);
+  } catch {
+    // Fall through to table parsing for older CLI output.
+  }
+
   const lines = output.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-  return lines
-    .map((line) => {
-      const match = line.match(/^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\s+(.+)$/i);
-      if (!match) return undefined;
-      return { id: match[1], name: match[2].trim() };
-    })
-    .filter((workspace): workspace is MulticaWorkspace => Boolean(workspace));
+  return lines.reduce<MulticaWorkspace[]>((workspaces, line) => {
+    if (/^(?:ID\s+NAME|[*]\s*=|Tip:)/i.test(line)) return workspaces;
+    const normalized = line.replace(/^\*\s*/, "");
+    const columns = normalized.split(/\s{2,}/).map((column) => column.trim()).filter(Boolean);
+    const [id, name, slug] = columns;
+    if (id && name && /^[0-9a-f]{8}(?:-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})?$/i.test(id)) {
+      workspaces.push({ id, name, slug });
+    }
+    return workspaces;
+  }, []);
 }
 
 export function resolveWorkspaceIdFromList(requested: string, workspaces: MulticaWorkspace[]): string {
@@ -412,9 +443,12 @@ export function resolveWorkspaceIdFromList(requested: string, workspaces: Multic
   const normalized = slugifyWorkspaceName(token);
   const matches = workspaces.filter((workspace) => {
     const name = workspace.name.trim();
+    const slug = workspace.slug?.trim() ?? "";
     return (
       name.toLowerCase() === token.toLowerCase() ||
+      slug.toLowerCase() === token.toLowerCase() ||
       slugifyWorkspaceName(name) === normalized ||
+      slugifyWorkspaceName(slug) === normalized ||
       workspace.id.toLowerCase() === token.toLowerCase()
     );
   });
@@ -439,7 +473,7 @@ function resolveWorkspaceId(opts: Options, required: boolean): string | undefine
     return undefined;
   }
 
-  const workspaces = parseWorkspaceListOutput(runMulticaGlobal(opts, ["workspace", "list"]));
+  const workspaces = parseWorkspaceListOutput(runMulticaGlobal(opts, ["workspace", "list", "--full-id", "--output", "json"]));
   const resolved = resolveWorkspaceIdFromList(requested, workspaces);
   if (!resolved) {
     const available = workspaces.map((workspace) => `${workspace.name} (${workspace.id})`).join(", ") || "none";
@@ -452,6 +486,17 @@ function resolveWorkspaceId(opts: Options, required: boolean): string | undefine
     );
   }
   return resolved;
+}
+
+function assertWorkspaceTargetAccessible(opts: Options, expectedWorkspaceId: string) {
+  const out = runMultica({ ...opts, workspaceId: expectedWorkspaceId }, ["workspace", "get", "--output", "json"]);
+  const workspace = asRecord(jsonFromCliOutput(out));
+  const actualWorkspaceId = textFromUnknown(workspace?.id).trim();
+  if (actualWorkspaceId !== expectedWorkspaceId) {
+    throw new Error(
+      `Resolved workspace ${expectedWorkspaceId}, but Multica CLI is operating in ${actualWorkspaceId || "unknown workspace"}. Refusing to create a tracker issue in the wrong workspace.`,
+    );
+  }
 }
 
 async function uploadEvidenceImage(opts: Options, filePath: string): Promise<{ id?: string; url?: string } | undefined> {
@@ -494,6 +539,22 @@ function issueIdentifierFromCreateOutput(output: string): string | undefined {
   const record = asRecord(parsed);
   if (!record) return undefined;
   return textFromUnknown(record.identifier ?? record.key ?? record.id) || undefined;
+}
+
+export function issueWorkspaceIdFromCreateOutput(output: string): string | undefined {
+  const parsed = jsonFromCliOutput(output);
+  const record = asRecord(parsed);
+  if (!record) return undefined;
+  return textFromUnknown(record.workspace_id ?? record.workspaceId) || undefined;
+}
+
+function assertIssueWorkspace(issue: Issue, expectedWorkspaceId: string, context: string) {
+  const actualWorkspaceId = issue.workspace_id ?? issue.workspaceId;
+  if (actualWorkspaceId && actualWorkspaceId !== expectedWorkspaceId) {
+    throw new Error(
+      `${context} belongs to workspace ${actualWorkspaceId}, but tracker target was ${expectedWorkspaceId}. Refusing to continue in the wrong workspace.`,
+    );
+  }
 }
 
 function withIssue(opts: Options, issue: string): Options {
@@ -2250,6 +2311,9 @@ function printDryRun(kind: string, content: string, extra: Record<string, string
 
 function createFromPreflight(opts: Options) {
   const workspaceId = resolveWorkspaceId(opts, true);
+  if (!workspaceId) {
+    throw new Error("Multica workspace is required for create-from-preflight.");
+  }
   const resolvedOpts = { ...opts, workspaceId };
   const preflight = readInput(opts.preflightText, opts.preflightFile);
   const contract = parsePreflightContract(preflight, opts.title);
@@ -2271,6 +2335,8 @@ function createFromPreflight(opts: Options) {
     printDryRun("start comment", startComment);
     return;
   }
+
+  assertWorkspaceTargetAccessible(resolvedOpts, workspaceId);
 
   const dir = artifactDir({ identifier: "preflight" });
   const descriptionFile = writeTempMarkdown(dir, "preflight-issue-description.md", description);
@@ -2296,6 +2362,12 @@ function createFromPreflight(opts: Options) {
   const issue = issueIdentifierFromCreateOutput(out);
   if (!issue) {
     throw new Error("Could not read created issue identifier from multica issue create output.");
+  }
+  const createdWorkspaceId = issueWorkspaceIdFromCreateOutput(out);
+  if (createdWorkspaceId) {
+    assertIssueWorkspace({ workspace_id: createdWorkspaceId }, workspaceId, `Created issue ${issue}`);
+  } else {
+    assertIssueWorkspace(getIssue(withIssue(resolvedOpts, issue)), workspaceId, `Created issue ${issue}`);
   }
 
   start(withIssue({ ...resolvedOpts, goal: contract.goalCommand, goalFile: undefined, updateDescription: false }, issue));
