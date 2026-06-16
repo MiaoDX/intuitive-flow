@@ -48,6 +48,10 @@ Current default-surface correction:
   visual/deepening architecture report.
 - Keep `$gstack-autoplan` default-visible because the staged workflow names it
   as the optional unknown-unknown scout before grill-batch/preflight/execution.
+- Multi-mode skills should expose a compact `Modes` table and state selected
+  mode only when it affects execution. Use `Mode note` sparingly for manual
+  invocation, ambiguity, or better-route discovery; do not add mode menus to
+  single-purpose utility skills.
 
 ## Repo-Owned Root Skills
 

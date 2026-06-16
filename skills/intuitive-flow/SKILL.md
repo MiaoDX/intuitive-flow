@@ -26,6 +26,19 @@ This is the compact runtime entrypoint. Existing detailed behavior is preserved
 in `references/detailed-guidance.md`; read it only when the route crosses
 multiple stages or the compact gates below do not decide the next action.
 
+## Modes
+
+| Mode | Use when | Output | Redirect when |
+| --- | --- | --- | --- |
+| Direct route | Status checks, diagnostics, or tiny concrete edits are bounded enough for the main session. | Short route note, focused proof, and concise closeout. | The task is really discovery, refactor scope, or preflight. |
+| Planning route | The user has a fuzzy idea, draft plan, or wants agents to align before execution. | Upstream recommendation through reduce-entropy, planning loop, grill-batch, or preflight. | The plan is already approved and execution-ready. |
+| Durable execution | An approved plan/preflight/phase needs implementation, verification, docs, commits, and closeout. | Route brief, staged execution, proof card, docs alignment, parked todos. | The task is a known refactor seam or changed-code cleanup. |
+
+For non-trivial runs, state `Selected mode:`, `Why:`, and `Redirect:` before
+the first artifact or edit. For tiny direct work, one sentence can carry the
+same information. Add a final `Mode note:` only when the user manually invoked
+this skill, the request was ambiguous, or another mode/skill would fit better.
+
 ## First Gates
 
 Before reading more context, launching workers, or editing files:

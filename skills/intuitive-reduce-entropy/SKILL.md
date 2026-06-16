@@ -37,11 +37,25 @@ guidance, narrowing scope, reusing an existing route, or documenting current
 truth. Recommend a new durable entity only when the shrink/reuse path cannot
 make the evidence honest.
 
+## Modes
+
+| Mode | Use when | Output | Redirect when |
+| --- | --- | --- | --- |
+| Repo entropy mode | The repo feels messy, has stale surfaces, or the user asks what to clean next. | Ranked maintenance candidates with source, evidence, owner, proof, risk, parked items, and next action. | The user already named a bounded refactor target. |
+| Plan entropy mode | The input is an idea, draft plan, named plan file, or preflight draft. | Plan-review candidates for missing decisions, weak assumptions, proof gaps, and next owner. | The plan already has approved scope, non-goals, gates, and execution route. |
+| Discovery-loop mode | The user asks for all serious directions, unknown unknowns, or to continue until saturated. | Fresh bounded rounds until no P0/P1 or materially useful P2 remains. | The request only needs a quick local answer. |
+
+For non-trivial runs, state `Selected mode:`, `Why:`, and `Redirect:` before
+auditing. For tiny direct work, one sentence can carry the same information.
+Add a final `Mode note:` only when the user manually invoked this skill, the
+request was ambiguous, or another mode/skill would fit better.
+
 Start by saying:
 
 ```text
 Selected mode: <repo entropy mode | plan entropy mode>
 Why: <one sentence tied to the user's prompt>
+Redirect: <none | better mode/skill and why>
 Discovery intensity: <quick scan | selection scan | saturation scan>
 ```
 

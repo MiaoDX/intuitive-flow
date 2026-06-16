@@ -131,6 +131,15 @@ which local reference to read next. Conditional detail belongs in one-level
 `references/` files, deterministic mechanics in `scripts/`, and reusable output
 shapes in `templates/`.
 
+Multi-mode skills should make their mode surface visible without turning every
+response into a help page. Use a compact `Modes` table in `SKILL.md` with
+`Mode`, `Use when`, `Output`, and `Redirect when`. For non-trivial runs, state
+`Selected mode`, `Why`, and `Redirect` before the first artifact or edit; tiny
+direct work may fold that into one sentence. Emit a final `Mode note` only when
+the user manually invoked the skill, the request was ambiguous, or another mode
+or skill would fit better. Single-purpose utility skills do not need a mode
+menu.
+
 This source layout is intentionally separate from host install and discovery
 layouts. `skills/` is the repo-owned source of truth; the sync pipeline projects
 those skills into Claude Code, Codex, MiMoCode, and shared agent install

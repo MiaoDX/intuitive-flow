@@ -36,6 +36,7 @@ Start by saying:
 ```text
 Selected mode: <repo entropy mode | plan entropy mode>
 Why: <one sentence tied to the user's prompt>
+Redirect: <none | better mode/skill and why>
 Discovery intensity: <quick scan | selection scan | saturation scan>
 ```
 
