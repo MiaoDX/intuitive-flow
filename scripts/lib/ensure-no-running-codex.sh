@@ -1,20 +1,23 @@
 #!/bin/bash
 
-ensure_no_running_codex() {
+_running_codex_rows() {
     local current_pid parent_pid
-    local -a rows=()
 
     current_pid=$$
     parent_pid=$PPID
 
+    ps -eo pid=,tty=,command= |
+        awk -v current_pid="$current_pid" -v parent_pid="$parent_pid" '
+            /(^|[[:space:]])codex([[:space:]]|$)|\/codex([[:space:]]|$)/ && $1 != current_pid && $1 != parent_pid { print }
+        '
+}
+
+ensure_no_running_codex() {
+    local -a rows=()
+
     while IFS= read -r row; do
         rows+=("$row")
-    done < <(
-        ps -eo pid=,tty=,command= |
-            awk -v current_pid="$current_pid" -v parent_pid="$parent_pid" '
-                /(^|[[:space:]])codex([[:space:]]|$)|\/codex([[:space:]]|$)/ && $1 != current_pid && $1 != parent_pid { print }
-            '
-    )
+    done < <(_running_codex_rows)
 
     if [ "${#rows[@]}" -eq 0 ]; then
         return 0
@@ -27,4 +30,25 @@ ensure_no_running_codex() {
         echo "    $row"
     done
     return 1
+}
+
+warn_if_codex_running() {
+    local -a rows=()
+
+    while IFS= read -r row; do
+        rows+=("$row")
+    done < <(_running_codex_rows)
+
+    if [ "${#rows[@]}" -eq 0 ]; then
+        return 0
+    fi
+
+    echo "  ! Codex is already running; continuing with update."
+    echo "  ! Older Codex sessions can rewrite ~/.codex/config.toml on exit and discard the new status line."
+    echo "  ! Restart already-running Codex sessions after update so config, hooks, and skills are refreshed."
+    echo "  ! Running Codex sessions:"
+    for row in "${rows[@]}"; do
+        echo "    $row"
+    done
+    return 0
 }

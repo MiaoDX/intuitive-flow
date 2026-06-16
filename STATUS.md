@@ -46,7 +46,9 @@ Use this only when intentionally updating global/local agent tooling:
 
 `scripts/update.sh` writes outside the repo into user-level tool directories and
 config, including Claude, Codex, skill installs, gstack state, and vendored
-gstack setup.
+gstack setup. It warns but continues when Codex is already running; restart
+existing Codex sessions after update to pick up refreshed config, hooks, and
+skills.
 
 ## Active Focus
 
@@ -111,7 +113,8 @@ There is no active `.planning/` roadmap or GSD phase in this checkout.
 - `vendor/**`, `node_modules/**`, and `.venv/**` are dependency or local
   environment surfaces, not human docs.
 - `scripts/update.sh` is not a harmless test command; it mutates installed tools
-  and user config.
+  and user config. By default it warns rather than blocks when Codex is already
+  running.
 - Default skill visibility is controlled by
   `scripts/default-skill-allowlist.txt`; external sources are never installed in
   broad `all` mode by default, trial community skills are visible for dogfooding

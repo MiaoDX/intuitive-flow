@@ -2,19 +2,18 @@
 set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-SKIP_CODEX_RUNNING_CHECK=false
+REQUIRE_NO_RUNNING_CODEX=false
 UPDATE_LOCK_DIR="${TMPDIR:-/tmp}/intuitive-flow-update.lock.d"
 UPDATE_LOCK_PID_FILE="$UPDATE_LOCK_DIR/pid"
 UPDATE_LOCK_HELD=false
 NPM_REGISTRY_MODE="${NPM_REGISTRY_MODE:-direct}"
 
 usage() {
-    echo "Usage: ${0##*/} [--tmp-fix] [--skip-codex-running-check] [--npm-mirror]"
+    echo "Usage: ${0##*/} [--tmp-fix] [--require-no-running-codex] [--skip-codex-running-check] [--npm-mirror]"
 }
 
 codex_running_hint() {
-    echo "Hint: If you only want to update versions and do not care whether existing Codex sessions overwrite status-line config on exit, rerun with:"
-    echo "  ${0##*/} --skip-codex-running-check"
+    echo "Hint: Rerun without --require-no-running-codex to warn about running Codex sessions and continue."
 }
 
 print_npm_source() {
@@ -122,8 +121,11 @@ for arg in "$@"; do
         --tmp-fix)
             exec "$SCRIPT_DIR/support/tmp-fix.sh"
             ;;
+        --require-no-running-codex)
+            REQUIRE_NO_RUNNING_CODEX=true
+            ;;
         --skip-codex-running-check)
-            SKIP_CODEX_RUNNING_CHECK=true
+            REQUIRE_NO_RUNNING_CODEX=false
             ;;
         --npm-mirror)
             NPM_REGISTRY_MODE=mirror
@@ -179,15 +181,16 @@ task_init
 print_npm_source
 
 ensure_clean_env
-if [ "$SKIP_CODEX_RUNNING_CHECK" = true ]; then
-    task_warn "Skipping Codex running-process check by request."
-else
+if [ "$REQUIRE_NO_RUNNING_CODEX" = true ]; then
+    task_warn "Requiring no running Codex sessions before update."
     if ! ensure_no_running_codex; then
         echo
         usage
         codex_running_hint
         exit 1
     fi
+else
+    warn_if_codex_running
 fi
 
 # ── Update phases ────────────────────────────────────────────────────
