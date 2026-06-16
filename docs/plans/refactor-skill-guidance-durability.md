@@ -13,6 +13,10 @@ last_verified: 2026-05-15
 
 DONE
 
+Archived note: historical provenance only. This plan describes an old
+`skills-src/` generation era; current implementation guidance lives in
+`skills/`, `README.md`, `ARCHITECTURE.md`, `STATUS.md`, and `docs/human/**`.
+
 ## Target
 
 Repo-owned skill guidance under `skills-src/`, non-generated root skills under

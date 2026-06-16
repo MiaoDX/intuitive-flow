@@ -107,6 +107,7 @@ run_sync_local_commands_skills() {
     if [ -d "$root_skills_src" ]; then
         local root_skills_codex_synced=0
         local root_skills_claude_synced=0
+        local root_skills_claude_failed=0
         local root_skills_mimocode_synced=0
         local mimocode_command_dest="$HOME/.config/mimocode/command"
         local skill_dir skill_name
@@ -124,6 +125,7 @@ run_sync_local_commands_skills() {
                 root_skills_claude_synced=$((root_skills_claude_synced + 1))
             else
                 echo "  ! failed to sync Claude Code skill: $skill_name"
+                root_skills_claude_failed=$((root_skills_claude_failed + 1))
             fi
 
             if [ -d "$codex_dest" ]; then
@@ -140,8 +142,12 @@ run_sync_local_commands_skills() {
             render_mimocode_command "$skill_dir/SKILL.md" "$mimocode_command_dest/$skill_name.md" "$skill_name"
             root_skills_mimocode_synced=$((root_skills_mimocode_synced + 1))
 
-            echo "  synced skill: $skill_name"
+            echo "  synced skill mirrors: $skill_name"
         done < <(_manifest_tool root-skills "$default_skill_allowlist")
+        if [ "$root_skills_claude_failed" -gt 0 ]; then
+            echo "  ! $root_skills_claude_failed repo-local skill(s) failed to sync to Claude Code"
+            return 1
+        fi
         if [ "$root_skills_claude_synced" -gt 0 ] || [ "$root_skills_codex_synced" -gt 0 ]; then
             echo "  ✓ $root_skills_claude_synced repo-local skill(s) → Claude Code"
             echo "  ✓ $root_skills_codex_synced repo-local skill(s) → ~/.codex/skills/"

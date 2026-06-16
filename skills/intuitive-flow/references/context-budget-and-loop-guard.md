@@ -166,7 +166,8 @@ asked to discuss, inspect, or explain, stop after the audit.
 
 For durable implementation, the main session is the control plane. It should
 choose routes, inspect artifacts, babysit worker progress, and decide stops.
-The execution plane should be a bounded `skill-runner`/tmux worker by default.
+The execution plane should be a bounded delegated worker by default, selected
+through the `$skill-runner` Codex delegation reference.
 
 Main-session direct implementation is allowed only for tiny direct edits,
 read-only probes, or local repairs whose route brief explains why context

@@ -13,6 +13,10 @@ last_verified: 2026-05-17
 
 DONE
 
+Archived note: historical provenance only. References to the old local skill
+manifest or generated skill sync are shipped history, not current
+implementation guidance.
+
 ## Target
 
 All repo-owned root skills listed in `scripts/local-skill-manifest.txt`, using

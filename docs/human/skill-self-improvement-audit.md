@@ -1,6 +1,6 @@
 # Skill Self-Improvement Audit
 
-Last reviewed: 2026-06-15
+Last reviewed: 2026-06-16
 
 This audit applies the self-improvement lens from
 [`agent-harness-references.md`](agent-harness-references.md) to the default
@@ -46,6 +46,8 @@ Current default-surface correction:
   report-only deepening scanner after the architecture review route. It is not
   a removal candidate unless a future audit shows the route no longer needs a
   visual/deepening architecture report.
+- Keep `$gstack-autoplan` default-visible because the staged workflow names it
+  as the optional unknown-unknown scout before grill-batch/preflight/execution.
 
 ## Repo-Owned Root Skills
 
@@ -78,7 +80,7 @@ Current default-surface correction:
 | `tdd` | External test-first workflow. | Keep as direct specialist when the user explicitly wants TDD. |
 | `zoom-out` | External architecture/context map. | Keep routed as the first architecture review pass before plan-eng-review. |
 | `gstack-browse`, `gstack-open-gstack-browser` | Browser launch and browser QA helpers. | Keep for visual/runtime dogfooding that text checks miss. |
-| `gstack-plan-eng-review`, `gstack-review`, `gstack-qa` | Managed review and QA wrappers. | Keep default-visible for plan, PR, and app QA gates. |
+| `gstack-autoplan`, `gstack-plan-eng-review`, `gstack-review`, `gstack-qa` | Managed review and QA wrappers. | Keep default-visible for unknown-unknown plan scouting, plan review, PR review, and app QA gates. |
 | `gstack-investigate` | Managed root-cause investigation workflow. | Keep as the default debugging/investigation route; do not also default-install `$diagnose`. |
 | `gsd-progress`, `gsd-resume-work`, `gsd-pause-work` | GSD status and continuation helpers. | Keep as low-risk recovery/status commands. |
 

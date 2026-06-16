@@ -1,6 +1,6 @@
 # Status
 
-Last reviewed: 2026-06-14
+Last reviewed: 2026-06-16
 
 ## Current State
 
@@ -65,6 +65,8 @@ The current maintenance focus is keeping the repo dogfoodable:
 - keep default skill installs listed in `scripts/default-skill-allowlist.txt`
   with role-tier comments that distinguish primary choices, routed specialists,
   direct utilities, managed GStack tooling, and GSD status/resume helpers
+- keep the optional `gstack-autoplan` planning scout default-visible because the
+  staged workflow names it as an unknown-unknown route
 - keep `agent-planning-loop` as the canonical scout-planning root skill and
   `intuitive-planning-loop` as legacy cleanup only
 - use `bun run audit:skill-upstreams` to review upstream skill candidates
@@ -79,7 +81,8 @@ The current maintenance focus is keeping the repo dogfoodable:
 - keep `SKILL.md` entrypoints compact and watch size drift through the
   non-failing `check:skills` size budget report
 - keep local hooks enabled with `bun run setup:hooks` so skill structure,
-  allowlist coverage, and local resource references are checked before commit
+  allowlist coverage, local resource references, and completed-plan archival
+  markers are checked before commit
 - keep CI and local `bun run verify` aligned
 - keep Bash as the ShellCheck-gated orchestration layer and Bun TypeScript as
   the structured validation layer

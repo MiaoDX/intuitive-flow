@@ -4,13 +4,12 @@ description: |
   Run a bounded autonomous planning loop before implementation: use scout
   workers to apply intuitive-reduce-entropy and grill-with-docs-batch, keep the
   main session as judge, iterate until the scope is clear, then present one
-  recommended plan plus alternatives for a single user review. On Codex, scout
-  workers are Paseo subagents when available or tmux/skill-runner sessions
-  otherwise, not native subagents. Use this
-  whenever the user asks to "align yourselves", "run reduce entropy and grill
-  batch", "use workers to refine the plan", "give me the plans after judging
-  them", mentions a "planning loop", or wants faster planning without being
-  pulled into every grill question.
+  recommended plan plus alternatives for a single user review. Follow the
+  skill-runner Codex delegation reference for host-specific worker selection.
+  Use this whenever the user asks to "align yourselves", "run reduce entropy
+  and grill batch", "use workers to refine the plan", "give me the plans after
+  judging them", mentions a "planning loop", or wants faster planning without
+  being pulled into every grill question.
 ---
 
 # Agent Planning Loop
@@ -75,10 +74,9 @@ Keep the main session as the control plane.
   removal as a user-review decision by itself.
 
 Follow the `$skill-runner` Codex delegation reference for worker selection. This
-skill chooses scout scope and acceptance; the delegation reference owns
-host-specific Paseo, native-subagent, and fallback rules. If no worker mechanism
-is available, run the same stages inline and state that delegation was
-unavailable.
+skill chooses scout scope and acceptance; the delegation reference owns all
+host-specific worker mechanics. If no worker mechanism is available, run the
+same stages inline and state that delegation was unavailable.
 
 ## Loop Shape
 

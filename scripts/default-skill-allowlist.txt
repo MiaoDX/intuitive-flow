@@ -48,7 +48,8 @@ external-skill mattpocock https://github.com/mattpocock/skills tdd
 external-skill mattpocock https://github.com/mattpocock/skills zoom-out
 
 # Managed GStack wrappers kept after setup.
-# Browser, QA, review, and root-cause tooling:
+# Unknown-unknown planning, browser, QA, review, and root-cause tooling:
+gstack-skill gstack-autoplan
 gstack-skill gstack-browse
 gstack-skill gstack-open-gstack-browser
 gstack-skill gstack-plan-eng-review

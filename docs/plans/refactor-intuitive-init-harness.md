@@ -13,6 +13,10 @@ last_verified: 2026-06-05
 
 DONE
 
+Archived note: historical provenance only. Execution log entries that mention
+generated skills or `skills-src/` describe shipped history, not current
+implementation guidance.
+
 ## Target
 
 `$intuitive-init` guidance for initializing, auditing, and refreshing

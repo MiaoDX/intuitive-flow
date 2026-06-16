@@ -37,9 +37,9 @@ It is the source of truth for the pass and must name:
 
 Follow the `$skill-runner` Codex delegation reference for worker handoffs. Use
 short workers for report-only scans, stale-path searches, test discovery, and
-independent verification probes; use `skill-runner`/tmux for broad or
-long-running `$intuitive-refactor` execution. Direct edits from any worker
-require disjoint ownership and main-session integration.
+independent verification probes; use delegated workers for broad or long-running
+`$intuitive-refactor` execution. Direct edits from any worker require disjoint
+ownership and main-session integration.
 
 Once implementation starts, do not keep discovering and implementing new P2
 cleanup. Add newly discovered work only when it is a P0/P1 regression found

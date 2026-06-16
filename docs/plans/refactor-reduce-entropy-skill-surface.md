@@ -13,6 +13,10 @@ last_verified: 2026-05-17
 
 DONE
 
+Archived note: historical provenance only. This plan predates the current
+direct `skills/` source layout and `scripts/default-skill-allowlist.txt`
+install surface.
+
 ## Target
 
 The user-facing Intuitive Flow skill surface: reduce the number of primary

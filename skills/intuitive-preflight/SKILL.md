@@ -110,7 +110,7 @@ field would otherwise be unreadable.
 Preflight status: <DRAFT | BLOCKED_NEEDS_DECISION | BLOCKED_NEEDS_LOCAL_VALIDATION>
 Task source: <user prompt | plan path | issue | mixed>
 Canonical source: <docs/plans/... | issue URL | conversation only>
-Route: <main direct | $intuitive-refactor | durable $intuitive-flow | Paseo subagent | skill-runner worker>
+Route: <main direct | $intuitive-refactor | durable $intuitive-flow | delegated worker>
 Goal: <one sentence>
 
 Scope: <included work; use short bullets only if needed>
@@ -126,7 +126,7 @@ Acceptance:
 - No regressions: <existing behavior or contract>
 
 Verification: deterministic=<lint/type/unit/focused contract commands>; integration=<catalog/route/report/artifact commands>; product-run=<public command/flow/script/harness>; local-live-manual=<provider/Docker/simulator/GPU/hardware/browser/human checks, or unavailable reason>; optional=<non-blocking checks>
-Execution: main=<root supervisor role>; worker=<none | Paseo scope | skill-runner scope>; worker-goal=<none | exact bounded goal>
+Execution: main=<root supervisor role>; worker=<none | delegated scope>; worker-goal=<none | exact bounded goal>
 To execute: /goal execute <canonical source> with intuitive-flow
 Optional tracking: <none | run $multica-goal-tracker create-from-preflight with --preflight-file <file> --workspace-id <workspace> after approval and before executing>
 Approval: LGTM/approve/go ahead approves; edits request revision.
@@ -150,9 +150,9 @@ Recommended default: <only when safe; otherwise none>
 
 Choose the smallest honest route: main direct for tiny concrete work,
 `$intuitive-refactor` for known cleanup or architecture seams, durable
-`$intuitive-flow` for plan-backed/stateful/multi-stage work, Paseo for probed
-parallel read/review/verification scopes, and `skill-runner` for long-running or
-isolated worker execution.
+`$intuitive-flow` for plan-backed/stateful/multi-stage work and delegated
+workers for justified parallel read/review/verification scopes or isolated
+execution.
 
 When two routes can satisfy the same acceptance criteria, choose the one that
 reuses, removes, or narrows existing entities. Do not route to a broader
@@ -161,7 +161,7 @@ new abstractions.
 
 Codex worker selection follows the `$skill-runner` Codex delegation reference.
 This skill only records why a worker route is justified for the preflight
-contract.
+contract; the reference owns host-specific mechanics.
 
 Do not use `skill-runner` merely because it exists. Use it when isolated state,
 long runtime, worker-local goal, or post-run artifacts will materially improve

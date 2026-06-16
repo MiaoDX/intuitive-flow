@@ -7,9 +7,10 @@ description: |
   defaults, including target-repo LSP and agent-facing Serena MCP setup. Use
   when setting up a repo for Claude Code/Codex, replacing symlinked agent files
   with local guidance, rerunning agent init after weeks of drift, cleaning
-  overgrown root agent files, or aligning a repo to intuitive-doc,
-  intuitive-tests, intuitive-flow, intuitive-refactor, and
-  intuitive-reduce-entropy without overwriting project-specific hints. When the
+  overgrown root agent files, or configuring agent-facing LSP/MCP guidance
+  without overwriting project-specific hints. Route human docs, test layout,
+  execution flow, refactor scope, and entropy discovery to their own skills
+  unless the change is only the agent guidance that points at them. When the
   user asks to "setup LSP" for a coding-agent repo, treat Serena MCP as the
   preferred agent-facing LSP path unless it is already configured or concretely
   blocked.

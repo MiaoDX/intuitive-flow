@@ -14,7 +14,7 @@ execution in one pass. Choose the idea-shaping route before the first question
 unless the user already made the mode clear:
 
 ```text
-Which route should we use?
+Which planning route should we use?
 
 A. Direct route - plain, more detailed, and user-led. I ask the
    important questions directly and wait for your answers.
@@ -22,8 +22,9 @@ B. Plan entropy route - use `$intuitive-reduce-entropy` in plan entropy mode to
    find missing decisions or weak assumptions before drafting/revising a plan.
 C. Agent planning route - use `$agent-planning-loop` when scout workers should
    debate options before one human review packet.
-D. Auto-guided route (experimental) - I auto-accept obvious defaults, save
-   those decisions into the plan, and ask only for scope, premise, or
+D. Auto-guided route (experimental) - use Flow only to draft the plan: I
+   auto-accept obvious defaults, save those decisions into the plan, and ask
+   only for scope, premise, or
    hard-to-reason choices.
 ```
 
@@ -41,6 +42,16 @@ Mode rules:
   decisions, or asks to move fast.
 - Direct route when no preference is stated.
 - Skip the prompt when a draft plan already exists and the next step is review.
+
+First-hop ownership:
+
+```text
+candidate discovery -> intuitive-reduce-entropy plan entropy mode
+agent scout debate -> agent-planning-loop
+domain/doc challenge -> grill-with-docs-batch
+execution contract -> intuitive-preflight
+implementation -> intuitive-flow after approval/preflight
+```
 
 Default paths:
 

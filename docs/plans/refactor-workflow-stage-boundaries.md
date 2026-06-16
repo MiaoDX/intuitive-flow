@@ -3,6 +3,8 @@
 Status: Implemented
 Created: 2026-06-12
 Last reviewed: 2026-06-12
+Archived note: historical provenance only; active workflow truth now lives in
+README.md, ARCHITECTURE.md, STATUS.md, docs/human/**, and skills/**.
 Current implementation contract: Implemented in this checkout. Human docs,
 skill contracts, the default allowlist, and rename-sensitive tests now make the
 staged workflow explicit:

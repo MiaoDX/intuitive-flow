@@ -351,15 +351,15 @@ appears in the main session, prefer a handoff-style `/compact` and keep
 canonical artifacts current.
 
 Delegation policy lives in `$skill-runner`'s Codex delegation reference. This
-skill chooses whether work stays in the main session, moves to a Paseo
-subagent, or moves to a `skill-runner`/tmux worker.
+skill chooses whether work stays in the main session or needs a delegated
+worker; the reference owns host-specific executor mechanics.
 
 | Work type | Preferred executor |
 | --- | --- |
-| Independent read-heavy probes | main session or Paseo subagent when parallelism/isolation is worth it |
-| Verification-heavy log/test inspection | main session, Paseo subagent, or `skill-runner`/tmux when artifacts matter |
-| Bounded disjoint edits | `skill-runner`/tmux workers when main-session context would suffer; Paseo only for short bounded tasks with clear ownership |
-| Stateful, interactive, durable, or long-running skill pipelines | `skill-runner` / tmux worker per sub-phase |
+| Independent read-heavy probes | main session or delegated worker when parallelism/isolation is worth it |
+| Verification-heavy log/test inspection | main session or delegated worker when artifacts matter |
+| Bounded disjoint edits | delegated worker when main-session context would suffer and ownership is clear |
+| Stateful, interactive, durable, or long-running skill pipelines | delegated worker per sub-phase |
 | Canonical source-of-truth edits and route decisions | main session |
 
 For any worker, inspect structured summaries, compact artifacts, targeted logs,

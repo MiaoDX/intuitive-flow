@@ -8,6 +8,7 @@ export type SkillCheckOptions = {
   skillsRoot: string;
   allowlistPath: string;
   deprecatedSourceRoot: string;
+  plansRoot?: string;
   packageJsonPath?: string;
   githubVerifyWorkflowPath?: string;
   skillSizeBudget?: SkillSizeBudget;
@@ -29,6 +30,7 @@ const defaultOptions = (): SkillCheckOptions => ({
   skillsRoot: join(process.cwd(), "skills"),
   allowlistPath: join(process.cwd(), "scripts", "default-skill-allowlist.txt"),
   deprecatedSourceRoot: join(process.cwd(), "skills-src"),
+  plansRoot: join(process.cwd(), "docs", "plans"),
   packageJsonPath: join(process.cwd(), "package.json"),
   githubVerifyWorkflowPath: join(process.cwd(), ".github", "workflows", "verify.yml"),
   skillSizeBudget: {
@@ -259,6 +261,33 @@ const checkToolingVersions = (options: SkillCheckOptions): string[] => {
   return errors;
 };
 
+const completedPlanPattern = /(?:^status:\s*(?:DONE|IMPLEMENTED)\b|^Status:\s*(?:DONE|Implemented)\b)/m;
+const stalePlanTruthPattern =
+  /Use this as the implementation source of truth|Canonical source:|Historical Preflight Contract|Historical execution request|GSD Handoff Trigger|skills-src|build:skills|build:skills:check|generated skills up to date/;
+const historicalPlanMarkerPattern =
+  /historical|provenance|shipped history|not current implementation guidance|not current-state|archived/i;
+
+const checkCompletedPlans = (plansRoot: string | undefined): string[] => {
+  const errors: string[] = [];
+  if (!plansRoot || !existsSync(plansRoot)) {
+    return errors;
+  }
+
+  for (const file of listFiles(plansRoot).filter((entry) => entry.endsWith(".md"))) {
+    const text = readFileSync(join(plansRoot, file), "utf8");
+    if (
+      completedPlanPattern.test(text) &&
+      stalePlanTruthPattern.test(text) &&
+      !historicalPlanMarkerPattern.test(text)
+    ) {
+      errors.push(
+        `completed plan has active-looking historical guidance without an archival marker: docs/plans/${file}`,
+      );
+    }
+  }
+  return errors;
+};
+
 export const skillSizeReport = (
   skillsRoot: string,
   budget: SkillSizeBudget = { maxChars: 18_000, maxLines: 300 },
@@ -308,6 +337,7 @@ export const checkSkills = (options = defaultOptions()): string[] => {
   }
 
   errors.push(...checkToolingVersions(options));
+  errors.push(...checkCompletedPlans(options.plansRoot));
 
   return errors;
 };

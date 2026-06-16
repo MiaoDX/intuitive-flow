@@ -1,13 +1,12 @@
 ---
 name: intuitive-flow
 description: |
-  Stable build/change entrypoint that routes by task scope: tiny concrete work
-  can run directly, refactor-shaped work delegates to intuitive-refactor, and
-  broad or durable work runs through staged planning, review, GSD handoff,
-  implementation, cleanup, and verification. Use when the user asks for fuzzy
-  idea shaping, durable planning, implementation from a plan, Matt Pocock skills
-  + gstack + GSD together, broad refactor routing, or one coherent source of
-  truth from idea to verified work.
+  Stable execution/change router after an approved plan, preflight contract, or
+  tiny concrete task. Refactor-shaped work delegates to intuitive-refactor, and
+  durable work runs through staged planning, review, GSD handoff,
+  implementation, cleanup, and verification. Also accept vague prompts as a
+  compatibility route that names the upstream planning stage instead of hiding
+  planning inside execution.
 ---
 
 # Intuitive Flow
@@ -121,7 +120,7 @@ with `gstack-autoplan`, `to-issues`, GSD handoff, `simplify`, or verification.
 Keep the main session as route owner, integration point, and final verifier.
 
 Codex worker selection follows the `$skill-runner` Codex delegation reference;
-do not repeat the host-specific Paseo/native-subagent policy here.
+do not repeat host-specific worker policy here.
 
 Use the main session for tiny direct edits and read-only probes only when the
 route brief names why that is safe for context. For durable multi-stage work,
@@ -129,10 +128,9 @@ prefer a control-plane split:
 
 - main session: route, decide, inspect artifacts/diffs/logs, verify claims,
   own the root goal, and synthesize next stage;
-- Paseo subagents: parallel read-heavy scouts, review passes, verification
-  probes, or short bounded tasks when available and probed;
-- `skill-runner`/tmux: stateful, artifact-sensitive, mutating, durable, or
-  long-running sub-phases.
+- delegated workers: parallel read-heavy scouts, review passes, verification
+  probes, or stateful/durable sub-phases according to the canonical delegation
+  reference.
 
 Workers may use worker-local goals only for their assigned bounded scope and
 must leave the main-session root goal untouched.
