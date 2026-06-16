@@ -1,6 +1,6 @@
 ---
 name: intuitive-refactor
-description: Set a bounded aggressive refactor goal before architecture or cleanup work starts, including checking target-repo LSP setup before risky symbol-level edits. Use whenever the user wants to improve architecture, clean up aggressively, "fix all big issues", avoid endless refactors, decide what is in/out of scope, classify P0/P1/P2/Parked findings, remove stale APIs or compatibility shims, or define the tests and stop condition before changing code. This skill works standalone and can also be combined with architecture scanners, intuitive-flow, TDD, or diagnosis skills.
+description: Set a bounded aggressive refactor goal before architecture or cleanup work starts, including checking target-repo LSP setup before risky symbol-level edits. Use whenever the user wants to improve architecture, clean up aggressively, "fix all big issues", avoid endless refactors, decide what is in/out of scope, classify P0/P1/P2/Parked findings, remove stale APIs or compatibility shims, define tests and stop conditions, or run a long code-size/complexity ratchet that should simplify architecture instead of merely moving lines. This skill works standalone and can also be combined with architecture scanners, intuitive-flow, TDD, or diagnosis skills.
 ---
 
 # Intuitive Refactor
@@ -15,6 +15,11 @@ This compact entrypoint preserves full original guidance in
 confidence ladder, prompt shapes, command naming, persistent state templates,
 or completion summaries.
 
+Read `references/ratchet-mode.md` when the request is a repeated code-size,
+complexity, oversized-module, backend/report/test-sprawl, or entropy ratchet.
+That mode tightens the normal refactor loop around concept reduction rather
+than pure extraction.
+
 ## Operating Rule
 
 Start from a target and a stop condition, not from "make it cleaner." When the
@@ -25,6 +30,11 @@ inside the accepted gate.
 Prefer the organized future at `HEAD` over compatibility shims. Preserve
 compatibility only when the user explicitly asks for a migration bridge or an
 external contract requires it.
+
+For ratchet-shaped work, prefer concept reduction over code motion: delete
+stale surfaces, merge duplicate concepts, move callers to an existing owner,
+and create a new module only when the architecture lacks a true home. Line-count
+relief is useful evidence, not the goal.
 
 ## Default Workflow
 
@@ -84,6 +94,15 @@ architecture review sequence before execution: zoom out, engineering review,
 then accepted refactor gate. Use `$improve-codebase-architecture` only as
 optional extra report-only candidate discovery if that review sequence still
 leaves no accepted target seam.
+
+For long-running ratchets, add these fields to the scope gate:
+
+```text
+Current quality signal:
+Architecture pressure:
+Behavior-change policy:
+Architecture simplification claim:
+```
 
 ## Stop Conditions
 
