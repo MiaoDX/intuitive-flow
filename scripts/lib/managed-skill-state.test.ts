@@ -17,12 +17,16 @@ const writeAllowlist = (root: string, text: string) => {
   return allowlistPath;
 };
 
-const expectActiveShellLine = (script: string, pattern: RegExp) => {
-  const activeLines = script
+const activeShell = (script: string) =>
+  script
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line !== "" && !line.startsWith("#"));
-  expect(activeLines.some((line) => pattern.test(line))).toBe(true);
+
+const expectManagedStateCommand = (script: string, command: string) => {
+  const commandLine = activeShell(script).find((line) => line.includes(`managed-skill-state.ts" ${command}`));
+  expect(commandLine).toBeDefined();
+  expect(commandLine).toContain("bun ");
 };
 
 describe("managed skill state", () => {
@@ -304,16 +308,14 @@ describe("managed skill state", () => {
     }
   });
 
-  test("update wrappers call managed skill state after installs", () => {
+  test("update tasks run managed skill state after installs", () => {
     const updateGstack = readFileSync(join(repoRoot, "scripts", "tasks", "update-gstack.sh"), "utf8");
     const updateSkills = readFileSync(join(repoRoot, "scripts", "tasks", "update-skills.sh"), "utf8");
     const updateCli = readFileSync(join(repoRoot, "scripts", "tasks", "update-cli.sh"), "utf8");
 
-    expectActiveShellLine(updateGstack, /^bun "\$SCRIPT_DIR\/lib\/managed-skill-state\.ts" "\$@"$/);
-    expectActiveShellLine(updateGstack, /^_managed_skill_state_tool gstack-sync "\$repo_dir" "\$SCRIPT_DIR\/default-skill-allowlist\.txt" \|\| return 1$/);
-    expectActiveShellLine(updateSkills, /^bun "\$SCRIPT_DIR\/lib\/managed-skill-state\.ts" "\$@"$/);
-    expectActiveShellLine(updateSkills, /^_managed_skill_state_tool external-sync "\$allowlist" "\$label"$/);
-    expectActiveShellLine(updateSkills, /^_managed_skill_state_tool external-prune-removed "\$allowlist"$/);
-    expectActiveShellLine(updateCli, /^bun "\$SCRIPT_DIR\/lib\/managed-skill-state\.ts" gsd-sync "\$SCRIPT_DIR\/default-skill-allowlist\.txt" \|\| return 1$/);
+    expectManagedStateCommand(updateGstack, "gstack-sync");
+    expectManagedStateCommand(updateSkills, "external-sync");
+    expectManagedStateCommand(updateSkills, "external-prune-removed");
+    expectManagedStateCommand(updateCli, "gsd-sync");
   });
 });

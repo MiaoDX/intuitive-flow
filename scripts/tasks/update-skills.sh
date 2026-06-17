@@ -35,15 +35,6 @@ _allowlist_tool() {
     bun "$SCRIPT_DIR/lib/default-skill-allowlist.ts" "$@"
 }
 
-_managed_skill_state_tool() {
-    if ! command -v bun >/dev/null 2>&1; then
-        echo "  ! bun not found; run scripts/update.sh after fixing the environment pre-check"
-        return 1
-    fi
-
-    bun "$SCRIPT_DIR/lib/managed-skill-state.ts" "$@"
-}
-
 _run_external_skills() {
     local agent="$1" label="$2"
     local allowlist repo skill_args_output
@@ -64,7 +55,7 @@ _run_external_skills() {
         _run_skills "$agent" "$repo" "$label" || return 1
     fi
 
-    _managed_skill_state_tool external-sync "$allowlist" "$label"
+    bun "$SCRIPT_DIR/lib/managed-skill-state.ts" external-sync "$allowlist" "$label"
 }
 
 run_external_skill_label() {
@@ -80,5 +71,5 @@ list_external_skill_labels() {
 prune_removed_external_skill_labels() {
     local allowlist
     allowlist=$(_default_skill_allowlist)
-    _managed_skill_state_tool external-prune-removed "$allowlist"
+    bun "$SCRIPT_DIR/lib/managed-skill-state.ts" external-prune-removed "$allowlist"
 }
