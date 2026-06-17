@@ -35,7 +35,6 @@ import {
   sessionEvidenceFromSkillRunnerDir,
   sessionEvidenceFromTranscript,
   summarizeGoal,
-  transcriptFromCodexJsonl,
 } from "./track_goal";
 
 describe("multica goal tracker", () => {
@@ -287,7 +286,7 @@ d5025f68-febd-4b06-a55a-339fd07c357d  Robomanipulation
       .map((value) => JSON.stringify(value))
       .join("\n");
 
-    expect(transcriptFromCodexJsonl(jsonl)).toContain("RESULT_STATUS: SUCCESS");
+    expect(evidenceFromCodexJsonl(jsonl)?.transcript).toContain("RESULT_STATUS: SUCCESS");
 
     const evidence = sessionEvidenceFromSessionText("file session.jsonl", jsonl);
     expect(evidence.source).toBe("codex session file session.jsonl");

@@ -557,10 +557,6 @@ function assertIssueWorkspace(issue: Issue, expectedWorkspaceId: string, context
   }
 }
 
-function withIssue(opts: Options, issue: string): Options {
-  return { ...opts, issue };
-}
-
 function asRecord(value: unknown): JsonRecord | undefined {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as JsonRecord) : undefined;
 }
@@ -1002,10 +998,6 @@ export function evidenceFromCodexJsonl(raw: string, targetGoal?: string): (Sessi
     transcript: selected.candidate.text.trim(),
     ...nearestGoalTiming(terminalGoals, selected.candidate, selected.goal),
   };
-}
-
-export function transcriptFromCodexJsonl(raw: string, targetGoal?: string): string | undefined {
-  return evidenceFromCodexJsonl(raw, targetGoal)?.transcript;
 }
 
 function looksLikeCodexJsonl(text: string): boolean {
@@ -1532,19 +1524,12 @@ export function extractGoalFromPreflight(raw: string): string {
   const explicitGoal = fencedBlockAfterHeading(raw, "Main-session /goal prompt");
   if (explicitGoal && /\/goal\b/.test(explicitGoal)) return explicitGoal;
 
-  const mainGoal = preflightField(raw, "Main-session /goal prompt");
-  if (mainGoal) {
-    const goal = extractGoal(mainGoal);
+  for (const field of ["Main-session /goal prompt", "To execute"]) {
+    const value = preflightField(raw, field);
+    if (!value) continue;
+    const goal = extractGoal(value);
     if (goal) return goal;
-    const line = mainGoal.split(/\r?\n/).map((value) => value.trim()).find((value) => /^\/goal\b/i.test(value));
-    if (line) return line;
-  }
-
-  const toExecute = preflightField(raw, "To execute");
-  if (toExecute) {
-    const goal = extractGoal(toExecute);
-    if (goal) return goal;
-    const line = toExecute.split(/\r?\n/).map((value) => value.trim()).find((value) => /^\/goal\b/i.test(value));
+    const line = value.split(/\r?\n/).map((candidate) => candidate.trim()).find((candidate) => /^\/goal\b/i.test(candidate));
     if (line) return line;
   }
 
@@ -2367,10 +2352,10 @@ function createFromPreflight(opts: Options) {
   if (createdWorkspaceId) {
     assertIssueWorkspace({ workspace_id: createdWorkspaceId }, workspaceId, `Created issue ${issue}`);
   } else {
-    assertIssueWorkspace(getIssue(withIssue(resolvedOpts, issue)), workspaceId, `Created issue ${issue}`);
+    assertIssueWorkspace(getIssue({ ...resolvedOpts, issue }), workspaceId, `Created issue ${issue}`);
   }
 
-  start(withIssue({ ...resolvedOpts, goal: contract.goalCommand, goalFile: undefined, updateDescription: false }, issue));
+  start({ ...resolvedOpts, goal: contract.goalCommand, goalFile: undefined, updateDescription: false, issue });
   console.log(`Created tracked preflight issue ${issue}`);
 }
 
