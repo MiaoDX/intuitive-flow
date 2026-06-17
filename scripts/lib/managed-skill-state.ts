@@ -12,7 +12,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
-import { externalSkillSourceByLabel, readDefaultSkillAllowlist, readPruneLedger } from "./default-skill-allowlist";
+import { externalSkillSourceByLabel, normalizeSource, readDefaultSkillAllowlist, readPruneLedger } from "./default-skill-allowlist";
 
 type SkillState = {
   schemaVersion: 1;
@@ -100,10 +100,6 @@ const writeOwnedRootSkillState = (home: string, rootSkills: string[]) => {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, JSON.stringify({ schemaVersion: 1, rootSkills } satisfies OwnedRootSkillState, null, 2) + "\n");
 };
-
-const normalizeSource = (source: string) => source
-  .replace(/^https:\/\/github\.com\//, "")
-  .replace(/\.git$/, "");
 
 const removeIfExists = (path: string): number => {
   try {
