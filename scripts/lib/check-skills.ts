@@ -2,7 +2,7 @@
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, normalize } from "node:path";
-import { checkRootSkills, readDefaultSkillAllowlist } from "./default-skill-allowlist";
+import { checkRootSkills, readDefaultSkillAllowlist, readPruneLedger } from "./default-skill-allowlist";
 
 export type SkillCheckOptions = {
   skillsRoot: string;
@@ -305,33 +305,16 @@ const checkPruneLedger = (
   pruneLedgerPath: string | undefined,
 ): string[] => {
   const errors: string[] = [];
-  if (
-    allowlist.legacySkills.length > 0 ||
-    allowlist.legacyCommands.length > 0 ||
-    allowlist.legacyMimocodeCommands.length > 0
-  ) {
-    errors.push("default skill allowlist must not contain prune-only legacy entries; use scripts/default-skill-prune-ledger.txt");
-  }
-
   if (!pruneLedgerPath || !existsSync(pruneLedgerPath)) {
     return errors;
   }
 
   let pruneLedger;
   try {
-    pruneLedger = readDefaultSkillAllowlist(pruneLedgerPath);
+    pruneLedger = readPruneLedger(pruneLedgerPath);
   } catch (error) {
     errors.push(error instanceof Error ? error.message : String(error));
     return errors;
-  }
-
-  if (
-    pruneLedger.rootSkills.length > 0 ||
-    pruneLedger.externalSources.length > 0 ||
-    pruneLedger.gstackSkills.length > 0 ||
-    pruneLedger.gsdSkills.length > 0
-  ) {
-    errors.push("default skill prune ledger must contain only legacy entries");
   }
 
   const currentLegacySkills = listIntersection(pruneLedger.legacySkills, liveSkillNames(allowlist));

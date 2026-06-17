@@ -6,13 +6,14 @@ import {
   checkRootSkills,
   readDefaultSkillAllowlist,
   parseDefaultSkillAllowlistText,
+  parsePruneLedgerText,
   pruneLegacyArtifacts,
   pruneRemovedOwnedRootSkills,
   recordOwnedRootSkills,
 } from "./default-skill-allowlist";
 
 describe("default skill allowlist", () => {
-  test("parses root, external, GStack, GSD, and legacy entries", () => {
+  test("parses root, external, GStack, and GSD install entries", () => {
     const allowlist = parseDefaultSkillAllowlistText(`
       # comment
       root-skill intuitive-flow
@@ -22,10 +23,6 @@ describe("default skill allowlist", () => {
       external-skill mattpocock https://github.com/mattpocock/skills tdd
       gstack-skill gstack-review
       gsd-skill gsd-plan-phase
-      legacy-skill intuitive-planning-loop
-      legacy-skill old-flow
-      legacy-command old.md
-      legacy-mimocode-command stale.md
     `);
 
     expect(allowlist.rootSkills).toEqual(["agent-planning-loop", "intuitive-flow"]);
@@ -38,9 +35,21 @@ describe("default skill allowlist", () => {
     ]);
     expect(allowlist.gstackSkills).toEqual(["gstack-review"]);
     expect(allowlist.gsdSkills).toEqual(["gsd-plan-phase"]);
-    expect(allowlist.legacySkills).toEqual(["intuitive-planning-loop", "old-flow"]);
-    expect(allowlist.legacyCommands).toEqual(["old.md"]);
-    expect(allowlist.legacyMimocodeCommands).toEqual(["stale.md"]);
+  });
+
+  test("parses prune-only legacy entries separately from the install allowlist", () => {
+    const ledger = parsePruneLedgerText(`
+      # comment
+      legacy-skill intuitive-planning-loop
+      legacy-skill old-flow
+      legacy-skill old-flow
+      legacy-command old.md
+      legacy-mimocode-command stale.md
+    `);
+
+    expect(ledger.legacySkills).toEqual(["intuitive-planning-loop", "old-flow"]);
+    expect(ledger.legacyCommands).toEqual(["old.md"]);
+    expect(ledger.legacyMimocodeCommands).toEqual(["stale.md"]);
   });
 
   test("current default surface keeps debugging and GSD visibility narrow", () => {
@@ -64,7 +73,7 @@ describe("default skill allowlist", () => {
   });
 
   test("rejects unsafe values and duplicate labels pointing at different repos", () => {
-    expect(() => parseDefaultSkillAllowlistText("legacy-skill ../not-owned")).toThrow("unsafe skill name");
+    expect(() => parsePruneLedgerText("legacy-skill ../not-owned")).toThrow("unsafe skill name");
     expect(() =>
       parseDefaultSkillAllowlistText(`
         external-skill demo owner/one alpha
@@ -73,20 +82,16 @@ describe("default skill allowlist", () => {
     ).toThrow("external skill source label maps to multiple repos");
   });
 
-  test("rejects entries that are both current and legacy", () => {
-    expect(() =>
-      parseDefaultSkillAllowlistText(`
-        root-skill intuitive-flow
-        legacy-skill intuitive-flow
-      `),
-    ).toThrow("skill listed as both current and legacy: intuitive-flow");
-
-    expect(() =>
-      parseDefaultSkillAllowlistText(`
-        gstack-skill gstack-review
-        legacy-mimocode-command gstack-review.md
-      `),
-    ).toThrow("command listed as both current and legacy: gstack-review.md");
+  test("rejects prune-only entries in the install allowlist and install entries in the prune ledger", () => {
+    expect(() => parseDefaultSkillAllowlistText("legacy-skill old-flow\n")).toThrow(
+      "default skill allowlist must not contain prune-only legacy entries",
+    );
+    expect(() => parseDefaultSkillAllowlistText("legacy-command old.md\n")).toThrow(
+      "default skill allowlist must not contain prune-only legacy entries",
+    );
+    expect(() => parsePruneLedgerText("root-skill intuitive-flow\n")).toThrow(
+      "default skill prune ledger must contain only legacy entries",
+    );
   });
 
   test("checks root skill folders against the allowlist", () => {
@@ -106,7 +111,7 @@ describe("default skill allowlist", () => {
     }
   });
 
-  test("prunes only allowlist legacy artifacts", () => {
+  test("prunes only prune-ledger legacy artifacts", () => {
     const home = mkdtempSync(join(tmpdir(), "skill-home-"));
     try {
       mkdirSync(join(home, ".codex", "skills", "old-skill"), { recursive: true });
@@ -119,7 +124,7 @@ describe("default skill allowlist", () => {
       writeFileSync(join(home, ".config", "mimocode", "command", "keep.md"), "");
 
       const removed = pruneLegacyArtifacts(
-        parseDefaultSkillAllowlistText("legacy-skill old-skill\nlegacy-command old.md\nlegacy-mimocode-command stale.md\n"),
+        parsePruneLedgerText("legacy-skill old-skill\nlegacy-command old.md\nlegacy-mimocode-command stale.md\n"),
         home,
       );
 
@@ -175,13 +180,13 @@ describe("default skill allowlist", () => {
       mkdirSync(join(home, ".config", "mimocode", "command"), { recursive: true });
       writeFileSync(join(home, ".config", "mimocode", "command", "intuitive-planning-loop.md"), "");
 
-      const allowlist = parseDefaultSkillAllowlistText(`
-        root-skill agent-planning-loop
+      const allowlist = parseDefaultSkillAllowlistText("root-skill agent-planning-loop\n");
+      const pruneLedger = parsePruneLedgerText(`
         legacy-skill intuitive-planning-loop
       `);
 
       expect(pruneRemovedOwnedRootSkills(allowlist, home)).toBe(3);
-      expect(pruneLegacyArtifacts(allowlist, home)).toBe(1);
+      expect(pruneLegacyArtifacts(pruneLedger, home)).toBe(1);
       expect(existsSync(join(home, ".codex", "skills", "agent-planning-loop"))).toBe(true);
       expect(existsSync(join(home, ".codex", "skills", "intuitive-planning-loop"))).toBe(false);
       expect(existsSync(join(home, ".agents", "skills", "intuitive-planning-loop"))).toBe(false);
@@ -201,10 +206,7 @@ describe("default skill allowlist", () => {
       writeFileSync(join(root, "intuitive-planning-loop", "SKILL.md"), "");
 
       const errors = checkRootSkills(
-        parseDefaultSkillAllowlistText(`
-          root-skill agent-planning-loop
-          legacy-skill intuitive-planning-loop
-        `),
+        parseDefaultSkillAllowlistText("root-skill agent-planning-loop\n"),
         root,
       );
 

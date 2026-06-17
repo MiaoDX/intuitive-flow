@@ -321,14 +321,10 @@ checking, and runs Bun tests. GitHub Actions mirrors the same proof in
 references, required handoff markers, deprecated `skills-src/` files, or
 CI/local Bun version drift fail CI.
 
-At the moment, the test suite covers the default skill allowlist parser,
-root-skill allowlist checks, direct skill validation, deprecated source
-rejection, resource reference checks, primary workflow handoff marker checks,
-external skill entry validation, GitHub Actions Bun pin alignment, separation of install allowlist and prune-only
-ledger, and pruning of prune-ledger legacy artifacts, stale previously owned
-root skills, stale managed external skills, stale managed GStack skill links,
-managed GSD wrapper pruning, upstream skill audit output, and installer wrapper
-calls that enforce managed state.
+At the moment, the test suite covers skill validation, default install allowlist
+and prune-ledger parsing, managed install-state pruning, config and hook helpers,
+workflow gates, skill-runner behavior, upstream skill audit output, and
+installer wrapper calls that enforce managed state.
 
 The repo-owned pre-commit hook repeats the skill structure check locally when
 `core.hooksPath` points at `.githooks/`.

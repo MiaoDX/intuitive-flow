@@ -142,7 +142,7 @@ describe("skill checker", () => {
       writeFixtureFile(root, "skills/alpha/SKILL.md", "---\nname: alpha\ndescription: Alpha.\n---\n");
 
       expect(checkSkills(optionsFor(root))).toContain(
-        "default skill allowlist must not contain prune-only legacy entries; use scripts/default-skill-prune-ledger.txt",
+        "default skill allowlist must not contain prune-only legacy entries on line 2: legacy-skill old-alpha",
       );
     });
   });

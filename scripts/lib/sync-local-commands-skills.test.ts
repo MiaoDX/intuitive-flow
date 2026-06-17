@@ -12,7 +12,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, join } from "node:path";
-import { parseDefaultSkillAllowlistText } from "./default-skill-allowlist";
+import { parseDefaultSkillAllowlistText, parsePruneLedgerText } from "./default-skill-allowlist";
 
 const repoRoot = process.cwd();
 
@@ -122,7 +122,7 @@ describe("local command and skill sync task", () => {
       mkdirSync(join(home, ".codex", "skills"), { recursive: true });
       const { npmLog, npxLog, stubBin } = createCliStubs(home);
       const allowlist = parseDefaultSkillAllowlistText(await Bun.file(join(repoRoot, "scripts", "default-skill-allowlist.txt")).text());
-      const pruneLedger = parseDefaultSkillAllowlistText(await Bun.file(join(repoRoot, "scripts", "default-skill-prune-ledger.txt")).text());
+      const pruneLedger = parsePruneLedgerText(await Bun.file(join(repoRoot, "scripts", "default-skill-prune-ledger.txt")).text());
 
       const result = spawnSync("bash", ["scripts/tasks/sync-local-commands-skills.sh"], {
         cwd: repoRoot,
@@ -137,7 +137,6 @@ describe("local command and skill sync task", () => {
       expect(allowlist.rootSkills.length).toBeGreaterThan(0);
       expect(allowlist.rootSkills).toContain("agent-planning-loop");
       expect(allowlist.rootSkills).not.toContain("intuitive-planning-loop");
-      expect(allowlist.legacySkills).toEqual([]);
       expect(pruneLedger.legacySkills).toContain("intuitive-planning-loop");
       const npmCalls = await Bun.file(npmLog).text();
       expect(npmCalls).toContain("view skills version");

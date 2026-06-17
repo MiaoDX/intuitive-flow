@@ -3,7 +3,6 @@
 import {
   existsSync,
   mkdirSync,
-  mkdtempSync,
   readFileSync,
   readdirSync,
   rmSync,
@@ -11,10 +10,12 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
-import { tmpdir } from "node:os";
 
 export type RepoSkillAllowlist = {
   rootSkills: string[];
+};
+
+export type PruneLedger = {
   legacySkills: string[];
   legacyCommands: string[];
   legacyMimocodeCommands: string[];
@@ -62,12 +63,15 @@ export const defaultSkillAllowlistPath = (cwd = process.cwd()) => join(cwd, "scr
 
 const emptyAllowlist = (): DefaultSkillAllowlist => ({
   rootSkills: [],
-  legacySkills: [],
-  legacyCommands: [],
-  legacyMimocodeCommands: [],
   externalSources: [],
   gstackSkills: [],
   gsdSkills: [],
+});
+
+const emptyPruneLedger = (): PruneLedger => ({
+  legacySkills: [],
+  legacyCommands: [],
+  legacyMimocodeCommands: [],
 });
 
 const assertSafeSkillName = (value: string, lineNumber: number) => {
@@ -98,11 +102,6 @@ const pushUnique = (values: string[], value: string) => {
   if (!values.includes(value)) {
     values.push(value);
   }
-};
-
-const intersection = (left: string[], right: string[]): string[] => {
-  const rightSet = new Set(right);
-  return left.filter((value) => rightSet.has(value)).sort();
 };
 
 const sourceKey = (label: string, repo: string) => `${label}\0${repo}`;
@@ -197,22 +196,11 @@ export const parseDefaultSkillAllowlistText = (text: string): DefaultSkillAllowl
     }
 
     if (kind === "legacy-skill") {
-      if (parts.length !== 2) {
-        throw new Error(`invalid legacy-skill line ${lineNumber}: ${rawLine}`);
-      }
-      const [, skillName] = parts;
-      assertSafeSkillName(skillName, lineNumber);
-      pushUnique(allowlist.legacySkills, skillName);
-      return;
+      throw new Error(`default skill allowlist must not contain prune-only legacy entries on line ${lineNumber}: ${rawLine}`);
     }
 
     if (kind === "legacy-command" || kind === "legacy-mimocode-command") {
-      if (parts.length !== 2) {
-        throw new Error(`invalid ${kind} line ${lineNumber}: ${rawLine}`);
-      }
-      const [, commandName] = parts;
-      assertSafeCommandName(commandName, lineNumber);
-      pushUnique(kind === "legacy-command" ? allowlist.legacyCommands : allowlist.legacyMimocodeCommands, commandName);
+      throw new Error(`default skill allowlist must not contain prune-only legacy entries on line ${lineNumber}: ${rawLine}`);
     }
   });
 
@@ -221,37 +209,58 @@ export const parseDefaultSkillAllowlistText = (text: string): DefaultSkillAllowl
     skills: source.skills.sort(),
   })).sort((left, right) => left.label.localeCompare(right.label));
   allowlist.rootSkills.sort();
-  allowlist.legacySkills.sort();
-  allowlist.legacyCommands.sort();
-  allowlist.legacyMimocodeCommands.sort();
   allowlist.gstackSkills.sort();
   allowlist.gsdSkills.sort();
 
-  const liveSkillNames = [
-    ...allowlist.rootSkills,
-    ...allowlist.externalSources.flatMap((source) => source.skills),
-    ...allowlist.gstackSkills,
-    ...allowlist.gsdSkills,
-  ];
-  const conflictingLegacySkills = intersection(allowlist.legacySkills, liveSkillNames);
-  if (conflictingLegacySkills.length > 0) {
-    throw new Error(`skill listed as both current and legacy: ${conflictingLegacySkills.join(", ")}`);
-  }
-
-  const liveCommandNames = [
-    ...allowlist.rootSkills.map((skillName) => `${skillName}.md`),
-    ...allowlist.gstackSkills.map((skillName) => `${skillName}.md`),
-    ...allowlist.gsdSkills.map((skillName) => `${skillName}.md`),
-  ];
-  const conflictingLegacyCommands = intersection(
-    [...allowlist.legacyCommands, ...allowlist.legacyMimocodeCommands],
-    liveCommandNames,
-  );
-  if (conflictingLegacyCommands.length > 0) {
-    throw new Error(`command listed as both current and legacy: ${conflictingLegacyCommands.join(", ")}`);
-  }
-
   return allowlist;
+};
+
+export const parsePruneLedgerText = (text: string): PruneLedger => {
+  const ledger = emptyPruneLedger();
+  const seen = new Set<string>();
+
+  text.split(/\r?\n/).forEach((rawLine, index) => {
+    const lineNumber = index + 1;
+    const line = rawLine.trim();
+    if (line === "" || line.startsWith("#")) {
+      return;
+    }
+
+    const parts = line.split(/\s+/);
+    const [kind] = parts as [AllowlistKind | string, ...string[]];
+    if (!["legacy-skill", "legacy-command", "legacy-mimocode-command"].includes(kind)) {
+      throw new Error(`default skill prune ledger must contain only legacy entries on line ${lineNumber}: ${rawLine}`);
+    }
+
+    const dedupeKey = parts.join("\0");
+    if (seen.has(dedupeKey)) {
+      return;
+    }
+    seen.add(dedupeKey);
+
+    if (kind === "legacy-skill") {
+      if (parts.length !== 2) {
+        throw new Error(`invalid legacy-skill line ${lineNumber}: ${rawLine}`);
+      }
+      const [, skillName] = parts;
+      assertSafeSkillName(skillName, lineNumber);
+      pushUnique(ledger.legacySkills, skillName);
+      return;
+    }
+
+    if (parts.length !== 2) {
+      throw new Error(`invalid ${kind} line ${lineNumber}: ${rawLine}`);
+    }
+    const [, commandName] = parts;
+    assertSafeCommandName(commandName, lineNumber);
+    pushUnique(kind === "legacy-command" ? ledger.legacyCommands : ledger.legacyMimocodeCommands, commandName);
+  });
+
+  ledger.legacySkills.sort();
+  ledger.legacyCommands.sort();
+  ledger.legacyMimocodeCommands.sort();
+
+  return ledger;
 };
 
 export const readDefaultSkillAllowlist = (path = defaultSkillAllowlistPath()): DefaultSkillAllowlist => {
@@ -259,6 +268,13 @@ export const readDefaultSkillAllowlist = (path = defaultSkillAllowlistPath()): D
     throw new Error(`missing default skill allowlist: ${path}`);
   }
   return parseDefaultSkillAllowlistText(readFileSync(path, "utf8"));
+};
+
+export const readPruneLedger = (path: string): PruneLedger => {
+  if (!existsSync(path)) {
+    throw new Error(`missing default skill prune ledger: ${path}`);
+  }
+  return parsePruneLedgerText(readFileSync(path, "utf8"));
 };
 
 export const externalSkillSourceByLabel = (allowlist: DefaultSkillAllowlist, label: string): ExternalSkillSource => {
@@ -292,7 +308,7 @@ export const checkRootSkills = (allowlist: DefaultSkillAllowlist, rootSkillsDir:
 };
 
 export const pruneLegacyArtifacts = (
-  allowlist: DefaultSkillAllowlist,
+  ledger: PruneLedger,
   home = process.env.HOME ?? "",
 ): number => {
   if (home === "") {
@@ -301,7 +317,7 @@ export const pruneLegacyArtifacts = (
 
   let removed = 0;
 
-  for (const commandName of allowlist.legacyCommands) {
+  for (const commandName of ledger.legacyCommands) {
     const commandPath = join(home, ".claude", "commands", commandName);
     if (existsSync(commandPath)) {
       rmSync(commandPath, { recursive: true, force: true });
@@ -309,7 +325,7 @@ export const pruneLegacyArtifacts = (
     }
   }
 
-  for (const commandName of allowlist.legacyMimocodeCommands) {
+  for (const commandName of ledger.legacyMimocodeCommands) {
     const commandPath = join(home, ".config", "mimocode", "command", commandName);
     if (existsSync(commandPath)) {
       rmSync(commandPath, { recursive: true, force: true });
@@ -317,7 +333,7 @@ export const pruneLegacyArtifacts = (
     }
   }
 
-  for (const skillName of allowlist.legacySkills) {
+  for (const skillName of ledger.legacySkills) {
     for (const installRoot of skillInstallRoots(home)) {
       const skillPath = join(installRoot, skillName);
       if (existsSync(skillPath)) {
@@ -411,7 +427,7 @@ export const recordOwnedRootSkills = (
 };
 
 const usage = () => {
-  console.error("Usage: default-skill-allowlist.ts <validate|root-skills|check-root-skills|prune|prune-owned-root-skills|record-owned-root-skills|external-labels|external-repo|external-skill-args|gstack-skills|gsd-skills|self-test> <allowlist> [arg]");
+  console.error("Usage: default-skill-allowlist.ts <validate|root-skills|check-root-skills|prune|prune-owned-root-skills|record-owned-root-skills|external-labels|external-repo|external-skill-args|gstack-skills|gsd-skills> <allowlist-or-prune-ledger> [arg]");
 };
 
 const main = () => {
@@ -422,38 +438,21 @@ const main = () => {
   }
 
   try {
-    const allowlist = readDefaultSkillAllowlist(allowlistPath);
-
-    if (command === "self-test") {
-      const tempHome = mkdtempSync(join(tmpdir(), "default-skill-allowlist-"));
-      const fixture = parseDefaultSkillAllowlistText("root-skill alpha\nlegacy-skill old-skill\nlegacy-command old.md\nlegacy-mimocode-command stale.md\n");
-      mkdirSync(join(tempHome, ".codex", "skills", "old-skill"), { recursive: true });
-      mkdirSync(join(tempHome, ".codex", "skills", "alpha"), { recursive: true });
-      mkdirSync(join(tempHome, ".codex", "skills", "removed-alpha"), { recursive: true });
-      mkdirSync(join(tempHome, ".claude", "commands"), { recursive: true });
-      writeFileSync(join(tempHome, ".claude", "commands", "old.md"), "");
-      mkdirSync(join(tempHome, ".config", "mimocode", "command"), { recursive: true });
-      writeFileSync(join(tempHome, ".config", "mimocode", "command", "stale.md"), "");
-      writeFileSync(join(tempHome, ".config", "mimocode", "command", "old-skill.md"), "");
-      mkdirSync(join(tempHome, ".intuitive-flow"), { recursive: true });
-      writeFileSync(ownedRootSkillsStatePath(tempHome), JSON.stringify({ schemaVersion: 1, rootSkills: ["alpha", "removed-alpha"] }) + "\n");
-      const removed = pruneLegacyArtifacts(fixture, tempHome);
-      const removedOwned = pruneRemovedOwnedRootSkills(fixture, tempHome);
-      recordOwnedRootSkills(fixture, tempHome);
-      rmSync(tempHome, { recursive: true, force: true });
-      if (removed !== 4) {
-        throw new Error(`self-test expected 4 removals, got ${removed}`);
-      }
-      if (removedOwned !== 1) {
-        throw new Error(`self-test expected 1 owned removal, got ${removedOwned}`);
-      }
-      return;
-    }
-
     if (command === "validate") {
+      readDefaultSkillAllowlist(allowlistPath);
       console.log("  ✓ default skill allowlist is valid");
       return;
     }
+
+    if (command === "prune") {
+      const removed = pruneLegacyArtifacts(readPruneLedger(allowlistPath));
+      if (removed > 0) {
+        console.log(`  ✓ removed ${removed} stale local command/skill artifact(s)`);
+      }
+      return;
+    }
+
+    const allowlist = readDefaultSkillAllowlist(allowlistPath);
 
     if (command === "root-skills") {
       console.log(allowlist.rootSkills.join("\n"));
@@ -470,14 +469,6 @@ const main = () => {
         console.error(`  ! ${error}`);
       }
       process.exit(errors.length === 0 ? 0 : 1);
-    }
-
-    if (command === "prune") {
-      const removed = pruneLegacyArtifacts(allowlist);
-      if (removed > 0) {
-        console.log(`  ✓ removed ${removed} stale local command/skill artifact(s)`);
-      }
-      return;
     }
 
     if (command === "prune-owned-root-skills") {
