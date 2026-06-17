@@ -3,7 +3,9 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
+  pruneRemovedOwnedRootSkills,
   pruneRemovedExternalSkillStates,
+  recordOwnedRootSkills,
   syncExternalSkillState,
   syncGsdSkillState,
   syncGstackSkillState,
@@ -30,6 +32,53 @@ const expectManagedStateCommand = (script: string, command: string) => {
 };
 
 describe("managed skill state", () => {
+  test("prunes only previously owned root skills missing from the allowlist", () => {
+    const home = mkdtempSync(join(tmpdir(), "skill-home-"));
+    const root = mkdtempSync(join(tmpdir(), "skill-allowlist-"));
+    try {
+      const allowlistPath = writeAllowlist(root, "root-skill current\n");
+      mkdirSync(join(home, ".intuitive-flow"), { recursive: true });
+      writeFileSync(
+        join(home, ".intuitive-flow", "owned-root-skills.json"),
+        JSON.stringify({ schemaVersion: 1, rootSkills: ["current", "removed", "../unsafe"] }),
+      );
+      mkdirSync(join(home, ".codex", "skills", "current"), { recursive: true });
+      mkdirSync(join(home, ".codex", "skills", "removed"), { recursive: true });
+      mkdirSync(join(home, ".agents", "skills", "removed"), { recursive: true });
+      mkdirSync(join(home, ".codex", "skills", "user-skill"), { recursive: true });
+
+      const removed = pruneRemovedOwnedRootSkills(allowlistPath, home);
+
+      expect(removed).toBe(2);
+      expect(existsSync(join(home, ".codex", "skills", "current"))).toBe(true);
+      expect(existsSync(join(home, ".codex", "skills", "removed"))).toBe(false);
+      expect(existsSync(join(home, ".agents", "skills", "removed"))).toBe(false);
+      expect(existsSync(join(home, ".codex", "skills", "user-skill"))).toBe(true);
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("records current root skills as owned state", () => {
+    const home = mkdtempSync(join(tmpdir(), "skill-home-"));
+    const root = mkdtempSync(join(tmpdir(), "skill-allowlist-"));
+    try {
+      const allowlistPath = writeAllowlist(root, "root-skill intuitive-flow\nroot-skill intuitive-doc\n");
+
+      recordOwnedRootSkills(allowlistPath, home);
+
+      const state = JSON.parse(readFileSync(join(home, ".intuitive-flow", "owned-root-skills.json"), "utf8"));
+      expect(state).toEqual({
+        schemaVersion: 1,
+        rootSkills: ["intuitive-doc", "intuitive-flow"],
+      });
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("seeds gstack Codex state without deleting before prior ownership exists", () => {
     const home = mkdtempSync(join(tmpdir(), "managed-skills-home-"));
     const repo = mkdtempSync(join(tmpdir(), "managed-skills-gstack-"));

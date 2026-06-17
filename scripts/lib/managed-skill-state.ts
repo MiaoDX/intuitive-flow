@@ -24,12 +24,23 @@ type SkillLock = {
   skills?: Record<string, { source?: string }>;
 };
 
+type OwnedRootSkillState = {
+  schemaVersion: 1;
+  rootSkills: string[];
+};
+
 const stateDir = (home: string) => join(home, ".intuitive-flow");
+const ownedRootSkillsStatePath = (home: string) => join(stateDir(home), "owned-root-skills.json");
 const gstackCodexStatePath = (home: string) => join(stateDir(home), "gstack-codex-skills.json");
 const gstackClaudeStatePath = (home: string) => join(stateDir(home), "gstack-claude-skills.json");
 const gsdStatePath = (home: string) => join(stateDir(home), "gsd-skills.json");
 const externalStatePath = (home: string, label: string) => join(stateDir(home), `external-skills-${label}.json`);
 const externalStateFilePattern = /^external-skills-([A-Za-z0-9-]+)\.json$/;
+const skillInstallRoots = (home: string) => [
+  join(home, ".codex", "skills"),
+  join(home, ".agents", "skills"),
+  join(home, ".claude", "skills"),
+];
 
 const isSafeName = (value: string) => /^[A-Za-z0-9_][A-Za-z0-9._-]*$/.test(value) && !value.includes("..");
 
@@ -59,6 +70,35 @@ const readState = (path: string): SkillState | null => {
 const writeState = (path: string, state: SkillState) => {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, JSON.stringify(state, null, 2) + "\n");
+};
+
+const readOwnedRootSkillState = (home: string): OwnedRootSkillState | null => {
+  const path = ownedRootSkillsStatePath(home);
+  if (!existsSync(path)) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(readFileSync(path, "utf8")) as Partial<OwnedRootSkillState>;
+    if (parsed.schemaVersion !== 1 || !Array.isArray(parsed.rootSkills)) {
+      return null;
+    }
+
+    return {
+      schemaVersion: 1,
+      rootSkills: parsed.rootSkills.filter((skillName): skillName is string => (
+        typeof skillName === "string" && isSafeName(skillName)
+      )),
+    };
+  } catch {
+    return null;
+  }
+};
+
+const writeOwnedRootSkillState = (home: string, rootSkills: string[]) => {
+  const path = ownedRootSkillsStatePath(home);
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, JSON.stringify({ schemaVersion: 1, rootSkills } satisfies OwnedRootSkillState, null, 2) + "\n");
 };
 
 const normalizeSource = (source: string) => source
@@ -520,8 +560,48 @@ export const syncGsdSkillState = (
   return removed;
 };
 
+export const pruneRemovedOwnedRootSkills = (
+  allowlistPath: string,
+  home = process.env.HOME ?? "",
+): number => {
+  if (home === "") {
+    throw new Error("HOME is required for local owned skill pruning");
+  }
+
+  const previous = readOwnedRootSkillState(home);
+  if (!previous) {
+    return 0;
+  }
+
+  const desired = new Set(readDefaultSkillAllowlist(allowlistPath).rootSkills);
+  let removed = 0;
+
+  for (const skillName of previous.rootSkills) {
+    if (desired.has(skillName)) {
+      continue;
+    }
+
+    for (const installRoot of skillInstallRoots(home)) {
+      removed += removeIfExists(join(installRoot, skillName));
+    }
+  }
+
+  return removed;
+};
+
+export const recordOwnedRootSkills = (
+  allowlistPath: string,
+  home = process.env.HOME ?? "",
+): void => {
+  if (home === "") {
+    throw new Error("HOME is required for local owned skill state");
+  }
+
+  writeOwnedRootSkillState(home, readDefaultSkillAllowlist(allowlistPath).rootSkills);
+};
+
 const usage = () => {
-  console.error("Usage: managed-skill-state.ts <gstack-sync|external-sync|external-prune-removed|gsd-sync> <args...>");
+  console.error("Usage: managed-skill-state.ts <gstack-sync|external-sync|external-prune-removed|gsd-sync|prune-owned-root-skills|record-owned-root-skills> <args...>");
 };
 
 const main = () => {
@@ -581,6 +661,31 @@ const main = () => {
       if (removed > 0) {
         console.log(`  ✓ removed ${removed} stale external skill artifact(s) for removed source label(s)`);
       }
+      return;
+    }
+
+    if (command === "prune-owned-root-skills") {
+      const [allowlistPath] = args;
+      if (!allowlistPath) {
+        usage();
+        process.exit(2);
+      }
+
+      const removed = pruneRemovedOwnedRootSkills(allowlistPath);
+      if (removed > 0) {
+        console.log(`  ✓ removed ${removed} stale owned root skill artifact(s)`);
+      }
+      return;
+    }
+
+    if (command === "record-owned-root-skills") {
+      const [allowlistPath] = args;
+      if (!allowlistPath) {
+        usage();
+        process.exit(2);
+      }
+
+      recordOwnedRootSkills(allowlistPath);
       return;
     }
 

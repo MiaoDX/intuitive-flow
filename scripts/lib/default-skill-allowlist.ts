@@ -2,12 +2,10 @@
 
 import {
   existsSync,
-  mkdirSync,
   readFileSync,
   readdirSync,
   rmSync,
   statSync,
-  writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
 
@@ -44,17 +42,11 @@ const labelPattern = /^[a-z][a-z0-9-]*$/;
 const repoSlugPattern = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const githubUrlPattern = /^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+(?:\.git)?$/;
 const commandNamePattern = /^[A-Za-z0-9_.-]+\.md$/;
-const ownedRootSkillsStatePath = (home: string) => join(home, ".intuitive-flow", "owned-root-skills.json");
 const skillInstallRoots = (home: string) => [
   join(home, ".codex", "skills"),
   join(home, ".agents", "skills"),
   join(home, ".claude", "skills"),
 ];
-
-type OwnedRootSkillState = {
-  schemaVersion: 1;
-  rootSkills: string[];
-};
 
 export const defaultSkillAllowlistPath = (cwd = process.cwd()) => join(cwd, "scripts", "default-skill-allowlist.txt");
 
@@ -349,82 +341,8 @@ export const pruneLegacyArtifacts = (
   return removed;
 };
 
-const isSafeName = (value: string) => skillNamePattern.test(value) && !value.includes("..");
-
-const readOwnedRootSkillState = (home: string): OwnedRootSkillState | null => {
-  const statePath = ownedRootSkillsStatePath(home);
-  if (!existsSync(statePath)) {
-    return null;
-  }
-
-  try {
-    const parsed = JSON.parse(readFileSync(statePath, "utf8")) as Partial<OwnedRootSkillState>;
-    if (parsed.schemaVersion !== 1 || !Array.isArray(parsed.rootSkills)) {
-      return null;
-    }
-
-    return {
-      schemaVersion: 1,
-      rootSkills: parsed.rootSkills.filter((skillName): skillName is string => (
-        typeof skillName === "string" && isSafeName(skillName)
-      )),
-    };
-  } catch {
-    return null;
-  }
-};
-
-export const pruneRemovedOwnedRootSkills = (
-  allowlist: DefaultSkillAllowlist,
-  home = process.env.HOME ?? "",
-): number => {
-  if (home === "") {
-    throw new Error("HOME is required for local owned skill pruning");
-  }
-
-  const state = readOwnedRootSkillState(home);
-  if (!state) {
-    return 0;
-  }
-
-  const desired = new Set(allowlist.rootSkills);
-  let removed = 0;
-
-  for (const skillName of state.rootSkills) {
-    if (desired.has(skillName)) {
-      continue;
-    }
-
-    for (const installRoot of skillInstallRoots(home)) {
-      const skillPath = join(installRoot, skillName);
-      if (existsSync(skillPath)) {
-        rmSync(skillPath, { recursive: true, force: true });
-        removed += 1;
-      }
-    }
-  }
-
-  return removed;
-};
-
-export const recordOwnedRootSkills = (
-  allowlist: DefaultSkillAllowlist,
-  home = process.env.HOME ?? "",
-): void => {
-  if (home === "") {
-    throw new Error("HOME is required for local owned skill state");
-  }
-
-  const statePath = ownedRootSkillsStatePath(home);
-  mkdirSync(join(home, ".intuitive-flow"), { recursive: true });
-  writeFileSync(
-    statePath,
-    JSON.stringify({ schemaVersion: 1, rootSkills: allowlist.rootSkills } satisfies OwnedRootSkillState, null, 2) + "\n",
-  );
-};
-
 const usage = () => {
-  console.error("Usage: default-skill-allowlist.ts <validate|root-skills|check-root-skills|prune|prune-owned-root-skills|record-owned-root-skills|external-labels|external-repo|external-skill-args|gstack-skills|gsd-skills> <allowlist-or-prune-ledger> [arg]");
+  console.error("Usage: default-skill-allowlist.ts <validate|root-skills|check-root-skills|prune|external-labels|external-repo|external-skill-args|gstack-skills|gsd-skills> <allowlist-or-prune-ledger> [arg]");
 };
 
 const main = () => {
@@ -466,19 +384,6 @@ const main = () => {
         console.error(`  ! ${error}`);
       }
       process.exit(errors.length === 0 ? 0 : 1);
-    }
-
-    if (command === "prune-owned-root-skills") {
-      const removed = pruneRemovedOwnedRootSkills(allowlist);
-      if (removed > 0) {
-        console.log(`  ✓ removed ${removed} stale owned root skill artifact(s)`);
-      }
-      return;
-    }
-
-    if (command === "record-owned-root-skills") {
-      recordOwnedRootSkills(allowlist);
-      return;
     }
 
     if (command === "external-labels") {

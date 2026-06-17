@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import {
@@ -8,8 +8,6 @@ import {
   parseDefaultSkillAllowlistText,
   parsePruneLedgerText,
   pruneLegacyArtifacts,
-  pruneRemovedOwnedRootSkills,
-  recordOwnedRootSkills,
 } from "./default-skill-allowlist";
 
 describe("default skill allowlist", () => {
@@ -140,31 +138,6 @@ describe("default skill allowlist", () => {
     }
   });
 
-  test("prunes only previously owned root skills missing from the allowlist", () => {
-    const home = mkdtempSync(join(tmpdir(), "skill-home-"));
-    try {
-      mkdirSync(join(home, ".intuitive-flow"), { recursive: true });
-      writeFileSync(
-        join(home, ".intuitive-flow", "owned-root-skills.json"),
-        JSON.stringify({ schemaVersion: 1, rootSkills: ["current", "removed", "../unsafe"] }),
-      );
-      mkdirSync(join(home, ".codex", "skills", "current"), { recursive: true });
-      mkdirSync(join(home, ".codex", "skills", "removed"), { recursive: true });
-      mkdirSync(join(home, ".agents", "skills", "removed"), { recursive: true });
-      mkdirSync(join(home, ".codex", "skills", "user-skill"), { recursive: true });
-
-      const removed = pruneRemovedOwnedRootSkills(parseDefaultSkillAllowlistText("root-skill current\n"), home);
-
-      expect(removed).toBe(2);
-      expect(existsSync(join(home, ".codex", "skills", "current"))).toBe(true);
-      expect(existsSync(join(home, ".codex", "skills", "removed"))).toBe(false);
-      expect(existsSync(join(home, ".agents", "skills", "removed"))).toBe(false);
-      expect(existsSync(join(home, ".codex", "skills", "user-skill"))).toBe(true);
-    } finally {
-      rmSync(home, { recursive: true, force: true });
-    }
-  });
-
   test("flags legacy skills if they remain as repo root skills", () => {
     const root = mkdtempSync(join(tmpdir(), "root-skills-"));
     try {
@@ -184,20 +157,4 @@ describe("default skill allowlist", () => {
     }
   });
 
-  test("records current root skills as owned state", () => {
-    const home = mkdtempSync(join(tmpdir(), "skill-home-"));
-    try {
-      const allowlist = parseDefaultSkillAllowlistText("root-skill intuitive-flow\nroot-skill intuitive-doc\n");
-
-      recordOwnedRootSkills(allowlist, home);
-
-      const state = JSON.parse(readFileSync(join(home, ".intuitive-flow", "owned-root-skills.json"), "utf8"));
-      expect(state).toEqual({
-        schemaVersion: 1,
-        rootSkills: ["intuitive-doc", "intuitive-flow"],
-      });
-    } finally {
-      rmSync(home, { recursive: true, force: true });
-    }
-  });
 });

@@ -57,15 +57,27 @@ const syncEnv = (home: string, stubBin: string) => ({
   PATH: `${stubBin}${delimiter}${process.env.PATH ?? ""}`,
 });
 
+const copySyncTaskHelpers = (fixture: string) => {
+  const libDir = join(fixture, "scripts", "lib");
+  mkdirSync(libDir, { recursive: true });
+  for (const helper of ["default-skill-allowlist.ts", "managed-skill-state.ts"]) {
+    copyFileSync(join(repoRoot, "scripts", "lib", helper), join(libDir, helper));
+  }
+};
+
+const prepareSyncTaskFixture = (fixture: string) => {
+  mkdirSync(join(fixture, "scripts"), { recursive: true });
+};
+
 describe("local command and skill sync task", () => {
   test("renders Codex command adapters without native spawn_agent fanout", () => {
     const home = mkdtempSync(join(tmpdir(), "sync-command-adapter-home-"));
     const fixture = mkdtempSync(join(tmpdir(), "sync-command-adapter-project-"));
     try {
       const { stubBin } = createCliStubs(home);
+      prepareSyncTaskFixture(fixture);
       mkdirSync(join(home, ".codex", "skills"), { recursive: true });
       mkdirSync(join(fixture, ".claude", "commands"), { recursive: true });
-      mkdirSync(join(fixture, "scripts", "lib"), { recursive: true });
       writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "");
       writeFileSync(
         join(fixture, ".claude", "commands", "sample.md"),
@@ -78,10 +90,7 @@ describe("local command and skill sync task", () => {
           "",
         ].join("\n"),
       );
-      copyFileSync(
-        join(repoRoot, "scripts", "lib", "default-skill-allowlist.ts"),
-        join(fixture, "scripts", "lib", "default-skill-allowlist.ts"),
-      );
+      copySyncTaskHelpers(fixture);
 
       const result = spawnSync(
         "bash",
@@ -172,15 +181,12 @@ describe("local command and skill sync task", () => {
     const fixture = mkdtempSync(join(tmpdir(), "sync-skills-project-"));
     try {
       const { stubBin } = createCliStubs(home, { failNpx: true });
+      prepareSyncTaskFixture(fixture);
       mkdirSync(join(home, ".codex", "skills"), { recursive: true });
-      mkdirSync(join(fixture, "scripts", "lib"), { recursive: true });
       mkdirSync(join(fixture, "skills", "alpha"), { recursive: true });
       writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill alpha\n");
       writeFileSync(join(fixture, "skills", "alpha", "SKILL.md"), "---\nname: alpha\ndescription: Alpha skill.\n---\n");
-      copyFileSync(
-        join(repoRoot, "scripts", "lib", "default-skill-allowlist.ts"),
-        join(fixture, "scripts", "lib", "default-skill-allowlist.ts"),
-      );
+      copySyncTaskHelpers(fixture);
 
       const result = spawnSync(
         "bash",
@@ -215,16 +221,13 @@ describe("local command and skill sync task", () => {
     const fixture = mkdtempSync(join(tmpdir(), "sync-skills-project-"));
     try {
       const { stubBin } = createCliStubs(home);
+      prepareSyncTaskFixture(fixture);
       mkdirSync(join(home, ".codex", "skills", "alpha", "alpha"), { recursive: true });
       writeFileSync(join(home, ".codex", "skills", "alpha", "alpha", "SKILL.md"), "# stale nested copy\n");
-      mkdirSync(join(fixture, "scripts", "lib"), { recursive: true });
       mkdirSync(join(fixture, "skills", "alpha"), { recursive: true });
       writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill alpha\n");
       writeFileSync(join(fixture, "skills", "alpha", "SKILL.md"), "---\nname: alpha\ndescription: Alpha skill.\n---\n");
-      copyFileSync(
-        join(repoRoot, "scripts", "lib", "default-skill-allowlist.ts"),
-        join(fixture, "scripts", "lib", "default-skill-allowlist.ts"),
-      );
+      copySyncTaskHelpers(fixture);
 
       const result = spawnSync(
         "bash",
@@ -258,16 +261,13 @@ describe("local command and skill sync task", () => {
     const fixture = mkdtempSync(join(tmpdir(), "sync-skills-project-"));
     try {
       const { stubBin } = createCliStubs(home);
+      prepareSyncTaskFixture(fixture);
       mkdirSync(join(home, ".codex", "skills"), { recursive: true });
-      mkdirSync(join(fixture, "scripts", "lib"), { recursive: true });
       mkdirSync(join(fixture, "skills", "alpha", "references"), { recursive: true });
       writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill alpha\n");
       writeFileSync(join(fixture, "skills", "alpha", "SKILL.md"), "---\nname: alpha\ndescription: Alpha skill.\n---\n");
       writeFileSync(join(fixture, "skills", "alpha", "references", "old.md"), "# Old reference\n");
-      copyFileSync(
-        join(repoRoot, "scripts", "lib", "default-skill-allowlist.ts"),
-        join(fixture, "scripts", "lib", "default-skill-allowlist.ts"),
-      );
+      copySyncTaskHelpers(fixture);
 
       const runSync = () => spawnSync(
         "bash",
@@ -311,16 +311,13 @@ describe("local command and skill sync task", () => {
     const fixture = mkdtempSync(join(tmpdir(), "sync-skills-project-"));
     try {
       const { stubBin } = createCliStubs(home);
-      mkdirSync(join(fixture, "scripts", "lib"), { recursive: true });
+      prepareSyncTaskFixture(fixture);
       mkdirSync(join(fixture, "skills", "listed"), { recursive: true });
       mkdirSync(join(fixture, "skills", "unlisted"), { recursive: true });
       writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill listed\n");
       writeFileSync(join(fixture, "skills", "listed", "SKILL.md"), "# Listed\n");
       writeFileSync(join(fixture, "skills", "unlisted", "SKILL.md"), "# Unlisted\n");
-      copyFileSync(
-        join(repoRoot, "scripts", "lib", "default-skill-allowlist.ts"),
-        join(fixture, "scripts", "lib", "default-skill-allowlist.ts"),
-      );
+      copySyncTaskHelpers(fixture);
 
       const result = spawnSync(
         "bash",
@@ -350,17 +347,14 @@ describe("local command and skill sync task", () => {
     const fixture = mkdtempSync(join(tmpdir(), "sync-skills-project-"));
     try {
       const { npxLog, stubBin } = createCliStubs(home);
+      prepareSyncTaskFixture(fixture);
       mkdirSync(join(home, ".codex", "skills"), { recursive: true });
-      mkdirSync(join(fixture, "scripts", "lib"), { recursive: true });
       mkdirSync(join(fixture, "skills", "alpha"), { recursive: true });
       mkdirSync(join(fixture, ".claude", "skills", "legacy-local"), { recursive: true });
       writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill alpha\n");
       writeFileSync(join(fixture, "skills", "alpha", "SKILL.md"), "---\nname: alpha\ndescription: Alpha skill.\n---\n");
       writeFileSync(join(fixture, ".claude", "skills", "legacy-local", "SKILL.md"), "---\nname: legacy-local\ndescription: Legacy local skill.\n---\n");
-      copyFileSync(
-        join(repoRoot, "scripts", "lib", "default-skill-allowlist.ts"),
-        join(fixture, "scripts", "lib", "default-skill-allowlist.ts"),
-      );
+      copySyncTaskHelpers(fixture);
 
       const result = spawnSync(
         "bash",
@@ -397,18 +391,15 @@ describe("local command and skill sync task", () => {
     const fixture = mkdtempSync(join(tmpdir(), "sync-skills-project-"));
     try {
       const { stubBin } = createCliStubs(home);
+      prepareSyncTaskFixture(fixture);
       mkdirSync(join(home, ".codex", "skills", "old-skill"), { recursive: true });
       mkdirSync(join(home, ".config", "mimocode", "command"), { recursive: true });
       writeFileSync(join(home, ".config", "mimocode", "command", "old-skill.md"), "");
-      mkdirSync(join(fixture, "scripts", "lib"), { recursive: true });
       mkdirSync(join(fixture, "skills", "alpha"), { recursive: true });
       writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill alpha\n");
       writeFileSync(join(fixture, "scripts", "default-skill-prune-ledger.txt"), "legacy-skill old-skill\n");
       writeFileSync(join(fixture, "skills", "alpha", "SKILL.md"), "---\nname: alpha\ndescription: Alpha skill.\n---\n");
-      copyFileSync(
-        join(repoRoot, "scripts", "lib", "default-skill-allowlist.ts"),
-        join(fixture, "scripts", "lib", "default-skill-allowlist.ts"),
-      );
+      copySyncTaskHelpers(fixture);
 
       const result = spawnSync(
         "bash",
@@ -443,17 +434,14 @@ describe("local command and skill sync task", () => {
     const fixture = mkdtempSync(join(tmpdir(), "sync-skills-project-"));
     try {
       const { stubBin } = createCliStubs(home);
+      prepareSyncTaskFixture(fixture);
       mkdirSync(join(home, ".codex", "skills"), { recursive: true });
-      mkdirSync(join(fixture, "scripts", "lib"), { recursive: true });
       mkdirSync(join(fixture, "skills", "alpha"), { recursive: true });
       mkdirSync(join(fixture, "skills", "beta"), { recursive: true });
       writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill alpha\nroot-skill beta\n");
       writeFileSync(join(fixture, "skills", "alpha", "SKILL.md"), "---\nname: alpha\ndescription: Alpha skill.\n---\n");
       writeFileSync(join(fixture, "skills", "beta", "SKILL.md"), "---\nname: beta\ndescription: Beta skill.\n---\n");
-      copyFileSync(
-        join(repoRoot, "scripts", "lib", "default-skill-allowlist.ts"),
-        join(fixture, "scripts", "lib", "default-skill-allowlist.ts"),
-      );
+      copySyncTaskHelpers(fixture);
 
       const runSync = () => spawnSync(
         "bash",

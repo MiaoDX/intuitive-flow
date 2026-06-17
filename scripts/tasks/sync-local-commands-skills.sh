@@ -32,6 +32,15 @@ _manifest_tool() {
     bun "$SCRIPT_DIR/lib/default-skill-allowlist.ts" "$@"
 }
 
+_managed_state_tool() {
+    if ! command -v bun >/dev/null 2>&1; then
+        echo "  ! bun not found; run scripts/update.sh after fixing the environment pre-check"
+        return 1
+    fi
+
+    bun "$SCRIPT_DIR/lib/managed-skill-state.ts" "$@"
+}
+
 _remove_stale_local_artifacts() {
     local manifest="$1"
     if [ ! -f "$manifest" ]; then
@@ -42,12 +51,12 @@ _remove_stale_local_artifacts() {
 
 _remove_stale_owned_root_skills() {
     local manifest="$1"
-    _manifest_tool prune-owned-root-skills "$manifest"
+    _managed_state_tool prune-owned-root-skills "$manifest"
 }
 
 _record_owned_root_skills() {
     local manifest="$1"
-    _manifest_tool record-owned-root-skills "$manifest"
+    _managed_state_tool record-owned-root-skills "$manifest"
 }
 
 _check_root_skill_manifest() {
