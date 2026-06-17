@@ -218,7 +218,8 @@ before calling the candidate decision-ready.
 
 Route accepted work by object: human docs to `$intuitive-doc`, agent guidance to
 `$intuitive-init`, tests to `$intuitive-tests`, code/API cleanup to
-`$intuitive-refactor`, and execution contracts to `$intuitive-preflight`.
+`$intuitive-refactor`, accepted directions without execution contracts to
+`$intuitive-preflight`, and approved execution contracts to `$intuitive-flow`.
 
 ## Packet Shape
 
