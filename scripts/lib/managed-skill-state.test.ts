@@ -81,14 +81,19 @@ describe("managed skill state", () => {
       mkdirSync(join(home, ".codex", "skills", "removed"), { recursive: true });
       mkdirSync(join(home, ".agents", "skills", "removed"), { recursive: true });
       mkdirSync(join(home, ".codex", "skills", "user-skill"), { recursive: true });
+      mkdirSync(join(home, ".config", "mimocode", "command"), { recursive: true });
+      writeFileSync(join(home, ".config", "mimocode", "command", "removed.md"), "");
+      writeFileSync(join(home, ".config", "mimocode", "command", "user-skill.md"), "");
 
       const removed = pruneRemovedOwnedRootSkills(allowlistPath, home);
 
-      expect(removed).toBe(2);
+      expect(removed).toBe(3);
       expect(existsSync(join(home, ".codex", "skills", "current"))).toBe(true);
       expect(existsSync(join(home, ".codex", "skills", "removed"))).toBe(false);
       expect(existsSync(join(home, ".agents", "skills", "removed"))).toBe(false);
+      expect(existsSync(join(home, ".config", "mimocode", "command", "removed.md"))).toBe(false);
       expect(existsSync(join(home, ".codex", "skills", "user-skill"))).toBe(true);
+      expect(existsSync(join(home, ".config", "mimocode", "command", "user-skill.md"))).toBe(true);
     } finally {
       rmSync(home, { recursive: true, force: true });
       rmSync(root, { recursive: true, force: true });
@@ -250,6 +255,7 @@ describe("managed skill state", () => {
       );
       mkdirSync(join(home, ".agents", "skills", "keep"), { recursive: true });
       mkdirSync(join(home, ".agents", "skills", "remove"), { recursive: true });
+      mkdirSync(join(home, ".codex", "skills", "remove"), { recursive: true });
       mkdirSync(join(home, ".agents", "skills", "user-skill"), { recursive: true });
       mkdirSync(join(home, ".claude", "skills", "remove"), { recursive: true });
       writeFileSync(
@@ -265,9 +271,10 @@ describe("managed skill state", () => {
 
       const removed = syncExternalSkillState(allowlistPath, "demo", home);
 
-      expect(removed).toBe(2);
+      expect(removed).toBe(3);
       expect(existsSync(join(home, ".agents", "skills", "keep"))).toBe(true);
       expect(existsSync(join(home, ".agents", "skills", "remove"))).toBe(false);
+      expect(existsSync(join(home, ".codex", "skills", "remove"))).toBe(false);
       expect(existsSync(join(home, ".claude", "skills", "remove"))).toBe(false);
       expect(existsSync(join(home, ".agents", "skills", "user-skill"))).toBe(true);
       expect(JSON.parse(readFileSync(join(home, ".agents", ".skill-lock.json"), "utf8")).skills.remove).toBeUndefined();
@@ -328,6 +335,7 @@ describe("managed skill state", () => {
         JSON.stringify({ schemaVersion: 1, source: "owner/keep", skills: ["alpha"] }),
       );
       mkdirSync(join(home, ".agents", "skills", "old"), { recursive: true });
+      mkdirSync(join(home, ".codex", "skills", "old"), { recursive: true });
       mkdirSync(join(home, ".agents", "skills", "alpha"), { recursive: true });
       mkdirSync(join(home, ".agents"), { recursive: true });
       writeFileSync(
@@ -342,8 +350,9 @@ describe("managed skill state", () => {
 
       const removed = pruneRemovedExternalSkillStates(allowlistPath, home);
 
-      expect(removed).toBe(2);
+      expect(removed).toBe(3);
       expect(existsSync(join(home, ".agents", "skills", "old"))).toBe(false);
+      expect(existsSync(join(home, ".codex", "skills", "old"))).toBe(false);
       expect(existsSync(join(home, ".agents", "skills", "alpha"))).toBe(true);
       expect(existsSync(join(home, ".intuitive-flow", "external-skills-removed.json"))).toBe(false);
       expect(existsSync(join(home, ".intuitive-flow", "external-skills-keep.json"))).toBe(true);

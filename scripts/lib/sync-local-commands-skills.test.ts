@@ -465,6 +465,7 @@ describe("local command and skill sync task", () => {
 
       expect(existsSync(join(home, ".codex", "skills", "alpha", "SKILL.md"))).toBe(true);
       expect(existsSync(join(home, ".codex", "skills", "beta", "SKILL.md"))).toBe(true);
+      expect(existsSync(join(home, ".config", "mimocode", "command", "beta.md"))).toBe(true);
       expect(JSON.parse(readFileSync(join(home, ".intuitive-flow", "owned-root-skills.json"), "utf8"))).toEqual({
         schemaVersion: 1,
         rootSkills: ["alpha", "beta"],
@@ -482,6 +483,7 @@ describe("local command and skill sync task", () => {
 
       expect(existsSync(join(home, ".codex", "skills", "alpha", "SKILL.md"))).toBe(true);
       expect(existsSync(join(home, ".codex", "skills", "beta"))).toBe(false);
+      expect(existsSync(join(home, ".config", "mimocode", "command", "beta.md"))).toBe(false);
       expect(existsSync(join(home, ".codex", "skills", "user-skill", "SKILL.md"))).toBe(true);
       expect(JSON.parse(readFileSync(join(home, ".intuitive-flow", "owned-root-skills.json"), "utf8"))).toEqual({
         schemaVersion: 1,

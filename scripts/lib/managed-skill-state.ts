@@ -132,6 +132,10 @@ const removeExternalSkillIfPresent = (path: string): number => {
   return removeIfExists(path);
 };
 
+const removeExternalSkillInstalls = (home: string, skillName: string): number => (
+  skillInstallRoots(home).reduce((removed, root) => removed + removeExternalSkillIfPresent(join(root, skillName)), 0)
+);
+
 const removeGsdSkillIfManaged = (path: string): number => {
   const skillPath = join(path, "SKILL.md");
   if (!existsSync(skillPath)) {
@@ -449,8 +453,7 @@ export const syncExternalSkillState = (
         continue;
       }
 
-      removed += removeExternalSkillIfPresent(join(home, ".agents", "skills", skillName));
-      removed += removeExternalSkillIfPresent(join(home, ".claude", "skills", skillName));
+      removed += removeExternalSkillInstalls(home, skillName);
       removeSkillLockEntry(home, skillName, previous.source);
     }
   }
@@ -498,8 +501,7 @@ export const pruneRemovedExternalSkillStates = (
     }
 
     for (const skillName of previous.skills) {
-      removed += removeExternalSkillIfPresent(join(home, ".agents", "skills", skillName));
-      removed += removeExternalSkillIfPresent(join(home, ".claude", "skills", skillName));
+      removed += removeExternalSkillInstalls(home, skillName);
       removeSkillLockEntry(home, skillName, previous.source);
     }
 
@@ -580,6 +582,7 @@ export const pruneRemovedOwnedRootSkills = (
     for (const installRoot of skillInstallRoots(home)) {
       removed += removeIfExists(join(installRoot, skillName));
     }
+    removed += removeIfExists(join(home, ".config", "mimocode", "command", `${skillName}.md`));
   }
 
   return removed;
