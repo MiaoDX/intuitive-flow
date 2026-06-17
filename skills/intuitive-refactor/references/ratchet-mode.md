@@ -19,6 +19,11 @@ Rank slice options in this order:
 A line-count win is weak if it adds vague modules, preserves unnecessary facade
 wrappers, or makes future agents rediscover the same concepts.
 
+For over-engineering, bloat, YAGNI, or deletion-first refactor prompts, use
+community `$ponytail-review` or `$ponytail-audit` as candidate discovery, then
+apply this ratchet mode's severity, behavior-change, proof, and stop gates
+before editing.
+
 ## Good Ratchet Slices
 
 - Ownership splits: report section renderers, artifact envelopes, backend

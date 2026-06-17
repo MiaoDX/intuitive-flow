@@ -110,6 +110,9 @@ that were checked and rejected.
 
 1. Orient from the repo's thin source of truth first: root agent guidance and
    current human docs named by the repo.
+   For over-engineering, bloat, YAGNI, or deletion-first repo cleanup prompts,
+   use community `$ponytail-audit` as discovery input, then apply this skill's
+   Demand gate and materiality bar before selecting candidates.
 2. Before searching high-noise surfaces, run the bundled high-noise summary
    script from the target repo root.
 3. Classify observations by entropy source:
