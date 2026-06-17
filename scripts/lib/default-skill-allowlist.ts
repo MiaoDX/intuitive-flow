@@ -11,10 +11,6 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 
-export type RepoSkillAllowlist = {
-  rootSkills: string[];
-};
-
 export type PruneLedger = {
   legacySkills: string[];
   legacyCommands: string[];
@@ -27,7 +23,8 @@ export type ExternalSkillSource = {
   skills: string[];
 };
 
-export type DefaultSkillAllowlist = RepoSkillAllowlist & {
+export type DefaultSkillAllowlist = {
+  rootSkills: string[];
   externalSources: ExternalSkillSource[];
   gstackSkills: string[];
   gsdSkills: string[];
