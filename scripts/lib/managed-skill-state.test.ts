@@ -32,8 +32,8 @@ const expectManagedStateCommand = (script: string, command: string) => {
   expect(commandLine).toContain("bun ");
 };
 
-const expectManagedStateWrapperCall = (script: string, command: string) => {
-  expect(activeShell(script)).toContain(`_managed_state_tool ${command} "$manifest"`);
+const expectManagedStateToolCall = (script: string, command: string, arg: string) => {
+  expect(activeShell(script)).toContain(`_managed_state_tool ${command} "${arg}" || return 1`);
 };
 
 describe("managed skill state", () => {
@@ -402,8 +402,8 @@ describe("managed skill state", () => {
     expectManagedStateCommand(updateSkills, "external-sync");
     expectManagedStateCommand(updateSkills, "external-prune-removed");
     expectManagedStateCommand(updateCli, "gsd-sync");
-    expectManagedStateWrapperCall(syncLocal, "prune-legacy-artifacts");
-    expectManagedStateWrapperCall(syncLocal, "prune-owned-root-skills");
-    expectManagedStateWrapperCall(syncLocal, "record-owned-root-skills");
+    expectManagedStateToolCall(syncLocal, "prune-legacy-artifacts", "$default_skill_prune_ledger");
+    expectManagedStateToolCall(syncLocal, "prune-owned-root-skills", "$default_skill_allowlist");
+    expectManagedStateToolCall(syncLocal, "record-owned-root-skills", "$default_skill_allowlist");
   });
 });

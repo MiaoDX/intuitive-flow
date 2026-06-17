@@ -41,24 +41,6 @@ _managed_state_tool() {
     bun "$SCRIPT_DIR/lib/managed-skill-state.ts" "$@"
 }
 
-_remove_stale_local_artifacts() {
-    local manifest="$1"
-    if [ ! -f "$manifest" ]; then
-        return 0
-    fi
-    _managed_state_tool prune-legacy-artifacts "$manifest"
-}
-
-_remove_stale_owned_root_skills() {
-    local manifest="$1"
-    _managed_state_tool prune-owned-root-skills "$manifest"
-}
-
-_record_owned_root_skills() {
-    local manifest="$1"
-    _managed_state_tool record-owned-root-skills "$manifest"
-}
-
 _check_root_skill_manifest() {
     local manifest="$1"
     local root_skills_src="$2"
@@ -79,8 +61,10 @@ run_sync_local_commands_skills() {
     default_skill_prune_ledger="$project_dir/scripts/default-skill-prune-ledger.txt"
 
     task_notice "Repo-local commands & skills: pruning stale artifacts"
-    _remove_stale_local_artifacts "$default_skill_prune_ledger" || return 1
-    _remove_stale_owned_root_skills "$default_skill_allowlist" || return 1
+    if [ -f "$default_skill_prune_ledger" ]; then
+        _managed_state_tool prune-legacy-artifacts "$default_skill_prune_ledger" || return 1
+    fi
+    _managed_state_tool prune-owned-root-skills "$default_skill_allowlist" || return 1
 
     local claude_dest="$HOME/.claude/commands"
     local codex_dest="$HOME/.codex/skills"
@@ -168,7 +152,7 @@ run_sync_local_commands_skills() {
         if [ "$root_skills_mimocode_synced" -gt 0 ]; then
             echo "  ✓ $root_skills_mimocode_synced repo-local command(s) → ~/.config/mimocode/command/"
         fi
-        _record_owned_root_skills "$default_skill_allowlist" || return 1
+        _managed_state_tool record-owned-root-skills "$default_skill_allowlist" || return 1
     fi
 }
 
