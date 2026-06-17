@@ -61,6 +61,17 @@ codex_native_package_version() {
     printf '%s\n' "$native_version"
 }
 
+codex_native_install_spec() {
+    local registry="$1"
+    local native_name native_spec
+
+    native_name=$(codex_native_package_name)
+    [ -n "$native_name" ] || return 1
+
+    native_spec=$(codex_native_dependency_spec "$registry") || return 1
+    printf '%s@%s\n' "$native_name" "$native_spec"
+}
+
 codex_native_dist_tag_version() {
     local registry="$1"
     local native_name

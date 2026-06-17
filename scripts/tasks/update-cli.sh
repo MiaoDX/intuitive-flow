@@ -23,13 +23,10 @@ global_cli_repair_specs() {
         specs+=("$claude_native")
     fi
 
-    local codex_native_name codex_native_version
-    codex_native_name=$(codex_native_package_name)
-    if [ -n "$codex_native_name" ]; then
-        codex_native_version=$(codex_native_package_version "$registry" 2>/dev/null) || codex_native_version=""
-        if [ -n "$codex_native_version" ]; then
-            specs+=("$codex_native_name@npm:@openai/codex@$codex_native_version")
-        fi
+    local codex_native_spec
+    codex_native_spec=$(codex_native_install_spec "$registry" 2>/dev/null) || codex_native_spec=""
+    if [ -n "$codex_native_spec" ]; then
+        specs+=("$codex_native_spec")
     fi
 
     printf '%s\n' "${specs[@]}"
@@ -254,14 +251,21 @@ collect_global_cli_install_packages() {
         append_if_package_needs_update "$registry" "$package"
     done
 
-    local codex_native_name codex_native_version codex_native_installed codex_native_spec
+    local codex_native_name codex_native_version codex_native_installed codex_native_spec native_spec_prefix
     codex_native_name=$(codex_native_package_name)
     if [ -n "$codex_native_name" ]; then
-        codex_native_version=$(codex_native_package_version "$registry") || codex_native_version=""
+        codex_native_spec=$(codex_native_install_spec "$registry") || codex_native_spec=""
+        native_spec_prefix="$codex_native_name@npm:@openai/codex@"
+        codex_native_version="${codex_native_spec#"$native_spec_prefix"}"
+        if [ "$codex_native_version" = "$codex_native_spec" ]; then
+            codex_native_version=""
+        fi
         codex_native_installed=$(global_npm_package_version "$codex_native_name") || codex_native_installed=""
-        codex_native_spec="$codex_native_name@npm:@openai/codex@$codex_native_version"
 
-        if [ -z "$codex_native_version" ]; then
+        if [ -z "$codex_native_spec" ]; then
+            echo "  ! could not resolve Codex native package spec for: $codex_native_name"
+            GLOBAL_CLI_CHECK_FAILED=true
+        elif [ -z "$codex_native_version" ]; then
             echo "  ! could not resolve Codex native package version for: $codex_native_name"
             GLOBAL_CLI_CHECK_FAILED=true
         elif [ -z "$codex_native_installed" ]; then
