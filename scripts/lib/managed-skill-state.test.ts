@@ -17,6 +17,14 @@ const writeAllowlist = (root: string, text: string) => {
   return allowlistPath;
 };
 
+const expectActiveShellLine = (script: string, pattern: RegExp) => {
+  const activeLines = script
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line !== "" && !line.startsWith("#"));
+  expect(activeLines.some((line) => pattern.test(line))).toBe(true);
+};
+
 describe("managed skill state", () => {
   test("seeds gstack Codex state without deleting before prior ownership exists", () => {
     const home = mkdtempSync(join(tmpdir(), "managed-skills-home-"));
@@ -301,11 +309,11 @@ describe("managed skill state", () => {
     const updateSkills = readFileSync(join(repoRoot, "scripts", "tasks", "update-skills.sh"), "utf8");
     const updateCli = readFileSync(join(repoRoot, "scripts", "tasks", "update-cli.sh"), "utf8");
 
-    expect(updateGstack).toContain('managed-skill-state.ts" "$@"');
-    expect(updateGstack).toContain('gstack-sync "$repo_dir" "$SCRIPT_DIR/default-skill-allowlist.txt"');
-    expect(updateSkills).toContain('managed-skill-state.ts" "$@"');
-    expect(updateSkills).toContain('external-sync "$allowlist" "$label"');
-    expect(updateSkills).toContain('external-prune-removed "$allowlist"');
-    expect(updateCli).toContain('gsd-sync "$SCRIPT_DIR/default-skill-allowlist.txt"');
+    expectActiveShellLine(updateGstack, /^bun "\$SCRIPT_DIR\/lib\/managed-skill-state\.ts" "\$@"$/);
+    expectActiveShellLine(updateGstack, /^_managed_skill_state_tool gstack-sync "\$repo_dir" "\$SCRIPT_DIR\/default-skill-allowlist\.txt" \|\| return 1$/);
+    expectActiveShellLine(updateSkills, /^bun "\$SCRIPT_DIR\/lib\/managed-skill-state\.ts" "\$@"$/);
+    expectActiveShellLine(updateSkills, /^_managed_skill_state_tool external-sync "\$allowlist" "\$label"$/);
+    expectActiveShellLine(updateSkills, /^_managed_skill_state_tool external-prune-removed "\$allowlist"$/);
+    expectActiveShellLine(updateCli, /^bun "\$SCRIPT_DIR\/lib\/managed-skill-state\.ts" gsd-sync "\$SCRIPT_DIR\/default-skill-allowlist\.txt" \|\| return 1$/);
   });
 });
