@@ -176,11 +176,11 @@ kinds above.
 
 During `scripts/update.sh`, the local sync writes
 `~/.intuitive-flow/owned-root-skills.json` after a successful root-skill sync.
-On later runs, it removes only skill directories that were previously recorded
-as Intuitive-owned but are no longer listed as `root-skill`. If the ownership
-state does not exist yet, the updater seeds it after sync and does not infer
-ownership from matching names. User-installed skills outside that owned state
-are preserved.
+On later runs, it removes only install artifacts that were previously recorded
+as Intuitive-owned but are no longer listed as `root-skill`: skill directories
+and generated MiMoCode command wrappers. If the ownership state does not exist
+yet, the updater seeds it after sync and does not infer ownership from matching
+names. User-installed skills outside that owned state are preserved.
 
 For each allowlisted repo-owned root skill, the Codex install directory is a
 fresh mirror of `skills/<name>/` on every sync. The updater replaces the
@@ -207,7 +207,8 @@ prune the managed install.
 External source cleanup uses the same ownership rule. After each successful
 external install, the updater writes
 `~/.intuitive-flow/external-skills-<label>.json`. Later runs remove only skills
-that were previously recorded for that label but are no longer desired.
+that were previously recorded for that label but are no longer desired, across
+the Claude Code, Codex, and shared agent skill install roots.
 
 GSD setup remains upstream-owned, but exposed GSD wrappers are pruned back to
 the `gsd-skill` entries in the default allowlist after each installer run. The
