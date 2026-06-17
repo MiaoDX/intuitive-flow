@@ -100,7 +100,7 @@ describe("skill checker", () => {
       writeFixtureFile(
         root,
         "skills/alpha/SKILL.md",
-        "---\nname: alpha\ndescription: Alpha.\n---\n\nRun `bun /home/mi/ws/intuitive-flow/skills/alpha/scripts/run.ts`.\n",
+        `---\nname: alpha\ndescription: Alpha.\n---\n\nRun \`bun ${root}/skills/alpha/scripts/run.ts\`.\n`,
       );
 
       expect(checkSkills(optionsFor(root))).toContain(

@@ -120,7 +120,6 @@ const normalizeMention = (mention: string): string =>
 const skillRelativePath = (path: string): string => normalize(path).replace(/\\/g, "/");
 
 const isMarkdownFile = (file: string): boolean => file.endsWith(".md");
-const localCheckoutPathPattern = /\/home\/mi\/ws\/intuitive-flow\b/;
 
 const requiredWorkflowMarkers: Record<string, string[]> = {
   "agent-planning-loop": ["Plan artifact:", "Recommended next action:", "Shortcut:"],
@@ -166,7 +165,7 @@ const localResourceMentions = (text: string, sourceFile: string): ResourceMentio
   return [...mentions.values()].sort((a, b) => a.displayPath.localeCompare(b.displayPath));
 };
 
-const checkSkill = (skillsRoot: string, skillName: string): string[] => {
+const checkSkill = (skillsRoot: string, skillName: string, projectRoot: string): string[] => {
   const errors: string[] = [];
   const skillDir = join(skillsRoot, skillName);
   const skillPath = join(skillDir, "SKILL.md");
@@ -198,7 +197,7 @@ const checkSkill = (skillsRoot: string, skillName: string): string[] => {
     if (fileText.includes("{{>")) {
       errors.push(`template include left in canonical skill file: skills/${skillName}/${file}`);
     }
-    if (isMarkdownFile(file) && localCheckoutPathPattern.test(fileText)) {
+    if (isMarkdownFile(file) && fileText.includes(projectRoot)) {
       errors.push(`machine-local checkout path in canonical skill file: skills/${skillName}/${file}`);
     }
 
@@ -357,6 +356,7 @@ export const skillSizeReport = (
 
 export const checkSkills = (options = defaultOptions()): string[] => {
   const errors: string[] = [];
+  const projectRoot = dirname(options.skillsRoot);
 
   if (existsSync(options.deprecatedSourceRoot) && listFiles(options.deprecatedSourceRoot).length > 0) {
     errors.push("deprecated generated skill source remains: skills-src/");
@@ -383,7 +383,7 @@ export const checkSkills = (options = defaultOptions()): string[] => {
   errors.push(...checkPruneLedger(allowlist, options.allowlistPath, options.pruneLedgerPath));
 
   for (const skillName of skillNames(options.skillsRoot)) {
-    errors.push(...checkSkill(options.skillsRoot, skillName));
+    errors.push(...checkSkill(options.skillsRoot, skillName, projectRoot));
   }
 
   errors.push(...checkToolingVersions(options));
