@@ -187,10 +187,9 @@ fresh mirror of `skills/<name>/` on every sync. The updater replaces the
 installed skill contents before copying so deleted or renamed `references/`,
 `templates/`, or `scripts/` resources cannot survive as stale installed files.
 
-The scout-based planning skill is installed as `agent-planning-loop`.
-`intuitive-planning-loop` is a legacy skill name only; the prune ledger keeps it
-as `legacy-skill` so updater-owned stale installs and generated command
-wrappers are pruned on later syncs.
+The scout-based planning skill is installed as `agent-planning-loop`. Retired
+repo-owned skill names stay in the prune ledger so updater-owned stale installs
+and generated command wrappers are pruned on later syncs.
 
 External skill installs are explicit `external-skill` entries in the default
 allowlist. The updater never installs an external source in broad `all` mode by

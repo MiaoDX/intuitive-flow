@@ -76,14 +76,14 @@ The current maintenance focus is keeping the repo dogfoodable:
   be dogfooded before they are promoted into flow routes or removed
 - keep the optional `gstack-autoplan` planning scout default-visible because the
   staged workflow names it as an unknown-unknown route
-- keep `agent-planning-loop` as the canonical scout-planning root skill and
-  `intuitive-planning-loop` as prune-ledger cleanup only
+- keep `agent-planning-loop` as the canonical scout-planning root skill; retired
+  repo-owned skill names belong in the prune ledger only
 - use `bun run audit:skill-upstreams` to review upstream skill candidates
   outside the allowlist before adding anything new
 - keep installed global skill surfaces pruned by owner state: Intuitive root
   skills, managed external sources, GSD wrappers, and GStack wrappers
 - keep `$gstack-investigate` as the default root-cause/debugging route instead
-  of also default-installing `$diagnose`
+  of adding another overlapping default debugging skill
 - keep GSD phase machinery routed by `$intuitive-flow` or explicit GSD use;
   only GSD status/resume/pause helpers are default-visible
 - edit repo-owned skills directly under `skills/`
