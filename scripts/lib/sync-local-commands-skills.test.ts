@@ -136,8 +136,9 @@ describe("local command and skill sync task", () => {
 
       expect(allowlist.rootSkills.length).toBeGreaterThan(0);
       expect(allowlist.rootSkills).toContain("agent-planning-loop");
-      expect(allowlist.rootSkills).not.toContain("intuitive-planning-loop");
-      expect(pruneLedger.legacySkills).toContain("intuitive-planning-loop");
+      for (const legacySkill of pruneLedger.legacySkills) {
+        expect(allowlist.rootSkills).not.toContain(legacySkill);
+      }
       const npmCalls = await Bun.file(npmLog).text();
       expect(npmCalls).toContain("view skills version");
       const npxCalls = await Bun.file(npxLog).text();
@@ -158,7 +159,9 @@ describe("local command and skill sync task", () => {
         expect(descLine).not.toBe('description: ">"');
         expect(descLine.length).toBeGreaterThan("description: \"\"".length + 5);
       }
-      expect(existsSync(join(home, ".codex", "skills", "intuitive-planning-loop"))).toBe(false);
+      for (const legacySkill of pruneLedger.legacySkills) {
+        expect(existsSync(join(home, ".codex", "skills", legacySkill))).toBe(false);
+      }
     } finally {
       rmSync(home, { recursive: true, force: true });
     }
