@@ -46,7 +46,7 @@ _remove_stale_local_artifacts() {
     if [ ! -f "$manifest" ]; then
         return 0
     fi
-    _manifest_tool prune "$manifest"
+    _managed_state_tool prune-legacy-artifacts "$manifest"
 }
 
 _remove_stale_owned_root_skills() {

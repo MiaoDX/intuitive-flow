@@ -12,7 +12,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
-import { externalSkillSourceByLabel, readDefaultSkillAllowlist } from "./default-skill-allowlist";
+import { externalSkillSourceByLabel, readDefaultSkillAllowlist, readPruneLedger } from "./default-skill-allowlist";
 
 type SkillState = {
   schemaVersion: 1;
@@ -600,8 +600,38 @@ export const recordOwnedRootSkills = (
   writeOwnedRootSkillState(home, readDefaultSkillAllowlist(allowlistPath).rootSkills);
 };
 
+export const pruneLegacyArtifacts = (
+  pruneLedgerPath: string,
+  home = process.env.HOME ?? "",
+): number => {
+  if (home === "") {
+    throw new Error("HOME is required for local artifact pruning");
+  }
+
+  const ledger = readPruneLedger(pruneLedgerPath);
+  let removed = 0;
+
+  for (const commandName of ledger.legacyCommands) {
+    removed += removeIfExists(join(home, ".claude", "commands", commandName));
+  }
+
+  for (const commandName of ledger.legacyMimocodeCommands) {
+    removed += removeIfExists(join(home, ".config", "mimocode", "command", commandName));
+  }
+
+  for (const skillName of ledger.legacySkills) {
+    for (const installRoot of skillInstallRoots(home)) {
+      removed += removeIfExists(join(installRoot, skillName));
+    }
+
+    removed += removeIfExists(join(home, ".config", "mimocode", "command", `${skillName}.md`));
+  }
+
+  return removed;
+};
+
 const usage = () => {
-  console.error("Usage: managed-skill-state.ts <gstack-sync|external-sync|external-prune-removed|gsd-sync|prune-owned-root-skills|record-owned-root-skills> <args...>");
+  console.error("Usage: managed-skill-state.ts <gstack-sync|external-sync|external-prune-removed|gsd-sync|prune-legacy-artifacts|prune-owned-root-skills|record-owned-root-skills> <args...>");
 };
 
 const main = () => {
@@ -674,6 +704,20 @@ const main = () => {
       const removed = pruneRemovedOwnedRootSkills(allowlistPath);
       if (removed > 0) {
         console.log(`  ✓ removed ${removed} stale owned root skill artifact(s)`);
+      }
+      return;
+    }
+
+    if (command === "prune-legacy-artifacts") {
+      const [pruneLedgerPath] = args;
+      if (!pruneLedgerPath) {
+        usage();
+        process.exit(2);
+      }
+
+      const removed = pruneLegacyArtifacts(pruneLedgerPath);
+      if (removed > 0) {
+        console.log(`  ✓ removed ${removed} stale local command/skill artifact(s)`);
       }
       return;
     }

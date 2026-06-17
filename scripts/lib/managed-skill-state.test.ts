@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
+  pruneLegacyArtifacts,
   pruneRemovedOwnedRootSkills,
   pruneRemovedExternalSkillStates,
   recordOwnedRootSkills,
@@ -31,7 +32,41 @@ const expectManagedStateCommand = (script: string, command: string) => {
   expect(commandLine).toContain("bun ");
 };
 
+const expectManagedStateWrapperCall = (script: string, command: string) => {
+  expect(activeShell(script)).toContain(`_managed_state_tool ${command} "$manifest"`);
+};
+
 describe("managed skill state", () => {
+  test("prunes only prune-ledger legacy artifacts", () => {
+    const home = mkdtempSync(join(tmpdir(), "skill-home-"));
+    const root = mkdtempSync(join(tmpdir(), "skill-prune-ledger-"));
+    try {
+      const pruneLedgerPath = join(root, "default-skill-prune-ledger.txt");
+      writeFileSync(pruneLedgerPath, "legacy-skill old-skill\nlegacy-command old.md\nlegacy-mimocode-command stale.md\n");
+      mkdirSync(join(home, ".codex", "skills", "old-skill"), { recursive: true });
+      mkdirSync(join(home, ".codex", "skills", "keep-skill"), { recursive: true });
+      mkdirSync(join(home, ".claude", "commands"), { recursive: true });
+      writeFileSync(join(home, ".claude", "commands", "old.md"), "");
+      mkdirSync(join(home, ".config", "mimocode", "command"), { recursive: true });
+      writeFileSync(join(home, ".config", "mimocode", "command", "stale.md"), "");
+      writeFileSync(join(home, ".config", "mimocode", "command", "old-skill.md"), "");
+      writeFileSync(join(home, ".config", "mimocode", "command", "keep.md"), "");
+
+      const removed = pruneLegacyArtifacts(pruneLedgerPath, home);
+
+      expect(removed).toBe(4);
+      expect(existsSync(join(home, ".codex", "skills", "old-skill"))).toBe(false);
+      expect(existsSync(join(home, ".claude", "commands", "old.md"))).toBe(false);
+      expect(existsSync(join(home, ".config", "mimocode", "command", "stale.md"))).toBe(false);
+      expect(existsSync(join(home, ".config", "mimocode", "command", "old-skill.md"))).toBe(false);
+      expect(existsSync(join(home, ".config", "mimocode", "command", "keep.md"))).toBe(true);
+      expect(existsSync(join(home, ".codex", "skills", "keep-skill"))).toBe(true);
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("prunes only previously owned root skills missing from the allowlist", () => {
     const home = mkdtempSync(join(tmpdir(), "skill-home-"));
     const root = mkdtempSync(join(tmpdir(), "skill-allowlist-"));
@@ -361,10 +396,14 @@ describe("managed skill state", () => {
     const updateGstack = readFileSync(join(repoRoot, "scripts", "tasks", "update-gstack.sh"), "utf8");
     const updateSkills = readFileSync(join(repoRoot, "scripts", "tasks", "update-skills.sh"), "utf8");
     const updateCli = readFileSync(join(repoRoot, "scripts", "tasks", "update-cli.sh"), "utf8");
+    const syncLocal = readFileSync(join(repoRoot, "scripts", "tasks", "sync-local-commands-skills.sh"), "utf8");
 
     expectManagedStateCommand(updateGstack, "gstack-sync");
     expectManagedStateCommand(updateSkills, "external-sync");
     expectManagedStateCommand(updateSkills, "external-prune-removed");
     expectManagedStateCommand(updateCli, "gsd-sync");
+    expectManagedStateWrapperCall(syncLocal, "prune-legacy-artifacts");
+    expectManagedStateWrapperCall(syncLocal, "prune-owned-root-skills");
+    expectManagedStateWrapperCall(syncLocal, "record-owned-root-skills");
   });
 });

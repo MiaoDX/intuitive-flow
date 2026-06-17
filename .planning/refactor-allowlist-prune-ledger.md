@@ -32,6 +32,8 @@ DONE
 - Remove `legacy*` fields from `DefaultSkillAllowlist`.
 - Update focused tests so they prove the split boundary.
 - Keep broader install, GStack/GSD, and external skill behavior unchanged.
+- Move destructive prune-ledger artifact deletion out of the allowlist parser
+  and into the managed install-state owner.
 
 ## Parked Cross-Seam / Future Ideas
 
@@ -64,3 +66,14 @@ tests pass, `bun run verify` passes, and parked ideas remain unimplemented.
 - 2026-06-17: Verified with:
   `bun test scripts/lib/default-skill-allowlist.test.ts scripts/lib/check-skills.test.ts scripts/lib/sync-local-commands-skills.test.ts scripts/lib/managed-skill-state.test.ts`;
   `bun run check:skills`; `bun run check`.
+- 2026-06-17: Reopened after the owned-root state cleanup made the remaining
+  owner split clear: prune-ledger parsing belongs in the allowlist module, but
+  destructive installed-artifact deletion still belongs with managed install
+  state.
+- 2026-06-17: Moved destructive prune-ledger artifact deletion to
+  `managed-skill-state.ts`, kept prune-ledger parsing and validation in
+  `default-skill-allowlist.ts`, and updated sync shell calls to use
+  `prune-legacy-artifacts`. Verified with:
+  `bun test scripts/lib/default-skill-allowlist.test.ts scripts/lib/managed-skill-state.test.ts scripts/lib/sync-local-commands-skills.test.ts scripts/lib/check-skills.test.ts`;
+  `bun run check`; `shellcheck --severity=error scripts/update.sh scripts/**/*.sh .githooks/pre-commit`;
+  `bun run check:skills`; and `bun run verify`.

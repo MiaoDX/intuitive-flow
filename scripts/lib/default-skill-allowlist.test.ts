@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import {
@@ -7,7 +7,6 @@ import {
   readDefaultSkillAllowlist,
   parseDefaultSkillAllowlistText,
   parsePruneLedgerText,
-  pruneLegacyArtifacts,
 } from "./default-skill-allowlist";
 
 describe("default skill allowlist", () => {
@@ -106,35 +105,6 @@ describe("default skill allowlist", () => {
       expect(errors).toContain("root skill missing from default allowlist: unlisted");
     } finally {
       rmSync(root, { recursive: true, force: true });
-    }
-  });
-
-  test("prunes only prune-ledger legacy artifacts", () => {
-    const home = mkdtempSync(join(tmpdir(), "skill-home-"));
-    try {
-      mkdirSync(join(home, ".codex", "skills", "old-skill"), { recursive: true });
-      mkdirSync(join(home, ".codex", "skills", "keep-skill"), { recursive: true });
-      mkdirSync(join(home, ".claude", "commands"), { recursive: true });
-      writeFileSync(join(home, ".claude", "commands", "old.md"), "");
-      mkdirSync(join(home, ".config", "mimocode", "command"), { recursive: true });
-      writeFileSync(join(home, ".config", "mimocode", "command", "stale.md"), "");
-      writeFileSync(join(home, ".config", "mimocode", "command", "old-skill.md"), "");
-      writeFileSync(join(home, ".config", "mimocode", "command", "keep.md"), "");
-
-      const removed = pruneLegacyArtifacts(
-        parsePruneLedgerText("legacy-skill old-skill\nlegacy-command old.md\nlegacy-mimocode-command stale.md\n"),
-        home,
-      );
-
-      expect(removed).toBe(4);
-      expect(existsSync(join(home, ".codex", "skills", "old-skill"))).toBe(false);
-      expect(existsSync(join(home, ".claude", "commands", "old.md"))).toBe(false);
-      expect(existsSync(join(home, ".config", "mimocode", "command", "stale.md"))).toBe(false);
-      expect(existsSync(join(home, ".config", "mimocode", "command", "old-skill.md"))).toBe(false);
-      expect(existsSync(join(home, ".config", "mimocode", "command", "keep.md"))).toBe(true);
-      expect(existsSync(join(home, ".codex", "skills", "keep-skill"))).toBe(true);
-    } finally {
-      rmSync(home, { recursive: true, force: true });
     }
   });
 

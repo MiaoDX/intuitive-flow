@@ -4,7 +4,6 @@ import {
   existsSync,
   readFileSync,
   readdirSync,
-  rmSync,
   statSync,
 } from "node:fs";
 import { join } from "node:path";
@@ -42,11 +41,6 @@ const labelPattern = /^[a-z][a-z0-9-]*$/;
 const repoSlugPattern = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const githubUrlPattern = /^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+(?:\.git)?$/;
 const commandNamePattern = /^[A-Za-z0-9_.-]+\.md$/;
-const skillInstallRoots = (home: string) => [
-  join(home, ".codex", "skills"),
-  join(home, ".agents", "skills"),
-  join(home, ".claude", "skills"),
-];
 
 export const defaultSkillAllowlistPath = (cwd = process.cwd()) => join(cwd, "scripts", "default-skill-allowlist.txt");
 
@@ -296,53 +290,8 @@ export const checkRootSkills = (allowlist: DefaultSkillAllowlist, rootSkillsDir:
   return errors;
 };
 
-export const pruneLegacyArtifacts = (
-  ledger: PruneLedger,
-  home = process.env.HOME ?? "",
-): number => {
-  if (home === "") {
-    throw new Error("HOME is required for local artifact pruning");
-  }
-
-  let removed = 0;
-
-  for (const commandName of ledger.legacyCommands) {
-    const commandPath = join(home, ".claude", "commands", commandName);
-    if (existsSync(commandPath)) {
-      rmSync(commandPath, { recursive: true, force: true });
-      removed += 1;
-    }
-  }
-
-  for (const commandName of ledger.legacyMimocodeCommands) {
-    const commandPath = join(home, ".config", "mimocode", "command", commandName);
-    if (existsSync(commandPath)) {
-      rmSync(commandPath, { recursive: true, force: true });
-      removed += 1;
-    }
-  }
-
-  for (const skillName of ledger.legacySkills) {
-    for (const installRoot of skillInstallRoots(home)) {
-      const skillPath = join(installRoot, skillName);
-      if (existsSync(skillPath)) {
-        rmSync(skillPath, { recursive: true, force: true });
-        removed += 1;
-      }
-    }
-
-    const mimocodeCommandPath = join(home, ".config", "mimocode", "command", `${skillName}.md`);
-    if (existsSync(mimocodeCommandPath)) {
-      rmSync(mimocodeCommandPath, { recursive: true, force: true });
-      removed += 1;
-    }
-  }
-
-  return removed;
-};
-
 const usage = () => {
-  console.error("Usage: default-skill-allowlist.ts <validate|root-skills|check-root-skills|prune|external-labels|external-repo|external-skill-args|gstack-skills|gsd-skills> <allowlist-or-prune-ledger> [arg]");
+  console.error("Usage: default-skill-allowlist.ts <validate|root-skills|check-root-skills|external-labels|external-repo|external-skill-args|gstack-skills|gsd-skills> <allowlist> [arg]");
 };
 
 const main = () => {
@@ -356,14 +305,6 @@ const main = () => {
     if (command === "validate") {
       readDefaultSkillAllowlist(allowlistPath);
       console.log("  ✓ default skill allowlist is valid");
-      return;
-    }
-
-    if (command === "prune") {
-      const removed = pruneLegacyArtifacts(readPruneLedger(allowlistPath));
-      if (removed > 0) {
-        console.log(`  ✓ removed ${removed} stale local command/skill artifact(s)`);
-      }
       return;
     }
 
