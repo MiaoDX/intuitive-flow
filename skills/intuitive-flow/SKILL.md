@@ -48,9 +48,12 @@ Before reading more context, launching workers, or editing files:
 2. Check host goal state when available.
    A `blocked` or `complete` goal is a stop gate, not a resume cue. An active
    goal is prior intent, not permission to override the latest user message.
-3. If this is an active-goal resume/debug turn, use Hot Resume:
-   read only the task capsule if any, `git status --short`, `git log -3
-   --oneline`, and at most one focused machine-readable artifact summary.
+3. If this is an active-goal resume/debug turn, or a continuation of a
+   plan-backed durable run, use Hot Resume: read only the task capsule if any
+   (`docs/status/active/<plan-slug>.md` for plan-backed runs), `git status
+   --short`, `git log -3 --oneline`, and at most one focused
+   machine-readable artifact summary. Do not reread the full source plan unless
+   the capsule cannot answer a named next-action question.
 4. When changing `intuitive-flow` itself, audit first and patch only the named
    smallest delta after current-turn user permission.
 

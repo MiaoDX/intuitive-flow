@@ -28,14 +28,18 @@ source files, or large JSON artifacts.
 
 Read only:
 
-1. the task capsule, if one exists;
+1. the task capsule, if one exists
+   (`docs/status/active/<plan-slug>.md` for plan-backed runs);
 2. `git status --short`;
 3. `git log -3 --oneline`;
 4. at most one focused machine-readable artifact summary.
 
-If no capsule exists and the run is non-trivial, create or request a capsule
-before implementation. Continue in the same turn only when the experiment
-contract is trivial and the next command is low-risk.
+If no capsule exists and the run is a non-trivial plan-backed durable run,
+create `docs/status/active/<plan-slug>.md` from the current active slice before
+implementation. Do not create a same-directory `-process` plan; the source plan
+stays canonical and the capsule is only the resume surface. Continue in the
+same turn only when the experiment contract is trivial and the next command is
+low-risk.
 
 If that low-context check or stop gate says the next required evidence is
 blocked on a human action, local hardware, paid account, external service, or
@@ -179,13 +183,18 @@ session.
 
 For durable local-debug work, maintain a compact capsule under a project-local
 status surface such as `docs/status/active/<task>.md` when the repo has one.
-Use an equivalent task-owned file when it does not.
+For plan-backed durable work, default to
+`docs/status/active/<plan-slug>.md`, where `<plan-slug>` is the source plan file
+name without `.md`. Use an equivalent task-owned file when the repo does not
+have a status surface.
 
 The capsule should contain only:
 
+- source plan path;
 - current blocker;
 - blocker fingerprint;
 - last proven evidence;
+- completed slices, summarized in one line each;
 - next hypothesis;
 - next command/artifact;
 - stop condition;
@@ -193,6 +202,8 @@ The capsule should contain only:
 - parked work.
 
 The capsule is a resume accelerator, not a replacement for canonical plans,
-status, or verification artifacts. Update canonical source-of-truth files only
-when project-level focus, decisions, blockers, or verification expectations
-materially change.
+status, or verification artifacts. During compact/resume, read the capsule
+first and reopen the source plan only for the specific active section or
+acceptance criterion the capsule points to. Update canonical source-of-truth
+files only when project-level focus, decisions, blockers, verification
+expectations, or final plan freshness materially change.
