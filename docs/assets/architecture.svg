@@ -75,8 +75,7 @@
   <text x="112" y="291" class="mono small" fill="#0f172a">~/.claude</text>
   <text x="222" y="291" class="mono small" fill="#0f172a">~/.codex</text>
   <text x="326" y="291" class="mono small" fill="#0f172a">~/.agents</text>
-  <text x="432" y="291" class="mono small" fill="#0f172a">~/.gstack</text>
-  <text x="538" y="291" class="mono small" fill="#0f172a">vendor/gstack</text>
+  <text x="432" y="291" class="mono small" fill="#0f172a">vendor/gstack</text>
 
   <rect x="90" y="310" width="620" height="18" rx="6" fill="#f1f5f9" stroke="#d8e0ea"/>
   <text x="400" y="323" text-anchor="middle" class="font small" fill="#475569">Primary: flow, refactor, reduce-entropy, squash. Proof: bun run verify.</text>

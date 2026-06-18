@@ -3,7 +3,6 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
-  commentIdFromCommentOutput,
   agentCommentBanner,
   attemptRecordFromCommentText,
   attemptRecordsFromComments,
@@ -13,12 +12,9 @@ import {
   extractGoal,
   extractGoalFromPreflight,
   extractTrackedGoalFromComments,
-  imageAttachmentUrlFromCommentOutput,
   issueWorkspaceIdFromCreateOutput,
   markdownCodeBlock,
-  markdownForEvidenceCardUpload,
   markdownForFinalReview,
-  markdownForInlineImage,
   markdownForFinish,
   markdownForPreflightIssueDescription,
   markdownForRawSessionOutput,
@@ -226,10 +222,8 @@ d5025f68-febd-4b06-a55a-339fd07c357d  Robomanipulation
     const timeline = buildGoalTimeline([attempt]);
 
     expect(markdownForStart(summary).startsWith(agentCommentBanner)).toBe(true);
-    expect(markdownForFinish({ identifier: "MIA-40", status: "done" }, summary, session, "/tmp/card.png", attempt, timeline).startsWith(agentCommentBanner)).toBe(true);
-    expect(markdownForEvidenceCardUpload({ identifier: "MIA-40", status: "done" }, attempt, timeline).startsWith(agentCommentBanner)).toBe(true);
+    expect(markdownForFinish({ identifier: "MIA-40", status: "done" }, summary, session, attempt, timeline).startsWith(agentCommentBanner)).toBe(true);
     expect(markdownForRawSessionOutput(session).startsWith(agentCommentBanner)).toBe(true);
-    expect(markdownForInlineImage("/uploads/workspaces/ws/card.png").startsWith(agentCommentBanner)).toBe(true);
   });
 
   test("normalizes real transcript evidence without inventing proof", () => {
@@ -684,7 +678,6 @@ Run bun run verify.
       { identifier: "MIA-40", title: "Tracker", status: "Done" },
       summary,
       session,
-      "/tmp/card.svg",
       attempt,
       timeline,
     );
@@ -702,55 +695,9 @@ Run bun run verify.
     expect(comment).toContain("**本次 Goal:** #2 / complete");
     expect(comment).toContain("**本次持续时间:** 9m 7s");
     expect(comment).toContain("**Issue 累计耗时:** 11m 7s");
-    expect(comment).toContain("父评论末尾的 PNG");
+    expect(comment).toContain("下方保留真实 session 输出");
     expect(comment).toContain("inside fence");
     expect(markdownCodeBlock(session.rawOutput)).toContain("````text");
-  });
-
-  test("builds a top evidence card comment with summary and image at the end", () => {
-    const summary = summarizeGoal("/goal fix the tracker\nRun bun run verify");
-    const session = sessionEvidenceFromTranscript("session file", "RESULT_STATUS: SUCCESS\nVerified.");
-    const attempt = buildAttemptRecord(summary, { ...session, durationMs: 10_000 }, "complete", 1);
-    const timeline = buildGoalTimeline([attempt]);
-    const comment = markdownForEvidenceCardUpload(
-      { identifier: "MIA-40", status: "Done" },
-      attempt,
-      timeline,
-      "/uploads/workspaces/ws/completion-card.png",
-    );
-
-    expect(comment).toContain("<!-- multica-goal-tracker:evidence-card-upload -->");
-    expect(comment).toContain("## Goal 完成卡片");
-    expect(comment).toContain("**最新 Goal:** #1 / complete");
-    expect(comment).toContain("**Goal 次数:** 1");
-    expect(comment).toContain("**累计耗时:** 10s");
-    expect(comment).toContain("## 简要总结");
-    expect(comment).toContain("围绕「修复 the tracker」推进");
-    expect(comment).toContain("## 尝试过程");
-    expect(comment).toContain("- #1 完成 / 10s：修复 the tracker");
-    expect(comment).toContain("下方回复只保留详情和真实 session 输出。");
-    const summaryIndex = comment.indexOf("## 简要总结");
-    const attemptsIndex = comment.indexOf("## 尝试过程");
-    const imageIndex = comment.indexOf("![completion-card.png](/uploads/workspaces/ws/completion-card.png)");
-    expect(imageIndex).toBeGreaterThan(attemptsIndex);
-    expect(attemptsIndex).toBeGreaterThan(summaryIndex);
-  });
-
-  test("summarizes multiple attempts in the top evidence card upload comment", () => {
-    const firstSummary = summarizeGoal("/goal implement first slice via $intuitive-flow");
-    const secondSummary = summarizeGoal("/goal complete follow-up defaults via $intuitive-flow");
-    const firstSession = sessionEvidenceFromTranscript("first session", "RESULT_STATUS: PARTIAL\nFirst raw output.");
-    const secondSession = sessionEvidenceFromTranscript("second session", "RESULT_STATUS: SUCCESS\nSecond raw output.");
-    const first = buildAttemptRecord(firstSummary, { ...firstSession, durationMs: 60_000 }, "partial", 1);
-    const second = buildAttemptRecord(secondSummary, { ...secondSession, durationMs: 90_000 }, "complete", 2);
-    const timeline = buildGoalTimeline([first, second]);
-    const comment = markdownForEvidenceCardUpload({ identifier: "MIA-40", status: "done" }, second, timeline);
-
-    expect(comment).toContain("**Goal 次数:** 2");
-    expect(comment).toContain("**Issue 状态:** done / complete");
-    expect(comment).toContain("最终结论：RESULT_STATUS: SUCCESS Second raw output.");
-    expect(comment).toContain("- #1 部分完成 / 1m 0s：实现 first slice");
-    expect(comment).toContain("- #2 完成 / 1m 30s：complete follow-up defaults");
   });
 
   test("builds final-review details with overview first and raw outputs last", () => {
@@ -769,7 +716,6 @@ Run bun run verify.
       { identifier: "MIA-40", title: "Tracker", status: "done" },
       attempts,
       timeline,
-      "/tmp/card.png",
     );
 
     const overviewIndex = comment.indexOf("## Goal 最终汇总概览");
@@ -828,7 +774,6 @@ Run bun run verify.
       { identifier: "MIA-41", status: "done" },
       summary,
       session,
-      "/tmp/card-1.png",
       first,
       buildGoalTimeline([first]),
     );
@@ -836,7 +781,6 @@ Run bun run verify.
       { identifier: "MIA-41", status: "done" },
       summary,
       session,
-      "/tmp/card-2.png",
       second,
       buildGoalTimeline([first, second]),
     );
@@ -857,7 +801,6 @@ Run bun run verify.
       { identifier: "MIA-41", status: "done" },
       summary,
       session,
-      "/tmp/card-2.png",
       second,
       buildGoalTimeline([first, second]),
     );
@@ -867,7 +810,7 @@ Run bun run verify.
     expect(timelineFromLatestOnly.totalDurationMs).toBe(150_000);
 
     const timelineWithDuplicateOldComment = buildGoalTimeline(
-      attemptRecordsFromComments([{ content: markdownForFinish({ identifier: "MIA-41", status: "done" }, summary, session, "/tmp/card-1.png", first, buildGoalTimeline([first])) }, { content: latestComment }]),
+      attemptRecordsFromComments([{ content: markdownForFinish({ identifier: "MIA-41", status: "done" }, summary, session, first, buildGoalTimeline([first])) }, { content: latestComment }]),
     );
     expect(timelineWithDuplicateOldComment.attempts.map((attempt) => attempt.sequence)).toEqual([1, 2]);
     expect(timelineWithDuplicateOldComment.totalDurationMs).toBe(150_000);
@@ -881,7 +824,6 @@ Run bun run verify.
       { identifier: "MIA-43", status: "Done" },
       summary,
       session,
-      "/tmp/card.png",
       attempt,
       buildGoalTimeline([attempt]),
     );
@@ -907,7 +849,6 @@ Run bun run verify.
       { identifier: "MIA-42", status: "In Progress" },
       summary,
       session,
-      "/tmp/card.png",
       attempt,
       buildGoalTimeline([attempt]),
     );
@@ -915,47 +856,10 @@ Run bun run verify.
     expect(comment).toContain("## Goal 执行记录概览");
     expect(comment).toContain("**本次 Goal:** #1 / partial");
     expect(comment).toContain("**执行结果:**");
-    expect(comment).toContain("父评论末尾的 PNG 是渲染后的执行卡片");
+    expect(comment).toContain("下方保留真实 session 输出");
     expect(comment).not.toContain("## Goal 完成记录");
     expect(comment).not.toContain("**完成结果:**");
-    expect(comment).not.toContain("父评论末尾的 PNG 是渲染后的完成卡片");
-  });
-
-  test("extracts image URL and comment ID from Multica comment add output", () => {
-    const output = JSON.stringify({
-      id: "comment-1",
-      attachments: [
-        {
-          filename: "completion-card.png",
-          content_type: "image/png",
-          url: "/uploads/workspaces/ws/completion-card.png",
-        },
-      ],
-    });
-
-    expect(commentIdFromCommentOutput(output)).toBe("comment-1");
-    expect(imageAttachmentUrlFromCommentOutput(output)).toBe("/uploads/workspaces/ws/completion-card.png");
-    expect(markdownForInlineImage("/uploads/workspaces/ws/completion-card.png")).toContain(
-      "![completion-card.png](/uploads/workspaces/ws/completion-card.png)",
-    );
-  });
-
-  test("extracts image URL and comment ID from noisy Multica upload output", () => {
-    const output = `Uploaded /tmp/completion-card.png
-{
-  "id": "comment-1",
-  "attachments": [
-    {
-      "filename": "completion-card.png",
-      "content_type": "image/png",
-      "url": "/uploads/workspaces/ws/completion-card.png"
-    }
-  ]
-}
-Comment added to issue MIA-40.`;
-
-    expect(commentIdFromCommentOutput(output)).toBe("comment-1");
-    expect(imageAttachmentUrlFromCommentOutput(output)).toBe("/uploads/workspaces/ws/completion-card.png");
+    expect(comment).not.toContain("父评论末尾的 PNG");
   });
 
   test("replaces only the marked summary block in descriptions", () => {

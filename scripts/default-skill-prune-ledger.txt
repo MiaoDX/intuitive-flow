@@ -6,7 +6,6 @@
 # Format:
 # legacy-skill <skill>
 # legacy-command <command.md>
-# legacy-mimocode-command <command.md>
 
 # Legacy repo-owned skill names that update.sh may remove from local installs.
 legacy-skill agent-teams-impl-ralph-refactor

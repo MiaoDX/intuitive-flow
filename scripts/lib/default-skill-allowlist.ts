@@ -11,7 +11,6 @@ import { join } from "node:path";
 export type PruneLedger = {
   legacySkills: string[];
   legacyCommands: string[];
-  legacyMimocodeCommands: string[];
 };
 
 export type ExternalSkillSource = {
@@ -33,8 +32,7 @@ type AllowlistKind =
   | "gstack-skill"
   | "gsd-skill"
   | "legacy-skill"
-  | "legacy-command"
-  | "legacy-mimocode-command";
+  | "legacy-command";
 
 const skillNamePattern = /^[A-Za-z0-9_][A-Za-z0-9._-]*$/;
 const labelPattern = /^[a-z][a-z0-9-]*$/;
@@ -54,7 +52,6 @@ const emptyAllowlist = (): DefaultSkillAllowlist => ({
 const emptyPruneLedger = (): PruneLedger => ({
   legacySkills: [],
   legacyCommands: [],
-  legacyMimocodeCommands: [],
 });
 
 const assertSafeSkillName = (value: string, lineNumber: number) => {
@@ -115,7 +112,6 @@ export const parseDefaultSkillAllowlistText = (text: string): DefaultSkillAllowl
       "gsd-skill",
       "legacy-skill",
       "legacy-command",
-      "legacy-mimocode-command",
     ].includes(kind)) {
       throw new Error(`unknown default skill allowlist kind on line ${lineNumber}: ${kind}`);
     }
@@ -182,7 +178,7 @@ export const parseDefaultSkillAllowlistText = (text: string): DefaultSkillAllowl
       throw new Error(`default skill allowlist must not contain prune-only legacy entries on line ${lineNumber}: ${rawLine}`);
     }
 
-    if (kind === "legacy-command" || kind === "legacy-mimocode-command") {
+    if (kind === "legacy-command") {
       throw new Error(`default skill allowlist must not contain prune-only legacy entries on line ${lineNumber}: ${rawLine}`);
     }
   });
@@ -211,7 +207,7 @@ export const parsePruneLedgerText = (text: string): PruneLedger => {
 
     const parts = line.split(/\s+/);
     const [kind] = parts as [AllowlistKind | string, ...string[]];
-    if (!["legacy-skill", "legacy-command", "legacy-mimocode-command"].includes(kind)) {
+    if (!["legacy-skill", "legacy-command"].includes(kind)) {
       throw new Error(`default skill prune ledger must contain only legacy entries on line ${lineNumber}: ${rawLine}`);
     }
 
@@ -236,12 +232,11 @@ export const parsePruneLedgerText = (text: string): PruneLedger => {
     }
     const [, commandName] = parts;
     assertSafeCommandName(commandName, lineNumber);
-    pushUnique(kind === "legacy-command" ? ledger.legacyCommands : ledger.legacyMimocodeCommands, commandName);
+    pushUnique(ledger.legacyCommands, commandName);
   });
 
   ledger.legacySkills.sort();
   ledger.legacyCommands.sort();
-  ledger.legacyMimocodeCommands.sort();
 
   return ledger;
 };

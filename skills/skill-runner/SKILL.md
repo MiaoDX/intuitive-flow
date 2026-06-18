@@ -46,7 +46,7 @@ Keep skills small, composable, and boring.
    or patched.
 3. Run the skill-runner script from the Intuitive Flow checkout with the
    original prompt and that workspace as `--cwd`.
-4. Wait for the tmux session by default, unless the user asks to detach.
+4. Wait for the tmux session to finish.
 5. Read only the compact run artifacts first: `result.md`, `eval.md`, and the
    worker's final message. Read `skill-review.md` when deciding whether this
    run exposed reusable skill changes.
@@ -60,7 +60,7 @@ artifacts and targeted searches through logs.
 ## Umbrella Skill Usage
 
 Umbrella skills such as `$intuitive-flow` and `$intuitive-reduce-entropy` may
-use this runner as the isolation backend for stateful, interactive, or
+use this runner as the isolation backend for durable, artifact-sensitive, or
 long-running skill work. The main session should stay responsible for route
 decisions, source-of-truth edits, integration, and final verification.
 
@@ -74,9 +74,9 @@ Do not assume a separate git worktree or custom model selection for runner jobs.
 Organize work to be safe in the current worktree unless the user chose a
 different workspace.
 
-For detached or long-running umbrella runs, the parent skill may create a
-repo-local progress file at `docs/status/active/<task-slug>.md`. For waited
-runs, runner artifacts are usually enough.
+For long-running umbrella runs, the parent skill may create a repo-local
+progress file at `docs/status/active/<task-slug>.md`. Runner artifacts are
+usually enough.
 
 The script's `RESULT_STATUS` final response is the machine-readable status
 contract, but the main session must inspect compact artifacts and actual diff
@@ -109,9 +109,9 @@ task is solely custom skill maintenance.
 
 Use script help for the option surface instead of memorizing it:
 `python3 .../run_skill_runner.py --help`. Common options are `--agent`,
-`--cwd`, `--detach`, `--interactive --goal`, `--timeout-min`,
+`--cwd`, `--timeout-min`,
 `--idle-timeout-min`, `--owned-path`, `--dry-run`, `--finalize-run`,
-`--require-sandbox`, and `--dangerous`.
+and `--dangerous`.
 
 For goal-driven `intuitive-flow` sub-phases, set a babysitter review cadence
 from the task: short for small edits, longer for broad refactors or slow proof.
@@ -138,10 +138,9 @@ The runner treats the worker's final `RESULT_STATUS` as authoritative:
 - `BLOCKED_NEEDS_DECISION` maps to `BLOCKED` even when the CLI exits 0.
 - `FAILED` maps to `FAILED` even when the CLI exits 0.
 
-Exec and interactive runs normalize status through compact artifacts. Automatic
-blocker detection is intentionally narrow so normal docs mentioning auth, API
-keys, or setup do not look like live failures. Inspect `terminal.log` only when
-debugging a run.
+Runs normalize status through compact artifacts. Automatic blocker detection is
+intentionally narrow so normal docs mentioning auth, API keys, or setup do not
+look like live failures. Inspect `terminal.log` only when debugging a run.
 
 For goal-driven workers, the main session should choose a review cadence before
 launch and adjust it when task evidence changes. Do not stop a healthy
@@ -151,7 +150,8 @@ scope. Use captured logs, current diff, commits, and the canonical artifact to
 decide whether to continue, steer with a follow-up prompt, or kill and relaunch
 with a corrected goal.
 
-Sandbox selection is recorded in `sandbox-preflight.md` and `run.json`.
+`run.json` records the selected agent, workspace, owned paths, and whether the
+runner used the dangerous no-sandbox flag.
 
 ## Prompt Rewrite Rules
 
@@ -260,7 +260,7 @@ a commit message that names the skill change.
 
 ## Stop Conditions
 
-Stop or detach for a human decision when:
+Stop for a human decision when:
 
 - the worker asks for approval that cannot be answered safely
 - the task needs credentials, paid APIs, local hardware, Docker, or GPU and the

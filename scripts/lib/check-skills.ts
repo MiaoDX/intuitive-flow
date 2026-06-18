@@ -321,10 +321,7 @@ const checkPruneLedger = (
     errors.push(`prune ledger lists current skill as legacy: ${currentLegacySkills.join(", ")}`);
   }
 
-  const currentLegacyCommands = listIntersection(
-    [...pruneLedger.legacyCommands, ...pruneLedger.legacyMimocodeCommands],
-    liveCommandNames(allowlist),
-  );
+  const currentLegacyCommands = listIntersection(pruneLedger.legacyCommands, liveCommandNames(allowlist));
   if (currentLegacyCommands.length > 0) {
     errors.push(`prune ledger lists current command as legacy: ${currentLegacyCommands.join(", ")}`);
   }

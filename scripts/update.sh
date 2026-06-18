@@ -192,17 +192,6 @@ else
     task_skip "Codex config" "skipped because Global CLI tools failed"
 fi
 
-# Agent Deck installs Codex notify hooks into the shared merged hook surface.
-if task_succeeded "Global CLI tools"; then
-    task_run "Agent Deck" "$SCRIPT_DIR/dev/agent-deck-richer.sh"
-    task_await "Agent Deck"
-else
-    task_skip "Agent Deck" "skipped because Global CLI tools failed"
-fi
-
-task_run "GStack State" run_gstack_state
-task_await "GStack State"
-
 if task_succeeded "Global CLI tools"; then
     task_run "GStack" run_gstack --hint print_gstack_failure_hint
     task_await "GStack"

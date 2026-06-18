@@ -41,12 +41,10 @@ describe("default skill allowlist", () => {
       legacy-skill old-flow
       legacy-skill old-flow
       legacy-command old.md
-      legacy-mimocode-command stale.md
     `);
 
     expect(ledger.legacySkills).toEqual(["old-alpha", "old-flow"]);
     expect(ledger.legacyCommands).toEqual(["old.md"]);
-    expect(ledger.legacyMimocodeCommands).toEqual(["stale.md"]);
   });
 
   test("current default surface keeps debugging and GSD visibility narrow", () => {

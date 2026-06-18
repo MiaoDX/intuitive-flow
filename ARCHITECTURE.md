@@ -26,7 +26,7 @@ install and sync pipeline
         |
         v
 local/global agent surfaces
-  ~/.claude, ~/.codex, ~/.agents, ~/.gstack, vendor/gstack
+  ~/.claude, ~/.codex, ~/.agents, vendor/gstack
 
 local git hooks
   .githooks/pre-commit
@@ -141,9 +141,9 @@ menu.
 
 This source layout is intentionally separate from host install and discovery
 layouts. `skills/` is the repo-owned source of truth; the sync pipeline projects
-those skills into Claude Code, Codex, MiMoCode, and shared agent install
-surfaces. Do not change the repo source tree solely because a host discovers
-skills under `.claude/skills`, `.codex/skills`, or `.agents/skills`.
+those skills into Claude Code, Codex, and shared agent install surfaces. Do not
+change the repo source tree solely because a host discovers skills under
+`.claude/skills`, `.codex/skills`, or `.agents/skills`.
 
 The install surface is controlled by `scripts/default-skill-allowlist.txt`:
 
@@ -161,10 +161,10 @@ The install surface is controlled by `scripts/default-skill-allowlist.txt`:
 Retired local artifacts are controlled by
 `scripts/default-skill-prune-ledger.txt`:
 
-- `legacy-skill` entries identify old repo-owned skill installs and their
-  generated MiMoCode command wrappers that the updater may prune.
-- `legacy-command` and `legacy-mimocode-command` entries identify old standalone
-  command files that the updater may prune.
+- `legacy-skill` entries identify old repo-owned skill installs that the updater
+  may prune.
+- `legacy-command` entries identify old standalone Claude command files that
+  the updater may prune.
 - The skill checker rejects prune-ledger entries that collide with current
   root, external, GStack, or GSD install entries.
 
@@ -178,7 +178,7 @@ During `scripts/update.sh`, the local sync writes
 `~/.intuitive-flow/owned-root-skills.json` after a successful root-skill sync.
 On later runs, it removes only install artifacts that were previously recorded
 as Intuitive-owned but are no longer listed as `root-skill`: skill directories
-and generated MiMoCode command wrappers. If the ownership state does not exist
+under the managed skill install roots. If the ownership state does not exist
 yet, the updater seeds it after sync and does not infer ownership from matching
 names. User-installed skills outside that owned state are preserved.
 
@@ -250,7 +250,7 @@ The updater currently handles these phases:
 - MCP fetch setup
 - Claude plugin installation
 - Codex feature, status-line config, and merged hook config
-- gstack state sync and vendored gstack setup
+- vendored gstack setup
 - external skill installation from `scripts/default-skill-allowlist.txt`
 - local command and root-skill sync
 
@@ -262,8 +262,7 @@ Local workstation utilities that are not part of the updater contract live under
 
 Codex hook writers must merge into `~/.codex/hooks.json` instead of replacing
 the file. `scripts/dev/tmux-richer.sh` uses `scripts/lib/ensure-codex-hooks.ts`
-to add tmux-agent-status lifecycle hooks while preserving other hook owners such
-as Agent Deck notify hooks.
+to add tmux-agent-status lifecycle hooks while preserving other hook owners.
 
 To add a new update phase, implement the phase in `scripts/tasks/`, source it
 from `scripts/update.sh`, schedule it with the task runner, and document any new
@@ -283,27 +282,6 @@ resource references, default allowlist drift, required workflow handoff marker
 drift, and GitHub Actions Bun pin drift before commit without making every
 commit run the full TypeScript and test proof.
 
-## Codex Adapter Contract
-
-Claude Code slash commands and Codex skills have different shapes. When this
-repo has `.claude/commands/*.md`, `scripts/lib/codex-skill-adapter.sh` can render
-those command files as Codex skill directories with an adapter block.
-
-The adapter contract translates:
-
-- Claude `AskUserQuestion` prompts into Codex `request_user_input` calls when
-  available.
-- Claude `Task(...)` references into Codex-safe worker guidance: inline for
-  tiny work, or `$skill-runner` / tmux-backed `codex exec` for isolated worker
-  phases. It does not map tasks to Codex `spawn_agent`.
-- Claude command arguments into skill invocation arguments.
-
-Codex native subagents are disabled by default for this harness; see
-`skills/skill-runner/references/codex-delegation.md`.
-
-Root skills under `skills/` are copied directly into `~/.codex/skills/` and
-installed for Claude Code through the skills CLI.
-
 ## Proof Boundary
 
 The basic local proof command is:
@@ -322,9 +300,9 @@ references, required handoff markers, deprecated `skills-src/` files, or
 CI/local Bun version drift fail CI.
 
 At the moment, the test suite covers skill validation, default install allowlist
-and prune-ledger parsing, managed install-state pruning, config and hook helpers,
-workflow gates, skill-runner behavior, upstream skill audit output, and
-installer wrapper calls that enforce managed state.
+and prune-ledger parsing, managed install-state pruning, hook helpers, workflow
+gates, skill-runner behavior, upstream skill audit output, and installer wrapper
+calls that enforce managed state.
 
 The repo-owned pre-commit hook repeats the skill structure check locally when
 `core.hooksPath` points at `.githooks/`.

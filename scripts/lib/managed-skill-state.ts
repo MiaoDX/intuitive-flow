@@ -582,7 +582,6 @@ export const pruneRemovedOwnedRootSkills = (
     for (const installRoot of skillInstallRoots(home)) {
       removed += removeIfExists(join(installRoot, skillName));
     }
-    removed += removeIfExists(join(home, ".config", "mimocode", "command", `${skillName}.md`));
   }
 
   return removed;
@@ -614,16 +613,10 @@ export const pruneLegacyArtifacts = (
     removed += removeIfExists(join(home, ".claude", "commands", commandName));
   }
 
-  for (const commandName of ledger.legacyMimocodeCommands) {
-    removed += removeIfExists(join(home, ".config", "mimocode", "command", commandName));
-  }
-
   for (const skillName of ledger.legacySkills) {
     for (const installRoot of skillInstallRoots(home)) {
       removed += removeIfExists(join(installRoot, skillName));
     }
-
-    removed += removeIfExists(join(home, ".config", "mimocode", "command", `${skillName}.md`));
   }
 
   return removed;

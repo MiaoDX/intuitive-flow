@@ -3,10 +3,10 @@ name: multica-goal-tracker
 description: |
   Track goal-driven Multica issues. Use when a user creates or maintains
   Multica issues by pasting a /goal prompt, wants Codex to summarize that goal
-  into a concise issue purpose, append a normalized goal-start comment, render
-  and attach a completion evidence card/screenshot from real Multica execution
-  run messages or a supplied session transcript, or add additional goal attempts
-  and completion proof to the same issue.
+  into a concise issue purpose, append a normalized goal-start comment, record
+  completion evidence from real Multica execution run messages or a supplied
+  session transcript, or add additional goal attempts and completion proof to
+  the same issue.
 ---
 
 # Multica Goal Tracker
@@ -19,7 +19,7 @@ Use this skill to keep Multica issues consistent when the human workflow is:
 3. After the run completes, attach concise completion evidence.
 4. If the result is incomplete, keep the issue open and append the next goal as
    another attempt on the same issue.
-5. Repeat until the issue-level outcome is complete. The tracker card shows the
+5. Repeat until the issue-level outcome is complete. Finish comments show the
    per-goal attempt plus cumulative issue time.
 
 The skill can also create the Multica issue from an approved
@@ -38,8 +38,8 @@ must begin with the visible marker:
 > Agent 提交：以下内容由 Agent 帮忙整理并提交，用于和人工手写评论区分。
 ```
 
-Keep this marker as the first visible line on start, evidence-card upload, and
-finish details comments.
+Keep this marker as the first visible line on start, finish, and final-review
+comments.
 
 ## Create From Preflight
 
@@ -121,10 +121,9 @@ bun skills/multica-goal-tracker/scripts/track_goal.ts \
 ```
 
 The script picks the active goal, extracts real run/session evidence, records
-attempt metadata, renders a cumulative issue-level card, posts a scannable
-parent comment, and puts raw selected output in one details reply. `complete`
-attempts are completion records; `partial`, `blocked`, and `failed` attempts are
-execution records.
+attempt metadata, and posts one scannable comment with overview, timeline,
+details, and raw selected output. `complete` attempts are completion records;
+`partial`, `blocked`, and `failed` attempts are execution records.
 
 If the issue has no Multica run history, finish fails fast instead of creating a
 fake proof card. In that case pass a real Codex session JSONL for the finished
@@ -148,7 +147,7 @@ bun skills/multica-goal-tracker/scripts/track_goal.ts \
 ```
 
 Use `--allow-manual-summary --summary "..."` only when the user explicitly
-accepts a manual fallback. Manual fallback is not a real session screenshot.
+accepts a manual fallback. Manual fallback is not real session proof.
 
 If an attempt is incomplete, finish it with `--attempt-status partial|blocked|failed`,
 then run `start` again for the follow-up goal. The next finish becomes the next
@@ -168,12 +167,10 @@ bun skills/multica-goal-tracker/scripts/track_goal.ts \
   --attempts-file /tmp/multica-goal-attempts.json
 ```
 
-`final-review` renders one cumulative evidence card, posts it as the thread
-entry with a short issue-level summary, compact attempt list, and inline PNG at
-the end of that parent comment, then posts one text-only details reply with
-overview, timeline, details, and complete raw outputs for each attempt. The
-details reply stores metadata for every attempt, so later tracker runs can
-recover cumulative duration even if older Agent comments are cleaned up.
+`final-review` posts one text comment with a short issue-level summary, compact
+attempt list, overview, timeline, details, and complete raw outputs for each
+attempt. The comment stores metadata for every attempt, so later tracker runs
+can recover cumulative duration even if older Agent comments are cleaned up.
 
 ## Useful Options
 

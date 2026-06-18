@@ -3,7 +3,7 @@ import { Buffer } from "node:buffer";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { basename, dirname, join } from "node:path";
+import { dirname, join } from "node:path";
 
 type Issue = {
   identifier?: string;
@@ -18,15 +18,6 @@ type Issue = {
 };
 
 type JsonRecord = Record<string, unknown>;
-
-type RenderedEvidence = {
-  dir: string;
-  attachment: string;
-  htmlPath: string;
-  svgPath: string;
-  width: number;
-  height: number;
-};
 
 export type GoalSummary = {
   purpose: string;
@@ -362,21 +353,6 @@ function runMulticaGlobal(opts: Options, args: string[], input?: string): string
   return result.stdout;
 }
 
-function multicaConfigPath(opts: Options): string {
-  const suffix = opts.profile ? `-${opts.profile}` : "";
-  return join(homedir(), ".multica", `config${suffix}.json`);
-}
-
-function readMulticaConfig(opts: Options): JsonRecord | undefined {
-  const path = multicaConfigPath(opts);
-  if (!existsSync(path)) return undefined;
-  try {
-    return asRecord(JSON.parse(readFileSync(path, "utf8")) as unknown);
-  } catch {
-    return undefined;
-  }
-}
-
 function slugifyWorkspaceName(value: string): string {
   return value
     .trim()
@@ -496,36 +472,6 @@ function assertWorkspaceTargetAccessible(opts: Options, expectedWorkspaceId: str
     throw new Error(
       `Resolved workspace ${expectedWorkspaceId}, but Multica CLI is operating in ${actualWorkspaceId || "unknown workspace"}. Refusing to create a tracker issue in the wrong workspace.`,
     );
-  }
-}
-
-async function uploadEvidenceImage(opts: Options, filePath: string): Promise<{ id?: string; url?: string } | undefined> {
-  const config = readMulticaConfig(opts);
-  const serverUrl = textFromUnknown(process.env.MULTICA_SERVER_URL ?? config?.server_url ?? config?.serverUrl).replace(/\/+$/, "");
-  const token = textFromUnknown(config?.token);
-  const workspaceId = opts.workspaceId ?? process.env.MULTICA_WORKSPACE_ID ?? textFromUnknown(config?.workspace_id ?? config?.workspaceId);
-  if (!serverUrl || !token || !workspaceId) return undefined;
-
-  const form = new FormData();
-  form.append("file", Bun.file(filePath), basename(filePath));
-  try {
-    const response = await fetch(`${serverUrl}/api/upload-file`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "X-Workspace-ID": workspaceId,
-      },
-      body: form,
-    });
-    if (!response.ok) return undefined;
-    const parsed = await response.json() as unknown;
-    const record = asRecord(parsed);
-    if (!record) return undefined;
-    const url = textFromUnknown(record.url ?? record.download_url ?? record.downloadUrl) || undefined;
-    const id = textFromUnknown(record.id) || undefined;
-    return url || id ? { id, url } : undefined;
-  } catch {
-    return undefined;
   }
 }
 
@@ -1611,14 +1557,6 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function htmlEscape(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
 function truncate(value: string, max: number): string {
   const normalized = value.replace(/\s+/g, " ").trim();
   if (normalized.length <= max) return normalized;
@@ -1651,377 +1589,10 @@ function formatDuration(durationMs?: number): string {
   return `${seconds}s`;
 }
 
-function statusLabel(status: AttemptStatus): string {
-  switch (status) {
-    case "complete":
-      return "完成";
-    case "partial":
-      return "部分完成";
-    case "blocked":
-      return "阻塞";
-    case "failed":
-      return "失败";
-  }
-}
-
-function attemptSummaryLine(record: GoalAttemptRecord): string {
-  const outcome = record.outcome ? `；${truncate(record.outcome, 150)}` : "";
-  return `- #${record.sequence} ${statusLabel(record.status)} / ${formatDuration(record.durationMs)}：${truncate(record.purpose, 110)}${outcome}`;
-}
-
-function attemptSummaryLines(records: GoalAttemptRecord[], maxLines = 6): string {
-  if (records.length === 0) return "- 未找到可汇总的 goal attempt。";
-  const sorted = [...records].sort((a, b) => a.sequence - b.sequence);
-  if (sorted.length <= maxLines) return sorted.map(attemptSummaryLine).join("\n");
-
-  const head = sorted.slice(0, 2).map(attemptSummaryLine);
-  const tail = sorted.slice(-(maxLines - 3)).map(attemptSummaryLine);
-  return [...head, `- ... 中间 ${sorted.length - head.length - tail.length} 次 attempt 见下方详情。`, ...tail].join("\n");
-}
-
-function markdownForIssueWorkSummary(issue: Issue, latestAttempt: GoalAttemptRecord, timeline: GoalTimeline): string {
-  const records = timeline.attempts.length ? timeline.attempts : [latestAttempt];
-  const firstAttempt = records[0] ?? latestAttempt;
-  const finalAttempt = records[records.length - 1] ?? latestAttempt;
-  const finalLabel = finalAttempt.status === "complete" ? "最终结论" : "当前结论";
-
-  return `**Issue:** ${issue.identifier ?? issue.id ?? "unknown"}
-
-**Issue 状态:** ${issue.status ?? "unknown"} / ${finalAttempt.status}
-
-**Goal 次数:** ${records.length}
-
-**累计耗时:** ${formatDuration(timeline.totalDurationMs)}
-
-**时间范围:** ${formatDateTime(timeline.startedAt)} - ${formatDateTime(timeline.completedAt)}
-
-## 简要总结
-
-围绕「${truncate(firstAttempt.purpose, 180)}」推进。${finalLabel}：${truncate(finalAttempt.outcome, 260)}
-
-## 尝试过程
-
-${attemptSummaryLines(records)}
-`;
-}
-
-function estimatedLineCount(value: string, charsPerLine: number): number {
-  const lines = value.split(/\r?\n/);
-  return lines.reduce((total, line) => total + Math.max(1, Math.ceil(line.trim().length / charsPerLine)), 0);
-}
-
-function estimateEvidenceHeight(issue: Issue, summary: GoalSummary, session: SessionEvidence, timeline: GoalTimeline): number {
-  const attempts = timeline.attempts.length ? timeline.attempts : [];
-  const titleLines = estimatedLineCount(issue.title ?? "", 44);
-  const purposeLines = estimatedLineCount(summary.purpose, 62);
-  const outcomeLines = estimatedLineCount(session.outcome, 66);
-  const sourceLines = estimatedLineCount(compactSessionSource(session.source), 72);
-  const proofLines = estimatedLineCount(session.proofNote, 72);
-  const attemptLines = attempts.reduce((total, attempt) => {
-    return total + estimatedLineCount(`${attempt.purpose}\n${attempt.outcome}`, 58);
-  }, 0);
-  const estimate = 430 + titleLines * 46 + purposeLines * 30 + outcomeLines * 30 + sourceLines * 28 + proofLines * 28 + attempts.length * 58 + attemptLines * 24;
-  return Math.max(900, estimate);
-}
-
 function artifactDir(issue: Issue): string {
   const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\./g, "");
   const issueKey = issue.identifier ?? issue.id ?? "issue";
   return join(homedir(), ".cache", "multica-goal-tracker", issueKey, `${stamp}-${process.pid}`);
-}
-
-function compactSessionSource(source: string): string {
-  const pathMatch = source.match(/(\/[^\s]+)$/);
-  if (!pathMatch) return source;
-  const path = pathMatch[1];
-  const prefix = source.slice(0, source.length - path.length).trim();
-  const compactPath = path.split("/").filter(Boolean).slice(-4).join("/");
-  return [prefix, compactPath].filter(Boolean).join(" ");
-}
-
-function measuredEvidenceHeight(chrome: string, htmlPath: string, width: number, fallbackHeight: number): number {
-  const result = spawnSync(chrome, [
-    "--headless=new",
-    "--disable-gpu",
-    "--no-sandbox",
-    "--hide-scrollbars",
-    `--window-size=${width},1000`,
-    "--dump-dom",
-    `file://${htmlPath}`,
-  ], { encoding: "utf8" });
-  if (result.status !== 0) return fallbackHeight;
-  const match = result.stdout.match(/data-render-height="(\d+)"/);
-  if (!match) return fallbackHeight;
-  const measured = Number.parseInt(match[1], 10);
-  if (!Number.isFinite(measured) || measured <= 0) return fallbackHeight;
-  return Math.max(900, measured + 16);
-}
-
-function renderEvidence(issue: Issue, summary: GoalSummary, session: SessionEvidence, timeline: GoalTimeline): RenderedEvidence {
-  const dir = artifactDir(issue);
-  mkdirSync(dir, { recursive: true });
-  const htmlPath = join(dir, "completion-card.html");
-  const svgPath = join(dir, "completion-card.svg");
-  const pngPath = join(dir, "completion-card.png");
-  const width = 1400;
-  const estimatedHeight = estimateEvidenceHeight(issue, summary, session, timeline);
-  const issueKey = issue.identifier ?? issue.id ?? "Issue";
-  const title = issue.title ?? "";
-  const status = issue.status ?? "unknown";
-  const source = compactSessionSource(session.source);
-  const currentAttempt = timeline.attempts[timeline.attempts.length - 1];
-  const timelineRows = timeline.attempts
-    .map((attempt) => {
-      const active = attempt.sequence === currentAttempt?.sequence ? " active" : "";
-      return `
-        <div class="attempt-row${active}">
-          <div class="attempt-index">#${attempt.sequence}</div>
-          <div class="attempt-main">
-            <div class="attempt-title">${htmlEscape(attempt.purpose)}</div>
-            <div class="attempt-meta">${htmlEscape(attempt.status)} · ${htmlEscape(formatDuration(attempt.durationMs))} · ${htmlEscape(formatDateTime(attempt.completedAt))}</div>
-            <div class="attempt-outcome">${htmlEscape(attempt.outcome)}</div>
-          </div>
-        </div>
-      `;
-    })
-    .join("");
-
-  const cardInner = `
-    <div class="topline">
-      <span>${htmlEscape(issueKey)}</span>
-      <span>${htmlEscape(status)}</span>
-    </div>
-    <h1>${htmlEscape(title)}</h1>
-    <div class="body">
-      <section class="overview">
-        <div>
-          <div class="label">累计耗时</div>
-          <p class="stat">${htmlEscape(formatDuration(timeline.totalDurationMs))}</p>
-        </div>
-        <div>
-          <div class="label">Goal 次数</div>
-          <p class="stat">${timeline.attempts.length}</p>
-        </div>
-        <div>
-          <div class="label">Issue 起止</div>
-          <p class="meta">${htmlEscape(formatDateTime(timeline.startedAt))} - ${htmlEscape(formatDateTime(timeline.completedAt))}</p>
-        </div>
-      </section>
-      <section>
-        <div class="label">当前 Goal 目标</div>
-        <p>${htmlEscape(summary.purpose)}</p>
-      </section>
-      <section>
-        <div class="label">当前结果</div>
-        <p>${htmlEscape(session.outcome)}</p>
-      </section>
-      <section class="timing">
-        <div>
-          <div class="label">当前开始</div>
-          <p class="meta">${htmlEscape(formatDateTime(session.startedAt))}</p>
-        </div>
-        <div>
-          <div class="label">当前结束</div>
-          <p class="meta">${htmlEscape(formatDateTime(session.completedAt))}</p>
-        </div>
-        <div>
-          <div class="label">当前耗时</div>
-          <p class="meta">${htmlEscape(formatDuration(session.durationMs))}</p>
-        </div>
-      </section>
-      <section class="grid">
-        <div>
-          <div class="label">执行入口</div>
-          <p class="clamp-1">${htmlEscape(summary.route)}</p>
-        </div>
-        <div>
-          <div class="label">Session 来源</div>
-          <p>${htmlEscape(source)}</p>
-        </div>
-      </section>
-      <section class="proof">
-        <div class="label">验证说明</div>
-        <p>${htmlEscape(session.proofNote)}</p>
-      </section>
-      <section class="timeline-list">
-        <div class="label">Goal 时间线</div>
-        <div class="attempts">${timelineRows}</div>
-      </section>
-    </div>
-  `;
-
-  const htmlForHeight = (height: number) => `<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<style>
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    width: ${width}px;
-    min-height: ${height}px;
-    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: #f5f5f2;
-    color: #151712;
-  }
-  .card {
-    width: 1280px;
-    margin: 40px 60px;
-    padding: 32px 52px;
-    background: #ffffff;
-    border: 1px solid #d9dbd2;
-    box-shadow: 0 28px 80px rgba(20, 24, 16, 0.16);
-    display: flex;
-    flex-direction: column;
-  }
-  .topline {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: #386641;
-    font-size: 28px;
-    font-weight: 720;
-    letter-spacing: 0;
-    text-transform: uppercase;
-  }
-  h1 {
-    margin: 18px 0 16px;
-    font-size: 44px;
-    line-height: 1.06;
-    letter-spacing: 0;
-    max-width: 1100px;
-    overflow-wrap: anywhere;
-  }
-  .body {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  section { margin: 0; }
-  .overview {
-    display: grid;
-    grid-template-columns: 0.85fr 0.6fr 1.55fr;
-    gap: 24px;
-    padding: 12px 18px;
-    border: 1px solid #dfe2d8;
-    background: #f7f8f4;
-  }
-  .grid {
-    display: grid;
-    grid-template-columns: 1fr 1.4fr;
-    gap: 40px;
-  }
-  .timing {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-  }
-  .label {
-    color: #606656;
-    font-size: 17px;
-    font-weight: 720;
-    letter-spacing: 0;
-    margin-bottom: 4px;
-  }
-  p {
-    margin: 0;
-    color: #25291f;
-    font-size: 23px;
-    line-height: 1.16;
-    overflow-wrap: anywhere;
-  }
-  .meta {
-    font-size: 20px;
-    line-height: 1.15;
-  }
-  .stat {
-    font-size: 28px;
-    font-weight: 720;
-    line-height: 1.05;
-  }
-  .attempts {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-  .attempt-row {
-    display: grid;
-    grid-template-columns: 54px 1fr;
-    gap: 12px;
-    align-items: start;
-    padding: 8px 10px;
-    border-left: 4px solid #b8bead;
-    background: #fafaf8;
-  }
-  .attempt-row.active {
-    border-left-color: #386641;
-    background: #f1f5ee;
-  }
-  .attempt-index {
-    color: #386641;
-    font-size: 17px;
-    font-weight: 720;
-  }
-  .attempt-title {
-    color: #25291f;
-    font-size: 17px;
-    line-height: 1.15;
-    overflow-wrap: anywhere;
-  }
-  .attempt-meta {
-    color: #606656;
-    font-size: 14px;
-    line-height: 1.15;
-    margin-top: 4px;
-  }
-  .attempt-outcome {
-    color: #3f4538;
-    font-size: 15px;
-    line-height: 1.2;
-    margin-top: 4px;
-    overflow-wrap: anywhere;
-  }
-</style>
-</head>
-<body><main class="card">${cardInner}</main><script>document.documentElement.setAttribute("data-render-height", String(Math.ceil(document.scrollingElement.scrollHeight)));</script></body>
-</html>
-`;
-  const chrome = findCommand(["google-chrome", "chromium", "chromium-browser"]);
-  writeFileSync(htmlPath, htmlForHeight(900));
-  const height = chrome ? measuredEvidenceHeight(chrome, htmlPath, width, estimatedHeight) : estimatedHeight;
-  const html = htmlForHeight(height);
-  writeFileSync(htmlPath, html);
-
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
-  <foreignObject width="${width}" height="${height}">${html.replace(/<!doctype html>\n?/, "")}</foreignObject>
-</svg>
-`;
-  writeFileSync(svgPath, svg);
-
-  if (chrome) {
-    const result = spawnSync(chrome, [
-      "--headless=new",
-      "--disable-gpu",
-      "--no-sandbox",
-      "--hide-scrollbars",
-      `--window-size=${width},${height}`,
-      `--screenshot=${pngPath}`,
-      `file://${htmlPath}`,
-    ], { encoding: "utf8" });
-    if (result.status === 0 && existsSync(pngPath)) {
-      return { dir, attachment: pngPath, htmlPath, svgPath, width, height };
-    }
-  }
-  return { dir, attachment: svgPath, htmlPath, svgPath, width, height };
-}
-
-function findCommand(commands: string[]): string | undefined {
-  for (const command of commands) {
-    const result = spawnSync("bash", ["-lc", `command -v ${command}`], { encoding: "utf8" });
-    if (result.status === 0) return result.stdout.trim();
-  }
-  return undefined;
 }
 
 export function markdownFenceText(value: string): string {
@@ -2038,13 +1609,11 @@ export function markdownForFinish(
   issue: Issue,
   summary: GoalSummary,
   session: SessionEvidence,
-  attachment: string,
   attempt: GoalAttemptRecord,
   timeline: GoalTimeline,
 ): string {
   const title = attempt.status === "complete" ? "Goal 完成记录" : "Goal 执行记录";
   const outcomeLabel = attempt.status === "complete" ? "完成结果" : "执行结果";
-  const evidenceKind = attempt.status === "complete" ? "完成卡片" : "执行卡片";
   const rawTitle = attempt.status === "complete" ? "真实 session 完成输出" : "真实 session 执行输出";
   return `${agentCommentBanner}<!-- multica-goal-tracker:finish -->
 ${encodeAttemptRecords(timeline.attempts)}
@@ -2074,15 +1643,13 @@ ${encodeAttemptRecords(timeline.attempts)}
 
 **Goal 目标:** ${summary.purpose}
 
-**证据:** 父评论末尾的 PNG 是渲染后的${evidenceKind}；下方保留真实 session 输出，便于需要时核对原始结果。
+**证据:** 下方保留真实 session 输出，便于需要时核对原始结果。
 
 ## Goal 详情
 
 **验证说明:** ${session.proofNote}
 
-**Goal 时间线:** 已累计 ${timeline.attempts.length} 次 goal attempt；卡片中展示最近的 attempt 和累计耗时。
-
-本地证据文件: \`${attachment}\`
+**Goal 时间线:** 已累计 ${timeline.attempts.length} 次 goal attempt；累计耗时见上方概览。
 
 ## ${rawTitle}
 
@@ -2090,33 +1657,10 @@ ${markdownCodeBlock(session.rawOutput)}
 `;
 }
 
-export function markdownForEvidenceCardUpload(
-  issue: Issue,
-  attempt: GoalAttemptRecord,
-  timeline: GoalTimeline,
-  imageUrl?: string,
-): string {
-  const evidenceKind = attempt.status === "complete" ? "完成卡片" : "执行卡片";
-  const imageBlock = imageUrl
-    ? `\n## 渲染卡片\n\n![completion-card.png](${imageUrl})\n`
-    : "";
-  return `${agentCommentBanner}<!-- multica-goal-tracker:evidence-card-upload -->
-## Goal ${evidenceKind}
-
-${markdownForIssueWorkSummary(issue, attempt, timeline)}
-
-**最新 Goal:** #${attempt.sequence} / ${attempt.status}
-
-**证据:** 本评论末尾的 PNG 是渲染后的 ${evidenceKind}；下方回复只保留详情和真实 session 输出。
-${imageBlock}
-`;
-}
-
 export function markdownForFinalReview(
   issue: Issue,
   attempts: FinalReviewAttempt[],
   timeline: GoalTimeline,
-  attachment: string,
 ): string {
   const finalAttempt = attempts[attempts.length - 1];
   if (!finalAttempt) throw new Error("final-review requires at least one attempt.");
@@ -2153,15 +1697,13 @@ ${encodeAttemptRecords(timeline.attempts)}
 
 **最终结果:** ${finalAttempt.session.outcome}
 
-**证据:** 父评论末尾的 PNG 是渲染后的最终汇总卡片；下方保留每次真实 session 输出，便于需要时核对原始结果。
+**证据:** 下方保留每次真实 session 输出，便于需要时核对原始结果。
 
 ## Goal 时间线
 
 ${attemptLines}
 
 ## Goal 详情
-
-本地证据文件: \`${attachment}\`
 
 ${rawOutputs}
 `;
@@ -2184,66 +1726,13 @@ ${markdownCodeBlock(session.rawOutput)}
 `;
 }
 
-export function markdownForInlineImage(url: string): string {
-  return `${agentCommentBanner}<!-- multica-goal-tracker:evidence-image -->
-![completion-card.png](${url})
-`;
-}
-
-function findImageAttachmentUrl(value: unknown): string | undefined {
-  const record = asRecord(value);
-  if (record) {
-    const contentType = textFromUnknown(record.content_type ?? record.contentType);
-    const filename = textFromUnknown(record.filename ?? record.name);
-    const url = textFromUnknown(record.url ?? record.download_url ?? record.downloadUrl);
-    if (url && (/^image\//i.test(contentType) || /\.(png|jpe?g|webp|gif|svg)$/i.test(filename || url))) {
-      return url;
-    }
-    for (const child of Object.values(record)) {
-      const found = findImageAttachmentUrl(child);
-      if (found) return found;
-    }
-    return undefined;
-  }
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      const found = findImageAttachmentUrl(item);
-      if (found) return found;
-    }
-  }
-  return undefined;
-}
-
-export function imageAttachmentUrlFromCommentOutput(output: string): string | undefined {
-  if (!output.trim()) return undefined;
-  try {
-    return findImageAttachmentUrl(jsonFromCliOutput(output));
-  } catch {
-    return undefined;
-  }
-}
-
-export function commentIdFromCommentOutput(output: string): string | undefined {
-  if (!output.trim()) return undefined;
-  try {
-    const parsed = jsonFromCliOutput(output);
-    const record = asRecord(parsed);
-    const id = record ? textFromUnknown(record.id) : "";
-    if (id) return id;
-    const nested = record ? asRecord(record.comment ?? record.data) : undefined;
-    return nested ? textFromUnknown(nested.id) || undefined : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 function jsonFromCliOutput(output: string): unknown {
   const trimmed = output.trim();
   try {
     return JSON.parse(trimmed) as unknown;
   } catch {
     // The Multica CLI can print progress lines before/after JSON even with
-    // --output json, especially when uploading attachments.
+    // --output json.
   }
 
   const start = trimmed.search(/[\[{]/);
@@ -2396,50 +1885,17 @@ async function finish(opts: Options) {
   const existingAttempts = attemptRecordsFromComments(comments);
   const attempt = buildAttemptRecord(summary, session, opts.attemptStatus, nextAttemptSequence(existingAttempts));
   const timeline = buildGoalTimeline([...existingAttempts, attempt]);
-  const evidence = renderEvidence(issue, summary, session, timeline);
+  const comment = markdownForFinish(issue, summary, session, attempt, timeline);
 
   if (opts.dryRun) {
-    printDryRun("evidence card upload comment", markdownForEvidenceCardUpload(issue, attempt, timeline, "/uploads/workspaces/example/completion-card.png"), {
-      attachment: evidence.attachment,
-      html: evidence.htmlPath,
-      svg: evidence.svgPath,
-      size: `${evidence.width}x${evidence.height}`,
-    });
-    printDryRun("finish details comment", markdownForFinish(issue, summary, session, evidence.attachment, attempt, timeline));
+    printDryRun("finish comment", comment);
     return;
   }
 
-  const uploaded = await uploadEvidenceImage(opts, evidence.attachment);
-  if (!uploaded?.url) {
-    console.warn("WARNING: Multica upload-file did not return an image URL; parent comment will keep the evidence as an attachment without inline markdown.");
-  }
-  const cardUploadComment = markdownForEvidenceCardUpload(issue, attempt, timeline, uploaded?.url);
-  const cardUploadFile = writeTempMarkdown(evidence.dir, "evidence-card-upload.md", cardUploadComment);
-  const cardArgs = [
-    "issue",
-    "comment",
-    "add",
-    opts.issue!,
-    "--content-file",
-    cardUploadFile,
-    "--output",
-    "json",
-  ];
-  if (!uploaded?.url) {
-    cardArgs.push("--attachment", evidence.attachment);
-  }
-  const addOutput = runMultica(opts, cardArgs);
-  const parent = commentIdFromCommentOutput(addOutput);
-  const detailsComment = markdownForFinish(issue, summary, session, evidence.attachment, attempt, timeline);
-  const detailsCommentFile = writeTempMarkdown(evidence.dir, "finish-details.md", detailsComment);
-  const detailsArgs = ["issue", "comment", "add", opts.issue!, "--content-file", detailsCommentFile, "--output", "json"];
-  if (parent) {
-    detailsArgs.push("--parent", parent);
-  }
-  runMultica(opts, detailsArgs);
-  if (uploaded?.url) console.log(`Posted inline evidence image in parent comment: ${uploaded.url}`);
-  console.log(`Added tracker finish thread to ${issue.identifier ?? opts.issue}`);
-  console.log(`Attached evidence: ${evidence.attachment}`);
+  const dir = artifactDir(issue);
+  const commentFile = writeTempMarkdown(dir, "finish-comment.md", comment);
+  runMultica(opts, ["issue", "comment", "add", opts.issue!, "--content-file", commentFile, "--output", "json"]);
+  console.log(`Added tracker finish comment to ${issue.identifier ?? opts.issue}`);
 }
 
 async function finalReview(opts: Options) {
@@ -2448,50 +1904,17 @@ async function finalReview(opts: Options) {
   const timeline = buildGoalTimeline(attempts.map((attempt) => attempt.record));
   const finalAttempt = attempts[attempts.length - 1];
   if (!finalAttempt) throw new Error("final-review requires at least one attempt.");
-  const evidence = renderEvidence(issue, finalAttempt.summary, finalAttempt.session, timeline);
+  const comment = markdownForFinalReview(issue, attempts, timeline);
 
   if (opts.dryRun) {
-    printDryRun("final-review evidence card upload comment", markdownForEvidenceCardUpload(issue, finalAttempt.record, timeline, "/uploads/workspaces/example/completion-card.png"), {
-      attachment: evidence.attachment,
-      html: evidence.htmlPath,
-      svg: evidence.svgPath,
-      size: `${evidence.width}x${evidence.height}`,
-    });
-    printDryRun("final-review details comment", markdownForFinalReview(issue, attempts, timeline, evidence.attachment));
+    printDryRun("final-review comment", comment);
     return;
   }
 
-  const uploaded = await uploadEvidenceImage(opts, evidence.attachment);
-  if (!uploaded?.url) {
-    console.warn("WARNING: Multica upload-file did not return an image URL; parent comment will keep the evidence as an attachment without inline markdown.");
-  }
-  const cardUploadComment = markdownForEvidenceCardUpload(issue, finalAttempt.record, timeline, uploaded?.url);
-  const cardUploadFile = writeTempMarkdown(evidence.dir, "final-review-evidence-card-upload.md", cardUploadComment);
-  const cardArgs = [
-    "issue",
-    "comment",
-    "add",
-    opts.issue!,
-    "--content-file",
-    cardUploadFile,
-    "--output",
-    "json",
-  ];
-  if (!uploaded?.url) {
-    cardArgs.push("--attachment", evidence.attachment);
-  }
-  const addOutput = runMultica(opts, cardArgs);
-  const parent = commentIdFromCommentOutput(addOutput);
-  const detailsComment = markdownForFinalReview(issue, attempts, timeline, evidence.attachment);
-  const detailsCommentFile = writeTempMarkdown(evidence.dir, "final-review-details.md", detailsComment);
-  const detailsArgs = ["issue", "comment", "add", opts.issue!, "--content-file", detailsCommentFile, "--output", "json"];
-  if (parent) {
-    detailsArgs.push("--parent", parent);
-  }
-  runMultica(opts, detailsArgs);
-  if (uploaded?.url) console.log(`Posted inline final-review evidence image in parent comment: ${uploaded.url}`);
-  console.log(`Added tracker final-review thread to ${issue.identifier ?? opts.issue}`);
-  console.log(`Attached evidence: ${evidence.attachment}`);
+  const dir = artifactDir(issue);
+  const commentFile = writeTempMarkdown(dir, "final-review-comment.md", comment);
+  runMultica(opts, ["issue", "comment", "add", opts.issue!, "--content-file", commentFile, "--output", "json"]);
+  console.log(`Added tracker final-review comment to ${issue.identifier ?? opts.issue}`);
 }
 
 function summarize(opts: Options) {

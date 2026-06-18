@@ -44,10 +44,9 @@ Use this only when intentionally updating global/local agent tooling:
 ```
 
 `scripts/update.sh` writes outside the repo into user-level tool directories and
-config, including Claude, Codex, skill installs, gstack state, and vendored
-gstack setup. It warns but continues when Codex is already running; restart
-existing Codex sessions after update to pick up refreshed config, hooks, and
-skills.
+config, including Claude, Codex, skill installs, and vendored gstack setup. It
+warns but continues when Codex is already running; restart existing Codex
+sessions after update to pick up refreshed config, hooks, and skills.
 
 ## Active Focus
 

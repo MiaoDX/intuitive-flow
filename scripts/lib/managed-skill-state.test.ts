@@ -42,7 +42,7 @@ describe("managed skill state", () => {
     const root = mkdtempSync(join(tmpdir(), "skill-prune-ledger-"));
     try {
       const pruneLedgerPath = join(root, "default-skill-prune-ledger.txt");
-      writeFileSync(pruneLedgerPath, "legacy-skill old-skill\nlegacy-command old.md\nlegacy-mimocode-command stale.md\n");
+      writeFileSync(pruneLedgerPath, "legacy-skill old-skill\nlegacy-command old.md\n");
       mkdirSync(join(home, ".codex", "skills", "old-skill"), { recursive: true });
       mkdirSync(join(home, ".codex", "skills", "keep-skill"), { recursive: true });
       mkdirSync(join(home, ".claude", "commands"), { recursive: true });
@@ -54,11 +54,11 @@ describe("managed skill state", () => {
 
       const removed = pruneLegacyArtifacts(pruneLedgerPath, home);
 
-      expect(removed).toBe(4);
+      expect(removed).toBe(2);
       expect(existsSync(join(home, ".codex", "skills", "old-skill"))).toBe(false);
       expect(existsSync(join(home, ".claude", "commands", "old.md"))).toBe(false);
-      expect(existsSync(join(home, ".config", "mimocode", "command", "stale.md"))).toBe(false);
-      expect(existsSync(join(home, ".config", "mimocode", "command", "old-skill.md"))).toBe(false);
+      expect(existsSync(join(home, ".config", "mimocode", "command", "stale.md"))).toBe(true);
+      expect(existsSync(join(home, ".config", "mimocode", "command", "old-skill.md"))).toBe(true);
       expect(existsSync(join(home, ".config", "mimocode", "command", "keep.md"))).toBe(true);
       expect(existsSync(join(home, ".codex", "skills", "keep-skill"))).toBe(true);
     } finally {
@@ -87,11 +87,11 @@ describe("managed skill state", () => {
 
       const removed = pruneRemovedOwnedRootSkills(allowlistPath, home);
 
-      expect(removed).toBe(3);
+      expect(removed).toBe(2);
       expect(existsSync(join(home, ".codex", "skills", "current"))).toBe(true);
       expect(existsSync(join(home, ".codex", "skills", "removed"))).toBe(false);
       expect(existsSync(join(home, ".agents", "skills", "removed"))).toBe(false);
-      expect(existsSync(join(home, ".config", "mimocode", "command", "removed.md"))).toBe(false);
+      expect(existsSync(join(home, ".config", "mimocode", "command", "removed.md"))).toBe(true);
       expect(existsSync(join(home, ".codex", "skills", "user-skill"))).toBe(true);
       expect(existsSync(join(home, ".config", "mimocode", "command", "user-skill.md"))).toBe(true);
     } finally {
