@@ -84,6 +84,24 @@ Good claims name the owner and reduced concept, for example:
 Weak claims are "move 200 lines to helpers", "make file smaller", or "keep old
 imports with aliases because tests use them."
 
+## Autonomous Ratchet Runs
+
+When the user asks for continuous cleanup, run repeated ratchet slices, not an
+open-ended refactor.
+
+For each slice:
+
+1. Pick the highest-value concrete seam from the existing gate or a short scout.
+2. Prefer deletion, duplicate-concept merge, or moving callers to an existing owner.
+3. State the architecture claim before editing.
+4. Update code, tests, and the gate file together.
+5. Verify with the smallest proof that covers the slice.
+6. Commit if requested or repo workflow expects process commits.
+
+Stop when the next candidate is only polish, needs a public migration decision,
+lacks proof, or would split by size instead of ownership. Park it instead of
+continuing.
+
 ## Lessons From Prior Ratchets
 
 Effective:
