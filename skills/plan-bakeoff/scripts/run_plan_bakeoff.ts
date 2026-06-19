@@ -74,6 +74,13 @@ export type CandidateScorecard = {
     provider_profile: string;
     model: string;
   };
+  diagnostics: CandidateDiagnostics;
+};
+
+export type CandidateDiagnostics = {
+  reason: string;
+  output_tail: string;
+  artifacts: Array<{ name: string; tail: string }>;
 };
 
 type Args = {
@@ -489,11 +496,13 @@ export const runSkillRunnerCandidate = (
   worktree: string,
   env: Record<string, string | undefined> = process.env,
   options: { allowReal?: boolean } = {},
-): { runDir: string; status: CandidateStatus; workerStatus: string; output: string } => {
+): { runDir: string; status: CandidateStatus; workerStatus: string; output: string; diagnostics: CandidateDiagnostics } => {
   const candidateDir = join(runDir, "candidates", candidate.id);
   mkdirSync(candidateDir, { recursive: true });
   const home = join(candidateDir, "home");
   mkdirSync(home, { recursive: true });
+  const codexHome = join(home, ".codex");
+  mkdirSync(codexHome, { recursive: true });
   for (const skill of candidate.skills ?? []) {
     copySkill(skill, home);
   }
@@ -532,21 +541,40 @@ export const runSkillRunnerCandidate = (
         ...env,
         ...candidateMappedEnv(candidate, env),
         HOME: home,
-        CODEX_HOME: join(home, ".codex"),
+        CODEX_HOME: codexHome,
       },
     },
   );
   const output = redactText(`${result.stdout}\n${result.stderr}`, env);
   const workerDir = result.stdout.trim().split("\n").at(-1)?.trim() ?? "";
-  const resultText = workerDir && existsSync(join(workerDir, "result.md")) ? readFileSync(join(workerDir, "result.md"), "utf8") : "";
+  const resultText = workerStatusText(workerDir, candidateDir);
   const workerStatus = parseResultStatus(resultText);
+  const status = statusFromWorker(workerStatus, result.status ?? 1);
   return {
     runDir: workerDir,
-    status: statusFromWorker(workerStatus, result.status ?? 1),
+    status,
     workerStatus,
     output,
+    diagnostics: workerDiagnostics({
+      workerDir,
+      candidateDir,
+      workerStatus,
+      status,
+      exitCode: result.status ?? 1,
+      output,
+      env,
+    }),
   };
 };
+
+const workerStatusText = (workerDir: string, candidateDir: string): string =>
+  [
+    ...workerArtifactPaths(workerDir).map(([, path]) => path),
+    join(candidateDir, "last-message.md"),
+  ]
+    .filter((path) => path && existsSync(path))
+    .map((path) => readFileSync(path, "utf8"))
+    .join("\n");
 
 const shellQuoteCommand = (command: string[]): string =>
   command.map((part) => `'${part.replace(/'/g, "'\\''")}'`).join(" ");
@@ -555,11 +583,21 @@ export const bakeoffPrompt = (manifest: Manifest, candidate: Candidate): string 
   [
     `Implement approved plan ${manifest.plan} directly in this worktree.`,
     `Plan-bakeoff candidate: ${candidate.id}.`,
+    "The approved plan is embedded below; do not read the plan path unless it exists in this worktree.",
+    "",
+    "```markdown",
+    readFileSync(manifest.plan, "utf8").trim(),
+    "```",
+    "",
     "Use the accepted plan as scope. Do not delegate to skill-runner, tmux, or another coding agent.",
     "End with RESULT_STATUS: SUCCESS, PARTIAL, BLOCKED, or FAILED plus concise acceptance evidence.",
   ].join("\n");
 
-const parseResultStatus = (text: string): string => {
+export const parseResultStatus = (text: string): string => {
+  const direct = /^\s*RESULT_STATUS:\s*(SUCCESS|PARTIAL|BLOCKED(?:_NEEDS_DECISION)?|FAILED)\b/im.exec(text);
+  if (direct) {
+    return direct[1].toUpperCase() === "BLOCKED_NEEDS_DECISION" ? "BLOCKED" : direct[1].toUpperCase();
+  }
   const match = /-\s*Status:\s*([A-Z_]+)/.exec(text);
   return match?.[1] ?? "UNKNOWN";
 };
@@ -567,9 +605,77 @@ const parseResultStatus = (text: string): string => {
 const statusFromWorker = (workerStatus: string, exitCode: number): CandidateStatus => {
   if (workerStatus === "SUCCESS") return "SUCCESS";
   if (workerStatus === "PARTIAL") return "PARTIAL";
-  if (workerStatus === "BLOCKED") return "BLOCKED";
+  if (workerStatus === "BLOCKED" || workerStatus === "BLOCKED_NEEDS_DECISION") return "BLOCKED";
   return exitCode === 0 ? "SUCCESS" : "FAILED";
 };
+
+const workerDiagnostics = ({
+  workerDir,
+  candidateDir,
+  workerStatus,
+  status,
+  exitCode,
+  output,
+  env,
+}: {
+  workerDir: string;
+  candidateDir: string;
+  workerStatus: string;
+  status: CandidateStatus;
+  exitCode: number;
+  output: string;
+  env: Record<string, string | undefined>;
+}): CandidateDiagnostics => {
+  const artifacts = workerArtifactTails(workerDir, candidateDir, env);
+  const resultReason = artifactReason(artifacts);
+  const reason = resultReason
+    || (workerStatus === "UNKNOWN" ? `no parseable worker status; exit code ${exitCode}` : "")
+    || (status !== "SUCCESS" ? `worker reported RESULT_STATUS: ${workerStatus}; cli exit code ${exitCode}` : "");
+  return {
+    reason,
+    output_tail: tail(output, 2000),
+    artifacts,
+  };
+};
+
+const workerArtifactTails = (
+  workerDir: string,
+  candidateDir: string,
+  env: Record<string, string | undefined>,
+): CandidateDiagnostics["artifacts"] => {
+  const paths = [
+    ...workerArtifactPaths(workerDir),
+    ["last-message.md", join(candidateDir, "last-message.md")],
+  ];
+  return paths.flatMap(([name, path]) => {
+    if (!path || !existsSync(path)) {
+      return [];
+    }
+    const text = redactText(readFileSync(path, "utf8"), env).trim();
+    return text ? [{ name, tail: tail(text, 2000) }] : [];
+  });
+};
+
+const workerArtifactPaths = (workerDir: string): Array<[string, string]> =>
+  workerDir
+    ? [
+        ["result.md", join(workerDir, "result.md")],
+        ["eval.md", join(workerDir, "eval.md")],
+        ["stderr.log", join(workerDir, "stderr.log")],
+        ["pane-before-stop.log", join(workerDir, "pane-before-stop.log")],
+        ["terminal.log", join(workerDir, "terminal.log")],
+        ["events.jsonl", join(workerDir, "events.jsonl")],
+      ]
+    : [];
+
+const artifactReason = (artifacts: CandidateDiagnostics["artifacts"]): string => {
+  const result = artifacts.find((artifact) => artifact.name === "result.md")?.tail ?? "";
+  const match = /-\s*Reason:\s*(.+)/.exec(result);
+  return match?.[1]?.trim() ?? "";
+};
+
+const tail = (text: string, limit: number): string =>
+  text.length > limit ? text.slice(-limit).trimStart() : text;
 
 export const diffStats = (worktree: string): CandidateScorecard["diff_stats"] => {
   const result = git(worktree, ["diff", "--numstat"], { allowFail: true });
@@ -612,14 +718,37 @@ export const writeScorecard = (scorecard: CandidateScorecard, candidateDir: stri
       `- Worktree: ${scorecard.worktree}`,
       `- Skill-runner dir: ${scorecard.run_dir || "none"}`,
       `- Diff: ${scorecard.diff_stats.files_changed} files, +${scorecard.diff_stats.insertions}/-${scorecard.diff_stats.deletions}`,
+      ...(shouldShowDiagnostics(scorecard)
+        ? [`- Diagnostic reason: ${scorecard.diagnostics.reason || "none"}`]
+        : []),
       "",
       "## Verification",
       "",
       ...scorecard.verification.map((item) => `- ${item.status}: \`${item.command}\``),
+      ...(shouldShowDiagnostics(scorecard)
+        ? [
+            "",
+            "## Diagnostics",
+            "",
+            scorecard.diagnostics.output_tail ? "### Runner Output Tail" : "",
+            scorecard.diagnostics.output_tail ? fenced(scorecard.diagnostics.output_tail) : "",
+            ...scorecard.diagnostics.artifacts.flatMap((artifact) => [
+              `### ${artifact.name}`,
+              fenced(artifact.tail),
+            ]),
+          ].filter(Boolean)
+        : []),
       "",
     ].join("\n"),
   );
 };
+
+const shouldShowDiagnostics = (scorecard: CandidateScorecard): boolean =>
+  scorecard.status !== "SUCCESS"
+  || scorecard.worker_status === "UNKNOWN"
+  || scorecard.verification.some((item) => item.status === "fail");
+
+const fenced = (text: string): string => ["```text", text, "```"].join("\n");
 
 export const rankScorecards = (scorecards: CandidateScorecard[]): CandidateScorecard[] => {
   const statusScore: Record<CandidateStatus, number> = {
@@ -659,12 +788,36 @@ export const writeFinalReport = (runDir: string, scorecards: CandidateScorecard[
       "",
       ...ranked.map((item, index) => `${index + 1}. ${item.candidate_id} - ${item.status}`),
       "",
+      "## Verification Summary",
+      "",
+      ...ranked.map((item) => verificationSummaryLine(item)),
+      "",
+      "## Candidate Diagnostics",
+      "",
+      ...ranked.flatMap((item) => candidateDiagnosticLines(item)),
+      "",
       "## Recommended Next Action",
       "",
       winner ? `Review ${winner.worktree}, then port with $intuitive-port-worktree if accepted.` : "No clean winner; inspect partial candidates.",
       "",
     ].join("\n"),
   );
+};
+
+const verificationSummaryLine = (scorecard: CandidateScorecard): string => {
+  const pass = scorecard.verification.filter((item) => item.status === "pass").length;
+  const fail = scorecard.verification.filter((item) => item.status === "fail").length;
+  return `- ${scorecard.candidate_id}: ${pass} pass, ${fail} fail`;
+};
+
+const candidateDiagnosticLines = (scorecard: CandidateScorecard): string[] => {
+  if (!shouldShowDiagnostics(scorecard)) {
+    return [`- ${scorecard.candidate_id}: none`];
+  }
+  const artifactNames = scorecard.diagnostics.artifacts.map((artifact) => artifact.name).join(", ") || "none";
+  return [
+    `- ${scorecard.candidate_id}: ${scorecard.diagnostics.reason || "inspect scorecard diagnostics"} (artifacts: ${artifactNames})`,
+  ];
 };
 
 export const executeBakeoff = (
@@ -714,6 +867,7 @@ export const executeBakeoff = (
           provider_profile: candidate.provider_profile ?? "",
           model: candidate.model ?? "",
         },
+        diagnostics: worker.diagnostics,
       };
       writeScorecard(scorecard, candidateDir);
       scorecards.push(scorecard);

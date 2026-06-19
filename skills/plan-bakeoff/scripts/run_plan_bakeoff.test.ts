@@ -6,14 +6,18 @@ import { describe, expect, test } from "bun:test";
 import {
   bakeoffPrompt,
   candidateMappedEnv,
+  CandidateScorecard,
   executeBakeoff,
   normalizeManifest,
+  parseResultStatus,
   parseManifestText,
   proposalText,
   proposeCandidates,
   redactText,
   renderCandidateCommand,
   validateManifest,
+  writeFinalReport,
+  writeScorecard,
 } from "./run_plan_bakeoff";
 
 const repoRoot = process.cwd();
@@ -37,6 +41,21 @@ const createTempRepo = () => {
   git(dir, ["commit", "-m", "init"]);
   return dir;
 };
+
+const sampleScorecard = (overrides: Partial<CandidateScorecard> = {}): CandidateScorecard => ({
+  candidate_id: "candidate-a",
+  status: "SUCCESS",
+  worker_status: "SUCCESS",
+  base_ref: "abc123",
+  worktree: "/tmp/worktree",
+  branch: "plan-bakeoff/test/candidate-a",
+  run_dir: "/tmp/run",
+  verification: [{ command: "bun test", status: "pass", output: "ok" }],
+  diff_stats: { files_changed: 1, insertions: 2, deletions: 0 },
+  route: { harness: "fake", provider_profile: "", model: "" },
+  diagnostics: { reason: "", output_tail: "", artifacts: [] },
+  ...overrides,
+});
 
 describe("plan-bakeoff runner", () => {
   test("parses JSON manifest and normalizes target paths", () => {
@@ -267,22 +286,96 @@ describe("plan-bakeoff runner", () => {
   });
 
   test("candidate prompt avoids nested skill-runner orchestration", () => {
-    const prompt = bakeoffPrompt(
-      {
-        schema: "plan_bakeoff_manifest_v1",
-        target_repo: repoRoot,
-        plan: join(repoRoot, ".planning", "plan-bakeoff-skill.md"),
-        candidates: [
-          { id: "fake-a", harness: "fake" },
-          { id: "fake-b", harness: "fake" },
-        ],
-      },
-      { id: "fake-a", harness: "fake" },
-    );
+    const repo = createTempRepo();
+    try {
+      const plan = join(repo, "plan.md");
+      const prompt = bakeoffPrompt(
+        {
+          schema: "plan_bakeoff_manifest_v1",
+          target_repo: repo,
+          plan,
+          candidates: [
+            { id: "fake-a", harness: "fake" },
+            { id: "fake-b", harness: "fake" },
+          ],
+        },
+        { id: "fake-a", harness: "fake" },
+      );
 
-    expect(prompt).toContain("directly in this worktree");
-    expect(prompt).toContain("Do not delegate to skill-runner, tmux, or another coding agent");
-    expect(prompt).not.toContain("$intuitive-flow");
+      expect(prompt).toContain("directly in this worktree");
+      expect(prompt).toContain("# Plan");
+      expect(prompt).toContain("Do a fake task.");
+      expect(prompt).toContain("Do not delegate to skill-runner, tmux, or another coding agent");
+      expect(prompt).not.toContain("$intuitive-flow");
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
+  test("parses direct RESULT_STATUS lines and skill-runner result markdown", () => {
+    expect(parseResultStatus("RESULT_STATUS: SUCCESS\nSUMMARY: ok")).toBe("SUCCESS");
+    expect(parseResultStatus("RESULT_STATUS: BLOCKED_NEEDS_DECISION\nOPEN_DECISIONS: input")).toBe("BLOCKED");
+    expect(parseResultStatus("# Skill Runner Result\n\n- Status: PARTIAL\n- Reason: worker reported")).toBe("PARTIAL");
+    expect(parseResultStatus("SUMMARY: missing status")).toBe("UNKNOWN");
+  });
+
+  test("writes scorecard diagnostics for failed candidates", () => {
+    const dir = mkdtempSync(join(tmpdir(), "plan-bakeoff-scorecard-"));
+    try {
+      writeScorecard(
+        sampleScorecard({
+          status: "FAILED",
+          worker_status: "UNKNOWN",
+          diagnostics: {
+            reason: "no parseable worker status; exit code 1",
+            output_tail: "stderr token [REDACTED]",
+            artifacts: [{ name: "stderr.log", tail: "command failed" }],
+          },
+        }),
+        dir,
+      );
+
+      const markdown = readFileSync(join(dir, "scorecard.md"), "utf8");
+      const json = readFileSync(join(dir, "scorecard.json"), "utf8");
+      expect(markdown).toContain("Diagnostic reason: no parseable worker status; exit code 1");
+      expect(markdown).toContain("## Diagnostics");
+      expect(markdown).toContain("stderr.log");
+      expect(json).toContain('"diagnostics"');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("final report includes verification counts and candidate diagnostics", () => {
+    const dir = mkdtempSync(join(tmpdir(), "plan-bakeoff-report-"));
+    try {
+      writeFinalReport(dir, [
+        sampleScorecard({ candidate_id: "clean" }),
+        sampleScorecard({
+          candidate_id: "broken",
+          status: "FAILED",
+          worker_status: "UNKNOWN",
+          verification: [
+            { command: "bun test", status: "pass", output: "ok" },
+            { command: "git diff --check", status: "fail", output: "bad whitespace" },
+          ],
+          diagnostics: {
+            reason: "no parseable worker status; exit code 1",
+            output_tail: "failed",
+            artifacts: [{ name: "result.md", tail: "- Reason: failed" }],
+          },
+        }),
+      ]);
+
+      const report = readFileSync(join(dir, "final-report.md"), "utf8");
+      expect(report).toContain("## Verification Summary");
+      expect(report).toContain("- clean: 1 pass, 0 fail");
+      expect(report).toContain("- broken: 1 pass, 1 fail");
+      expect(report).toContain("## Candidate Diagnostics");
+      expect(report).toContain("- broken: no parseable worker status; exit code 1");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   test("executes three fake candidates in independent worktrees", () => {
@@ -316,15 +409,21 @@ describe("plan-bakeoff runner", () => {
       });
 
       expect(existsSync(join(runDir, "final-report.md"))).toBe(true);
-      expect(readFileSync(join(runDir, "final-report.md"), "utf8")).toContain("winner: fake-a");
+      const finalReport = readFileSync(join(runDir, "final-report.md"), "utf8");
+      expect(finalReport).toContain("winner: fake-a");
+      expect(finalReport).toContain("- fake-a: 1 pass, 0 fail");
+      expect(finalReport).toContain("- fake-b: 1 pass, 0 fail");
+      expect(finalReport).toContain("- fake-b: worker reported RESULT_STATUS: PARTIAL; cli exit code 0");
       for (const id of ["fake-a", "fake-b", "fake-c"]) {
         expect(existsSync(join(runDir, "candidates", id, "scorecard.json"))).toBe(true);
       }
       expect(readFileSync(join(runDir, "candidates", "fake-a", "scorecard.json"), "utf8")).toContain('"status": "SUCCESS"');
       expect(readFileSync(join(runDir, "candidates", "fake-b", "scorecard.json"), "utf8")).toContain('"status": "PARTIAL"');
+      expect(readFileSync(join(runDir, "candidates", "fake-b", "scorecard.md"), "utf8")).toContain("## Diagnostics");
       expect(git(repo, ["worktree", "list", "--porcelain"]).stdout).not.toContain(runDir);
       expect(existsSync(codexConfig)).toBe(false);
       expect(existsSync(claudeSettings)).toBe(false);
+      expect(existsSync(join(runDir, "candidates", "fake-a", "home", ".codex"))).toBe(true);
     } finally {
       rmSync(repo, { recursive: true, force: true });
       rmSync(runRoot, { recursive: true, force: true });
