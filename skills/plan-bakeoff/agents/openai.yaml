@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan Bakeoff"
+  short_description: "Run approved plans across candidate worktrees"
+  default_prompt: "Use $plan-bakeoff to run this approved plan across multiple candidate worktrees and rank the results."

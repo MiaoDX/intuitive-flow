@@ -28,6 +28,7 @@ root-skill intuitive-tests
 # Direct utilities:
 root-skill intuitive-port-worktree
 root-skill multica-goal-tracker
+root-skill plan-bakeoff
 root-skill skill-runner
 
 # External skills installed through the skills CLI.
