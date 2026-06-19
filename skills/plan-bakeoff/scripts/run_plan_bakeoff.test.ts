@@ -222,6 +222,7 @@ describe("plan-bakeoff runner", () => {
     expect(minimax).not.toContain("fake-mm-key");
     expect(claude).toContain("claude -p");
     expect(claude).toContain("--verbose");
+    expect(claude).toContain("--permission-mode auto");
     expect(claude).toContain("--model sonnet");
   });
 
@@ -428,6 +429,37 @@ describe("plan-bakeoff runner", () => {
       rmSync(repo, { recursive: true, force: true });
       rmSync(runRoot, { recursive: true, force: true });
       rmSync(home, { recursive: true, force: true });
+    }
+  }, 20000);
+
+  test("diagnoses post-run verification failures even when worker reports success", () => {
+    const repo = createTempRepo();
+    const runRoot = mkdtempSync(join(tmpdir(), "plan-bakeoff-verification-fail-"));
+    try {
+      const manifest = normalizeManifest(
+        {
+          schema: "plan_bakeoff_manifest_v1",
+          target_repo: repo,
+          plan: join(repo, "plan.md"),
+          run_root: runRoot,
+          verification: { commands: ["false"] },
+          candidates: [
+            { id: "fake-a", harness: "fake", command_profile: "fake-success" },
+            { id: "fake-b", harness: "fake", command_profile: "fake-success" },
+          ],
+        },
+        join(repo, "manifest.json"),
+      );
+      const runDir = executeBakeoff(manifest);
+      const scorecard = readFileSync(join(runDir, "candidates", "fake-a", "scorecard.md"), "utf8");
+      const report = readFileSync(join(runDir, "final-report.md"), "utf8");
+
+      expect(scorecard).toContain("- Status: PARTIAL");
+      expect(scorecard).toContain("worker reported SUCCESS but 1 post-run verification command failed");
+      expect(report).toContain("- fake-a: worker reported SUCCESS but 1 post-run verification command failed");
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+      rmSync(runRoot, { recursive: true, force: true });
     }
   }, 20000);
 

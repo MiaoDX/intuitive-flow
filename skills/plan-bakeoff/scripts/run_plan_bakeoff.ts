@@ -406,7 +406,7 @@ export const renderCandidateCommand = (
     return command;
   }
   if (candidate.harness === "claude-code") {
-    const command = ["claude", "-p", "--verbose", "--output-format", "stream-json"];
+    const command = ["claude", "-p", "--verbose", "--output-format", "stream-json", "--permission-mode", "auto"];
     if (candidate.model) {
       command.push("--model", candidate.model);
     }
@@ -606,6 +606,7 @@ const statusFromWorker = (workerStatus: string, exitCode: number): CandidateStat
   if (workerStatus === "SUCCESS") return "SUCCESS";
   if (workerStatus === "PARTIAL") return "PARTIAL";
   if (workerStatus === "BLOCKED" || workerStatus === "BLOCKED_NEEDS_DECISION") return "BLOCKED";
+  if (workerStatus === "FAILED") return "FAILED";
   return exitCode === 0 ? "SUCCESS" : "FAILED";
 };
 
@@ -852,9 +853,11 @@ export const executeBakeoff = (
     try {
       const worker = runSkillRunnerCandidate(manifest, candidate, runDir, worktree, env, { allowReal: options.allowReal });
       const verification = runVerification(worktree, manifest.verification?.commands ?? [], env);
+      const verificationFailures = verification.filter((item) => item.status === "fail").length;
+      const status = verificationFailures > 0 && worker.status === "SUCCESS" ? "PARTIAL" : worker.status;
       const scorecard: CandidateScorecard = {
         candidate_id: candidate.id,
-        status: verification.some((item) => item.status === "fail") && worker.status === "SUCCESS" ? "PARTIAL" : worker.status,
+        status,
         worker_status: worker.workerStatus,
         base_ref: baseRef,
         worktree,
@@ -867,7 +870,12 @@ export const executeBakeoff = (
           provider_profile: candidate.provider_profile ?? "",
           model: candidate.model ?? "",
         },
-        diagnostics: worker.diagnostics,
+        diagnostics: verificationFailures > 0 && worker.status === "SUCCESS"
+          ? {
+              ...worker.diagnostics,
+              reason: `worker reported SUCCESS but ${verificationFailures} post-run verification command${verificationFailures === 1 ? "" : "s"} failed`,
+            }
+          : worker.diagnostics,
       };
       writeScorecard(scorecard, candidateDir);
       scorecards.push(scorecard);
