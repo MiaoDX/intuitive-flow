@@ -89,6 +89,10 @@ imports with aliases because tests use them."
 When the user asks for continuous cleanup, run repeated ratchet slices, not an
 open-ended refactor.
 
+For long-lived or resumed campaigns, read `references/ratchet-campaign.md` and
+`../../_shared/references/durable-run.md`. Those shared rules own the active
+capsule, checkpoint cadence, control-plane/worker shape, and proof selector.
+
 For each slice:
 
 1. Pick the highest-value concrete seam from the existing gate or a short scout.

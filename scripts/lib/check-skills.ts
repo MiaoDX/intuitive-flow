@@ -139,10 +139,17 @@ const localResourceMentions = (text: string, sourceFile: string): ResourceMentio
     mentions.set(`${displayPath}:${resolvedPath}`, { displayPath, resolvedPath });
   };
 
-  const resourcePattern = /\b(?:references|templates)\/[A-Za-z0-9._/-]+\.[A-Za-z0-9]+/g;
+  const resolveMention = (mention: string): string => {
+    if (mention.startsWith("./") || mention.startsWith("../")) {
+      return skillRelativePath(join(dirname(sourceFile), mention));
+    }
+    return mention;
+  };
+
+  const resourcePattern = /(?<![A-Za-z0-9_/-])((?:references|templates)\/[A-Za-z0-9._/-]+|(?:\.\.\/)+_shared\/[A-Za-z0-9._/-]+)\.[A-Za-z0-9]+/g;
   for (const match of text.matchAll(resourcePattern)) {
     const mention = normalizeMention(match[0]);
-    addMention(mention);
+    addMention(mention, resolveMention(mention));
   }
   const markdownLinkPattern = /\[[^\]]*]\(([^)]+)\)/g;
   for (const match of text.matchAll(markdownLinkPattern)) {

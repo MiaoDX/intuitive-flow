@@ -78,9 +78,11 @@ At closeout, read `STATUS.md` again and update it when focus, status, next
 action, blocker, verification state, or handoff expectation changed. If no
 update is needed, say it was checked and left unchanged.
 
-For parallel standalone terminal work, use
+For parallel standalone terminal work or durable resume state, use
 `docs/status/active/<task-slug>.md` instead of editing `STATUS.md` for routine
-progress.
+progress. If `docs/status/active/` does not exist, create it. The active file is
+a compact capsule for current execution state; `STATUS.md` remains the
+project-level human status surface.
 
 ## Plan Freshness At Closeout
 

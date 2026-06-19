@@ -49,16 +49,17 @@ Before reading more context, launching workers, or editing files:
    A `blocked` or `complete` goal is a stop gate, not a resume cue. An active
    goal is prior intent, not permission to override the latest user message.
 3. If this is an active-goal resume/debug turn, or a continuation of a
-   plan-backed durable run, use Hot Resume: read only the task capsule if any
-   (`docs/status/active/<plan-slug>.md` for plan-backed runs), `git status
-   --short`, `git log -3 --oneline`, and at most one focused
-   machine-readable artifact summary. Do not reread the full source plan unless
-   the capsule cannot answer a named next-action question.
+   plan-backed durable run, use the shared Hot Resume and active capsule rules
+   in `../_shared/references/durable-run.md`. Do not reread the full source
+   plan unless the capsule cannot answer a named next-action question.
 4. When changing `intuitive-flow` itself, audit first and patch only the named
    smallest delta after current-turn user permission.
 
-For durable or resumed runs, read `references/context-budget-and-loop-guard.md`
-before deciding whether to continue, relaunch, or stop.
+For durable or resumed runs, read `../_shared/references/durable-run.md` before
+deciding whether to continue, relaunch, or stop. Read
+`references/context-budget-and-loop-guard.md` only when the run needs the
+Flow-specific experiment contract, self-modification guard, or blocker-loop
+diagnostics.
 
 ## Read First
 
@@ -66,7 +67,8 @@ Load only the reference needed for the selected route:
 
 | Need | Read |
 | --- | --- |
-| Active-goal resume/debug, context budget, loop breaker, experiment contract | `references/context-budget-and-loop-guard.md` |
+| Shared durable-run mechanics, Hot Resume, active capsule, control-plane/worker cadence, proof selector | `../_shared/references/durable-run.md` |
+| Flow-specific blocker experiment contract, self-modification guard, loop diagnostics | `references/context-budget-and-loop-guard.md` |
 | Source-of-truth, `STATUS.md`, `CONTEXT.md`, provenance, phase granularity | `references/source-of-truth.md` |
 | Fuzzy idea shaping, single plan-file intake, unknown-unknown scout/reconciliation | `references/plan-intake-and-autoplan.md` |
 | GSD ingest vs plan-phase routing, committed phase execution, changed-code cleanup scope | `references/gsd-handoff.md` |
@@ -139,8 +141,9 @@ verification.
 
 Keep the main session as route owner, integration point, and final verifier.
 Use main-session edits for tiny direct work. For durable, stateful, long-running,
-or parallel work, read `references/checkpoints-and-auto-run.md` and the
-`$skill-runner` Codex delegation reference before launching workers.
+or parallel work, read `../_shared/references/durable-run.md`,
+`references/checkpoints-and-auto-run.md`, and the `$skill-runner` Codex
+delegation reference before launching workers.
 
 ## Hard Stops
 

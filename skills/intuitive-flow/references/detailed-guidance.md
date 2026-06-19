@@ -4,7 +4,8 @@ This file is an index. Read only the reference needed for the selected route:
 
 | Need | Read |
 | --- | --- |
-| Active-goal resume/debug, context budget, loop breaker, experiment contract | references/context-budget-and-loop-guard.md |
+| Shared durable-run mechanics, Hot Resume, active capsule, control-plane/worker cadence, proof selector | ../../_shared/references/durable-run.md |
+| Flow-specific blocker experiment contract, self-modification guard, loop diagnostics | references/context-budget-and-loop-guard.md |
 | Source-of-truth, STATUS.md, CONTEXT.md, provenance, phase granularity | references/source-of-truth.md |
 | Fuzzy idea shaping, single plan-file intake, unknown-unknown scout/reconciliation | references/plan-intake-and-autoplan.md |
 | GSD ingest vs plan-phase routing, committed phase execution, changed-code cleanup scope | references/gsd-handoff.md |

@@ -107,6 +107,11 @@ command output are not reliable stop conditions across repeated runs. Persist
 the refactor gate in the repo when the user asks for execution, repeated runs,
 or "all big known issues."
 
+For durable or repeated execution, also maintain the shared active capsule from
+`../../_shared/references/durable-run.md` at `docs/status/active/<gate-slug>.md`;
+create `docs/status/active/` when it is missing. The gate remains canonical for
+scope/status/checklist, while the capsule is only the compact resume surface.
+
 Use one source of truth:
 
 - If a relevant `docs/plans/<slug>.md` already exists, update that file.
@@ -270,6 +275,14 @@ level the user accepted.
 Default to the smallest evidence path that can make the gate honest: produce the
 scope gate, write/update the persistent gate file when appropriate, and execute
 the accepted cleanup when the user has approved the target.
+
+Before choosing commands for a non-trivial refactor, inventory the repo's
+available verification layers from local docs, scripts, package/Make targets,
+CI, and existing test or harness guidance. Use the shared proof selector in
+`../../_shared/references/durable-run.md` to pick the smallest sufficient proof by
+change class. Do not run full-suite, visual, simulator, browser, hardware, or
+manual gates after every slice unless that proof uniquely observes the behavior
+the slice can regress.
 
 Use another workflow when it materially improves the current pass:
 

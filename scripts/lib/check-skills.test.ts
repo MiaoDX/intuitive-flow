@@ -43,6 +43,40 @@ describe("skill checker", () => {
     });
   });
 
+  test("accepts shared references outside individual skill directories", async () => {
+    await withTempProject((root) => {
+      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill alpha\nroot-skill beta\n");
+      writeFixtureFile(
+        root,
+        "skills/alpha/SKILL.md",
+        "---\nname: alpha\ndescription: Alpha.\n---\n\nRead `../_shared/references/durable-run.md`.\n",
+      );
+      writeFixtureFile(
+        root,
+        "skills/beta/SKILL.md",
+        "---\nname: beta\ndescription: Beta.\n---\n\nSee [shared](../_shared/references/durable-run.md).\n",
+      );
+      writeFixtureFile(root, "skills/_shared/references/durable-run.md", "# Durable Run\n");
+
+      expect(checkSkills(optionsFor(root))).toEqual([]);
+    });
+  });
+
+  test("rejects missing shared references", async () => {
+    await withTempProject((root) => {
+      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill alpha\n");
+      writeFixtureFile(
+        root,
+        "skills/alpha/SKILL.md",
+        "---\nname: alpha\ndescription: Alpha.\n---\n\nRead `../_shared/references/missing.md`.\n",
+      );
+
+      expect(checkSkills(optionsFor(root))).toContain(
+        "missing referenced skill resource in skills/alpha/SKILL.md: ../_shared/references/missing.md",
+      );
+    });
+  });
+
   test("rejects deprecated skills-src files", async () => {
     await withTempProject((root) => {
       writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill alpha\n");

@@ -20,6 +20,11 @@ complexity, oversized-module, backend/report/test-sprawl, or entropy ratchet.
 That mode tightens the normal refactor loop around concept reduction rather
 than pure extraction.
 
+Read `references/ratchet-campaign.md` plus
+`../_shared/references/durable-run.md` when the user asks to keep refactoring,
+continue cleanup, run a long-lived campaign, or resume an existing refactor
+gate whose status is `CONTINUE`.
+
 Read `references/changed-code-review.md` when the request is diff-scoped
 cleanup, post-implementation review, reuse/quality/efficiency review, or when
 `$intuitive-flow` asks for changed-code cleanup before final verification.
@@ -31,6 +36,7 @@ cleanup, post-implementation review, reuse/quality/efficiency review, or when
 | Scope gate | The target is broad, risky, architecture-shaped, or needs accepted severities before edits. | Refactor scope, accepted checklist, evidence ladder, stop condition, parked items. | The user is only asking what to clean next across the repo. |
 | Execution slice | The user names a bounded code/API/module seam and wants cleanup implemented. | One vertical slice with code, callers, tests, docs/stale surfaces, and proof. | The task lacks scope, non-goals, or verification. |
 | Ratchet mode | The goal is repeated code-size, complexity, module-sprawl, or architecture simplification. | Scope gate plus quality signal, architecture pressure, behavior-change policy, simplification claim. | The request is only to review the current diff. |
+| Ratchet campaign | The user asks to continue cleanup for many slices/hours or an existing refactor gate is `CONTINUE`. | Canonical gate plus active capsule, checkpoint cadence, per-slice proof selector, parked decisions. | The next candidate is only polish, lacks proof, or needs a public migration/user decision. |
 | Changed-code review | The request is post-implementation reuse/quality/efficiency review of changed files. | Diff-scoped findings first, optional targeted fixes only when authorized, then proof to rerun. | The issue is a broader architecture cleanup or entropy discovery task. |
 
 For non-trivial runs, state `Selected mode:`, `Why:`, and `Redirect:` before
@@ -88,13 +94,25 @@ the user or approved flow has clearly authorized an implementation pass.
 
 ## Evidence Ladder
 
-Choose the smallest ladder that proves the accepted scope:
+First inventory the target repo's available verification layers from local docs,
+scripts, Make targets, package scripts, CI, and existing test/harness guidance.
+For long-running campaigns, record that inventory in the gate or active capsule
+so future slices do not rediscover it.
+
+Choose the smallest ladder that proves the accepted scope and change class:
 
 - L0 static/search proof for docs, references, and stale-path cleanup;
 - L1 unit/mock tests for local behavior;
 - L2 contract/integration tests for public APIs, commands, or file formats;
 - L3 product/demo/manual proof for UI, simulator, provider, hardware, or
   external-service behavior.
+
+Use `../_shared/references/durable-run.md` for the cross-skill proof selector.
+Focused proof is preferred when it observes the changed behavior. Expensive
+full-suite, visual, simulator, product, or manual gates are required when the
+accepted scope changes behavior those gates uniquely observe, when focused
+proof cannot cover the blast radius, or when the gate file explicitly requires
+them.
 
 Do not claim completion from a narrower proof than the scope requires.
 

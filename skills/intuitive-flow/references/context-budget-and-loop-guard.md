@@ -4,6 +4,12 @@ Use this reference for active-goal resume/debug turns, repeated blockers,
 local-hardware probes, long-running verification, or any flow where context
 growth is itself becoming a risk.
 
+Shared Hot Resume, context-budget, control-plane, checkpoint, active-capsule,
+and proof-selector rules live in `../../_shared/references/durable-run.md`. Read
+that shared reference first for durable or resumed work; use this file for the
+Flow-specific experiment contract, self-modification guard, and blocker-loop
+diagnostics.
+
 ## Hot Resume
 
 Before Hot Resume, apply the latest user intent gate and host goal gate:
@@ -66,24 +72,6 @@ the main-session root goal. Do not create a second root goal. Create
 worker-local goals only inside tmux/`skill-runner` for one bounded sub-phase,
 and close or block only that worker goal before returning a handoff to the main
 session.
-
-## Context Budgets
-
-Use the smallest budget that can decide the next action.
-
-| Budget | Allowed context |
-| --- | --- |
-| `low` | Up to four short commands; capsule/status summary; git short state; one focused artifact summary; no large files or extra references. |
-| `medium` | One focused source file or one focused plan/status section after explaining why `low` cannot decide. |
-| `high` | New planning, broad refactor, unfamiliar repo intake, or route ambiguity only; state why the escalation is necessary. |
-
-Hot Resume defaults to `low`. Escalate only after naming the specific question
-that lower context cannot answer.
-
-Prefer `rg`, `jq`, small Python summary snippets, or repo-local summary scripts
-over `cat`/`sed` of large files. Do not paste full stderr, full `state.json`,
-large test logs, or long generated artifacts into the main session. Summaries
-should name the artifact path and the decision it supports.
 
 ## Experiment Contract
 
@@ -166,44 +154,15 @@ implementing from inherited momentum. First perform a compact self-audit:
 Patch only after current-turn user permission to make that change. If the user
 asked to discuss, inspect, or explain, stop after the audit.
 
-## Execution Surface Guard
+## Flow-Specific Context Hygiene
 
-For durable implementation, the main session is the control plane. It should
-choose routes, inspect artifacts, babysit worker progress, and decide stops.
-The execution plane should be a bounded delegated worker by default, selected
-through the `$skill-runner` Codex delegation reference.
+Prefer `rg`, `jq`, small summary snippets, or repo-local summary scripts over
+full-file dumps for large plans, logs, or generated artifacts. Do not paste full
+stderr, full state files, large test logs, or long generated artifacts into the
+main session. Summaries should name the artifact path and the decision it
+supports.
 
-Main-session direct implementation is allowed only for tiny direct edits,
-read-only probes, or local repairs whose route brief explains why context
-continuity is not at risk. Otherwise, launch or steer a worker and consume a
-compact handoff instead of pulling long logs or full files into the main
-session.
-
-## Capsule
-
-For durable local-debug work, maintain a compact capsule under a project-local
-status surface such as `docs/status/active/<task>.md` when the repo has one.
-For plan-backed durable work, default to
-`docs/status/active/<plan-slug>.md`, where `<plan-slug>` is the source plan file
-name without `.md`. Use an equivalent task-owned file when the repo does not
-have a status surface.
-
-The capsule should contain only:
-
-- source plan path;
-- current blocker;
-- blocker fingerprint;
-- last proven evidence;
-- completed slices, summarized in one line each;
-- next hypothesis;
-- next command/artifact;
-- stop condition;
-- no-touch scope;
-- parked work.
-
-The capsule is a resume accelerator, not a replacement for canonical plans,
-status, or verification artifacts. During compact/resume, read the capsule
-first and reopen the source plan only for the specific active section or
-acceptance criterion the capsule points to. Update canonical source-of-truth
-files only when project-level focus, decisions, blockers, verification
-expectations, or final plan freshness materially change.
+For durable implementation, follow the shared control-plane and active-capsule
+rules in `../../_shared/references/durable-run.md`. Main-session direct
+implementation is allowed only for tiny direct edits, read-only probes, or
+local repairs whose route brief explains why context continuity is not at risk.

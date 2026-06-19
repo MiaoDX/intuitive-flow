@@ -86,6 +86,9 @@ The current maintenance focus is keeping the repo dogfoodable:
 - keep GSD phase machinery routed by `$intuitive-flow` or explicit GSD use;
   only GSD status/resume/pause helpers are default-visible
 - edit repo-owned skills directly under `skills/`
+- keep cross-skill runtime rules in `skills/_shared/` when Flow and Refactor
+  intentionally share behavior; `_shared` is a bundled resource surface, not an
+  allowlisted root skill
 - keep `SKILL.md` entrypoints compact and watch size drift through the
   non-failing `check:skills` size budget report; `check:skills` also rejects
   skill-style frontmatter in non-entrypoint Markdown so references and templates

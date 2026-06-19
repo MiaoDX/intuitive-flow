@@ -4,6 +4,11 @@ Use this reference before whole-flow, durable, auto-guided, tmux-worker, or
 `/goal` runs and before crossing review, GSD, execution, cleanup, or
 verification boundaries.
 
+Shared active-capsule, checkpoint cadence, control-plane/worker, and proof
+selection rules live in `../../_shared/references/durable-run.md`. Read that file
+first for durable runs; use this file for Flow-specific contract gates, goal
+ownership, deterministic stop gates, decision triage, and GSD boundaries.
+
 ## Execution Contract Gate
 
 Before starting a whole-flow or durable auto-run that may cross review, GSD
@@ -147,36 +152,12 @@ Good stop gates are deterministic and cheap. Prefer adding or using them over
 model judgment for milestones that end at human review, human testing, physical
 world proof, credentials, or other external-state boundaries.
 
-## Resume Capsule
-
-For durable local-debug or active-goal work, maintain a compact capsule under a
-project-local status surface such as `docs/status/active/<task>.md` when the
-repo has one. Use an equivalent task-owned file when it does not.
-
-The capsule exists to avoid replaying the full workflow on every resume. It
-should contain only:
-
-- current blocker;
-- blocker fingerprint;
-- last proven evidence;
-- next hypothesis;
-- next command/artifact;
-- stop condition;
-- no-touch scope;
-- parked work.
-
-On resume/debug turns, check the capsule before normal route discovery. If the
-capsule and stop gate are enough to choose the next action, stay in Hot Resume
-with a low context budget. Escalate to normal route discovery only when the
-capsule is missing, stale, contradicted by current evidence, or the user asks
-for new planning/review scope.
-
 ## Control Plane And Worker Sessions
 
-For durable runs that may cross multiple stages, keep the main session as the
-control plane and use `skill-runner`/tmux workers as the execution plane by
-default. Main-session direct durable implementation is an exception, not the
-default.
+For durable runs that may cross multiple stages, follow the shared
+control-plane, worker, review-cadence, and active-capsule rules in
+`../../_shared/references/durable-run.md`. Main-session direct durable
+implementation is an exception, not the default.
 
 Main session responsibilities:
 
@@ -218,23 +199,12 @@ use a handoff-style `/compact` and immediately re-check the canonical artifact.
 Prefer closing a completed worker over clearing it and continuing. A fresh
 worker per sub-phase gives cleaner boundaries and makes stale goals less likely.
 
-For goal-driven workers, set a steering cadence, not a short hard timeout.
-Choose the cadence per sub-phase from expected proof duration, risk, and
-artifact rhythm:
-
-| Task shape | Suggested review cadence |
-| --- | --- |
-| Tiny or low-risk edit | no worker, or 10-20 minutes if delegated |
-| Normal implementation slice | 30-60 minutes |
-| Broad refactor with active tests | 60-120 minutes |
-| Known slow verification or migration | align with expected proof checkpoints |
-
-Let a healthy long-running worker continue when it is producing durable progress
-or running an expected long proof. If the worker is active after a review
-interval without durable progress, or if it is pursuing the wrong artifact, the
-main session should inspect the captured pane/logs/diff/canonical artifact and
-either steer the worker with a follow-up, stop it as blocked, or relaunch a
-fresh worker with a narrower corrected goal.
+For goal-driven workers, set a steering cadence from the shared durable-run
+table. If a worker is active after a review interval without durable progress,
+or if it is pursuing the wrong artifact, the main session should inspect the
+captured pane/logs/diff/canonical artifact and either steer the worker with a
+follow-up, stop it as blocked, or relaunch a fresh worker with a narrower
+corrected goal.
 
 When stopping a bad goal, do not blindly resume. First answer:
 

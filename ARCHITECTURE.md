@@ -186,6 +186,12 @@ For each allowlisted repo-owned root skill, the Codex install directory is a
 fresh mirror of `skills/<name>/` on every sync. The updater replaces the
 installed skill contents before copying so deleted or renamed `references/`,
 `templates/`, or `scripts/` resources cannot survive as stale installed files.
+Shared repo-owned skill resources live under `skills/_shared/` and are not a
+root skill. Root skills may link to those files with relative `_shared`
+references when behavior is intentionally shared across skills. During local
+sync, the updater mirrors `skills/_shared/` beside installed root skill
+directories so sibling references such as `../_shared/references/*.md` remain
+valid.
 
 The scout-based planning skill is installed as `agent-planning-loop`. Retired
 repo-owned skill names stay in the prune ledger so updater-owned stale installs

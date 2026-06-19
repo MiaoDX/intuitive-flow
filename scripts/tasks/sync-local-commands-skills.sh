@@ -61,6 +61,7 @@ run_sync_local_commands_skills() {
     _managed_state_tool prune-owned-root-skills "$default_skill_allowlist" || return 1
 
     local codex_dest="$HOME/.codex/skills"
+    local claude_dest="$HOME/.claude/skills"
 
     # ── Sync local skills/* (repo root) to Claude Code + Codex ─
     local root_skills_src="$project_dir/skills"
@@ -74,6 +75,20 @@ run_sync_local_commands_skills() {
         fi
         local skills_registry
         skills_registry=$(select_npm_registry "Skills CLI" skills) || return 1
+        if [ -d "$root_skills_src/_shared" ]; then
+            if [ -d "$codex_dest" ]; then
+                task_notice "Repo-local commands & skills: syncing shared Codex skill resources"
+                if ! _replace_dir_contents "$root_skills_src/_shared" "$codex_dest/_shared"; then
+                    return 1
+                fi
+            fi
+            if [ -d "$claude_dest" ]; then
+                task_notice "Repo-local commands & skills: syncing shared Claude Code skill resources"
+                if ! _replace_dir_contents "$root_skills_src/_shared" "$claude_dest/_shared"; then
+                    return 1
+                fi
+            fi
+        fi
         while IFS= read -r skill_name; do
             skill_dir="$root_skills_src/$skill_name"
 
