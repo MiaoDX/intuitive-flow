@@ -32,21 +32,44 @@ what good means, and what must not break.
 evidence, retrospectives, scratch work, and low-level churn. Humans can inspect
 it when something is risky or broken. They should not have to live there.
 
-The workflow keeps the user-facing choices small, with a clear planning to
-execution boundary. For ideas or draft plans, use `$intuitive-reduce-entropy`
-in plan entropy mode, optional `gstack-autoplan` unknown-unknown scouting for
-non-trivial plans, `$grill-with-docs-batch`, and `$intuitive-preflight` before
-`$intuitive-flow` executes. For repo maintenance, use `$intuitive-reduce-entropy`
-in repo entropy mode. Use `$agent-planning-loop` when scout workers should
-debate a plan before one human review packet, `$intuitive-refactor` to clean a
-known target, and `$intuitive-squash` before branch handoff.
+The workflow keeps the user-facing choices small by separating simple execution
+from complex planning. Tiny concrete work can still go straight to
+`$intuitive-flow`. Complex or plan-backed work should first reduce plan entropy,
+turn the result into a plan, repeat plan-entropy passes until the serious
+questions are found, run `$grill-with-docs-batch`, then use
+`$intuitive-preflight` before `$intuitive-flow` executes. For repo maintenance,
+use `$intuitive-reduce-entropy` in repo entropy mode. Use
+`$agent-planning-loop` when scout workers should debate a plan before one human
+review packet, `$intuitive-refactor` to clean a known target, and
+`$intuitive-squash` before branch handoff.
 See [BELIEFS.md](BELIEFS.md) for the supporting doctrine behind the workflow;
 current project truth stays in the small human surface above.
 
 ## Start In A Repo
 
-In the target repo, give your AI agent the maintenance entrypoint and ask it to
-find the ranked batch of high-value entropy reduction candidates:
+Pick the route by task shape:
+
+| Task shape | First prompt |
+| --- | --- |
+| Tiny concrete change or status check | `Use $intuitive-flow for this bounded task: <task>` |
+| Complex idea, feature, refactor, or plan-backed work | Start a reduce-entropy planning loop before execution |
+| Repo maintenance or "what should we clean next?" | Use repo entropy mode to find a ranked candidate batch |
+
+For complex work, start by asking for plan entropy mode and keep iterating until
+the plan has no more material blind spots:
+
+```text
+Use $intuitive-reduce-entropy in plan entropy mode for this idea or plan:
+<paste idea or path to docs/plans/<plan>.md>
+
+Goal: find missing decisions, weak assumptions, proof gaps, and unknown-unknown
+scout needs. Update or produce a plan, then repeat plan entropy until the
+remaining points are implementation defaults. Next route should be
+$grill-with-docs-batch, then $intuitive-preflight, then $intuitive-flow.
+```
+
+For repo maintenance, give your AI agent the maintenance entrypoint and ask it
+to find the ranked batch of high-value entropy reduction candidates:
 
 ```text
 Read this skill:
@@ -58,16 +81,8 @@ to work in. If agent guidance is the first entropy source, route to
 $intuitive-init. Start with a ranked candidate batch before applying changes.
 ```
 
-For a draft plan or idea, ask for plan entropy mode instead:
-
-```text
-Use $intuitive-reduce-entropy in plan entropy mode on docs/plans/<plan>.md.
-Find missing decisions, weak assumptions, proof gaps, and unknown-unknown scout
-needs before grill-batch, preflight, or execution.
-```
-
 <p align="center">
-  <img src="docs/assets/terminal-init.svg" alt="AI-native reduce-entropy flow" width="720">
+  <img src="docs/assets/workflow.svg" alt="Simple work goes to Flow; complex work loops through reduce entropy, grill batch, preflight, then Flow" width="820">
 </p>
 
 ## Optional Tool Install (For Humans)
@@ -85,9 +100,9 @@ Keep the public choice small:
 
 | Skill | Use it for |
 | --- | --- |
-| **intuitive-flow** | Execution router after an approved plan or preflight contract; still accepts vague prompts as a compatibility router that names the upstream planning stage |
+| **intuitive-flow** | Direct executor for tiny bounded tasks and execution router after an approved plan or preflight contract; vague prompts are compatibility-routed upstream |
 | **intuitive-refactor** | Directly clean a known module, seam, stale API, compatibility surface, code/package/module layout issue, or architecture target |
-| **intuitive-reduce-entropy** | Selects repo entropy mode for maintenance candidates or plan entropy mode for idea/plan blind spots before grill-batch and preflight |
+| **intuitive-reduce-entropy** | Selects repo entropy mode for maintenance candidates or plan entropy mode for idea/plan blind spots; complex plans iterate here before grill-batch and preflight |
 | **agent-planning-loop** | Bounded autonomous planning loop: scouts run reduce-entropy and grill-batch style critique, while the main session judges scope and returns one review packet |
 | **intuitive-squash** | Compress noisy local agent history into a clean reviewable commit story |
 

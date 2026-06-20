@@ -1,6 +1,6 @@
 # Status
 
-Last reviewed: 2026-06-16
+Last reviewed: 2026-06-20
 
 ## Current State
 
@@ -56,9 +56,11 @@ The current maintenance focus is keeping the repo dogfoodable:
 - keep `docs/human/agent-harness-references.md` as the source ledger for
   external Claude Code, Codex, AGENTS.md, and field-practice lessons before
   turning those lessons into skill rules
-- keep the recommended workflow staged: repo/plan entropy, optional
-  `gstack-autoplan` unknown-unknown scout for non-trivial plans, grill-batch,
-  preflight, then `intuitive-flow` execution
+- keep the recommended workflow split by task shape: tiny bounded tasks may go
+  directly to `intuitive-flow`; complex or plan-backed work should iterate
+  plan entropy into a plan, optionally scout unknown unknowns with
+  `gstack-autoplan`, run grill-batch, run preflight, then execute through
+  `intuitive-flow`
 - keep the user-facing skill surface small: flow, refactor, reduce-entropy,
   agent-planning-loop, and squash; route or directly invoke specialists from
   the allowlist as needed, with docs/init/tests/preflight/

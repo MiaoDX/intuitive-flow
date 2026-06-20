@@ -75,11 +75,25 @@ Each reusable workflow installs from `skills/<name>/SKILL.md`. A skill should
 describe when it activates, how it should run, and what output or side effects
 are expected.
 
-The recommended planning-to-execution workflow is staged:
+The skill layer has two execution boundaries:
+
+- Tiny concrete tasks may use `$intuitive-flow` directly when the task is
+  bounded, locally verifiable, and does not need a durable plan.
+- Complex, ambiguous, or plan-backed tasks should make planning explicit before
+  execution. `$intuitive-flow` is the final executor, not a hidden planning
+  substitute.
+
+The recommended complex planning-to-execution workflow is staged:
 
 ```text
-plan/repo entropy -> optional gstack-autoplan unknown-unknown scout
-  -> grill-batch -> preflight -> intuitive-flow execution
+idea or draft plan
+  -> reduce plan entropy
+  -> plan
+  -> repeat plan entropy until material blind spots are saturated
+  -> optional gstack-autoplan unknown-unknown scout
+  -> grill-batch
+  -> preflight
+  -> intuitive-flow execution
 ```
 
 `$intuitive-flow` remains the stable user-facing trigger and compatibility
@@ -87,6 +101,17 @@ router, but the recommended path treats it as the execution orchestrator after
 an approved plan or `$intuitive-preflight` contract exists. Vague prompts should
 be routed upstream to plan entropy mode, `$agent-planning-loop`, grill-batch, or
 preflight instead of hiding planning inside execution.
+
+The planning owners are intentionally separate:
+
+- `$intuitive-reduce-entropy` owns repo entropy mode for maintenance discovery
+  and plan entropy mode for idea or plan hardening.
+- `$grill-with-docs-batch` owns decision quality against domain language,
+  current docs, and durable boundaries.
+- `$intuitive-preflight` owns the executable contract: scope, non-goals,
+  acceptance, verification gates, route, worker strategy, and stop conditions.
+- `$intuitive-flow` owns implementation, integration, proof, docs alignment, and
+  closeout after a plan or preflight contract is accepted.
 
 The primary user-facing skills are `$intuitive-flow`, `$intuitive-refactor`,
 `$intuitive-reduce-entropy`, `$agent-planning-loop`, and
