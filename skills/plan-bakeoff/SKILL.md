@@ -16,6 +16,22 @@ Use this skill to orchestrate one accepted plan across multiple independent git
 worktrees. Keep `skill-runner` as the single-worker primitive; this skill owns
 the fanout, shared baseline, candidate manifest, scorecards, and final report.
 
+## User Prompt Contract
+
+Keep user-facing bakeoff prompts short. The user should only need to name:
+
+- target repo
+- accepted plan path or equivalent approved contract
+- candidate set or env/config file that implies the candidate set
+- any explicit stop gates such as "do not port", "keep worktrees", or
+  "dry-run first"
+
+Do not ask the user to paste environment setup instructions, verification
+rubrics, scoring criteria, or repo-specific preflight commands into the prompt.
+Infer those from this skill, the target repo guidance, and the accepted plan.
+If the target repo lacks enough guidance to prepare comparable worktrees, record
+that as a bakeoff blocker instead of expanding the prompt into a one-off SOP.
+
 ## Safety Model
 
 - Require an approved plan or equivalent execution contract before launching
@@ -33,36 +49,104 @@ the fanout, shared baseline, candidate manifest, scorecards, and final report.
 ## Default Flow
 
 1. Read the accepted plan.
-2. Copy `.plan-bakeoff.env.example` to `.plan-bakeoff.env` if needed, then fill
+2. Read the target repo's agent guidance and discover repo-local setup/test
+   commands before inventing any environment steps.
+3. Copy `.plan-bakeoff.env.example` to `.plan-bakeoff.env` if needed, then fill
    only local API keys. `.plan-bakeoff.env` is gitignored and must not be
    committed.
-3. Ask for a proposal:
+4. Ask for a proposal:
 
    ```bash
    bash skills/plan-bakeoff/scripts/run_plan_bakeoff.sh --manifest <manifest> --propose
    ```
 
-4. Let the user accept or edit the manifest.
-5. Dry-run the manifest:
+5. Let the user accept or edit the manifest.
+6. Dry-run the manifest:
 
    ```bash
    bash skills/plan-bakeoff/scripts/run_plan_bakeoff.sh --manifest <manifest> --dry-run
    ```
 
-6. Execute fake candidates, or real candidates only after explicit approval:
+7. Execute fake candidates, or real candidates only after explicit approval:
 
    ```bash
    bash skills/plan-bakeoff/scripts/run_plan_bakeoff.sh --manifest <manifest> --execute
    bash skills/plan-bakeoff/scripts/run_plan_bakeoff.sh --manifest <manifest> --execute --execute-real
    ```
 
-7. Inspect the final report, candidate scorecards, and worker artifacts.
-8. Recommend a winner, cherry-pick ideas, rejected candidates, and next action.
+8. Inspect the final report, candidate scorecards, and worker artifacts.
+9. Recommend a winner, cherry-pick ideas, rejected candidates, and next action.
 
 Execution launches candidates in parallel by default from the same resolved
 base ref. The runner gives each candidate a one-hour budget plus a grace window
 instead of using a short fixed stop, because bakeoff should compare
 implementations rather than filter out slower-but-promising routes.
+
+## Environment Discovery Defaults
+
+Treat environment preparation as a target-repo contract, not as user prompt
+content and not as part of the model-quality score.
+
+Before launching candidates:
+
+- Read the target repo's mandatory orientation files and follow only the setup
+  links needed for this plan.
+- Prefer repo-provided preflight/bootstrap/test wrappers over ad hoc commands.
+- If the repo provides worktree-specific readiness commands, run those before
+  real candidates and include them in shared verification when appropriate.
+- Use one committed base ref for all candidates. Do not include unrelated dirty
+  checkout state in candidate baselines.
+- Source env files only in process memory. Report missing keys by name, never by
+  value.
+- If setup, submodules, assets, or required local runtimes are missing, fail
+  loudly and record the affected candidates as blocked. Do not substitute
+  system Python, fallback providers, or weaker verification just to keep a run
+  moving.
+
+The goal is to compare implementation quality after a fair shared baseline, not
+to reward whichever model guesses the local machine best.
+
+## Default Judge Rubric
+
+Use this rubric when comparing candidate diffs and writing the final human
+recommendation. Prefer concrete file/diff/test evidence over broad impressions.
+
+1. Plan acceptance completeness: implements the accepted plan's required
+   behavior and does not skip explicit acceptance criteria.
+2. Repo contract alignment: respects target repo architecture layers, command
+   grammar, environment rules, safety constraints, and source-of-truth docs.
+3. Minimality and maintainability: keeps the diff scoped, removes avoidable
+   complexity, names concepts clearly, and avoids speculative compatibility
+   shims.
+4. Verification quality: runs focused relevant checks, explains skipped checks,
+   and leaves reproducible evidence.
+5. Diff cleanliness: avoids unrelated files, generated noise, secret exposure,
+   broad formatting churn, and broken worktree state.
+6. Failure clarity: blocked or partial candidates state the real blocker,
+   affected files, and next recovery step without hiding behind generic model
+   failure.
+7. Cherry-pick value: preserve isolated ideas from non-winning candidates when
+   they improve the selected implementation.
+
+Rank successful candidates by this rubric after considering verification
+results. A smaller verified implementation that fully matches the plan should
+rank above a broader unverified rewrite.
+
+## Final Comparison Shape
+
+After execution, inspect `final-report.md`, each scorecard, diffs, verification
+logs, and worker artifacts. Return a concise comparison with:
+
+- ranking and recommended winner
+- per-candidate status and elapsed time when available in artifacts
+- what changed and whether verification passed
+- useful cherry-pick ideas
+- rejected or blocked candidates with concrete reasons
+- recommended next action, usually `$intuitive-port-worktree` for the selected
+  result
+
+Do not auto-port, auto-merge, or push target-repo changes from a bakeoff unless
+the user explicitly asks after reviewing the recommendation.
 
 ## Candidate Policy
 
