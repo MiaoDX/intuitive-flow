@@ -59,6 +59,11 @@ the fanout, shared baseline, candidate manifest, scorecards, and final report.
 7. Inspect the final report, candidate scorecards, and worker artifacts.
 8. Recommend a winner, cherry-pick ideas, rejected candidates, and next action.
 
+Execution launches candidates in parallel by default from the same resolved
+base ref. The runner gives each candidate a one-hour budget plus a grace window
+instead of using a short fixed stop, because bakeoff should compare
+implementations rather than filter out slower-but-promising routes.
+
 ## Candidate Policy
 
 Use JSON manifests. YAML support is intentionally parked for v0 so the runner
@@ -77,6 +82,13 @@ Optional fields:
 - `base.mode`: `clean-head` or `allow-dirty-baseline`, default `clean-head`
 - `run_root`: run artifact root
 - `verification.commands`: shared post-run commands
+- `execution.parallel`: run candidates concurrently, default `true`; set
+  `false` only for harness debugging.
+- `execution.worker_timeout_min`: per-candidate work budget before grace,
+  default `60`.
+- `execution.timeout_grace_min`: additional per-candidate grace window,
+  default `15`.
+- `execution.idle_timeout_min`: no-output stop budget, default `20`.
 
 Candidate fields:
 
@@ -89,6 +101,8 @@ Candidate fields:
 - `command_profile`: deterministic command template.
 - `runtime`: `host`; Docker is intentionally unsupported in v0.
 - `skills`: skills expected in the candidate worker environment.
+- `timeout_min`, `idle_timeout_min`, `timeout_grace_min`: candidate-specific
+  timing overrides for unusually large or tiny tasks.
 
 Example:
 

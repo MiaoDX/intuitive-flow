@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import {
   chmodSync,
   cpSync,
@@ -39,6 +39,13 @@ export type Manifest = {
   verification?: {
     commands?: string[];
   };
+  execution?: {
+    parallel?: boolean;
+    worker_timeout_min?: number;
+    idle_timeout_min?: number;
+    timeout_grace_min?: number;
+    poll_interval_sec?: number;
+  };
   candidates: Candidate[];
 };
 
@@ -53,6 +60,9 @@ export type Candidate = {
   command_profile?: string;
   runtime?: string;
   skills?: string[];
+  timeout_min?: number;
+  idle_timeout_min?: number;
+  timeout_grace_min?: number;
 };
 
 export type CandidateScorecard = {
@@ -82,6 +92,18 @@ export type CandidateDiagnostics = {
   output_tail: string;
   artifacts: Array<{ name: string; tail: string }>;
 };
+
+type WorkerTiming = {
+  timeoutMin: number;
+  idleTimeoutMin: number;
+  timeoutGraceMin: number;
+  pollIntervalSec: number;
+};
+
+const DEFAULT_WORKER_TIMEOUT_MIN = 60;
+const DEFAULT_TIMEOUT_GRACE_MIN = 15;
+const DEFAULT_IDLE_TIMEOUT_MIN = 20;
+const DEFAULT_POLL_INTERVAL_SEC = 1;
 
 type Args = {
   manifest?: string;
@@ -181,6 +203,13 @@ export const normalizeManifest = (manifest: Manifest, manifestPath: string, runR
     },
     verification: {
       commands: manifest.verification?.commands ?? [],
+    },
+    execution: {
+      parallel: manifest.execution?.parallel ?? true,
+      worker_timeout_min: manifest.execution?.worker_timeout_min ?? DEFAULT_WORKER_TIMEOUT_MIN,
+      idle_timeout_min: manifest.execution?.idle_timeout_min ?? DEFAULT_IDLE_TIMEOUT_MIN,
+      timeout_grace_min: manifest.execution?.timeout_grace_min ?? DEFAULT_TIMEOUT_GRACE_MIN,
+      poll_interval_sec: manifest.execution?.poll_interval_sec ?? DEFAULT_POLL_INTERVAL_SEC,
     },
     candidates,
   };
@@ -471,16 +500,34 @@ export const copySkill = (skillName: string, destHome: string, sourceRoot = join
   cpSync(src, dest, { recursive: true });
 };
 
-const fakeAgentScript = (candidate: Candidate, dir: string): string => {
+const shellQuote = (value: string): string => `'${value.replace(/'/g, "'\\''")}'`;
+
+const fakeAgentScript = (candidate: Candidate, dir: string, runDir: string, candidateCount: number): string => {
   const script = join(dir, "fake-agent.sh");
   const status = candidate.command_profile === "fake-partial" ? "PARTIAL" : candidate.command_profile === "fake-failed" ? "FAILED" : "SUCCESS";
   const summary = `${candidate.id} ${status.toLowerCase()}`;
+  const barrierBlock = candidate.command_profile === "fake-barrier-success"
+    ? [
+        `barrier_dir=${shellQuote(join(runDir, "fake-barrier"))}`,
+        "mkdir -p \"$barrier_dir\"",
+        `touch "$barrier_dir"/${shellQuote(candidate.id)}.started`,
+        "deadline=$((SECONDS + 20))",
+        `while [ "$(find "$barrier_dir" -name '*.started' | wc -l)" -lt ${candidateCount} ]; do`,
+        "  if [ \"$SECONDS\" -ge \"$deadline\" ]; then",
+        `    printf '%s\\n' 'RESULT_STATUS: FAILED' 'SUMMARY: ${candidate.id} timed out waiting for parallel peers' 'CHANGED_FILES: none' 'COMMITS: none' 'VERIFICATION: fake-worker' 'OPEN_DECISIONS: none' 'SKILL_BEHAVIOR_NOTES: parallel launch barrier was not satisfied' 'ACCEPTANCE_EVIDENCE: incomplete' 'RECOMMENDED_GOAL_REVISION: none'`,
+        "    exit 1",
+        "  fi",
+        "  sleep 0.1",
+        "done",
+      ]
+    : [];
   writeFileSync(
     script,
     [
       "#!/usr/bin/env bash",
       "set -euo pipefail",
       "cat >/dev/null",
+      ...barrierBlock,
       `printf '%s\\n' 'RESULT_STATUS: ${status}' 'SUMMARY: ${summary}' 'CHANGED_FILES: none' 'COMMITS: none' 'VERIFICATION: fake-worker' 'OPEN_DECISIONS: none' 'SKILL_BEHAVIOR_NOTES: none' 'ACCEPTANCE_EVIDENCE: fake candidate completed' 'RECOMMENDED_GOAL_REVISION: none'`,
       "",
     ].join("\n"),
@@ -496,7 +543,7 @@ export const runSkillRunnerCandidate = (
   worktree: string,
   env: Record<string, string | undefined> = process.env,
   options: { allowReal?: boolean } = {},
-): { runDir: string; status: CandidateStatus; workerStatus: string; output: string; diagnostics: CandidateDiagnostics } => {
+): Promise<{ runDir: string; status: CandidateStatus; workerStatus: string; output: string; diagnostics: CandidateDiagnostics }> => {
   const candidateDir = join(runDir, "candidates", candidate.id);
   mkdirSync(candidateDir, { recursive: true });
   const home = join(candidateDir, "home");
@@ -510,12 +557,18 @@ export const runSkillRunnerCandidate = (
     throw new Error(`candidate ${candidate.id}: real harness requires --execute-real`);
   }
   const agentCommand = candidate.harness === "fake"
-    ? fakeAgentScript(candidate, candidateDir)
+    ? fakeAgentScript(
+        candidate,
+        candidateDir,
+        runDir,
+        manifest.candidates.filter((item) => item.command_profile === "fake-barrier-success").length,
+      )
     : shellQuoteCommand(renderCandidateCommand(candidate, join(candidateDir, "last-message.md"), env));
   const skillRunnerScript = join(repoRootFromScript(), "skills", "skill-runner", "scripts", "run_skill_runner.py");
   const workerRunRoot = join(candidateDir, "skill-runner-runs");
   const prompt = bakeoffPrompt(manifest, candidate);
-  const result = spawnSync(
+  const timing = workerTiming(manifest, candidate);
+  return runProcess(
     "python3",
     [
       skillRunnerScript,
@@ -526,17 +579,16 @@ export const runSkillRunnerCandidate = (
       "--run-root",
       workerRunRoot,
       "--timeout-min",
-      "5",
+      String(timing.timeoutMin + timing.timeoutGraceMin),
       "--idle-timeout-min",
-      "1",
+      String(timing.idleTimeoutMin),
       "--poll-interval-sec",
-      "0.1",
+      String(timing.pollIntervalSec),
       "--",
       prompt,
     ],
     {
       cwd: repoRootFromScript(),
-      encoding: "utf8",
       env: {
         ...env,
         ...candidateMappedEnv(candidate, env),
@@ -544,28 +596,65 @@ export const runSkillRunnerCandidate = (
         CODEX_HOME: codexHome,
       },
     },
-  );
-  const output = redactText(`${result.stdout}\n${result.stderr}`, env);
-  const workerDir = result.stdout.trim().split("\n").at(-1)?.trim() ?? "";
-  const resultText = workerStatusText(workerDir, candidateDir);
-  const workerStatus = parseResultStatus(resultText);
-  const status = statusFromWorker(workerStatus, result.status ?? 1);
-  return {
-    runDir: workerDir,
-    status,
-    workerStatus,
-    output,
-    diagnostics: workerDiagnostics({
-      workerDir,
-      candidateDir,
-      workerStatus,
+  ).then((result) => {
+    const output = redactText(`${result.stdout}\n${result.stderr}`, env);
+    const workerDir = result.stdout.trim().split("\n").at(-1)?.trim() ?? "";
+    const resultText = workerStatusText(workerDir, candidateDir);
+    const workerStatus = parseResultStatus(resultText);
+    const status = statusFromWorker(workerStatus, result.status ?? 1);
+    return {
+      runDir: workerDir,
       status,
-      exitCode: result.status ?? 1,
+      workerStatus,
       output,
-      env,
-    }),
-  };
+      diagnostics: workerDiagnostics({
+        workerDir,
+        candidateDir,
+        workerStatus,
+        status,
+        exitCode: result.status ?? 1,
+        output,
+        env,
+      }),
+    };
+  });
 };
+
+const workerTiming = (manifest: Manifest, candidate: Candidate): WorkerTiming => ({
+  timeoutMin: candidate.timeout_min ?? manifest.execution?.worker_timeout_min ?? DEFAULT_WORKER_TIMEOUT_MIN,
+  idleTimeoutMin: candidate.idle_timeout_min ?? manifest.execution?.idle_timeout_min ?? DEFAULT_IDLE_TIMEOUT_MIN,
+  timeoutGraceMin: candidate.timeout_grace_min ?? manifest.execution?.timeout_grace_min ?? DEFAULT_TIMEOUT_GRACE_MIN,
+  pollIntervalSec: manifest.execution?.poll_interval_sec ?? DEFAULT_POLL_INTERVAL_SEC,
+});
+
+const runProcess = (
+  command: string,
+  args: string[],
+  options: { cwd: string; env: Record<string, string | undefined> },
+): Promise<{ status: number | null; stdout: string; stderr: string }> =>
+  new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd: options.cwd,
+      env: Object.fromEntries(
+        Object.entries(options.env).filter((entry): entry is [string, string] => entry[1] !== undefined),
+      ),
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.setEncoding("utf8");
+    child.stderr.setEncoding("utf8");
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk;
+    });
+    child.on("error", reject);
+    child.on("close", (status) => {
+      resolve({ status, stdout, stderr });
+    });
+  });
 
 const workerStatusText = (workerDir: string, candidateDir: string): string =>
   [
@@ -821,7 +910,7 @@ const candidateDiagnosticLines = (scorecard: CandidateScorecard): string[] => {
   ];
 };
 
-export const executeBakeoff = (
+export const executeBakeoff = async (
   manifest: Manifest,
   options: {
     dryRun?: boolean;
@@ -829,7 +918,7 @@ export const executeBakeoff = (
     env?: Record<string, string | undefined>;
     allowReal?: boolean;
   } = {},
-): string => {
+): Promise<string> => {
   const env = options.env ?? process.env;
   const runDir = createRunDir(manifest.run_root ?? defaultRunRoot(manifest.target_repo), manifest.target_repo);
   writeFileSync(join(runDir, "manifest.json"), JSON.stringify(sanitizeManifest(manifest), null, 2) + "\n");
@@ -841,8 +930,7 @@ export const executeBakeoff = (
     return runDir;
   }
 
-  const scorecards: CandidateScorecard[] = [];
-  for (const candidate of manifest.candidates) {
+  const candidateRuns = manifest.candidates.map((candidate) => {
     if (candidate.harness !== "fake" && !options.allowReal) {
       throw new Error(`candidate ${candidate.id}: real harness requires --execute-real`);
     }
@@ -850,8 +938,12 @@ export const executeBakeoff = (
     const branch = `plan-bakeoff/${slug(basename(runDir))}/${candidate.id}`;
     const worktree = join(runDir, "worktrees", candidate.id);
     createWorktree(manifest.target_repo, worktree, branch, baseRef);
+    return { candidate, candidateDir, branch, worktree };
+  });
+
+  const runCandidate = async ({ candidate, candidateDir, branch, worktree }: typeof candidateRuns[number]) => {
     try {
-      const worker = runSkillRunnerCandidate(manifest, candidate, runDir, worktree, env, { allowReal: options.allowReal });
+      const worker = await runSkillRunnerCandidate(manifest, candidate, runDir, worktree, env, { allowReal: options.allowReal });
       const verification = runVerification(worktree, manifest.verification?.commands ?? [], env);
       const verificationFailures = verification.filter((item) => item.status === "fail").length;
       const status = verificationFailures > 0 && worker.status === "SUCCESS" ? "PARTIAL" : worker.status;
@@ -878,13 +970,21 @@ export const executeBakeoff = (
           : worker.diagnostics,
       };
       writeScorecard(scorecard, candidateDir);
-      scorecards.push(scorecard);
+      return scorecard;
     } finally {
       if (!options.keepWorktrees) {
         removeWorktree(manifest.target_repo, worktree, branch);
       }
     }
-  }
+  };
+  const scorecardsPromise = manifest.execution?.parallel === false
+    ? candidateRuns.reduce<Promise<CandidateScorecard[]>>(
+        (previous, candidateRun) =>
+          previous.then(async (scorecards) => [...scorecards, await runCandidate(candidateRun)]),
+        Promise.resolve([]),
+      )
+    : Promise.all(candidateRuns.map(runCandidate));
+  const scorecards = await scorecardsPromise;
   writeFinalReport(runDir, scorecards);
   return runDir;
 };
@@ -952,7 +1052,7 @@ const parseArgs = (argv: string[]): Args => {
   return args;
 };
 
-const main = () => {
+const main = async () => {
   const args = parseArgs(Bun.argv.slice(2));
   const manifestPath = resolve(args.manifest ?? "");
   const manifest = normalizeManifest(parseManifestText(readFileSync(manifestPath, "utf8")), manifestPath, args.runRoot);
@@ -970,7 +1070,7 @@ const main = () => {
   if (errors.length > 0) {
     throw new Error(errors.join("\n"));
   }
-  const runDir = executeBakeoff(manifest, {
+  const runDir = await executeBakeoff(manifest, {
     dryRun: args.dryRun && !args.execute,
     keepWorktrees: args.keepWorktrees,
     allowReal: args.executeReal,
@@ -980,7 +1080,7 @@ const main = () => {
 
 if (import.meta.main) {
   try {
-    main();
+    await main();
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     process.exit(1);

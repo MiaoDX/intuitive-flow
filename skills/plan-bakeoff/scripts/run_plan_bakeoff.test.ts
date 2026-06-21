@@ -79,6 +79,9 @@ describe("plan-bakeoff runner", () => {
       expect(manifest.target_repo).toBe(repo);
       expect(manifest.plan).toBe(join(repo, "plan.md"));
       expect(manifest.base?.mode).toBe("clean-head");
+      expect(manifest.execution?.parallel).toBe(true);
+      expect(manifest.execution?.worker_timeout_min).toBe(60);
+      expect(manifest.execution?.timeout_grace_min).toBe(15);
       expect(manifest.candidates[0].runtime).toBe("host");
     } finally {
       rmSync(repo, { recursive: true, force: true });
@@ -379,7 +382,7 @@ describe("plan-bakeoff runner", () => {
     }
   });
 
-  test("executes three fake candidates in independent worktrees", () => {
+  test("executes three fake candidates in independent worktrees", async () => {
     const repo = createTempRepo();
     const runRoot = mkdtempSync(join(tmpdir(), "plan-bakeoff-run-root-"));
     const home = mkdtempSync(join(tmpdir(), "plan-bakeoff-home-"));
@@ -401,7 +404,7 @@ describe("plan-bakeoff runner", () => {
         },
         join(repo, "manifest.json"),
       );
-      const runDir = executeBakeoff(manifest, {
+      const runDir = await executeBakeoff(manifest, {
         env: {
           ...process.env,
           HOME: home,
@@ -432,7 +435,44 @@ describe("plan-bakeoff runner", () => {
     }
   }, 20000);
 
-  test("diagnoses post-run verification failures even when worker reports success", () => {
+  test("executes fake candidates in parallel by default", async () => {
+    const repo = createTempRepo();
+    const runRoot = mkdtempSync(join(tmpdir(), "plan-bakeoff-parallel-"));
+    try {
+      const manifest = normalizeManifest(
+        {
+          schema: "plan_bakeoff_manifest_v1",
+          target_repo: repo,
+          plan: join(repo, "plan.md"),
+          run_root: runRoot,
+          candidates: [
+            { id: "fake-a", harness: "fake", command_profile: "fake-barrier-success" },
+            { id: "fake-b", harness: "fake", command_profile: "fake-barrier-success" },
+            { id: "fake-c", harness: "fake", command_profile: "fake-barrier-success" },
+          ],
+        },
+        join(repo, "manifest.json"),
+      );
+
+      const startedAt = Date.now();
+      const runDir = await executeBakeoff(manifest);
+      const elapsedMs = Date.now() - startedAt;
+
+      expect(elapsedMs).toBeLessThan(10_000);
+      const report = readFileSync(join(runDir, "final-report.md"), "utf8");
+      expect(report).toContain("winner: fake-a");
+      for (const id of ["fake-a", "fake-b", "fake-c"]) {
+        expect(readFileSync(join(runDir, "candidates", id, "scorecard.json"), "utf8")).toContain(
+          '"status": "SUCCESS"',
+        );
+      }
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+      rmSync(runRoot, { recursive: true, force: true });
+    }
+  }, 30000);
+
+  test("diagnoses post-run verification failures even when worker reports success", async () => {
     const repo = createTempRepo();
     const runRoot = mkdtempSync(join(tmpdir(), "plan-bakeoff-verification-fail-"));
     try {
@@ -450,7 +490,7 @@ describe("plan-bakeoff runner", () => {
         },
         join(repo, "manifest.json"),
       );
-      const runDir = executeBakeoff(manifest);
+      const runDir = await executeBakeoff(manifest);
       const scorecard = readFileSync(join(runDir, "candidates", "fake-a", "scorecard.md"), "utf8");
       const report = readFileSync(join(runDir, "final-report.md"), "utf8");
 
@@ -463,7 +503,7 @@ describe("plan-bakeoff runner", () => {
     }
   }, 20000);
 
-  test("blocks real harness execution without execute-real", () => {
+  test("blocks real harness execution without execute-real", async () => {
     const repo = createTempRepo();
     const runRoot = mkdtempSync(join(tmpdir(), "plan-bakeoff-real-block-"));
     try {
@@ -487,7 +527,7 @@ describe("plan-bakeoff runner", () => {
         join(repo, "manifest.json"),
       );
 
-      expect(() => executeBakeoff(manifest)).toThrow("real harness requires --execute-real");
+      await expect(executeBakeoff(manifest)).rejects.toThrow("real harness requires --execute-real");
     } finally {
       rmSync(repo, { recursive: true, force: true });
       rmSync(runRoot, { recursive: true, force: true });
