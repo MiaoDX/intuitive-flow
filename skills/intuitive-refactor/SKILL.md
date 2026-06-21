@@ -1,14 +1,20 @@
 ---
 name: intuitive-refactor
-description: Set a bounded aggressive refactor or changed-code cleanup goal before architecture or cleanup work starts, including checking target-repo LSP setup before risky symbol-level edits. Use whenever the user wants to improve architecture, clean up aggressively, review changed code for reuse/quality/efficiency, "fix all big issues", avoid endless refactors, decide what is in/out of scope, classify P0/P1/P2/Parked findings, remove stale APIs or compatibility shims, find unnecessary modules/surfaces to delete or merge, define tests and stop conditions, or run a long code-size/complexity ratchet that should simplify architecture instead of merely moving lines. Also use for continuous cleanup, keep improving this repo, and ongoing refactor ratchet prompts. This skill works standalone and can also be combined with architecture scanners, intuitive-flow, TDD, or diagnosis skills.
+description: Set a bounded aggressive refactor or changed-code cleanup goal before code or architecture cleanup starts, including target-repo LSP checks, proof, and stop conditions. Use when the user names a concrete refactor seam/module/API, selects a cleanup candidate from intuitive-reduce-entropy, wants continuous or periodic architecture cleanup, needs stale APIs/compat shims/unnecessary modules deleted or merged, wants changed-code reuse/quality/efficiency review, or needs a code-size/complexity ratchet. For unknown repo-wide cleanup discovery, route through intuitive-reduce-entropy first; use this skill to make selected cleanup canonical, verified, and able to stop when value drops.
 ---
 
 # Intuitive Refactor
 
 Use this skill to turn architecture or cleanup intent into a bounded refactor
-before code changes start. It can discover candidates, define accepted
-severities, execute selected slices, and stop without becoming an endless
-cleanup loop.
+before code changes start. It supports two public entry points:
+
+- explicit refactors where the user names the seam, module, API, or stale
+  surface to change;
+- entropy-backed cleanup where `$intuitive-reduce-entropy` has found or the
+  user has selected an architecture/code cleanup candidate.
+
+It can define accepted severities, execute selected slices, delete stale
+surfaces, and stop for discussion instead of becoming an endless cleanup loop.
 
 This compact entrypoint preserves full original guidance in
 `references/detailed-guidance.md`. Read that file for detailed severity gates,
@@ -37,6 +43,7 @@ cleanup, post-implementation review, reuse/quality/efficiency review, or when
 | --- | --- | --- | --- |
 | Scope gate | The target is broad, risky, architecture-shaped, or needs accepted severities before edits. | Refactor scope, accepted checklist, evidence ladder, stop condition, parked items. | The user is only asking what to clean next across the repo. |
 | Execution slice | The user names a bounded code/API/module seam and wants cleanup implemented. | One vertical slice with code, callers, tests, docs/stale surfaces, and proof. | The task lacks scope, non-goals, or verification. |
+| Entropy-backed cleanup intake | The user asks for continuous/periodic architecture cleanup or repo entropy reduction, or selects a code/API/module candidate from `$intuitive-reduce-entropy`. | If no candidate exists: redirect to repo entropy discovery. If a candidate is selected: refactor gate with deletion/merge-first plan, proof, and low-value stop rule. | A concrete seam is already named; use Execution slice or Ratchet mode. |
 | Ratchet mode | The goal is repeated code-size, complexity, module-sprawl, or architecture simplification. | Scope gate plus quality signal, architecture pressure, behavior-change policy, simplification claim. | The request is only to review the current diff. |
 | Architecture deletion audit | A ratchet has slowed into low-ROI behavior-preserving slices, or the user wants to find unnecessary modules, stale surfaces, duplicate owners, compatibility shims, or deletion/merge candidates before editing. | Ranked read-only deletion/merge candidates with owner layer, why unnecessary, blast radius, proof, and one recommended first slice. | A concrete seam is already approved for implementation. |
 | Ratchet campaign | The user asks to continue cleanup for many slices/hours or an existing refactor gate is `CONTINUE`. | Canonical gate plus active capsule, checkpoint cadence, per-slice proof selector, parked decisions. | The next candidate is only polish, lacks proof, or needs a public migration/user decision. |
@@ -54,6 +61,12 @@ target is broad, first produce a refactor scope gate. When the user names a
 bounded target and asks for execution, treat that as approval to implement
 inside the accepted gate.
 
+For unknown repo-wide or periodic architecture cleanup, do not invent a target
+inside this skill. Run `$intuitive-reduce-entropy` in repo entropy or discovery
+loop mode first, then use this skill only after a candidate packet or concrete
+seam has been selected. Reduce entropy finds what is worth cleaning;
+intuitive-refactor makes the selected cleanup canonical.
+
 Prefer the organized future at `HEAD` over compatibility shims. Preserve
 compatibility only when the user explicitly asks for a migration bridge or an
 external contract requires it.
@@ -61,7 +74,9 @@ external contract requires it.
 For ratchet-shaped work, prefer concept reduction over code motion: delete
 stale surfaces, merge duplicate concepts, move callers to an existing owner,
 and create a new module only when the architecture lacks a true home. Line-count
-relief is useful evidence, not the goal.
+relief is useful evidence, not the goal. Record the net architecture value of
+each slice: surfaces deleted, duplicate owners merged, wrappers removed, callers
+migrated to one canonical owner, and new owners added.
 
 For architecture-deletion audits, stay read-only unless the user already
 approved executing a named candidate. The audit selects high-ROI deletion or
@@ -76,7 +91,8 @@ the user or approved flow has clearly authorized an implementation pass.
 
 1. Orient:
    read current docs, module owners, call sites, tests, and existing gates just
-   enough to understand the target.
+   enough to understand the target. If no target or selected candidate exists,
+   route to `$intuitive-reduce-entropy` instead of broad-scanning here.
 2. Classify findings:
    P0, P1, P2, or Parked. Reject polish-only work and speculative refactors.
 3. Define the scope gate:
@@ -128,6 +144,7 @@ Do not claim completion from a narrower proof than the scope requires.
 
 ```text
 Refactor scope:
+Discovery source:
 Target:
 Accepted severities:
 Accepted cleanup checklist:
@@ -135,6 +152,7 @@ Parked cross-seam / future ideas:
 Evidence ladder:
 Stop condition:
 Execution risks:
+Low-value stop signal:
 ```
 
 If the target is architecture-shaped or the module map is unclear, run the
@@ -150,6 +168,7 @@ Current quality signal:
 Architecture pressure:
 Behavior-change policy:
 Architecture simplification claim:
+Surface metrics:
 Deletion-audit trigger:
 ```
 
@@ -161,3 +180,8 @@ parked, and remaining findings are outside the accepted severities.
 
 Do not broaden into newly discovered cleanup just because it is nearby. Park it
 with enough evidence for a future selection decision.
+
+Stop and discuss when the next candidate cannot name a deletion, merge,
+canonical owner move, stale-surface removal, or material maintainer surprise.
+In a campaign, stop after repeated low-value selection attempts instead of
+continuing with behavior-preserving hardening or line shuffling.

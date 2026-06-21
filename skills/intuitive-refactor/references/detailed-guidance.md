@@ -17,6 +17,12 @@ Start with a scope gate. For broad or ambiguous requests, make the first pass
 report-only. When the user names a bounded target and asks for execution, treat
 that as approval to clean the target up aggressively.
 
+For periodic repo cleanup, "keep reducing entropy", or "what architecture
+cleanup is worth doing" prompts where no code/API/module seam has been selected,
+route to `$intuitive-reduce-entropy` first. Use this skill after discovery when
+the user selects a cleanup candidate, or when the entropy packet names a
+concrete refactor target that needs a gate, proof, and implementation slice.
+
 Do not edit production code until all of these are explicit:
 
 - the target module or seam
@@ -253,6 +259,10 @@ Look for an existing gate before proposing new work:
 
 If the target seam is unclear, stop after a report-only map. Do not wander
 through the whole repo looking for unrelated cleanup.
+
+If the target seam is unclear because the user is asking for repo-wide or
+periodic entropy reduction, run `$intuitive-reduce-entropy` in repo entropy or
+discovery-loop mode instead of turning this refactor skill into a broad audit.
 
 If the target is architecture/public-contract shaped, look for an existing
 architecture packet in the user prompt, plan, ADR, or gate. If none exists, run

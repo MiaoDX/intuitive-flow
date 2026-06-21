@@ -19,6 +19,23 @@ Rank slice options in this order:
 A line-count win is weak if it adds vague modules, preserves unnecessary facade
 wrappers, or makes future agents rediscover the same concepts.
 
+## Value Metrics
+
+Every ratchet slice should state its net architecture value before editing and
+report the value after proof. Use simple counters instead of prose alone:
+
+- stale surfaces, wrappers, aliases, or legacy paths removed;
+- duplicate concept owners merged;
+- current callers migrated to a single canonical owner;
+- tests or docs stopped preserving stale names;
+- new modules, registries, or owners added;
+- public contracts touched or explicitly preserved.
+
+Creating a new owner is acceptable only when it removes more surprise than it
+adds. If a proposed slice cannot improve at least one deletion, merge,
+canonical-owner, or stale-surface metric, treat it as low value and stop for
+discussion or route back to entropy discovery.
+
 For over-engineering, bloat, YAGNI, or deletion-first refactor prompts, use
 community `$ponytail-review` or `$ponytail-audit` as candidate discovery, then
 apply this ratchet mode's severity, behavior-change, proof, and stop gates
@@ -73,6 +90,7 @@ Use this output shape:
 Architecture deletion audit:
 Scope inspected:
 Quality signal:
+Surface metrics:
 Ranked candidates:
 - P1/P2/Parked: <surface/module/concept>
   Owner layer:
@@ -144,18 +162,26 @@ For long-lived or resumed campaigns, read `references/ratchet-campaign.md` and
 `../../_shared/references/durable-run.md`. Those shared rules own the active
 capsule, checkpoint cadence, control-plane/worker shape, and proof selector.
 
+If the user asks for periodic architecture cleanup but no concrete seam,
+accepted gate, or selected entropy candidate exists, run
+`$intuitive-reduce-entropy` first. This mode executes selected cleanup; it does
+not replace repo-wide candidate discovery.
+
 For each slice:
 
 1. Pick the highest-value concrete seam from the existing gate or a short scout.
 2. Prefer deletion, duplicate-concept merge, or moving callers to an existing owner.
 3. State the architecture claim before editing.
-4. Update code, tests, and the gate file together.
-5. Verify with the smallest proof that covers the slice.
-6. Commit if requested or repo workflow expects process commits.
+4. State the value metrics that should improve.
+5. Update code, tests, and the gate file together.
+6. Verify with the smallest proof that covers the slice.
+7. Commit if requested or repo workflow expects process commits.
 
 Stop when the next candidate is only polish, needs a public migration decision,
-lacks proof, or would split by size instead of ownership. Park it instead of
-continuing.
+lacks proof, would split by size instead of ownership, or cannot improve a net
+surface metric. If two consecutive candidate-selection attempts produce only
+low-impact hardening, line motion, or "could be nicer" work, stop and return a
+discussion packet instead of continuing.
 
 ## Lessons From Prior Ratchets
 

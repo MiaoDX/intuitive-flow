@@ -23,7 +23,10 @@ Enter campaign mode only when one of these is true:
   known slices.
 
 Do not enter campaign mode for a vague "make it better" prompt without a gate.
-Use scope gate or `$intuitive-reduce-entropy` first.
+Use scope gate or `$intuitive-reduce-entropy` first. For periodic architecture
+cleanup where the user has not named a seam, run `$intuitive-reduce-entropy` in
+repo entropy or discovery-loop mode and enter this campaign only after a
+candidate packet, selected code/API/module target, or refactor gate exists.
 
 ## State Surfaces
 
@@ -52,6 +55,9 @@ Checkpoint cadence:
 Active capsule:
 Continue criteria:
 Stop/park criteria:
+Discovery source:
+Surface metrics:
+Low-value stop signal:
 ```
 
 The quality signal can be line count, duplicated concepts, stale API count,
@@ -86,6 +92,11 @@ Non-goals:
 Reject a slice when the claim is "make the file smaller" without a reduced
 concept, canonical owner, or stale surface deletion.
 
+If the current campaign has no concrete next seam, do not continue by browsing
+for arbitrary local cleanup. Return to `$intuitive-reduce-entropy` for ranked
+candidate discovery, then resume only after the user selects the code/API/module
+cleanup candidate or approves the packet's recommended refactor action.
+
 Run an architecture-deletion audit from `ratchet-mode.md` before choosing the
 next implementation slice when any of these are true:
 
@@ -101,6 +112,11 @@ next implementation slice when any of these are true:
 The audit is read-only unless the user already approved executing the
 recommended candidate. Its output should pick one recommended first slice and
 park the rest; do not turn it into a second long-lived plan.
+
+Record these value metrics for each committed slice and in the closeout:
+surfaces deleted, duplicate owners merged, wrappers/aliases removed, callers
+migrated to one owner, tests/docs updated away from stale names, new owners
+added, and public contracts touched or preserved.
 
 ## Verification
 
@@ -141,6 +157,7 @@ Continue only while the next slice is:
 - inside the accepted target/gate;
 - backed by an existing owner or accepted new owner;
 - expected to delete, merge, or canonicalize a real concept;
+- expected to improve at least one net surface metric;
 - verifiable with available proof;
 - not blocked by external input or a public migration decision.
 
@@ -152,6 +169,8 @@ Park, stop, or ask when:
 - the proof needed for honesty is unavailable or external;
 - scout workers repeatedly return `park` for the same area;
 - the campaign is growing the plan faster than it simplifies the code;
+- two consecutive candidate-selection attempts cannot name a deletion, merge,
+  canonical owner move, stale-surface removal, or material maintainer surprise;
 - an architecture-deletion audit recommends only public removals that need a
   human migration decision;
 - the latest user message asks for status, discussion, pause, or process
