@@ -86,6 +86,22 @@ Non-goals:
 Reject a slice when the claim is "make the file smaller" without a reduced
 concept, canonical owner, or stale surface deletion.
 
+Run an architecture-deletion audit from `ratchet-mode.md` before choosing the
+next implementation slice when any of these are true:
+
+- the user asks to find unnecessary modules, stale architecture, deletion
+  candidates, or a faster way to reduce code/architecture surface;
+- the campaign has produced several small behavior-preserving hardening slices
+  and the next candidate is not clearly higher value;
+- the active plan's candidate list is mostly fallback/source validation, but
+  the campaign goal or user feedback has shifted toward architecture cleanup
+  and code reduction;
+- repeated scouts return only polish or low-impact local seams.
+
+The audit is read-only unless the user already approved executing the
+recommended candidate. Its output should pick one recommended first slice and
+park the rest; do not turn it into a second long-lived plan.
+
 ## Verification
 
 At campaign start, inventory the repo's proof layers once and record them in
@@ -136,6 +152,8 @@ Park, stop, or ask when:
 - the proof needed for honesty is unavailable or external;
 - scout workers repeatedly return `park` for the same area;
 - the campaign is growing the plan faster than it simplifies the code;
+- an architecture-deletion audit recommends only public removals that need a
+  human migration decision;
 - the latest user message asks for status, discussion, pause, or process
   review rather than execution.
 

@@ -1,6 +1,6 @@
 ---
 name: intuitive-refactor
-description: Set a bounded aggressive refactor or changed-code cleanup goal before architecture or cleanup work starts, including checking target-repo LSP setup before risky symbol-level edits. Use whenever the user wants to improve architecture, clean up aggressively, review changed code for reuse/quality/efficiency, "fix all big issues", avoid endless refactors, decide what is in/out of scope, classify P0/P1/P2/Parked findings, remove stale APIs or compatibility shims, define tests and stop conditions, or run a long code-size/complexity ratchet that should simplify architecture instead of merely moving lines. Also use for continuous cleanup, keep improving this repo, and ongoing refactor ratchet prompts. This skill works standalone and can also be combined with architecture scanners, intuitive-flow, TDD, or diagnosis skills.
+description: Set a bounded aggressive refactor or changed-code cleanup goal before architecture or cleanup work starts, including checking target-repo LSP setup before risky symbol-level edits. Use whenever the user wants to improve architecture, clean up aggressively, review changed code for reuse/quality/efficiency, "fix all big issues", avoid endless refactors, decide what is in/out of scope, classify P0/P1/P2/Parked findings, remove stale APIs or compatibility shims, find unnecessary modules/surfaces to delete or merge, define tests and stop conditions, or run a long code-size/complexity ratchet that should simplify architecture instead of merely moving lines. Also use for continuous cleanup, keep improving this repo, and ongoing refactor ratchet prompts. This skill works standalone and can also be combined with architecture scanners, intuitive-flow, TDD, or diagnosis skills.
 ---
 
 # Intuitive Refactor
@@ -16,9 +16,11 @@ confidence ladder, prompt shapes, command naming, persistent state templates,
 or completion summaries.
 
 Read `references/ratchet-mode.md` when the request is a repeated code-size,
-complexity, oversized-module, backend/report/test-sprawl, or entropy ratchet.
-That mode tightens the normal refactor loop around concept reduction rather
-than pure extraction.
+complexity, oversized-module, backend/report/test-sprawl, or entropy ratchet,
+or when the run needs an architecture-deletion audit to find unnecessary
+modules, owners, stale surfaces, shims, or duplicate concepts before the next
+slice. That mode tightens the normal refactor loop around concept reduction
+rather than pure extraction.
 
 Read `references/ratchet-campaign.md` plus
 `../_shared/references/durable-run.md` when the user asks to keep refactoring,
@@ -36,6 +38,7 @@ cleanup, post-implementation review, reuse/quality/efficiency review, or when
 | Scope gate | The target is broad, risky, architecture-shaped, or needs accepted severities before edits. | Refactor scope, accepted checklist, evidence ladder, stop condition, parked items. | The user is only asking what to clean next across the repo. |
 | Execution slice | The user names a bounded code/API/module seam and wants cleanup implemented. | One vertical slice with code, callers, tests, docs/stale surfaces, and proof. | The task lacks scope, non-goals, or verification. |
 | Ratchet mode | The goal is repeated code-size, complexity, module-sprawl, or architecture simplification. | Scope gate plus quality signal, architecture pressure, behavior-change policy, simplification claim. | The request is only to review the current diff. |
+| Architecture deletion audit | A ratchet has slowed into low-ROI behavior-preserving slices, or the user wants to find unnecessary modules, stale surfaces, duplicate owners, compatibility shims, or deletion/merge candidates before editing. | Ranked read-only deletion/merge candidates with owner layer, why unnecessary, blast radius, proof, and one recommended first slice. | A concrete seam is already approved for implementation. |
 | Ratchet campaign | The user asks to continue cleanup for many slices/hours or an existing refactor gate is `CONTINUE`. | Canonical gate plus active capsule, checkpoint cadence, per-slice proof selector, parked decisions. | The next candidate is only polish, lacks proof, or needs a public migration/user decision. |
 | Changed-code review | The request is post-implementation reuse/quality/efficiency review of changed files. | Diff-scoped findings first, optional targeted fixes only when authorized, then proof to rerun. | The issue is a broader architecture cleanup or entropy discovery task. |
 
@@ -59,6 +62,11 @@ For ratchet-shaped work, prefer concept reduction over code motion: delete
 stale surfaces, merge duplicate concepts, move callers to an existing owner,
 and create a new module only when the architecture lacks a true home. Line-count
 relief is useful evidence, not the goal.
+
+For architecture-deletion audits, stay read-only unless the user already
+approved executing a named candidate. The audit selects high-ROI deletion or
+merge candidates; implementation still goes through an execution slice with an
+architecture claim and proof.
 
 For changed-code review, stay diff-scoped. Review the changed files through the
 reuse, quality, and efficiency lenses, report findings first, and fix only when
@@ -142,6 +150,7 @@ Current quality signal:
 Architecture pressure:
 Behavior-change policy:
 Architecture simplification claim:
+Deletion-audit trigger:
 ```
 
 ## Stop Conditions
