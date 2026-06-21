@@ -1,7 +1,8 @@
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { setTimeout as sleep } from "node:timers/promises";
 import { describe, expect, test } from "bun:test";
 import { hasUsableTmux } from "./test-capabilities";
 
@@ -312,4 +313,157 @@ print(json.dumps({"eval": (run_dir / "eval.md").read_text()}))
       rmSync(tempDir, { recursive: true, force: true });
     }
   }, 10000);
+
+  test.skipIf(!hasTmux)("isolates tmux environments between concurrent workers", async () => {
+    const tempDir = mkdtempSync(join(tmpdir(), "skill-runner-env-"));
+    const homeA = join(tempDir, "home-a");
+    const homeB = join(tempDir, "home-b");
+    const firstEnv = join(tempDir, "first.env");
+    const secondEnv = join(tempDir, "second.env");
+    const firstAgent = join(tempDir, "first-agent.sh");
+    const secondAgent = join(tempDir, "second-agent.sh");
+
+    writeFileSync(
+      firstAgent,
+      [
+        "#!/usr/bin/env bash",
+        "cat >/dev/null",
+        `env | sort > ${JSON.stringify(firstEnv)}`,
+        "sleep 3",
+        "printf 'RESULT_STATUS: SUCCESS\\nSUMMARY: first complete\\nCHANGED_FILES: none\\nCOMMITS: none\\nVERIFICATION: fake\\nOPEN_DECISIONS: none\\nSKILL_BEHAVIOR_NOTES: none\\nRECOMMENDED_GOAL_REVISION: none\\n'",
+        "",
+      ].join("\n"),
+      { mode: 0o755 },
+    );
+    writeFileSync(
+      secondAgent,
+      [
+        "#!/usr/bin/env bash",
+        "cat >/dev/null",
+        `env | sort > ${JSON.stringify(secondEnv)}`,
+        "printf 'RESULT_STATUS: SUCCESS\\nSUMMARY: second complete\\nCHANGED_FILES: none\\nCOMMITS: none\\nVERIFICATION: fake\\nOPEN_DECISIONS: none\\nSKILL_BEHAVIOR_NOTES: none\\nRECOMMENDED_GOAL_REVISION: none\\n'",
+        "",
+      ].join("\n"),
+      { mode: 0o755 },
+    );
+
+    const first = spawn(
+      "python3",
+      [
+        runnerScript,
+        "--agent-command",
+        firstAgent,
+        "--cwd",
+        repoRoot,
+        "--run-root",
+        tempDir,
+        "--timeout-min",
+        "0.2",
+        "--idle-timeout-min",
+        "0.2",
+        "--poll-interval-sec",
+        "0.1",
+        "--",
+        "first env isolation task",
+      ],
+      {
+        cwd: repoRoot,
+        env: {
+          ...process.env,
+          HOME: homeA,
+          PLAN_BAKEOFF_PROBE: "first",
+          PYTHONDONTWRITEBYTECODE: "1",
+        },
+      },
+    );
+    let firstStdout = "";
+    let firstStderr = "";
+    first.stdout.setEncoding("utf8");
+    first.stderr.setEncoding("utf8");
+    first.stdout.on("data", (chunk) => {
+      firstStdout += chunk;
+    });
+    first.stderr.on("data", (chunk) => {
+      firstStderr += chunk;
+    });
+
+    try {
+      await waitForFile(firstEnv, 5000);
+
+      const second = spawnSync(
+        "python3",
+        [
+          runnerScript,
+          "--agent-command",
+          secondAgent,
+          "--cwd",
+          repoRoot,
+          "--run-root",
+          tempDir,
+          "--timeout-min",
+          "0.2",
+          "--idle-timeout-min",
+          "0.2",
+          "--poll-interval-sec",
+          "0.1",
+          "--",
+          "second env isolation task",
+        ],
+        {
+          cwd: repoRoot,
+          encoding: "utf8",
+          env: {
+            ...process.env,
+            HOME: homeB,
+            PLAN_BAKEOFF_PROBE: "second",
+            ANTHROPIC_API_KEY: "dummy-key",
+            ANTHROPIC_BASE_URL: "http://127.0.0.1:9",
+            PYTHONDONTWRITEBYTECODE: "1",
+          },
+        },
+      );
+
+      const firstStatus = await waitForChild(first);
+      if (firstStatus !== 0) {
+        throw new Error(`first worker failed\nstdout:\n${firstStdout}\nstderr:\n${firstStderr}`);
+      }
+      if (second.status !== 0) {
+        throw new Error(`second worker failed\nstdout:\n${second.stdout}\nstderr:\n${second.stderr}`);
+      }
+
+      const firstText = readFileSync(firstEnv, "utf8");
+      const secondText = readFileSync(secondEnv, "utf8");
+      expect(firstText).toContain(`HOME=${homeA}`);
+      expect(firstText).toContain("PLAN_BAKEOFF_PROBE=first");
+      expect(secondText).toContain(`HOME=${homeB}`);
+      expect(secondText).toContain("PLAN_BAKEOFF_PROBE=second");
+      expect(secondText).toContain("ANTHROPIC_API_KEY=dummy-key");
+      expect(secondText).toContain("ANTHROPIC_BASE_URL=http://127.0.0.1:9");
+      const secondRunDir = second.stdout.trim().split("\n").at(-1) ?? "";
+      expect(readFileSync(join(secondRunDir, "result.md"), "utf8")).toContain("Status: SUCCESS");
+    } finally {
+      if (first.exitCode === null) {
+        first.kill("SIGTERM");
+        await waitForChild(first).catch(() => undefined);
+      }
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  }, 15000);
 });
+
+async function waitForFile(path: string, timeoutMs: number) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (existsSync(path)) return;
+    await sleep(50);
+  }
+  throw new Error(`timed out waiting for ${path}`);
+}
+
+function waitForChild(child: ReturnType<typeof spawn>): Promise<number | null> {
+  if (child.exitCode !== null) return Promise.resolve(child.exitCode);
+  return new Promise((resolve, reject) => {
+    child.once("error", reject);
+    child.once("close", resolve);
+  });
+}

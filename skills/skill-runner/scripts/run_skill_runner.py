@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import hashlib
 import json
 import os
 import re
@@ -66,6 +67,7 @@ def main() -> int:
     rewritten = rewrite_prompt(prompt=prompt, skills=skills, cwd=cwd, owned_paths=owned_paths)
     workspace_status_before = git_status(cwd)
     session = args.session or default_session_name(run_dir)
+    tmux_socket_name = isolated_tmux_socket_name(run_dir)
 
     write_text(run_dir / "input.md", prompt + "\n")
     write_text(run_dir / "rewritten-prompt.md", rewritten)
@@ -79,12 +81,13 @@ def main() -> int:
             "created_at": dt.datetime.now(dt.timezone.utc).isoformat(),
             "owned_paths": owned_paths,
             "session": session,
+            "tmux_socket_name": tmux_socket_name,
             "skills": skills,
         },
     )
 
     if args.dry_run:
-        write_result(run_dir, session, "DRY_RUN", "Prompt rewritten; worker not started.")
+        write_result(run_dir, session, "DRY_RUN", "Prompt rewritten; worker not started.", tmux_socket_name)
         write_eval(
             run_dir,
             cwd,
@@ -100,8 +103,13 @@ def main() -> int:
         return 0
 
     write_run_script(run_dir, args, cwd)
-    start_tmux(session=session, run_dir=run_dir, cwd=cwd)
-    status, exit_code, reason = wait_for_worker(session=session, run_dir=run_dir, args=args)
+    start_tmux(session=session, run_dir=run_dir, cwd=cwd, socket_name=tmux_socket_name)
+    status, exit_code, reason = wait_for_worker(
+        session=session,
+        run_dir=run_dir,
+        args=args,
+        socket_name=tmux_socket_name,
+    )
     materialize_last_message(run_dir)
 
     if args.sync_on_skill_change:
@@ -109,7 +117,7 @@ def main() -> int:
     if args.commit_skill_changes:
         maybe_commit_skill_changes(skill_repo)
 
-    write_result(run_dir, session, status, reason)
+    write_result(run_dir, session, status, reason, tmux_socket_name)
     write_eval(
         run_dir,
         cwd,
@@ -163,6 +171,17 @@ def make_run_dir(run_root: str, cwd: Path, prompt: str) -> Path:
 
 def default_session_name(run_dir: Path) -> str:
     return "skill-runner-" + run_dir.name[:80]
+
+
+def isolated_tmux_socket_name(run_dir: Path) -> str:
+    digest = hashlib.sha1(str(run_dir).encode("utf-8")).hexdigest()[:16]
+    return f"skill-runner-{digest}"
+
+
+def tmux_command(socket_name: str | None, *args: str) -> list[str]:
+    if socket_name:
+        return ["tmux", "-L", socket_name, *args]
+    return ["tmux", *args]
 
 
 def slug(value: str) -> str:
@@ -342,19 +361,19 @@ exit "$code"
     run_script.chmod(0o755)
 
 
-def start_tmux(*, session: str, run_dir: Path, cwd: Path) -> None:
+def start_tmux(*, session: str, run_dir: Path, cwd: Path, socket_name: str) -> None:
     run_script = run_dir / "run.sh"
     subprocess.run(
-        ["tmux", "new-session", "-d", "-s", session, "-c", str(cwd), "bash", str(run_script)],
+        tmux_command(socket_name, "new-session", "-d", "-s", session, "-c", str(cwd), "bash", str(run_script)),
         check=True,
     )
     subprocess.run(
-        ["tmux", "pipe-pane", "-o", "-t", session, f"cat >> {shlex.quote(str(run_dir / 'terminal.log'))}"],
+        tmux_command(socket_name, "pipe-pane", "-o", "-t", session, f"cat >> {shlex.quote(str(run_dir / 'terminal.log'))}"),
         check=False,
     )
 
 
-def wait_for_worker(*, session: str, run_dir: Path, args: argparse.Namespace) -> tuple[str, int, str]:
+def wait_for_worker(*, session: str, run_dir: Path, args: argparse.Namespace, socket_name: str) -> tuple[str, int, str]:
     started = time.monotonic()
     last_activity = time.monotonic()
     last_size = -1
@@ -367,7 +386,7 @@ def wait_for_worker(*, session: str, run_dir: Path, args: argparse.Namespace) ->
             code = read_exit_code(exit_path)
             return classify_worker_exit(run_dir, code)
 
-        if not tmux_has_session(session):
+        if not tmux_has_session(session, socket_name):
             if exit_path.exists():
                 code = read_exit_code(exit_path)
                 return classify_worker_exit(run_dir, code)
@@ -379,39 +398,39 @@ def wait_for_worker(*, session: str, run_dir: Path, args: argparse.Namespace) ->
             last_size = current_size
 
         if time.monotonic() - started > timeout:
-            stop_session(session, run_dir, "timeout")
+            stop_session(session, run_dir, "timeout", socket_name)
             return "FAILED", 124, f"timeout after {args.timeout_min:g} minutes"
 
         if time.monotonic() - last_activity > idle_timeout:
-            stop_session(session, run_dir, "idle-timeout")
+            stop_session(session, run_dir, "idle-timeout", socket_name)
             return "FAILED", 124, f"idle timeout after {args.idle_timeout_min:g} minutes"
 
         risk = detect_risk(run_dir)
         if risk:
-            stop_session(session, run_dir, risk)
+            stop_session(session, run_dir, risk, socket_name)
             return "BLOCKED", 125, f"auto-stopped: {risk}"
 
         time.sleep(max(0.1, float(args.poll_interval_sec)))
 
 
-def tmux_has_session(session: str) -> bool:
+def tmux_has_session(session: str, socket_name: str | None = None) -> bool:
     return subprocess.run(
-        ["tmux", "has-session", "-t", session],
+        tmux_command(socket_name, "has-session", "-t", session),
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     ).returncode == 0
 
 
-def stop_session(session: str, run_dir: Path, reason: str) -> None:
+def stop_session(session: str, run_dir: Path, reason: str, socket_name: str | None = None) -> None:
     capture_path = run_dir / "pane-before-stop.log"
     with capture_path.open("w", encoding="utf-8") as fh:
         subprocess.run(
-            ["tmux", "capture-pane", "-p", "-S", "-2000", "-t", session],
+            tmux_command(socket_name, "capture-pane", "-p", "-S", "-2000", "-t", session),
             stdout=fh,
             stderr=subprocess.DEVNULL,
         )
     write_text(run_dir / "stopped_reason", reason + "\n")
-    subprocess.run(["tmux", "kill-session", "-t", session], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(tmux_command(socket_name, "kill-session", "-t", session), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     write_text(run_dir / "exit_code", "125\n")
     write_text(run_dir / "status", "stopped\n")
 
@@ -500,17 +519,19 @@ def finalize_existing_run(*, run_dir: Path, skill_repo: Path) -> int:
     metadata = load_run_metadata(run_dir)
     cwd = Path(str(metadata.get("cwd") or os.getcwd())).expanduser().resolve()
     session = str(metadata.get("session") or default_session_name(run_dir))
+    socket_name = metadata.get("tmux_socket_name")
+    socket_name = str(socket_name) if isinstance(socket_name, str) and socket_name else None
     skills = [str(item) for item in metadata.get("skills", []) if isinstance(item, str)]
     owned_paths = [str(item) for item in metadata.get("owned_paths", []) if isinstance(item, str)]
     if (run_dir / "exit_code").exists():
         code = read_exit_code(run_dir / "exit_code")
         materialize_last_message(run_dir)
         status, exit_code, reason = classify_worker_exit(run_dir, code)
-    elif tmux_has_session(session):
+    elif tmux_has_session(session, socket_name):
         status, exit_code, reason = "RUNNING", 0, "Worker session is still running."
     else:
         status, exit_code, reason = "FAILED", 1, "tmux session ended without exit_code"
-    write_result(run_dir, session, status, reason)
+    write_result(run_dir, session, status, reason, socket_name)
     write_eval(run_dir, cwd, skill_repo, status, exit_code, reason, owned_paths=owned_paths)
     write_skill_review(run_dir, cwd, skill_repo, skills, status, reason)
     print(run_dir)
@@ -525,7 +546,12 @@ def load_run_metadata(run_dir: Path) -> dict[str, object]:
     return data if isinstance(data, dict) else {}
 
 
-def write_result(run_dir: Path, session: str, status: str, reason: str) -> None:
+def write_result(run_dir: Path, session: str, status: str, reason: str, socket_name: str | None = None) -> None:
+    attach_command = (
+        f"tmux -L {shlex.quote(socket_name)} attach -t {shlex.quote(session)}"
+        if socket_name
+        else f"tmux attach -t {shlex.quote(session)}"
+    )
     write_text(
         run_dir / "result.md",
         f"""# Skill Runner Result
@@ -533,7 +559,7 @@ def write_result(run_dir: Path, session: str, status: str, reason: str) -> None:
 - Status: {status}
 - Reason: {reason}
 - Tmux session: `{session}`
-- Attach command: `tmux attach -t {session}`
+- Attach command: `{attach_command}`
 
 Review `last-message.md`, `eval.md`, and targeted log excerpts before relying
 on this run.
