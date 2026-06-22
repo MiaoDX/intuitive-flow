@@ -84,6 +84,11 @@ export type CandidateScorecard = {
     provider_profile: string;
     model: string;
   };
+  timing: {
+    started_at: string;
+    finished_at: string;
+    elapsed_ms: number;
+  };
   diagnostics: CandidateDiagnostics;
 };
 
@@ -498,6 +503,25 @@ export const copySkill = (skillName: string, destHome: string, sourceRoot = join
   }
   mkdirSync(dirname(dest), { recursive: true });
   cpSync(src, dest, { recursive: true });
+  copySharedSkillReferences(src, destHome, sourceRoot);
+};
+
+const copySharedSkillReferences = (skillPath: string, destHome: string, sourceRoot: string): void => {
+  const skillMarkdownPath = join(skillPath, "SKILL.md");
+  if (!existsSync(skillMarkdownPath)) {
+    return;
+  }
+  const skillMarkdown = readFileSync(skillMarkdownPath, "utf8");
+  if (!skillMarkdown.includes("../_shared/")) {
+    return;
+  }
+  const sharedSource = join(sourceRoot, "_shared");
+  if (!existsSync(sharedSource)) {
+    return;
+  }
+  const sharedDest = join(destHome, ".codex", "skills", "_shared");
+  mkdirSync(dirname(sharedDest), { recursive: true });
+  cpSync(sharedSource, sharedDest, { recursive: true });
 };
 
 const shellQuote = (value: string): string => `'${value.replace(/'/g, "'\\''")}'`;
@@ -807,6 +831,7 @@ export const writeScorecard = (scorecard: CandidateScorecard, candidateDir: stri
       `- Worker status: ${scorecard.worker_status}`,
       `- Worktree: ${scorecard.worktree}`,
       `- Skill-runner dir: ${scorecard.run_dir || "none"}`,
+      `- Elapsed: ${formatDuration(scorecard.timing.elapsed_ms)}`,
       `- Diff: ${scorecard.diff_stats.files_changed} files, +${scorecard.diff_stats.insertions}/-${scorecard.diff_stats.deletions}`,
       ...(shouldShowDiagnostics(scorecard)
         ? [`- Diagnostic reason: ${scorecard.diagnostics.reason || "none"}`]
@@ -878,6 +903,12 @@ export const writeFinalReport = (runDir: string, scorecards: CandidateScorecard[
       "",
       ...ranked.map((item, index) => `${index + 1}. ${item.candidate_id} - ${item.status}`),
       "",
+      "## Candidate Summary",
+      "",
+      "| Rank | Candidate | Status | Provider config | Running time | Verification | Diff | Ranking reason | Worktree |",
+      "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+      ...ranked.map((item, index) => candidateSummaryRow(item, index + 1)),
+      "",
       "## Verification Summary",
       "",
       ...ranked.map((item) => verificationSummaryLine(item)),
@@ -894,10 +925,67 @@ export const writeFinalReport = (runDir: string, scorecards: CandidateScorecard[
   );
 };
 
-const verificationSummaryLine = (scorecard: CandidateScorecard): string => {
+const candidateSummaryRow = (scorecard: CandidateScorecard, rank: number): string =>
+  [
+    rank,
+    mdCell(scorecard.candidate_id),
+    scorecard.status,
+    mdCell(providerConfigLabel(scorecard)),
+    formatDuration(scorecard.timing.elapsed_ms),
+    mdCell(verificationSummaryText(scorecard)),
+    mdCell(`${scorecard.diff_stats.files_changed} files, +${scorecard.diff_stats.insertions}/-${scorecard.diff_stats.deletions}`),
+    mdCell(rankingReason(scorecard)),
+    mdCell(scorecard.worktree),
+  ].join(" | ").replace(/^/, "| ").replace(/$/, " |");
+
+const providerConfigLabel = (scorecard: CandidateScorecard): string => {
+  const parts = [
+    scorecard.route.harness,
+    scorecard.route.provider_profile,
+    scorecard.route.model,
+  ].filter(Boolean);
+  return parts.length ? parts.join(" / ") : "unspecified";
+};
+
+const rankingReason = (scorecard: CandidateScorecard): string => {
+  const verificationFailures = scorecard.verification.filter((item) => item.status === "fail").length;
+  if (scorecard.status === "SUCCESS" && verificationFailures === 0) {
+    return `clean success; ${scorecard.diff_stats.files_changed} changed file${scorecard.diff_stats.files_changed === 1 ? "" : "s"}`;
+  }
+  if (scorecard.diagnostics.reason) {
+    return scorecard.diagnostics.reason;
+  }
+  if (verificationFailures > 0) {
+    return `${verificationFailures} verification failure${verificationFailures === 1 ? "" : "s"}`;
+  }
+  return `status ${scorecard.status.toLowerCase()}`;
+};
+
+const verificationSummaryText = (scorecard: CandidateScorecard): string => {
   const pass = scorecard.verification.filter((item) => item.status === "pass").length;
   const fail = scorecard.verification.filter((item) => item.status === "fail").length;
-  return `- ${scorecard.candidate_id}: ${pass} pass, ${fail} fail`;
+  return `${pass} pass, ${fail} fail`;
+};
+
+const mdCell = (value: string): string =>
+  value.replace(/\|/g, "\\|").replace(/\r?\n/g, " ").trim() || "none";
+
+const formatDuration = (elapsedMs: number): string => {
+  const safeMs = Math.max(0, Math.round(elapsedMs));
+  if (safeMs < 1000) {
+    return `${safeMs}ms`;
+  }
+  const totalSeconds = Math.round(safeMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (minutes === 0) {
+    return `${seconds}s`;
+  }
+  return `${minutes}m ${seconds}s`;
+};
+
+const verificationSummaryLine = (scorecard: CandidateScorecard): string => {
+  return `- ${scorecard.candidate_id}: ${verificationSummaryText(scorecard)}`;
 };
 
 const candidateDiagnosticLines = (scorecard: CandidateScorecard): string[] => {
@@ -942,11 +1030,14 @@ export const executeBakeoff = async (
   });
 
   const runCandidate = async ({ candidate, candidateDir, branch, worktree }: typeof candidateRuns[number]) => {
+    const startedAtMs = Date.now();
+    const startedAt = new Date(startedAtMs).toISOString();
     try {
       const worker = await runSkillRunnerCandidate(manifest, candidate, runDir, worktree, env, { allowReal: options.allowReal });
       const verification = runVerification(worktree, manifest.verification?.commands ?? [], env);
       const verificationFailures = verification.filter((item) => item.status === "fail").length;
       const status = verificationFailures > 0 && worker.status === "SUCCESS" ? "PARTIAL" : worker.status;
+      const finishedAtMs = Date.now();
       const scorecard: CandidateScorecard = {
         candidate_id: candidate.id,
         status,
@@ -961,6 +1052,11 @@ export const executeBakeoff = async (
           harness: candidate.harness,
           provider_profile: candidate.provider_profile ?? "",
           model: candidate.model ?? "",
+        },
+        timing: {
+          started_at: startedAt,
+          finished_at: new Date(finishedAtMs).toISOString(),
+          elapsed_ms: finishedAtMs - startedAtMs,
         },
         diagnostics: verificationFailures > 0 && worker.status === "SUCCESS"
           ? {

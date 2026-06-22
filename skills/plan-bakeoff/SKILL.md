@@ -266,6 +266,9 @@ Final report categories:
 - `mergeable_with_fixes`
 - `cherry_pick_ideas`
 - `reject`
+- one candidate summary table with rank, candidate id, status, provider
+  config, running time, verification counts, diff stats, ranking reason, and
+  worktree
 - verification summary
 - recommended `$intuitive-port-worktree` handoff
 

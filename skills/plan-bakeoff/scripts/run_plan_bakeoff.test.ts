@@ -53,6 +53,11 @@ const sampleScorecard = (overrides: Partial<CandidateScorecard> = {}): Candidate
   verification: [{ command: "bun test", status: "pass", output: "ok" }],
   diff_stats: { files_changed: 1, insertions: 2, deletions: 0 },
   route: { harness: "fake", provider_profile: "", model: "" },
+  timing: {
+    started_at: "2026-06-22T00:00:00.000Z",
+    finished_at: "2026-06-22T00:00:12.000Z",
+    elapsed_ms: 12_000,
+  },
   diagnostics: { reason: "", output_tail: "", artifacts: [] },
   ...overrides,
 });
@@ -350,11 +355,19 @@ describe("plan-bakeoff runner", () => {
     }
   });
 
-  test("final report includes verification counts and candidate diagnostics", () => {
+  test("final report includes one candidate summary table with provider config, runtime, and ranking reasons", () => {
     const dir = mkdtempSync(join(tmpdir(), "plan-bakeoff-report-"));
     try {
       writeFinalReport(dir, [
-        sampleScorecard({ candidate_id: "clean" }),
+        sampleScorecard({
+          candidate_id: "clean",
+          route: { harness: "codex-cli", provider_profile: "codex-router-responses", model: "gpt-5.5" },
+          timing: {
+            started_at: "2026-06-22T00:00:00.000Z",
+            finished_at: "2026-06-22T00:01:30.000Z",
+            elapsed_ms: 90_000,
+          },
+        }),
         sampleScorecard({
           candidate_id: "broken",
           status: "FAILED",
@@ -372,6 +385,10 @@ describe("plan-bakeoff runner", () => {
       ]);
 
       const report = readFileSync(join(dir, "final-report.md"), "utf8");
+      expect(report).toContain("## Candidate Summary");
+      expect(report).toContain("| Rank | Candidate | Status | Provider config | Running time | Verification | Diff | Ranking reason | Worktree |");
+      expect(report).toContain("| 1 | clean | SUCCESS | codex-cli / codex-router-responses / gpt-5.5 | 1m 30s | 1 pass, 0 fail | 1 files, +2/-0 | clean success; 1 changed file | /tmp/worktree |");
+      expect(report).toContain("| 2 | broken | FAILED | fake | 12s | 1 pass, 1 fail | 1 files, +2/-0 | no parseable worker status; exit code 1 | /tmp/worktree |");
       expect(report).toContain("## Verification Summary");
       expect(report).toContain("- clean: 1 pass, 0 fail");
       expect(report).toContain("- broken: 1 pass, 1 fail");
@@ -415,6 +432,8 @@ describe("plan-bakeoff runner", () => {
       expect(existsSync(join(runDir, "final-report.md"))).toBe(true);
       const finalReport = readFileSync(join(runDir, "final-report.md"), "utf8");
       expect(finalReport).toContain("winner: fake-a");
+      expect(finalReport).toContain("## Candidate Summary");
+      expect(finalReport).toContain("| Rank | Candidate | Status | Provider config | Running time | Verification | Diff | Ranking reason | Worktree |");
       expect(finalReport).toContain("- fake-a: 1 pass, 0 fail");
       expect(finalReport).toContain("- fake-b: 1 pass, 0 fail");
       expect(finalReport).toContain("- fake-b: worker reported RESULT_STATUS: PARTIAL; cli exit code 0");
@@ -422,12 +441,14 @@ describe("plan-bakeoff runner", () => {
         expect(existsSync(join(runDir, "candidates", id, "scorecard.json"))).toBe(true);
       }
       expect(readFileSync(join(runDir, "candidates", "fake-a", "scorecard.json"), "utf8")).toContain('"status": "SUCCESS"');
+      expect(readFileSync(join(runDir, "candidates", "fake-a", "scorecard.json"), "utf8")).toContain('"elapsed_ms"');
       expect(readFileSync(join(runDir, "candidates", "fake-b", "scorecard.json"), "utf8")).toContain('"status": "PARTIAL"');
       expect(readFileSync(join(runDir, "candidates", "fake-b", "scorecard.md"), "utf8")).toContain("## Diagnostics");
       expect(git(repo, ["worktree", "list", "--porcelain"]).stdout).not.toContain(runDir);
       expect(existsSync(codexConfig)).toBe(false);
       expect(existsSync(claudeSettings)).toBe(false);
       expect(existsSync(join(runDir, "candidates", "fake-a", "home", ".codex"))).toBe(true);
+      expect(existsSync(join(runDir, "candidates", "fake-a", "home", ".codex", "skills", "_shared", "references", "durable-run.md"))).toBe(true);
     } finally {
       rmSync(repo, { recursive: true, force: true });
       rmSync(runRoot, { recursive: true, force: true });
