@@ -99,8 +99,13 @@ If verification fails, stop and restore from the backup branch.
 
 Never squash these commits into a generic milestone:
 
-- Subjects or bodies containing `DO NOT SQUASH`, `PRESERVE`, `KEEP`,
-  `IMPORTANT`, `CRITICAL`, `SECURITY`, or `CVE-`.
+- Subjects or bodies containing explicit preservation markers:
+  - `DO NOT SQUASH`
+  - `[PRESERVE]`, `PRESERVE:`, `PRESERVE -`, or `PRESERVE /`
+  - `[KEEP]`, `KEEP:`, `KEEP -`, or `KEEP /`
+- Subjects or bodies containing explicit high-risk markers:
+  `[IMPORTANT]`, `IMPORTANT:`, `[CRITICAL]`, `CRITICAL:`,
+  `[SECURITY]`, `SECURITY:`, or `CVE-`.
 - Type prefixes such as `hotfix:`, `critical:`, or `security:`.
 - Fix commits that reference issues or tickets, such as `fix: #123`,
   `fixes PROJ-456`, or `closes #789`.
@@ -111,6 +116,11 @@ Never squash these commits into a generic milestone:
 Preserved commits stay as standalone `pick` commits in every proposed plan.
 Follow-up fixups that clearly target a preserved commit may be squashed into
 that preserved commit, but not into a milestone group.
+
+Do not treat ordinary words as preserve markers. Subjects such as
+`fix: keep the process alive`, `refactor: preserve source frame metadata`, or
+`docs: important setup note` are not preserved by this rule unless they use one
+of the explicit marker forms above or match another preserve rule.
 
 ## Plan Options
 
