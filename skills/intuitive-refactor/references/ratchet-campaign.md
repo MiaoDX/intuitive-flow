@@ -5,6 +5,13 @@ slices, many workers, or many hours. A campaign is allowed to be long-lived, but
 it is not open-ended: every slice still needs an owner-backed simplification
 claim, focused proof, checkpoint, and stop condition.
 
+The campaign default is an automated discovery/execution loop: discover a batch
+of high-value architecture candidates, execute only clear bounded ones, record
+uncertain or human-decision candidates as parked, then run fresh discovery
+again. Stop only after repeated discovery cannot find another safe P1/P2 slice,
+or when remaining work needs a public migration, unavailable proof, or design
+decision.
+
 Read `../../_shared/references/durable-run.md` before starting or resuming a
 campaign. The shared file owns latest-user-intent gates, active capsules,
 checkpoint cadence, control-plane/worker shape, context budget, and proof
@@ -16,6 +23,9 @@ Enter campaign mode only when one of these is true:
 
 - the user explicitly asks to keep refactoring, keep cleaning, continue a
   ratchet, or run a long cleanup campaign;
+- the user asks for periodic, automatic, or recurring architecture cleanup that
+  should keep finding clear refactor wins without stopping after the first
+  discovered batch;
 - an existing refactor gate has status `CONTINUE` and the latest user message
   asks to continue or keep going;
 - the accepted objective is a code-size, complexity, stale-surface,
@@ -24,9 +34,10 @@ Enter campaign mode only when one of these is true:
 
 Do not enter campaign mode for a vague "make it better" prompt without a gate.
 Use scope gate or `$intuitive-reduce-entropy` first. For periodic architecture
-cleanup where the user has not named a seam, run `$intuitive-reduce-entropy` in
-repo entropy or discovery-loop mode and enter this campaign only after a
-candidate packet, selected code/API/module target, or refactor gate exists.
+cleanup where the user has not named a seam, start with `$intuitive-reduce-entropy`
+in repo entropy or discovery-loop mode. Once there is a candidate packet or
+refactor gate, campaign mode may keep invoking fresh discovery between batches
+without asking the user to choose every obvious next slice.
 
 ## State Surfaces
 
@@ -58,12 +69,42 @@ Stop/park criteria:
 Discovery source:
 Surface metrics:
 Low-value stop signal:
+Discovery cadence:
+Consecutive no-clear-candidate passes:
 ```
 
 The quality signal can be line count, duplicated concepts, stale API count,
 test fixture duplication, dependency surface, or another repo-local metric. It
 is pressure, not the goal. The goal remains concept reduction and ownership
 clarity.
+
+## Discovery/Execution Loop
+
+Use this loop when the user wants the campaign to be more autonomous or
+periodic:
+
+1. Run a fresh discovery pass before the first slice and after each completed
+   batch of clear slices. Use `$intuitive-reduce-entropy` repo entropy mode, an
+   architecture-deletion audit from `ratchet-mode.md`, or focused scout workers
+   depending on the current uncertainty.
+2. Rank candidates by architecture value: stale-surface deletion,
+   duplicate-owner merge, canonical owner move, pass-through wrapper removal,
+   then test/docs simplification that stops preserving stale concepts.
+3. Execute only candidates that are clear, bounded, contract-preserving or
+   explicitly behavior-preserving, and verifiable with focused proof.
+4. Park candidates that need human judgment, public API/CLI/schema/report
+   migration, new runtime design, unavailable proof, hardware/manual evidence,
+   or broad migration approval. Record the owner layer, why it is parked, and
+   the decision or proof needed to unpark it.
+5. After the current clear batch passes proof and checkpointing, run another
+   discovery pass instead of stopping immediately.
+6. Stop only when two consecutive discovery passes cannot name a clear P1/P2
+   slice with a deletion, merge, canonical owner move, stale-surface removal,
+   or material maintainer surprise.
+
+Do not count parked candidates as progress blockers. They are decision records
+that keep the campaign moving to the next clear slice. Do not keep re-auditing
+the same parked area unless new code or user intent changes the decision.
 
 ## Slice Selection
 
@@ -93,9 +134,11 @@ Reject a slice when the claim is "make the file smaller" without a reduced
 concept, canonical owner, or stale surface deletion.
 
 If the current campaign has no concrete next seam, do not continue by browsing
-for arbitrary local cleanup. Return to `$intuitive-reduce-entropy` for ranked
-candidate discovery, then resume only after the user selects the code/API/module
-cleanup candidate or approves the packet's recommended refactor action.
+for arbitrary local cleanup. In autonomous/periodic campaign mode, return to
+fresh ranked discovery and execute the recommended clear candidate when it
+meets the continue criteria. If discovery returns only parked or risky work,
+record that pass and either run one more independent discovery pass or stop
+after the second consecutive no-clear-candidate pass.
 
 Run an architecture-deletion audit from `ratchet-mode.md` before choosing the
 next implementation slice when any of these are true:
@@ -136,6 +179,31 @@ Skipped <gate>: <slice change class> did not alter <behavior/artifact/contract>;
 focused proof covered <observable risk>; residual risk is <...>.
 ```
 
+## Commit Policy
+
+In campaign mode, make verified implementation slices commit-shaped by default.
+After each slice or clear batch, create a semantic commit when all of these are
+true:
+
+- the slice changed source, tests, docs, or planning/capsule state;
+- focused proof passed, or an explicitly accepted narrower proof passed with
+  residual risk recorded;
+- `git diff --check` passes;
+- the staged diff contains only this verified slice and its matching gate or
+  capsule updates;
+- repo guidance does not forbid commits and the latest user message did not
+  ask to leave changes uncommitted.
+
+Do not commit when the run is discovery-only, the result is only parked
+decisions, proof failed or was unavailable, unrelated dirty work cannot be
+separated, the slice touches a public contract whose migration has not been
+accepted, or the user asks for review before committing.
+
+Before committing, inspect the staged stat and check output. Include repo-local
+trailers or message conventions. If local hooks or commit checks fail, fix the
+slice when the failure is in scope; otherwise unstage and report the blocker
+without pretending the campaign is checkpointed.
+
 ## Checkpoint Rhythm
 
 Checkpoint after every committed slice and at least every 60-120 minutes during
@@ -145,7 +213,10 @@ a long campaign. The checkpoint should update:
   work;
 - canonical gate when accepted checklist, verification inventory, stop
   condition, campaign status, or final evidence changes;
-- semantic commit if the repo/user workflow expects per-slice commits.
+- semantic commit for verified implementation slices by default, following the
+  commit policy above;
+- discovery pass count, clear candidates executed, and parked candidates when
+  running the automated discovery/execution loop.
 
 Use batch summaries in the canonical gate. Do not append command transcripts or
 long per-slice prose that makes the plan harder to resume than the code.
@@ -171,6 +242,8 @@ Park, stop, or ask when:
 - the campaign is growing the plan faster than it simplifies the code;
 - two consecutive candidate-selection attempts cannot name a deletion, merge,
   canonical owner move, stale-surface removal, or material maintainer surprise;
+- two consecutive fresh discovery passes in autonomous campaign mode produce no
+  clear safe P1/P2 slice after parking uncertain items;
 - an architecture-deletion audit recommends only public removals that need a
   human migration decision;
 - the latest user message asks for status, discussion, pause, or process
