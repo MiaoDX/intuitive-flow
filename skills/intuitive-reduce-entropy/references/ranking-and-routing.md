@@ -245,9 +245,11 @@ implementation:
   accepted direction without an execution contract -> `$intuitive-preflight`;
   approved execution contract or tiny concrete task -> `$intuitive-flow`.
 - `$intuitive-reduce-entropy` -> find what repo maintenance would pay off most
-  now, name the discovery intensity, and recommend one next workflow action.
+  now, including thin read-only deletion/merge/canonical-owner discovery; name
+  the discovery intensity, and recommend one next workflow action.
 - `$intuitive-refactor` -> likely owner for known module, seam, API, or
-  architecture cleanup targets.
+  architecture cleanup targets after the target is named or a candidate packet
+  is selected.
 - `$intuitive-doc`, `$intuitive-init`, and `$intuitive-tests` -> likely owners
   for docs, agent guidance, and test-suite surfaces.
 - `$grill-with-docs-batch`, `$intuitive-preflight`, implementation planning, or

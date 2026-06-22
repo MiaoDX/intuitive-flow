@@ -1,31 +1,38 @@
 # Mode Router
 
-Use this reference when `$intuitive-refactor` needs mode selection, a scope
+Use this reference when `$intuitive-refactor` needs route selection, a scope
 gate, severity classification, or a proof ladder before editing.
 
-## Modes
+## Routes
 
-| Mode | Use when | Output | Redirect when |
+`$intuitive-refactor` starts after a known target exists. Unknown-target
+cleanup discovery, architecture deletion candidate finding, and repo-wide
+ranking belong to `$intuitive-reduce-entropy`; use its selected-candidate
+packet as this skill's discovery source.
+
+| Route | Use when | Output | Redirect when |
 | --- | --- | --- | --- |
-| Scope gate | The target is broad, risky, architecture-shaped, or needs accepted severities before edits. | Refactor scope, accepted checklist, evidence ladder, stop condition, parked items. | The user is only asking what to clean next across the repo. |
-| Execution slice | The user names a bounded code/API/module seam and wants cleanup implemented. | One vertical slice with code, callers, tests, docs/stale surfaces, and proof. | The task lacks scope, non-goals, or verification. |
-| Entropy-backed cleanup intake | The user asks for repo cleanup or selects a candidate from `$intuitive-reduce-entropy`. | If no candidate exists: redirect to repo entropy discovery. If selected: refactor gate with deletion/merge-first plan, proof, and low-value stop rule. | A concrete seam is already named; use execution slice or ratchet mode. |
-| Ratchet mode | The goal is repeated code-size, complexity, module-sprawl, stale-surface, or architecture simplification. | Scope gate plus quality signal, architecture pressure, behavior-change policy, simplification claim. | The request is only to review the current diff. |
-| Architecture deletion audit | A ratchet has slowed into low-ROI slices, or the user wants unnecessary modules, stale architecture, deletion candidates, or merge candidates found before editing. | Ranked read-only deletion/merge candidates with owner layer, why unnecessary, blast radius, proof, and one recommended first slice. | A concrete seam is already approved for implementation. |
-| Ratchet campaign | The user asks to continue cleanup for many slices/hours, run periodic automatic cleanup, or resume a gate with status `CONTINUE`. | Canonical gate plus active capsule, repeated discovery/execution batches, checkpoint cadence, per-slice proof selector, parked decisions. | Two consecutive discovery passes find no clear safe P1/P2 slice, or remaining candidates need human/public-contract decisions. |
+| Gate | The user names a target, selects a reduce-entropy candidate packet, or the task is broad/risky/architecture-shaped enough to need accepted severities before edits. | Refactor scope, accepted checklist, evidence ladder, stop condition, parked items. | The user is asking what to clean next or wants deletion/merge candidates found. |
+| Slice | The user names a bounded code/API/module seam and wants cleanup implemented. | One vertical slice with code, callers, tests, docs/stale surfaces, and proof. | The task lacks scope, non-goals, or verification. |
+| Ratchet | The accepted target or candidate set needs repeated code-size, complexity, module-sprawl, stale-surface, or architecture simplification slices. | Gate plus quality signal, architecture pressure, behavior-change policy, simplification claim, and per-slice value metrics. | No target/candidate exists, or the next step is read-only candidate discovery. |
 | Changed-code review | The request is post-implementation reuse/quality/efficiency review of changed files. | Diff-scoped findings first, optional targeted fixes only when authorized, then proof to rerun. | The issue is broader architecture cleanup or entropy discovery. |
+
+Use the campaign overlay, not a separate route, when a ratchet is expected to
+span many slices, workers, hours, commits, or resumed sessions. The overlay
+adds an active capsule, checkpoint cadence, repeated selected-slice loop, and
+commit policy from `references/ratchet-campaign.md`.
 
 For non-trivial runs, state:
 
 ```text
-Selected mode:
+Selected route:
 Why:
 Redirect:
 ```
 
-For tiny direct work, one sentence is enough. Add a final `Mode note:` only
+For tiny direct work, one sentence is enough. Add a final `Route note:` only
 when the user manually invoked this skill, the request was ambiguous, or another
-mode/skill would fit better.
+route/skill would fit better.
 
 ## Severity Guide
 
@@ -53,7 +60,7 @@ Execution risks:
 Low-value stop signal:
 ```
 
-For long-running ratchets, also add:
+For long-running ratchets that use the campaign overlay, also add:
 
 ```text
 Current quality signal:
@@ -61,7 +68,7 @@ Architecture pressure:
 Behavior-change policy:
 Architecture simplification claim:
 Surface metrics:
-Deletion-audit trigger:
+Discovery handoff trigger:
 ```
 
 If the target is architecture-shaped or the module map is unclear, run the
@@ -102,7 +109,8 @@ remaining findings are outside accepted severities.
 Do not broaden into nearby cleanup just because it is visible. Park it with
 enough evidence for a future selection decision.
 
-Stop and discuss when the next candidate cannot name a deletion, merge,
-canonical owner move, stale-surface removal, or material maintainer surprise.
-In campaign mode, use `references/ratchet-campaign.md` for the repeated
-discovery saturation rule.
+Stop and discuss or route to `$intuitive-reduce-entropy` when the next
+candidate cannot name a deletion, merge, canonical owner move, stale-surface
+removal, or material maintainer surprise. With the campaign overlay, use
+`references/ratchet-campaign.md` for the repeated selected-slice saturation
+rule.

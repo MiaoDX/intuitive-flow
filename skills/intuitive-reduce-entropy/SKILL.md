@@ -21,7 +21,8 @@ Use this skill when entropy is the problem, but make the mode explicit before
 auditing:
 
 - `repo entropy mode`: repository maintenance across agent guidance, human
-  docs, tests, repo layout, architecture depth, stale APIs, and cleanup gates.
+  docs, tests, repo layout, architecture depth, stale APIs, cleanup candidates,
+  and cleanup gates.
 - `plan entropy mode`: idea or plan review before execution, focused on missing
   decisions, weak assumptions, scope leaks, proof gaps, stale source evidence,
   and questions that should go to grill-batch or preflight.
@@ -37,6 +38,12 @@ guidance, narrowing scope, reusing an existing route, or documenting current
 truth. Recommend a new durable entity only when the shrink/reuse path cannot
 make the evidence honest.
 
+Use the cleanup discovery lens when repo entropy shows stale APIs, duplicate
+owners, compatibility wrappers, pass-through modules, stale tests/docs, or
+module-sprawl. The lens ranks deletion, merge, and canonical-owner candidates;
+it does not edit code, create campaign checkpoints, or decide mutation policy.
+Selected code/API/module candidates hand off to `$intuitive-refactor`.
+
 Before proposing any candidate, run a `Demand sanity gate`: decide whether the
 requested change itself is worth doing. For feature additions, ask whether the
 feature creates enough user or maintainer value to justify a new surface instead
@@ -50,7 +57,7 @@ Every selected candidate should include `Demand gate:` with the pass reason.
 
 | Mode | Use when | Output | Redirect when |
 | --- | --- | --- | --- |
-| Repo entropy mode | The repo feels messy, has stale surfaces, or the user asks what to clean next. | Ranked maintenance candidates with source, evidence, owner, proof, risk, parked items, and next action. | The user already named a bounded refactor target. |
+| Repo entropy mode | The repo feels messy, has stale surfaces, or the user asks what to clean next. | Ranked maintenance candidates with source, evidence, owner, proof, risk, parked items, and next action. Use the cleanup discovery lens for deletion/merge/canonical-owner candidates. | The user already named a bounded refactor target. |
 | Plan entropy mode | The input is an idea, draft plan, named plan file, or preflight draft. | Plan-review candidates for missing decisions, weak assumptions, proof gaps, and next owner. | The plan already has approved scope, non-goals, gates, and execution route. |
 | Discovery-loop mode | The user asks for all serious directions, unknown unknowns, or to continue until saturated. | Fresh bounded rounds until no P0/P1 or materially useful P2 remains. | The request only needs a quick local answer. |
 
@@ -126,6 +133,31 @@ that were checked and rejected.
    only when cleanup/reuse cannot remove the surprise.
 6. Return a ranked packet of decision-complete candidates, or a no-change
    result when no candidate passes the materiality bar.
+
+### Cleanup Discovery Lens
+
+Use this lens inside repo entropy or discovery-loop mode when the prompt or
+evidence points at stale architecture, deletion candidates, duplicate owners,
+wrappers, aliases, compatibility paths, pass-through modules, or tests/docs that
+keep old concepts alive. Keep it read-only and packet-shaped.
+
+Rank candidates in this order:
+
+1. Stale public or private surfaces whose active replacements already exist.
+2. Compatibility shims, aliases, wrappers, or legacy command paths with no
+   current external contract.
+3. Duplicate owners for the same domain concept, data envelope, fixture, route,
+   report section, runtime state, or workflow rule.
+4. Modules that exist only to preserve old names or pass through to another
+   owner.
+5. Tests or docs that force stale surfaces to stay alive instead of proving
+   current behavior.
+
+Do not import `$intuitive-refactor`'s behavior-change policy, proof ladder,
+campaign checkpointing, or commit rules. This skill should only label execution
+risk, suggested proof, likely owner, and the stop/ask condition. If the user
+selects a cleanup candidate, hand it to `$intuitive-refactor` for the mutation
+gate and implementation.
 
 For broad repo-wide or "continue until no more" requests, run discovery-loop
 mode: fresh bounded rounds from current `HEAD` until a new round finds no P0/P1

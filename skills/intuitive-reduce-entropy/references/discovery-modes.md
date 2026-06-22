@@ -97,6 +97,47 @@ one false-green verification issue, and one confirmed leftover wrapper, because
 all three make the next human or agent less surprised. Keep speculative ideas
 out of the ranked batch and put them in `Parked items`.
 
+## Cleanup Discovery Lens
+
+Use this lens inside repo entropy or discovery-loop mode when the user asks for
+unnecessary modules, stale architecture, deletion candidates, merge candidates,
+compatibility cleanup, or a faster way to reduce code/architecture surface. It
+is a read-only discovery lens, not a refactor execution mode.
+
+Rank deletion/merge/canonical-owner candidates in this order:
+
+1. Stale public or private surfaces whose active replacements already exist.
+2. Compatibility shims, aliases, wrappers, or legacy command paths with no
+   current external contract.
+3. Duplicate owners for the same domain concept, data envelope, fixture, route,
+   report section, runtime state, or workflow rule.
+4. Modules that exist only to preserve old names or pass through to another
+   owner.
+5. Tests or docs that force stale surfaces to stay alive instead of proving
+   current behavior.
+
+Do not count pure extraction, formatting, line shuffling, or "could be nicer"
+as deletion candidates. Park candidates that require a product/public-contract
+decision, unavailable proof, paid services, credentials, hardware, or broad
+migration approval.
+
+For each cleanup candidate, include:
+
+```text
+Owner layer:
+Why unnecessary:
+Expected simplification:
+Behavior-change risk:
+Blast radius:
+Suggested proof:
+Stop/ask condition:
+Owner skill: $intuitive-refactor
+```
+
+Do not import `$intuitive-refactor`'s mutation gate, behavior-change policy,
+campaign checkpoints, or commit rules. If the user selects a cleanup candidate,
+the next action is a refactor gate or execution slice in `$intuitive-refactor`.
+
 ## Plan Entropy Mode
 
 Use plan entropy mode when the user points at an idea, draft plan, named

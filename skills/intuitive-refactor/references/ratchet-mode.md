@@ -41,6 +41,11 @@ community `$ponytail-review` or `$ponytail-audit` as candidate discovery, then
 apply this ratchet mode's severity, behavior-change, proof, and stop gates
 before editing.
 
+For unknown-target cleanup, stale-architecture discovery, or read-only
+deletion/merge candidate finding, route to `$intuitive-reduce-entropy` first.
+This reference validates and executes selected candidates; it does not own
+repo-wide candidate discovery.
+
 ## Good Ratchet Slices
 
 - Ownership splits: report section renderers, artifact envelopes, backend
@@ -57,57 +62,36 @@ Reject slices that only move private functions into a new file, preserve every
 old alias indefinitely, couple tests to private wrappers, or make the plan
 ledger longer than the code change is valuable.
 
-## Architecture Deletion Audit
+## Selected Deletion Candidate Intake
 
-Use this read-only mode when a ratchet campaign is producing correct but slow
-behavior-preserving hardening slices, or when the user explicitly wants to find
-unnecessary architecture before doing more refactor work.
+When `$intuitive-reduce-entropy` hands off deletion or merge candidates, accept
+only candidates that make the architecture truer and smaller. Do not turn the
+handoff into another repo-wide audit inside this skill.
 
-The audit goal is to find deletion or merge candidates that make the architecture
-truer and smaller. It is not a repo-wide wish list and it does not edit code by
-default.
+The selected packet should already identify stale surfaces, compatibility
+shims, duplicate owners, pass-through modules, or tests/docs that preserve old
+names. Re-check only enough context to prove the candidate is still current and
+inside scope.
 
-Rank candidates in this order:
-
-1. Stale public or private surfaces whose active replacements already exist.
-2. Compatibility shims, aliases, wrappers, or legacy command paths with no
-   current external contract.
-3. Duplicate owners for the same domain concept, data envelope, fixture, route,
-   report section, or runtime state.
-4. Modules that exist only to preserve old names or pass through to another
-   owner.
-5. Tests that force stale surfaces to stay alive instead of proving current
-   behavior.
-
-Do not count pure extraction, formatting, line shuffling, or "could be nicer"
-as deletion candidates. Park candidates that require a product/public-contract
-decision, unavailable proof, paid services, credentials, hardware, or broad
-migration approval.
-
-Use this output shape:
+Use this intake shape before editing:
 
 ```text
-Architecture deletion audit:
-Scope inspected:
-Quality signal:
-Surface metrics:
-Ranked candidates:
-- P1/P2/Parked: <surface/module/concept>
-  Owner layer:
-  Why unnecessary:
-  Expected simplification:
-  Behavior-change class:
-  Blast radius:
-  Proof:
-  Stop/ask condition:
-Recommended first slice:
+Selected deletion/merge candidate:
+Discovery source:
+Owner layer:
+Why unnecessary:
+Expected simplification:
+Behavior-change class:
+Blast radius:
+Proof:
+Stop/ask condition:
 Rejected/parked:
 ```
 
-If the recommended first slice is accepted or already inside an approved gate,
-continue with the normal architecture claim before editing. If not, stop after
-the audit and ask for approval of the candidate, because deletion can change
-public behavior or remove familiar but stale entrypoints.
+If the candidate is accepted or already inside an approved gate, continue with
+the normal architecture claim before editing. If not, stop and ask for approval,
+because deletion can change public behavior or remove familiar but stale
+entrypoints.
 
 ## Behavior-Change Policy
 
@@ -164,8 +148,8 @@ capsule, checkpoint cadence, control-plane/worker shape, and proof selector.
 
 If the user asks for periodic architecture cleanup but no concrete seam,
 accepted gate, or selected entropy candidate exists, run
-`$intuitive-reduce-entropy` first. This mode executes selected cleanup; it does
-not replace repo-wide candidate discovery.
+`$intuitive-reduce-entropy` first. This route executes selected cleanup; it
+does not replace repo-wide candidate discovery.
 
 For each slice:
 
