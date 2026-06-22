@@ -31,6 +31,7 @@ export type Manifest = {
   schema: string;
   target_repo: string;
   plan: string;
+  worker_goal?: string;
   run_root?: string;
   base?: {
     mode?: string;
@@ -693,18 +694,34 @@ const shellQuoteCommand = (command: string[]): string =>
   command.map((part) => `'${part.replace(/'/g, "'\\''")}'`).join(" ");
 
 export const bakeoffPrompt = (manifest: Manifest, candidate: Candidate): string =>
-  [
-    `Implement approved plan ${manifest.plan} directly in this worktree.`,
-    `Plan-bakeoff candidate: ${candidate.id}.`,
-    "The approved plan is embedded below; do not read the plan path unless it exists in this worktree.",
-    "",
-    "```markdown",
-    readFileSync(manifest.plan, "utf8").trim(),
-    "```",
-    "",
-    "Use the accepted plan as scope. Do not delegate to skill-runner, tmux, or another coding agent.",
-    "End with RESULT_STATUS: SUCCESS, PARTIAL, BLOCKED, or FAILED plus concise acceptance evidence.",
-  ].join("\n");
+  manifest.worker_goal
+    ? [
+        manifest.worker_goal.trim(),
+        "",
+        `Plan-bakeoff candidate: ${candidate.id}.`,
+        "Use $intuitive-flow to execute the goal in this isolated worktree.",
+        "Continue until the plan acceptance criteria and verification gates pass, or until you can name a concrete blocker.",
+        "The approved plan is embedded below; prefer the worktree path when it exists.",
+        "",
+        "```markdown",
+        readFileSync(manifest.plan, "utf8").trim(),
+        "```",
+        "",
+        "Do not launch a separate coding agent; this candidate worker owns implementation in this isolated worktree.",
+        "End with RESULT_STATUS: SUCCESS, PARTIAL, BLOCKED, or FAILED plus concise acceptance evidence.",
+      ].join("\n")
+    : [
+        `Implement approved plan ${manifest.plan} directly in this worktree.`,
+        `Plan-bakeoff candidate: ${candidate.id}.`,
+        "The approved plan is embedded below; do not read the plan path unless it exists in this worktree.",
+        "",
+        "```markdown",
+        readFileSync(manifest.plan, "utf8").trim(),
+        "```",
+        "",
+        "Use the accepted plan as scope. Do not delegate to skill-runner, tmux, or another coding agent.",
+        "End with RESULT_STATUS: SUCCESS, PARTIAL, BLOCKED, or FAILED plus concise acceptance evidence.",
+      ].join("\n");
 
 export const parseResultStatus = (text: string): string => {
   const direct = /^\s*RESULT_STATUS:\s*(SUCCESS|PARTIAL|BLOCKED(?:_NEEDS_DECISION)?|FAILED)\b/im.exec(text);

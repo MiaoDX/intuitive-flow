@@ -165,6 +165,9 @@ Optional fields:
 - `base.ref`: base ref for all worktrees, default `HEAD`
 - `base.mode`: `clean-head` or `allow-dirty-baseline`, default `clean-head`
 - `run_root`: run artifact root
+- `worker_goal`: explicit first instruction for each candidate worker when the
+  task must trigger a goal-style skill route, for example
+  `/goal execute docs/plans/example.md with intuitive-flow`.
 - `verification.commands`: shared post-run commands
 - `execution.parallel`: run candidates concurrently, default `true`; set
   `false` only for harness debugging.

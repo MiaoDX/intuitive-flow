@@ -321,6 +321,34 @@ describe("plan-bakeoff runner", () => {
     }
   });
 
+  test("candidate prompt can use an explicit worker goal", () => {
+    const repo = createTempRepo();
+    try {
+      const plan = join(repo, "plan.md");
+      const goal = "/goal execute plan.md with intuitive-flow";
+      const prompt = bakeoffPrompt(
+        {
+          schema: "plan_bakeoff_manifest_v1",
+          target_repo: repo,
+          plan,
+          worker_goal: goal,
+          candidates: [
+            { id: "fake-a", harness: "fake" },
+            { id: "fake-b", harness: "fake" },
+          ],
+        },
+        { id: "fake-a", harness: "fake" },
+      );
+
+      expect(prompt.startsWith(goal)).toBe(true);
+      expect(prompt).toContain("Use $intuitive-flow to execute the goal");
+      expect(prompt).toContain("until you can name a concrete blocker");
+      expect(prompt).toContain("# Plan");
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
   test("parses direct RESULT_STATUS lines and skill-runner result markdown", () => {
     expect(parseResultStatus("RESULT_STATUS: SUCCESS\nSUMMARY: ok")).toBe("SUCCESS");
     expect(parseResultStatus("RESULT_STATUS: BLOCKED_NEEDS_DECISION\nOPEN_DECISIONS: input")).toBe("BLOCKED");
