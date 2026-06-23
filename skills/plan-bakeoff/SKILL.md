@@ -85,6 +85,14 @@ base ref. The runner gives each candidate a one-hour budget plus a grace window
 instead of using a short fixed stop, because bakeoff should compare
 implementations rather than filter out slower-but-promising routes.
 
+Plan-bakeoff delegates agent lifecycle to `skill-runner`. It should describe
+the candidate route, model, skills, and launch mode, then let `skill-runner`
+own skill materialization, tmux/session mechanics, provider CLI flags,
+context-sensitive interactive launch behavior, compact artifacts, and final
+status parsing. Do not reintroduce separate plan-bakeoff code paths that
+directly assemble `codex exec`, `claude -p`, or nested tmux sessions for real
+candidates.
+
 ## Environment Discovery Defaults
 
 Treat environment preparation as a target-repo contract, not as user prompt
@@ -210,6 +218,11 @@ Candidate fields:
 - `command_profile`: deterministic command template.
 - `runtime`: `host`; Docker is intentionally unsupported in v0.
 - `skills`: skills expected in the candidate worker environment.
+- `launch_mode`: `prompt-exec` or `interactive-tmux`. Default is
+  `prompt-exec` for Codex/command routes and `interactive-tmux` for
+  Claude-compatible routes. Prefer `interactive-tmux` for Kimi or long
+  Claude-compatible plans where prompt-mode context growth can exceed provider
+  hard limits. It currently supports Claude-compatible routes.
 - `worktree_setup.commands`: extra per-candidate setup commands appended after
   shared setup commands.
 - `timeout_min`, `idle_timeout_min`, `timeout_grace_min`: candidate-specific

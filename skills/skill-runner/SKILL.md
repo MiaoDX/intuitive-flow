@@ -110,8 +110,25 @@ task is solely custom skill maintenance.
 Use script help for the option surface instead of memorizing it:
 `python3 .../run_skill_runner.py --help`. Common options are `--agent`,
 `--cwd`, `--timeout-min`,
-`--idle-timeout-min`, `--owned-path`, `--dry-run`, `--finalize-run`,
-and `--dangerous`.
+`--idle-timeout-min`, `--launch-mode`, `--owned-path`, `--dry-run`,
+`--finalize-run`, and `--dangerous`.
+
+`skill-runner` is the owned abstraction for agent lifecycle. Higher-level
+skills and bakeoff tools should pass structured intent here rather than
+assembling `codex exec`, `claude -p`, tmux, or provider flags themselves.
+The launch mode is an implementation detail of this runner:
+
+- `prompt-exec` runs a one-shot prompt command such as `codex exec` or
+  `claude -p`. It is the default and stays best for short, automation-friendly
+  tasks with clean JSON/last-message artifacts.
+- `interactive-tmux` launches an interactive Claude session, pastes the
+  rewritten prompt, and asks the worker to write `last-message.md` plus
+  `exit_code` sentinel artifacts. Use it for Claude-compatible routes or long
+  plans where prompt-mode context management is brittle.
+
+Use `--selected-skill <name>` and `--materialize-skills` only with an isolated
+worker home, such as a plan-bakeoff candidate. The runner then copies selected
+repo-owned skills into both Codex and Claude skill locations for that worker.
 
 For goal-driven `intuitive-flow` sub-phases, set a babysitter review cadence
 from the task: short for small edits, longer for broad refactors or slow proof.

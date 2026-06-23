@@ -51,6 +51,8 @@ prompt = module.rewrite_prompt(
     skills=["intuitive-flow"],
     cwd=Path(${JSON.stringify(repoRoot)}),
     owned_paths=[],
+    launch_mode="prompt-exec",
+    run_dir=Path("/tmp/skill-runner-test"),
 )
 print(json.dumps({"prompt": prompt}))
 `);
@@ -61,6 +63,26 @@ print(json.dumps({"prompt": prompt}))
     expect(output.prompt).toContain("SUCCESS only if");
     expect(output.prompt).toContain("BLOCKED_NEEDS_DECISION if");
     expect(output.prompt).toContain("ACCEPTANCE_EVIDENCE");
+  });
+
+  test("interactive prompt includes sentinel artifact instructions", () => {
+    const output = runPython(`
+from pathlib import Path
+
+prompt = module.rewrite_prompt(
+    prompt="Implement docs/plans/example.md with $intuitive-flow",
+    skills=["intuitive-flow"],
+    cwd=Path(${JSON.stringify(repoRoot)}),
+    owned_paths=[],
+    launch_mode="interactive-tmux",
+    run_dir=Path("/tmp/skill-runner-interactive"),
+)
+print(json.dumps({"prompt": prompt}))
+`);
+
+    expect(output.prompt).toContain("Interactive tmux completion contract:");
+    expect(output.prompt).toContain("/tmp/skill-runner-interactive/last-message.md");
+    expect(output.prompt).toContain("/tmp/skill-runner-interactive/exit_code");
   });
 
   test("classifies worker RESULT_STATUS from compact output", () => {
@@ -308,11 +330,44 @@ print(json.dumps({"eval": (run_dir / "eval.md").read_text()}))
       expect(runDir).not.toBe("");
       expect(readFileSync(join(runDir, "result.md"), "utf8")).toContain("Status: SUCCESS");
       expect(readFileSync(join(runDir, "last-message.md"), "utf8")).toContain("RESULT_STATUS: SUCCESS");
-      expect(readFileSync(join(runDir, "run.json"), "utf8")).toContain('"execution_mode": "exec"');
+      expect(readFileSync(join(runDir, "run.json"), "utf8")).toContain('"execution_mode": "prompt-exec"');
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }
   }, 10000);
+
+  test("dry-run records interactive launch mode and selected skills", () => {
+    const runRoot = mkdtempSync(join(tmpdir(), "skill-runner-interactive-dry-"));
+    try {
+      const result = spawnSync(
+        "python3",
+        [
+          runnerScript,
+          "--dry-run",
+          "--agent",
+          "claude",
+          "--launch-mode",
+          "interactive-tmux",
+          "--selected-skill",
+          "intuitive-flow",
+          "--run-root",
+          runRoot,
+          "--cwd",
+          repoRoot,
+          "--",
+          "dry run interactive worker",
+        ],
+        { cwd: repoRoot, encoding: "utf8" },
+      );
+      expect(result.status).toBe(0);
+      const runDir = result.stdout.trim().split("\n").at(-1) ?? "";
+      expect(readFileSync(join(runDir, "run.json"), "utf8")).toContain('"execution_mode": "interactive-tmux"');
+      expect(readFileSync(join(runDir, "run.json"), "utf8")).toContain('"intuitive-flow"');
+      expect(readFileSync(join(runDir, "rewritten-prompt.md"), "utf8")).toContain("Interactive tmux completion contract:");
+    } finally {
+      rmSync(runRoot, { recursive: true, force: true });
+    }
+  });
 
   test.skipIf(!hasTmux)("isolates tmux environments between concurrent workers", async () => {
     const tempDir = mkdtempSync(join(tmpdir(), "skill-runner-env-"));

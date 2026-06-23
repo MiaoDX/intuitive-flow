@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run a skill-driven task in a supervised non-interactive tmux agent session."""
+"""Run a skill-driven task in a supervised tmux agent session."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ import json
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import time
 from pathlib import Path
@@ -20,6 +21,7 @@ DEFAULT_CACHE_ROOT = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache
 DEFAULT_RUN_ROOT = DEFAULT_CACHE_ROOT / "runs"
 DEFAULT_TIMEOUT_MINUTES = 600.0
 DEFAULT_IDLE_TIMEOUT_MINUTES = 20.0
+LAUNCH_MODES = ("prompt-exec", "interactive-tmux")
 RESULT_STATUS_PATTERN = re.compile(
     r"^\s*RESULT_STATUS:\s*(SUCCESS|PARTIAL|BLOCKED_NEEDS_DECISION|FAILED)\b",
     re.I | re.M,
@@ -62,9 +64,17 @@ def main() -> int:
     run_dir = make_run_dir(args.run_root, cwd, prompt)
     run_dir.mkdir(parents=True, exist_ok=False)
 
-    skills = detect_skills(prompt)
+    skills = merge_skills(detect_skills(prompt), args.selected_skill)
     owned_paths = normalize_owned_paths(args.owned_path, cwd)
-    rewritten = rewrite_prompt(prompt=prompt, skills=skills, cwd=cwd, owned_paths=owned_paths)
+    launch_mode = normalize_launch_mode(args.launch_mode, args.agent, bool(args.agent_command))
+    rewritten = rewrite_prompt(
+        prompt=prompt,
+        skills=skills,
+        cwd=cwd,
+        owned_paths=owned_paths,
+        launch_mode=launch_mode,
+        run_dir=run_dir,
+    )
     workspace_status_before = git_status(cwd)
     session = args.session or default_session_name(run_dir)
     tmux_socket_name = isolated_tmux_socket_name(run_dir)
@@ -77,7 +87,7 @@ def main() -> int:
             "agent": args.agent,
             "cwd": str(cwd),
             "dangerous": bool(args.dangerous),
-            "execution_mode": "exec",
+            "execution_mode": launch_mode,
             "created_at": dt.datetime.now(dt.timezone.utc).isoformat(),
             "owned_paths": owned_paths,
             "session": session,
@@ -85,6 +95,8 @@ def main() -> int:
             "skills": skills,
         },
     )
+    if args.materialize_skills:
+        materialize_selected_skills(run_dir, skill_repo, skills)
 
     if args.dry_run:
         write_result(run_dir, session, "DRY_RUN", "Prompt rewritten; worker not started.", tmux_socket_name)
@@ -104,6 +116,8 @@ def main() -> int:
 
     write_run_script(run_dir, args, cwd)
     start_tmux(session=session, run_dir=run_dir, cwd=cwd, socket_name=tmux_socket_name)
+    if launch_mode == "interactive-tmux":
+        send_interactive_prompt(session=session, run_dir=run_dir, socket_name=tmux_socket_name)
     status, exit_code, reason = wait_for_worker(
         session=session,
         run_dir=run_dir,
@@ -137,13 +151,36 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--agent", choices=("codex", "claude"), default="codex")
     parser.add_argument("--cwd", default=os.getcwd())
+    parser.add_argument("--model")
     parser.add_argument("--session")
     parser.add_argument("--run-root", default=str(DEFAULT_RUN_ROOT))
     parser.add_argument("--skill-repo", default=str(DEFAULT_SKILL_REPO))
+    parser.add_argument("--selected-skill", action="append", default=[], help=argparse.SUPPRESS)
+    parser.add_argument(
+        "--materialize-skills",
+        action="store_true",
+        help=(
+            "Copy selected repo-owned skills into this run's CODEX_HOME and HOME/.claude. "
+            "Use with isolated homes such as plan-bakeoff candidates."
+        ),
+    )
+    parser.add_argument("--codex-provider", default="codex-router-responses", help=argparse.SUPPRESS)
+    parser.add_argument("--codex-provider-base-url", default="", help=argparse.SUPPRESS)
+    parser.add_argument("--codex-provider-env-key", default="CODEX_API_KEY", help=argparse.SUPPRESS)
+    parser.add_argument("--codex-wire-api", default="responses", help=argparse.SUPPRESS)
     parser.add_argument("--timeout-min", type=float, default=DEFAULT_TIMEOUT_MINUTES)
     parser.add_argument("--idle-timeout-min", type=float, default=DEFAULT_IDLE_TIMEOUT_MINUTES)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--dangerous", action="store_true")
+    parser.add_argument(
+        "--launch-mode",
+        choices=LAUNCH_MODES,
+        default="prompt-exec",
+        help=(
+            "Agent transport inside tmux. prompt-exec runs codex exec/claude -p; "
+            "interactive-tmux launches an interactive CLI and asks it to write sentinel artifacts."
+        ),
+    )
     parser.add_argument("--poll-interval-sec", type=float, default=5.0, help=argparse.SUPPRESS)
     parser.add_argument("--agent-command", help=argparse.SUPPRESS)
     parser.add_argument(
@@ -160,6 +197,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--commit-skill-changes", action="store_true")
     parser.add_argument("prompt", nargs=argparse.REMAINDER)
     return parser.parse_args()
+
+
+def normalize_launch_mode(raw: str, agent: str, has_agent_command: bool) -> str:
+    if has_agent_command:
+        return "prompt-exec"
+    if raw == "interactive-tmux" and agent != "claude":
+        raise SystemExit("error: --launch-mode interactive-tmux currently supports --agent claude only")
+    return raw
 
 
 def make_run_dir(run_root: str, cwd: Path, prompt: str) -> Path:
@@ -200,6 +245,52 @@ def detect_skills(prompt: str) -> list[str]:
     return found
 
 
+def merge_skills(detected: list[str], explicit: list[str]) -> list[str]:
+    merged: list[str] = []
+    for item in [*detected, *explicit]:
+        skill = item.strip().lstrip("$")
+        if skill and skill not in merged:
+            merged.append(skill)
+    return merged
+
+
+def materialize_selected_skills(run_dir: Path, skill_repo: Path, skills: list[str]) -> None:
+    source_root = skill_repo / "skills"
+    codex_root = Path(os.environ.get("CODEX_HOME", str(Path.home() / ".codex"))).expanduser()
+    claude_root = Path.home() / ".claude"
+    report: list[dict[str, str]] = []
+    for skill in skills:
+        source = source_root / skill
+        if not (source / "SKILL.md").exists():
+            report.append({"skill": skill, "status": "missing", "source": str(source)})
+            continue
+        copy_skill_tree(source, codex_root / "skills" / skill)
+        copy_skill_tree(source, claude_root / "skills" / skill)
+        copy_shared_skill_references(source, codex_root / "skills", source_root)
+        copy_shared_skill_references(source, claude_root / "skills", source_root)
+        report.append({"skill": skill, "status": "materialized", "source": str(source)})
+    write_json(run_dir / "materialized-skills.json", {"skills": report})
+
+
+def copy_skill_tree(source: Path, dest: Path) -> None:
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(source, dest, dirs_exist_ok=True)
+
+
+def copy_shared_skill_references(skill_path: Path, dest_skills_root: Path, source_root: Path) -> None:
+    skill_markdown = skill_path / "SKILL.md"
+    try:
+        text = skill_markdown.read_text(encoding="utf-8")
+    except OSError:
+        return
+    if "../_shared/" not in text:
+        return
+    shared_source = source_root / "_shared"
+    if not shared_source.exists():
+        return
+    copy_skill_tree(shared_source, dest_skills_root / "_shared")
+
+
 def normalize_owned_paths(paths: list[str], cwd: Path) -> list[str]:
     normalized: list[str] = []
     for raw in paths:
@@ -220,7 +311,15 @@ def normalize_owned_paths(paths: list[str], cwd: Path) -> list[str]:
     return normalized
 
 
-def rewrite_prompt(*, prompt: str, skills: list[str], cwd: Path, owned_paths: list[str]) -> str:
+def rewrite_prompt(
+    *,
+    prompt: str,
+    skills: list[str],
+    cwd: Path,
+    owned_paths: list[str],
+    launch_mode: str,
+    run_dir: Path,
+) -> str:
     selected = ", ".join(f"${s}" for s in skills) if skills else "none explicitly named"
     owned_text = "\n".join(f"- {path}" for path in owned_paths) if owned_paths else "none specified"
     return f"""Objective:
@@ -304,40 +403,49 @@ OPEN_DECISIONS: <remaining decisions or "none">
 SKILL_BEHAVIOR_NOTES: <reusable skill issue candidates or "none">
 ACCEPTANCE_EVIDENCE: <how each SUCCESS-only-if condition was proven, or "incomplete">
 RECOMMENDED_GOAL_REVISION: <only if the current goal or prompt should be changed; otherwise "none">
+{interactive_completion_contract(launch_mode, run_dir)}"""
+
+
+def interactive_completion_contract(launch_mode: str, run_dir: Path) -> str:
+    if launch_mode != "interactive-tmux":
+        return ""
+    return f"""
+
+Interactive tmux completion contract:
+- At the very end, after printing the final response format above, write that
+  same final response to `{run_dir / "last-message.md"}`.
+- Then write `0` to `{run_dir / "exit_code"}` for SUCCESS or PARTIAL, `125` for
+  BLOCKED_NEEDS_DECISION, or `1` for FAILED.
+- Do not write `exit_code` before the final response is complete.
 """
 
 
 def write_run_script(run_dir: Path, args: argparse.Namespace, cwd: Path) -> None:
     prompt_path = run_dir / "rewritten-prompt.md"
     exit_path = run_dir / "exit_code"
+    launch_mode = normalize_launch_mode(args.launch_mode, args.agent, bool(args.agent_command))
+    if launch_mode == "interactive-tmux":
+        command = interactive_agent_command(args)
+        quoted = " ".join(shlex.quote(part) for part in command)
+        script = f"""#!/usr/bin/env bash
+set -u
+cd {shlex.quote(str(cwd))}
+echo $$ > {shlex.quote(str(run_dir / "worker.pid"))}
+echo running > {shlex.quote(str(run_dir / "status"))}
+printf 'Interactive worker command: %s\\n' {shlex.quote(quoted)}
+exec {quoted}
+"""
+        run_script = run_dir / "run.sh"
+        write_text(run_script, script)
+        run_script.chmod(0o755)
+        return
+
     if args.agent_command:
         command = shlex.split(str(args.agent_command))
     elif args.agent == "codex":
-        command = [
-            "codex",
-            "exec",
-            "--cd",
-            str(cwd),
-            "--json",
-            "--output-last-message",
-            str(run_dir / "last-message.md"),
-        ]
-        if args.dangerous:
-            command.append("--dangerously-bypass-approvals-and-sandbox")
-        else:
-            command.extend(["--sandbox", "workspace-write"])
-        command.append("-")
+        command = codex_exec_command(args, cwd, run_dir)
     else:
-        command = [
-            "claude",
-            "-p",
-            "--output-format",
-            "stream-json",
-            "--permission-mode",
-            "auto",
-        ]
-        if args.dangerous:
-            command.append("--dangerously-skip-permissions")
+        command = claude_prompt_command(args)
 
     quoted = " ".join(shlex.quote(part) for part in command)
     script = f"""#!/usr/bin/env bash
@@ -361,6 +469,62 @@ exit "$code"
     run_script.chmod(0o755)
 
 
+def interactive_agent_command(args: argparse.Namespace) -> list[str]:
+    if args.agent != "claude":
+        raise SystemExit("error: interactive-tmux currently supports --agent claude only")
+    command = ["claude", "--permission-mode", "auto"]
+    if args.model:
+        command.extend(["--model", args.model])
+    if args.dangerous:
+        command.append("--dangerously-skip-permissions")
+    return command
+
+
+def codex_exec_command(args: argparse.Namespace, cwd: Path, run_dir: Path) -> list[str]:
+    provider = args.codex_provider
+    command = [
+        "codex",
+        "exec",
+        "--cd",
+        str(cwd),
+        "--ignore-user-config",
+        "--ignore-rules",
+        "--json",
+        "--output-last-message",
+        str(run_dir / "last-message.md"),
+    ]
+    if args.dangerous:
+        command.append("--dangerously-bypass-approvals-and-sandbox")
+    else:
+        command.extend(["--sandbox", "workspace-write"])
+    if args.model:
+        command.extend(["-c", f"model={json.dumps(args.model)}"])
+    command.extend(["-c", f"model_provider={json.dumps(provider)}"])
+    command.extend(["-c", f"model_providers.{provider}.name={json.dumps(provider)}"])
+    if args.codex_provider_base_url:
+        command.extend(["-c", f"model_providers.{provider}.base_url={json.dumps(args.codex_provider_base_url)}"])
+    command.extend(["-c", f"model_providers.{provider}.env_key={json.dumps(args.codex_provider_env_key)}"])
+    command.extend(["-c", f"model_providers.{provider}.wire_api={json.dumps(args.codex_wire_api)}"])
+    command.append("-")
+    return command
+
+
+def claude_prompt_command(args: argparse.Namespace) -> list[str]:
+    command = [
+        "claude",
+        "-p",
+        "--output-format",
+        "stream-json",
+        "--permission-mode",
+        "auto",
+    ]
+    if args.model:
+        command.extend(["--model", args.model])
+    if args.dangerous:
+        command.append("--dangerously-skip-permissions")
+    return command
+
+
 def start_tmux(*, session: str, run_dir: Path, cwd: Path, socket_name: str) -> None:
     run_script = run_dir / "run.sh"
     subprocess.run(
@@ -370,6 +534,26 @@ def start_tmux(*, session: str, run_dir: Path, cwd: Path, socket_name: str) -> N
     subprocess.run(
         tmux_command(socket_name, "pipe-pane", "-o", "-t", session, f"cat >> {shlex.quote(str(run_dir / 'terminal.log'))}"),
         check=False,
+    )
+
+
+def send_interactive_prompt(*, session: str, run_dir: Path, socket_name: str) -> None:
+    # Give the CLI a moment to initialize before pasting a multi-line prompt.
+    time.sleep(1.0)
+    prompt = (run_dir / "rewritten-prompt.md").read_text(encoding="utf-8")
+    subprocess.run(
+        tmux_command(socket_name, "load-buffer", "-b", "skill-runner-prompt", "-"),
+        input=prompt,
+        text=True,
+        check=True,
+    )
+    subprocess.run(
+        tmux_command(socket_name, "paste-buffer", "-b", "skill-runner-prompt", "-t", session),
+        check=True,
+    )
+    subprocess.run(
+        tmux_command(socket_name, "send-keys", "-t", session, "Enter"),
+        check=True,
     )
 
 

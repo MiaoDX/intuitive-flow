@@ -15,6 +15,7 @@ import {
   proposeCandidates,
   redactText,
   renderCandidateCommand,
+  skillRunnerArgsForCandidate,
   validateManifest,
   writeFinalReport,
   writeScorecard,
@@ -89,6 +90,7 @@ describe("plan-bakeoff runner", () => {
       expect(manifest.execution?.worker_timeout_min).toBe(60);
       expect(manifest.execution?.timeout_grace_min).toBe(15);
       expect(manifest.candidates[0].runtime).toBe("host");
+      expect(manifest.candidates[0].launch_mode).toBe("prompt-exec");
       expect(manifest.worktree_setup?.commands ?? []).toEqual([]);
     } finally {
       rmSync(repo, { recursive: true, force: true });
@@ -193,7 +195,9 @@ describe("plan-bakeoff runner", () => {
     ]);
     expect(candidates[0].env).toEqual({ CODEX_BASE_URL: "CODEX_BASE_URL", CODEX_API_KEY: "CODEX_API_KEY" });
     expect(candidates[3].model).toBe("mimo-1000");
+    expect(candidates[3].launch_mode).toBe("interactive-tmux");
     expect(candidates[4].model).toBe("kimi-k2.7-code");
+    expect(candidates[4].launch_mode).toBe("interactive-tmux");
   });
 
   test("renders real harness commands without inline secrets", () => {
@@ -239,6 +243,54 @@ describe("plan-bakeoff runner", () => {
     expect(claude).toContain("--verbose");
     expect(claude).toContain("--permission-mode auto");
     expect(claude).toContain("--model sonnet");
+  });
+
+  test("renders structured skill-runner args for real candidates", () => {
+    const timing = {
+      timeoutMin: 60,
+      timeoutGraceMin: 15,
+      idleTimeoutMin: 20,
+      pollIntervalSec: 1,
+    };
+    const codex = skillRunnerArgsForCandidate(
+      {
+        id: "codex",
+        harness: "codex-cli",
+        provider_profile: "minimax-responses",
+        model: "MiniMax-M3",
+        skills: ["intuitive-flow"],
+      },
+      "/tmp/worktree",
+      "/tmp/run-root",
+      timing,
+      { MM_BASE_URL: "https://minimax.example.test/v1" },
+    );
+    const claude = skillRunnerArgsForCandidate(
+      {
+        id: "claude-kimi",
+        harness: "claude-code",
+        launch_mode: "interactive-tmux",
+        model: "kimi-k2.7-code",
+        skills: ["intuitive-flow"],
+      },
+      "/tmp/worktree",
+      "/tmp/run-root",
+      timing,
+    );
+
+    expect(codex).toContain("--agent");
+    expect(codex).toContain("codex");
+    expect(codex).toContain("--codex-provider");
+    expect(codex).toContain("minimax-responses");
+    expect(codex).toContain("--materialize-skills");
+    expect(codex.join(" ")).not.toContain("codex exec");
+    expect(claude).toContain("--agent");
+    expect(claude).toContain("claude");
+    expect(claude).toContain("--launch-mode");
+    expect(claude).toContain("interactive-tmux");
+    expect(claude).toContain("--model");
+    expect(claude).toContain("kimi-k2.7-code");
+    expect(claude.join(" ")).not.toContain("claude -p");
   });
 
   test("renders arbitrary command harness through bash", () => {

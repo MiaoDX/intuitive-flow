@@ -3,7 +3,6 @@
 import { spawn, spawnSync } from "node:child_process";
 import {
   chmodSync,
-  cpSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -54,6 +53,7 @@ export type Manifest = {
 export type Candidate = {
   id: string;
   harness: string;
+  launch_mode?: "prompt-exec" | "interactive-tmux";
   command?: string;
   provider_profile?: string;
   model?: string;
@@ -266,15 +266,26 @@ const normalizeCandidate = (candidate: Candidate, seen: Set<string>): Candidate 
   if (harness === "command" && !candidate.command?.trim()) {
     throw new Error(`candidate ${candidate.id}: command harness requires command`);
   }
+  const launchMode = candidate.launch_mode ?? defaultLaunchMode(candidate);
+  if (!["prompt-exec", "interactive-tmux"].includes(launchMode)) {
+    throw new Error(`candidate ${candidate.id}: unsupported launch_mode ${launchMode}`);
+  }
+  if (launchMode === "interactive-tmux" && harness !== "claude-code") {
+    throw new Error(`candidate ${candidate.id}: interactive-tmux launch_mode supports claude-code only`);
+  }
   return {
     ...candidate,
     harness,
+    launch_mode: launchMode,
     required_env: candidate.required_env ?? [],
     runtime,
     skills: candidate.skills ?? [],
     worktree_setup: normalizeWorktreeSetup(candidate.worktree_setup),
   };
 };
+
+const defaultLaunchMode = (candidate: Candidate): "prompt-exec" | "interactive-tmux" =>
+  candidate.harness === "claude-code" ? "interactive-tmux" : "prompt-exec";
 
 const normalizeWorktreeSetup = (setup: WorktreeSetup | undefined): WorktreeSetup | undefined => {
   if (!setup) {
@@ -397,6 +408,7 @@ const PROPOSAL_TEMPLATES: Candidate[] = [
   {
     id: "claude-mimo-1000",
     harness: "claude-code",
+    launch_mode: "interactive-tmux",
     provider_profile: "mimo-ultraspeed-anthropic",
     model: "mimo-1000",
     required_env: ["MIMO_API_KEY", "MIMO_BASE_URL"],
@@ -408,6 +420,7 @@ const PROPOSAL_TEMPLATES: Candidate[] = [
   {
     id: "claude-kimi",
     harness: "claude-code",
+    launch_mode: "interactive-tmux",
     provider_profile: "kimi-anthropic",
     model: "kimi-k2.7-code",
     required_env: ["KIMI_API_KEY"],
@@ -419,6 +432,7 @@ const PROPOSAL_TEMPLATES: Candidate[] = [
   {
     id: "claude-minimax",
     harness: "claude-code",
+    launch_mode: "interactive-tmux",
     provider_profile: "minimax-anthropic",
     model: "MiniMax-M3",
     required_env: ["MM_API_KEY"],
@@ -430,6 +444,7 @@ const PROPOSAL_TEMPLATES: Candidate[] = [
   {
     id: "claude-mimo-v2.5",
     harness: "claude-code",
+    launch_mode: "interactive-tmux",
     provider_profile: "mimo-tp-anthropic",
     model: "mimo-v2.5",
     required_env: ["MIMO_TP_KEY"],
@@ -558,6 +573,69 @@ export const renderCandidateCommand = (
   throw new Error(`candidate ${candidate.id}: unsupported real harness ${candidate.harness}`);
 };
 
+export const skillRunnerArgsForCandidate = (
+  candidate: Candidate,
+  worktree: string,
+  workerRunRoot: string,
+  timing: WorkerTiming,
+  env: Record<string, string | undefined> = process.env,
+): string[] => {
+  const args = commonSkillRunnerArgs(candidate, worktree, workerRunRoot, timing);
+  if (candidate.harness === "codex-cli") {
+    const provider = candidate.provider_profile ?? "codex-router-responses";
+    args.push("--agent", "codex");
+    args.push("--launch-mode", candidate.launch_mode ?? "prompt-exec");
+    if (candidate.model) {
+      args.push("--model", candidate.model);
+    }
+    args.push("--codex-provider", provider);
+    args.push("--codex-provider-base-url", codexProviderBaseUrl(provider, env));
+    args.push("--codex-provider-env-key", PROVIDER_ENV_KEY[provider] ?? "CODEX_API_KEY");
+    args.push("--codex-wire-api", "responses");
+    return args;
+  }
+  if (candidate.harness === "claude-code") {
+    args.push("--agent", "claude");
+    args.push("--launch-mode", candidate.launch_mode ?? "interactive-tmux");
+    if (candidate.model) {
+      args.push("--model", candidate.model);
+    }
+    return args;
+  }
+  if (candidate.harness === "command" && candidate.command?.trim()) {
+    args.push("--agent-command", shellQuoteCommand(["bash", "-lc", candidate.command]));
+    return args;
+  }
+  throw new Error(`candidate ${candidate.id}: unsupported real harness ${candidate.harness}`);
+};
+
+const commonSkillRunnerArgs = (
+  candidate: Candidate,
+  worktree: string,
+  workerRunRoot: string,
+  timing: WorkerTiming,
+): string[] => {
+  const args = [
+    "--cwd",
+    worktree,
+    "--run-root",
+    workerRunRoot,
+    "--timeout-min",
+    String(timing.timeoutMin + timing.timeoutGraceMin),
+    "--idle-timeout-min",
+    String(timing.idleTimeoutMin),
+    "--poll-interval-sec",
+    String(timing.pollIntervalSec),
+  ];
+  for (const skill of candidate.skills ?? []) {
+    args.push("--selected-skill", skill);
+  }
+  if ((candidate.skills ?? []).length > 0) {
+    args.push("--materialize-skills");
+  }
+  return args;
+};
+
 const codexProviderBaseUrl = (provider: string, env: Record<string, string | undefined>): string => {
   const envKey = PROVIDER_BASE_URL_ENV[provider];
   return (envKey ? env[envKey] : undefined) ?? PROVIDER_BASE_URL_DEFAULT[provider] ?? env.CODEX_BASE_URL ?? "";
@@ -592,35 +670,6 @@ export const removeWorktree = (targetRepo: string, worktree: string, branch?: st
   if (branch) {
     git(targetRepo, ["branch", "-D", branch], { allowFail: true });
   }
-};
-
-export const copySkill = (skillName: string, destHome: string, sourceRoot = join(repoRootFromScript(), "skills")): void => {
-  const src = join(sourceRoot, skillName);
-  const dest = join(destHome, ".codex", "skills", skillName);
-  if (!existsSync(join(src, "SKILL.md"))) {
-    return;
-  }
-  mkdirSync(dirname(dest), { recursive: true });
-  cpSync(src, dest, { recursive: true });
-  copySharedSkillReferences(src, destHome, sourceRoot);
-};
-
-const copySharedSkillReferences = (skillPath: string, destHome: string, sourceRoot: string): void => {
-  const skillMarkdownPath = join(skillPath, "SKILL.md");
-  if (!existsSync(skillMarkdownPath)) {
-    return;
-  }
-  const skillMarkdown = readFileSync(skillMarkdownPath, "utf8");
-  if (!skillMarkdown.includes("../_shared/")) {
-    return;
-  }
-  const sharedSource = join(sourceRoot, "_shared");
-  if (!existsSync(sharedSource)) {
-    return;
-  }
-  const sharedDest = join(destHome, ".codex", "skills", "_shared");
-  mkdirSync(dirname(sharedDest), { recursive: true });
-  cpSync(sharedSource, sharedDest, { recursive: true });
 };
 
 const shellQuote = (value: string): string => `'${value.replace(/'/g, "'\\''")}'`;
@@ -673,40 +722,30 @@ export const runSkillRunnerCandidate = (
   mkdirSync(home, { recursive: true });
   const codexHome = join(home, ".codex");
   mkdirSync(codexHome, { recursive: true });
-  for (const skill of candidate.skills ?? []) {
-    copySkill(skill, home);
-  }
   if (candidate.harness !== "fake" && !options.allowReal) {
     throw new Error(`candidate ${candidate.id}: real harness requires --execute-real`);
   }
-  const agentCommand = candidate.harness === "fake"
-    ? fakeAgentScript(
-        candidate,
-        candidateDir,
-        runDir,
-        manifest.candidates.filter((item) => item.command_profile === "fake-barrier-success").length,
-      )
-    : shellQuoteCommand(renderCandidateCommand(candidate, join(candidateDir, "last-message.md"), env));
   const skillRunnerScript = join(repoRootFromScript(), "skills", "skill-runner", "scripts", "run_skill_runner.py");
   const workerRunRoot = join(candidateDir, "skill-runner-runs");
   const prompt = bakeoffPrompt(manifest, candidate);
   const timing = workerTiming(manifest, candidate);
+  const skillRunnerArgs = candidate.harness === "fake"
+    ? [
+        ...commonSkillRunnerArgs(candidate, worktree, workerRunRoot, timing),
+        "--agent-command",
+        fakeAgentScript(
+          candidate,
+          candidateDir,
+          runDir,
+          manifest.candidates.filter((item) => item.command_profile === "fake-barrier-success").length,
+        ),
+      ]
+    : skillRunnerArgsForCandidate(candidate, worktree, workerRunRoot, timing, env);
   return runProcess(
     "python3",
     [
       skillRunnerScript,
-      "--agent-command",
-      agentCommand,
-      "--cwd",
-      worktree,
-      "--run-root",
-      workerRunRoot,
-      "--timeout-min",
-      String(timing.timeoutMin + timing.timeoutGraceMin),
-      "--idle-timeout-min",
-      String(timing.idleTimeoutMin),
-      "--poll-interval-sec",
-      String(timing.pollIntervalSec),
+      ...skillRunnerArgs,
       "--",
       prompt,
     ],
