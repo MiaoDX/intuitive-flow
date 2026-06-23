@@ -9,7 +9,7 @@ import {
 import type {
   GoalSummary,
   PreflightContract,
-} from "./track_goal";
+} from "./track_goal_goal";
 import type {
   SessionEvidence,
 } from "./track_goal_session_evidence";

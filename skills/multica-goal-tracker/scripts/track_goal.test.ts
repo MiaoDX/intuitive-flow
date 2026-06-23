@@ -3,17 +3,11 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
-  extractGoal,
-  extractGoalFromPreflight,
-  extractTrackedGoalFromComments,
   issueWorkspaceIdFromCreateOutput,
-  normalizeLines,
   parseWorkspaceListOutput,
-  parsePreflightContract,
   multicaEnv,
   resolveWorkspaceIdFromList,
   selectLatestRunId,
-  summarizeGoal,
 } from "./track_goal";
 import {
   attemptRecordFromCommentText,
@@ -22,6 +16,14 @@ import {
   buildGoalTimeline,
   nextAttemptSequence,
 } from "./track_goal_attempts";
+import {
+  extractGoal,
+  extractGoalFromPreflight,
+  extractTrackedGoalFromComments,
+  normalizeLines,
+  parsePreflightContract,
+  summarizeGoal,
+} from "./track_goal_goal";
 import {
   evidenceFromCodexJsonl,
   sessionEvidenceFromSessionText,
