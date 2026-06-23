@@ -166,7 +166,9 @@ Required top-level fields:
 Optional fields:
 
 - `base.ref`: base ref for all worktrees, default `HEAD`
-- `base.mode`: `clean-head` or `allow-dirty-baseline`, default `clean-head`
+- `base.mode`: legacy no-op compatibility field. Candidates are always created
+  from the resolved committed `base.ref`; dirty files in the source checkout are
+  not inherited.
 - `run_root`: run artifact root
 - `worker_goal`: explicit first instruction for each candidate worker when the
   task must trigger a goal-style skill route, for example

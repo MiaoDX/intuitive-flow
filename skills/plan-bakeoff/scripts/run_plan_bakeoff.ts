@@ -577,16 +577,6 @@ export const git = (cwd: string, args: string[], options: { allowFail?: boolean 
   return result;
 };
 
-export const assertCleanWorktree = (repo: string, mode: string): void => {
-  if (mode === "allow-dirty-baseline") {
-    return;
-  }
-  const status = git(repo, ["status", "--short"]).stdout.trim();
-  if (status) {
-    throw new Error(`target repo is dirty; use base.mode=allow-dirty-baseline only when every candidate should inherit the same baseline\n${status}`);
-  }
-};
-
 export const createWorktree = (
   targetRepo: string,
   worktree: string,
@@ -1212,7 +1202,6 @@ export const executeBakeoff = async (
   const runDir = createRunDir(manifest.run_root ?? defaultRunRoot(manifest.target_repo), manifest.target_repo);
   writeFileSync(join(runDir, "manifest.json"), JSON.stringify(sanitizeManifest(manifest), null, 2) + "\n");
   const baseRef = git(manifest.target_repo, ["rev-parse", manifest.base?.ref ?? "HEAD"]).stdout.trim();
-  assertCleanWorktree(manifest.target_repo, manifest.base?.mode ?? "clean-head");
 
   if (options.dryRun) {
     writeFileSync(join(runDir, "dry-run.md"), dryRunText(manifest, baseRef));

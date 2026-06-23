@@ -586,6 +586,39 @@ describe("plan-bakeoff runner", () => {
     }
   }, 20000);
 
+  test("uses committed base ref even when source checkout is dirty", async () => {
+    const repo = createTempRepo();
+    const runRoot = mkdtempSync(join(tmpdir(), "plan-bakeoff-dirty-source-"));
+    try {
+      writeFileSync(join(repo, "dirty-untracked.txt"), "not in candidate\n");
+      writeFileSync(join(repo, "plan.md"), "# Dirty local edit\n");
+      const manifest = normalizeManifest(
+        {
+          schema: "plan_bakeoff_manifest_v1",
+          target_repo: repo,
+          plan: join(repo, "plan.md"),
+          run_root: runRoot,
+          verification: { commands: ["test ! -f dirty-untracked.txt", "grep -q 'Do a fake task' plan.md"] },
+          candidates: [
+            { id: "fake-a", harness: "fake", command_profile: "fake-success" },
+            { id: "fake-b", harness: "fake", command_profile: "fake-success" },
+          ],
+        },
+        join(repo, "manifest.json"),
+      );
+
+      const runDir = await executeBakeoff(manifest);
+      const scorecard = readFileSync(join(runDir, "candidates", "fake-a", "scorecard.json"), "utf8");
+
+      expect(scorecard).toContain('"status": "SUCCESS"');
+      expect(scorecard).toContain('"command": "test ! -f dirty-untracked.txt"');
+      expect(scorecard).toContain(`"command": "grep -q 'Do a fake task' plan.md"`);
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+      rmSync(runRoot, { recursive: true, force: true });
+    }
+  }, 20000);
+
   test("runs worktree setup before workers and saves setup artifacts", async () => {
     const repo = createTempRepo();
     const runRoot = mkdtempSync(join(tmpdir(), "plan-bakeoff-setup-"));
