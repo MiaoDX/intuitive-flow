@@ -3,11 +3,13 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
-  pruneRemovedExternalSkillStates,
-  syncExternalSkillState,
   syncGsdSkillState,
   syncGstackSkillState,
 } from "./managed-skill-state";
+import {
+  pruneRemovedExternalSkillStates,
+  syncExternalSkillState,
+} from "./external-skill-state";
 import {
   pruneLegacyArtifacts,
   pruneRemovedOwnedRootSkills,

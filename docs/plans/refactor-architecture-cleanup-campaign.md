@@ -39,8 +39,8 @@ and easier to navigate.
 
 ## Rolling Candidate Queue
 
-Empty. Run a fresh discovery handoff after the global CLI task rename commit
-lands.
+Empty. Run a fresh discovery handoff after the external skill state lifecycle
+split commit lands.
 
 ## Parked Gates
 
@@ -116,3 +116,9 @@ P1/P2 slice after shrink attempts.
   phase functions. Shell syntax, global CLI / Claude tools wiring tests,
   `bun run check:shell`, `bun run check`, stale-reference search, and
   `git diff --check` passed.
+- 2026-06-23: Fresh discovery selected a safe bounded module-deepening slice in
+  managed skill state. Moved external-source skill state, external stale-install
+  pruning, and `.agents/.skill-lock.json` cleanup behind
+  `external-skill-state.ts`; `managed-skill-state.ts` still owns the same
+  `external-sync` and `external-prune-removed` CLI commands. Focused
+  managed-state/sync tests, `bun run check`, and `git diff --check` passed.

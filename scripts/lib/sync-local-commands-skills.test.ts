@@ -62,6 +62,7 @@ const copySyncTaskHelpers = (fixture: string) => {
   mkdirSync(libDir, { recursive: true });
   for (const helper of [
     "default-skill-allowlist.ts",
+    "external-skill-state.ts",
     "managed-skill-state-common.ts",
     "managed-skill-state.ts",
     "owned-root-skill-state.ts",

@@ -3,15 +3,12 @@
 Source gate: `docs/plans/refactor-architecture-cleanup-campaign.md`
 Latest user intent: autonomous repeated verified cleanup slices.
 
-Current slice: ready to commit global CLI update task rename.
+Current slice: ready to commit external skill state lifecycle split.
 
 Last proof:
-- `bash -n scripts/update.sh scripts/tasks/*.sh scripts/lib/*.sh` PASS
-- `bun test scripts/tasks/update-global-cli.test.ts scripts/tasks/update-claude-tools.test.ts` PASS
-- `bun run check:shell` PASS
+- `bun test scripts/lib/managed-skill-state.test.ts scripts/lib/sync-local-commands-skills.test.ts` PASS
 - `bun run check` PASS
 - `git diff --check` PASS
-- stale `update-cli.sh` reference search PASS except historical campaign log references
 
 Next proof:
 - fresh discovery handoff after commit
