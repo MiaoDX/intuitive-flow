@@ -39,8 +39,8 @@ and easier to navigate.
 
 ## Rolling Candidate Queue
 
-Empty. Run a fresh discovery handoff after the GSD skill state lifecycle split
-commit lands.
+Empty. Run a fresh discovery handoff after the GStack skill state lifecycle
+split commit lands.
 
 ## Parked Gates
 
@@ -127,3 +127,9 @@ P1/P2 slice after shrink attempts.
   `gsd-skill-state.ts`; `managed-skill-state.ts` still owns the same
   `gsd-sync` CLI command. Focused managed-state/sync tests, `bun run check`,
   and `git diff --check` passed.
+- 2026-06-23: Fresh discovery selected the final safe managed-state lifecycle
+  split. Moved GStack Codex/Claude skill state, symlink ownership checks, and
+  stale GStack wrapper pruning behind `gstack-skill-state.ts`;
+  `managed-skill-state.ts` still owns the same `gstack-sync` CLI command.
+  Focused managed-state/sync tests, `bun run check`, and `git diff --check`
+  passed.

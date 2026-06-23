@@ -5,7 +5,7 @@ import { join } from "node:path";
 import {
   syncGsdSkillState,
 } from "./gsd-skill-state";
-import { syncGstackSkillState } from "./managed-skill-state";
+import { syncGstackSkillState } from "./gstack-skill-state";
 import {
   pruneRemovedExternalSkillStates,
   syncExternalSkillState,
