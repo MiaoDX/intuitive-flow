@@ -39,8 +39,8 @@ and easier to navigate.
 
 ## Rolling Candidate Queue
 
-1. Shrink managed skill state ownership by moving one lifecycle slice behind a
-   clearer internal owner while preserving CLI commands and state paths.
+Empty. Run a fresh discovery handoff after the managed-state lifecycle move
+commit lands.
 
 ## Parked Gates
 
@@ -76,3 +76,8 @@ P1/P2 slice after shrink attempts.
 - 2026-06-23: Aligned root human docs and the skill audit with the
   default-visible `plan-bakeoff` direct utility. `bun run check:skills`,
   `plan-bakeoff` reference search, and `git diff --check` passed.
+- 2026-06-23: Moved repo-owned root skill state and prune-ledger artifact
+  cleanup behind `owned-root-skill-state.ts`, with shared safe install-state
+  helpers in `managed-skill-state-common.ts`. CLI command names, state paths,
+  and deletion semantics stayed unchanged. Focused managed-state/sync tests,
+  `bun run check`, and `git diff --check` passed.

@@ -60,7 +60,12 @@ const syncEnv = (home: string, stubBin: string) => ({
 const copySyncTaskHelpers = (fixture: string) => {
   const libDir = join(fixture, "scripts", "lib");
   mkdirSync(libDir, { recursive: true });
-  for (const helper of ["default-skill-allowlist.ts", "managed-skill-state.ts"]) {
+  for (const helper of [
+    "default-skill-allowlist.ts",
+    "managed-skill-state-common.ts",
+    "managed-skill-state.ts",
+    "owned-root-skill-state.ts",
+  ]) {
     copyFileSync(join(repoRoot, "scripts", "lib", helper), join(libDir, helper));
   }
 };

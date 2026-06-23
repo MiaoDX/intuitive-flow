@@ -3,21 +3,17 @@
 Source gate: `docs/plans/refactor-architecture-cleanup-campaign.md`
 Latest user intent: autonomous repeated verified cleanup slices.
 
-Current slice: ready to commit `plan-bakeoff` direct utility docs alignment.
+Current slice: ready to commit managed skill state lifecycle owner split.
 
 Last proof:
-- `bun run check:skills` PASS
-- `plan-bakeoff` reference search PASS
+- `bun test scripts/lib/managed-skill-state.test.ts scripts/lib/sync-local-commands-skills.test.ts` PASS
+- `bun run check` PASS
 - `git diff --check` PASS
 
 Next proof:
-- `bun test scripts/lib/managed-skill-state.test.ts scripts/lib/sync-local-commands-skills.test.ts`
-- `bun run check`
-- `git diff --check`
+- fresh discovery handoff after commit
 
-Next candidate: shrink managed skill state ownership by moving one lifecycle
-slice behind a clearer internal owner while preserving CLI commands and state
-paths.
+Next candidate: none queued; run fresh discovery against current `HEAD`.
 
 Parked work:
 - Codex config old managed status-line variant migration.

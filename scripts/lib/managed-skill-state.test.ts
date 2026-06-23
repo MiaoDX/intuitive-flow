@@ -3,14 +3,16 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
-  pruneLegacyArtifacts,
-  pruneRemovedOwnedRootSkills,
   pruneRemovedExternalSkillStates,
-  recordOwnedRootSkills,
   syncExternalSkillState,
   syncGsdSkillState,
   syncGstackSkillState,
 } from "./managed-skill-state";
+import {
+  pruneLegacyArtifacts,
+  pruneRemovedOwnedRootSkills,
+  recordOwnedRootSkills,
+} from "./owned-root-skill-state";
 
 const repoRoot = process.cwd();
 
