@@ -62,6 +62,16 @@ Reject slices that only move private functions into a new file, preserve every
 old alias indefinitely, couple tests to private wrappers, or make the plan
 ledger longer than the code change is valuable.
 
+Test-only ratchet cleanup is useful when it removes stale source-text checks,
+private absence guards, or duplicate fixtures that block current owner moves.
+Do not let it become the campaign's default path. After two or three
+consecutive test-only cleanup slices, run a fresh value check or discovery
+handoff and prefer the next production owner move, duplicate-owner merge,
+stale runtime surface deletion, or bounded module deepening if one can be
+shrunk into a behavior-preserving slice. Continue with more test-only cleanup
+only when no higher-value safe P1/P2 candidate is available or when the tests
+are directly blocking that candidate.
+
 ## Selected Deletion Candidate Intake
 
 When `$intuitive-reduce-entropy` hands off deletion or merge candidates, accept

@@ -38,6 +38,11 @@ The capsule is a resume surface, not the canonical plan. Keep the canonical
 plan, issue, or refactor gate as the source of truth for scope, accepted
 checklist, decisions, and final status.
 
+Keep the capsule compact enough to read during a hot resume. It should summarize
+state, not preserve history. Do not paste reusable prompts, long command
+transcripts, worker raw logs, or every completed slice into the capsule; put
+durable history in commits and compact gate summaries.
+
 Include only compact state:
 
 - source plan/gate/issue path;

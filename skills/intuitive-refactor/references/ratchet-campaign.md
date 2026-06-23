@@ -43,17 +43,27 @@ obvious next slice.
 
 ## State Surfaces
 
+Keep campaign prompts reusable and mostly stateless. The user prompt may define
+goals, autonomy, risk boundaries, and stop rules, but the campaign's mutable
+state belongs in repo artifacts selected by this skill. Do not require
+repo-specific state paths in a reusable prompt; prefer existing repo
+conventions and fall back to the default surfaces below when a long-running
+campaign needs resume state.
+
 Use two state surfaces:
 
 - Canonical gate: `docs/plans/refactor-<target>.md` or the existing plan/gate.
   It owns scope, accepted severities, checklist, status, stop condition,
   verification inventory, parked items, and final evidence.
 - Active capsule: `docs/status/active/<gate-slug>.md`. If
-  `docs/status/active/` does not exist, create it. It owns the current slice,
-  recent checkpoint, next proof, blocker fingerprint, and resume hint.
+  `docs/status/active/` does not exist, create it. It owns compact resume
+  state: current slice, last proof, next candidate/proof, blocker fingerprint,
+  parked gates, and resume hint.
 
 Do not create a second canonical plan for the same seam. Do not use chat
 history, commit history, or temporary logs as the campaign handoff source.
+Do not copy the user's reusable prompt into the gate or capsule; record the
+repo-local decisions produced by the prompt instead.
 
 ## Campaign Gate Additions
 
@@ -222,7 +232,10 @@ a long campaign. The checkpoint should update:
   running the automated selected-slice loop.
 
 Use batch summaries in the canonical gate. Do not append command transcripts or
-long per-slice prose that makes the plan harder to resume than the code.
+long per-slice prose that makes the plan harder to resume than the code. A
+small slice usually needs only its commit, value metrics, focused proof summary,
+and any parked decision. Put raw logs in ignored artifacts or leave them in the
+terminal history; do not turn the gate or capsule into a running transcript.
 
 ## Continue Criteria
 
