@@ -39,8 +39,8 @@ and easier to navigate.
 
 ## Rolling Candidate Queue
 
-Empty. Run a fresh discovery handoff after the GStack skill state lifecycle
-split commit lands.
+Empty. Run a fresh discovery handoff after the managed skill state dispatcher
+deletion commit lands.
 
 ## Parked Gates
 
@@ -119,17 +119,25 @@ P1/P2 slice after shrink attempts.
 - 2026-06-23: Fresh discovery selected a safe bounded module-deepening slice in
   managed skill state. Moved external-source skill state, external stale-install
   pruning, and `.agents/.skill-lock.json` cleanup behind
-  `external-skill-state.ts`; `managed-skill-state.ts` still owns the same
-  `external-sync` and `external-prune-removed` CLI commands. Focused
-  managed-state/sync tests, `bun run check`, and `git diff --check` passed.
+  `external-skill-state.ts`, temporarily leaving the dispatcher CLI in place
+  until the later dispatcher deletion slice. Focused managed-state/sync tests,
+  `bun run check`, and `git diff --check` passed.
 - 2026-06-23: Fresh discovery selected another safe managed-state lifecycle
   split. Moved GSD skill state and managed GSD wrapper pruning behind
-  `gsd-skill-state.ts`; `managed-skill-state.ts` still owns the same
-  `gsd-sync` CLI command. Focused managed-state/sync tests, `bun run check`,
-  and `git diff --check` passed.
+  `gsd-skill-state.ts`, temporarily leaving the dispatcher CLI in place until
+  the later dispatcher deletion slice. Focused managed-state/sync tests,
+  `bun run check`, and `git diff --check` passed.
 - 2026-06-23: Fresh discovery selected the final safe managed-state lifecycle
   split. Moved GStack Codex/Claude skill state, symlink ownership checks, and
-  stale GStack wrapper pruning behind `gstack-skill-state.ts`;
-  `managed-skill-state.ts` still owns the same `gstack-sync` CLI command.
-  Focused managed-state/sync tests, `bun run check`, and `git diff --check`
-  passed.
+  stale GStack wrapper pruning behind `gstack-skill-state.ts`, temporarily
+  leaving the dispatcher CLI in place until the later dispatcher deletion
+  slice. Focused managed-state/sync tests, `bun run check`, and
+  `git diff --check` passed.
+- 2026-06-23: Fresh discovery selected the now-stale managed skill state
+  dispatcher for deletion after lifecycle ownership moved to dedicated modules.
+  Migrated tracked shell callers to `gstack-skill-state.ts`,
+  `gsd-skill-state.ts`, `external-skill-state.ts`, and
+  `owned-root-skill-state.ts`, then deleted `managed-skill-state.ts` and
+  renamed the focused lifecycle test. Focused lifecycle/sync tests,
+  `bun run check:shell`, `bun run check`, stale dispatcher reference search,
+  and `git diff --check` passed.

@@ -55,7 +55,7 @@ _run_external_skills() {
         _run_skills "$agent" "$repo" "$label" || return 1
     fi
 
-    bun "$SCRIPT_DIR/lib/managed-skill-state.ts" external-sync "$allowlist" "$label"
+    bun "$SCRIPT_DIR/lib/external-skill-state.ts" sync "$allowlist" "$label"
 }
 
 run_external_skill_label() {
@@ -71,5 +71,5 @@ list_external_skill_labels() {
 prune_removed_external_skill_labels() {
     local allowlist
     allowlist=$(_default_skill_allowlist)
-    bun "$SCRIPT_DIR/lib/managed-skill-state.ts" external-prune-removed "$allowlist"
+    bun "$SCRIPT_DIR/lib/external-skill-state.ts" prune-removed "$allowlist"
 }

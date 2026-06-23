@@ -133,6 +133,6 @@ run_gsd_workflow() {
 
     local gsd_version
     gsd_version=$(cat ~/.claude/get-shit-done/VERSION 2>/dev/null || echo "?")
-    bun "$SCRIPT_DIR/lib/managed-skill-state.ts" gsd-sync "$SCRIPT_DIR/default-skill-allowlist.txt" || return 1
+    bun "$SCRIPT_DIR/lib/gsd-skill-state.ts" sync "$SCRIPT_DIR/default-skill-allowlist.txt" || return 1
     echo "  ✓ gsd v$gsd_version (claude + codex)"
 }

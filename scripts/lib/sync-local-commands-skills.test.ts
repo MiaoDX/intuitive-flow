@@ -66,7 +66,6 @@ const copySyncTaskHelpers = (fixture: string) => {
     "gsd-skill-state.ts",
     "gstack-skill-state.ts",
     "managed-skill-state-common.ts",
-    "managed-skill-state.ts",
     "owned-root-skill-state.ts",
   ]) {
     copyFileSync(join(repoRoot, "scripts", "lib", helper), join(libDir, helper));

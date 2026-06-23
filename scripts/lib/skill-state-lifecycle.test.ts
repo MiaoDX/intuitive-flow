@@ -2,9 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-  syncGsdSkillState,
-} from "./gsd-skill-state";
+import { syncGsdSkillState } from "./gsd-skill-state";
 import { syncGstackSkillState } from "./gstack-skill-state";
 import {
   pruneRemovedExternalSkillStates,
@@ -30,17 +28,17 @@ const activeShell = (script: string) =>
     .map((line) => line.trim())
     .filter((line) => line !== "" && !line.startsWith("#"));
 
-const expectManagedStateCommand = (script: string, command: string) => {
-  const commandLine = activeShell(script).find((line) => line.includes(`managed-skill-state.ts" ${command}`));
+const expectBunToolCommand = (script: string, tool: string, command: string) => {
+  const commandLine = activeShell(script).find((line) => line.includes(`${tool}" ${command}`));
   expect(commandLine).toBeDefined();
   expect(commandLine).toContain("bun ");
 };
 
-const expectManagedStateToolCall = (script: string, command: string, arg: string) => {
-  expect(activeShell(script)).toContain(`_managed_state_tool ${command} "${arg}" || return 1`);
+const expectOwnedRootStateToolCall = (script: string, command: string, arg: string) => {
+  expect(activeShell(script)).toContain(`_owned_root_state_tool ${command} "${arg}" || return 1`);
 };
 
-describe("managed skill state", () => {
+describe("skill state lifecycle", () => {
   test("prunes only prune-ledger legacy artifacts", () => {
     const home = mkdtempSync(join(tmpdir(), "skill-home-"));
     const root = mkdtempSync(join(tmpdir(), "skill-prune-ledger-"));
@@ -411,12 +409,12 @@ describe("managed skill state", () => {
     const updateGsdWorkflow = readFileSync(join(repoRoot, "scripts", "tasks", "update-gsd-workflow.sh"), "utf8");
     const syncLocal = readFileSync(join(repoRoot, "scripts", "tasks", "sync-local-commands-skills.sh"), "utf8");
 
-    expectManagedStateCommand(updateGstack, "gstack-sync");
-    expectManagedStateCommand(updateSkills, "external-sync");
-    expectManagedStateCommand(updateSkills, "external-prune-removed");
-    expectManagedStateCommand(updateGsdWorkflow, "gsd-sync");
-    expectManagedStateToolCall(syncLocal, "prune-legacy-artifacts", "$default_skill_prune_ledger");
-    expectManagedStateToolCall(syncLocal, "prune-owned-root-skills", "$default_skill_allowlist");
-    expectManagedStateToolCall(syncLocal, "record-owned-root-skills", "$default_skill_allowlist");
+    expectBunToolCommand(updateGstack, "gstack-skill-state.ts", "sync");
+    expectBunToolCommand(updateSkills, "external-skill-state.ts", "sync");
+    expectBunToolCommand(updateSkills, "external-skill-state.ts", "prune-removed");
+    expectBunToolCommand(updateGsdWorkflow, "gsd-skill-state.ts", "sync");
+    expectOwnedRootStateToolCall(syncLocal, "prune-legacy-artifacts", "$default_skill_prune_ledger");
+    expectOwnedRootStateToolCall(syncLocal, "prune-owned-root-skills", "$default_skill_allowlist");
+    expectOwnedRootStateToolCall(syncLocal, "record-owned-root-skills", "$default_skill_allowlist");
   });
 });

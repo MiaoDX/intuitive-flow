@@ -156,3 +156,49 @@ export const pruneRemovedExternalSkillStates = (
 
   return removed;
 };
+
+const usage = () => {
+  console.error("Usage: external-skill-state.ts <sync|prune-removed> <allowlist> [label]");
+};
+
+const main = () => {
+  const [command, allowlistPath, label] = process.argv.slice(2);
+
+  try {
+    if (command === "sync") {
+      if (!allowlistPath || !label) {
+        usage();
+        process.exit(2);
+      }
+
+      const removed = syncExternalSkillState(allowlistPath, label);
+      if (removed > 0) {
+        console.log(`  ✓ removed ${removed} stale external skill artifact(s) for ${label}`);
+      }
+      return;
+    }
+
+    if (command === "prune-removed") {
+      if (!allowlistPath) {
+        usage();
+        process.exit(2);
+      }
+
+      const removed = pruneRemovedExternalSkillStates(allowlistPath);
+      if (removed > 0) {
+        console.log(`  ✓ removed ${removed} stale external skill artifact(s) for removed source label(s)`);
+      }
+      return;
+    }
+
+    usage();
+    process.exit(2);
+  } catch (error) {
+    console.error(`  ! ${error instanceof Error ? error.message : String(error)}`);
+    process.exit(1);
+  }
+};
+
+if (import.meta.main) {
+  main();
+}

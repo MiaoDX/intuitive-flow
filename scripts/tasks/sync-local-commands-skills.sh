@@ -31,13 +31,13 @@ _manifest_tool() {
     bun "$SCRIPT_DIR/lib/default-skill-allowlist.ts" "$@"
 }
 
-_managed_state_tool() {
+_owned_root_state_tool() {
     if ! command -v bun >/dev/null 2>&1; then
         echo "  ! bun not found; run scripts/update.sh after fixing the environment pre-check"
         return 1
     fi
 
-    bun "$SCRIPT_DIR/lib/managed-skill-state.ts" "$@"
+    bun "$SCRIPT_DIR/lib/owned-root-skill-state.ts" "$@"
 }
 
 _check_root_skill_manifest() {
@@ -56,9 +56,9 @@ run_sync_local_commands_skills() {
 
     task_notice "Repo-local commands & skills: pruning stale artifacts"
     if [ -f "$default_skill_prune_ledger" ]; then
-        _managed_state_tool prune-legacy-artifacts "$default_skill_prune_ledger" || return 1
+        _owned_root_state_tool prune-legacy-artifacts "$default_skill_prune_ledger" || return 1
     fi
-    _managed_state_tool prune-owned-root-skills "$default_skill_allowlist" || return 1
+    _owned_root_state_tool prune-owned-root-skills "$default_skill_allowlist" || return 1
 
     local codex_dest="$HOME/.codex/skills"
     local claude_dest="$HOME/.claude/skills"
@@ -119,7 +119,7 @@ run_sync_local_commands_skills() {
             echo "  ✓ $root_skills_claude_synced repo-local skill(s) → Claude Code"
             echo "  ✓ $root_skills_codex_synced repo-local skill(s) → ~/.codex/skills/"
         fi
-        _managed_state_tool record-owned-root-skills "$default_skill_allowlist" || return 1
+        _owned_root_state_tool record-owned-root-skills "$default_skill_allowlist" || return 1
     fi
 }
 

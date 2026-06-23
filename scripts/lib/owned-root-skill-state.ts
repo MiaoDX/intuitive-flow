@@ -1,3 +1,5 @@
+#!/usr/bin/env bun
+
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { readDefaultSkillAllowlist, readPruneLedger } from "./default-skill-allowlist";
@@ -102,3 +104,59 @@ export const pruneLegacyArtifacts = (
 
   return removed;
 };
+
+const usage = () => {
+  console.error("Usage: owned-root-skill-state.ts <prune-legacy-artifacts|prune-owned-root-skills|record-owned-root-skills> <path>");
+};
+
+const main = () => {
+  const [command, path] = process.argv.slice(2);
+
+  try {
+    if (command === "prune-legacy-artifacts") {
+      if (!path) {
+        usage();
+        process.exit(2);
+      }
+
+      const removed = pruneLegacyArtifacts(path);
+      if (removed > 0) {
+        console.log(`  ✓ removed ${removed} stale local command/skill artifact(s)`);
+      }
+      return;
+    }
+
+    if (command === "prune-owned-root-skills") {
+      if (!path) {
+        usage();
+        process.exit(2);
+      }
+
+      const removed = pruneRemovedOwnedRootSkills(path);
+      if (removed > 0) {
+        console.log(`  ✓ removed ${removed} stale owned root skill artifact(s)`);
+      }
+      return;
+    }
+
+    if (command === "record-owned-root-skills") {
+      if (!path) {
+        usage();
+        process.exit(2);
+      }
+
+      recordOwnedRootSkills(path);
+      return;
+    }
+
+    usage();
+    process.exit(2);
+  } catch (error) {
+    console.error(`  ! ${error instanceof Error ? error.message : String(error)}`);
+    process.exit(1);
+  }
+};
+
+if (import.meta.main) {
+  main();
+}

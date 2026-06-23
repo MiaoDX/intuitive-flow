@@ -75,3 +75,30 @@ export const syncGsdSkillState = (
 
   return removed;
 };
+
+const usage = () => {
+  console.error("Usage: gsd-skill-state.ts sync <allowlist>");
+};
+
+const main = () => {
+  const [command, allowlistPath] = process.argv.slice(2);
+
+  try {
+    if (command !== "sync" || !allowlistPath) {
+      usage();
+      process.exit(2);
+    }
+
+    const removed = syncGsdSkillState(allowlistPath);
+    if (removed > 0) {
+      console.log(`  ✓ removed ${removed} stale GSD skill artifact(s)`);
+    }
+  } catch (error) {
+    console.error(`  ! ${error instanceof Error ? error.message : String(error)}`);
+    process.exit(1);
+  }
+};
+
+if (import.meta.main) {
+  main();
+}

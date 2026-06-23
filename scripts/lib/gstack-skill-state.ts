@@ -256,3 +256,30 @@ export const syncGstackSkillState = (
 
   return removed;
 };
+
+const usage = () => {
+  console.error("Usage: gstack-skill-state.ts sync <repo-dir> <allowlist>");
+};
+
+const main = () => {
+  const [command, repoDir, allowlistPath] = process.argv.slice(2);
+
+  try {
+    if (command !== "sync" || !repoDir || !allowlistPath) {
+      usage();
+      process.exit(2);
+    }
+
+    const removed = syncGstackSkillState(repoDir, allowlistPath);
+    if (removed > 0) {
+      console.log(`  ✓ removed ${removed} stale gstack skill artifact(s)`);
+    }
+  } catch (error) {
+    console.error(`  ! ${error instanceof Error ? error.message : String(error)}`);
+    process.exit(1);
+  }
+};
+
+if (import.meta.main) {
+  main();
+}
