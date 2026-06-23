@@ -9,17 +9,19 @@ import {
   writeScorecard,
 } from "./plan_bakeoff_report";
 import {
-  bakeoffPrompt,
-  candidateMappedEnv,
-  executeBakeoff,
   normalizeManifest,
-  parseResultStatus,
   parseManifestText,
   proposalText,
   proposeCandidates,
+  validateManifest,
+} from "./plan_bakeoff_manifest";
+import {
+  bakeoffPrompt,
+  candidateMappedEnv,
+  executeBakeoff,
+  parseResultStatus,
   redactText,
   skillRunnerArgsForCandidate,
-  validateManifest,
 } from "./run_plan_bakeoff";
 
 const repoRoot = process.cwd();

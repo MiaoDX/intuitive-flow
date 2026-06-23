@@ -3,12 +3,11 @@
 Source gate: `docs/plans/refactor-architecture-cleanup-campaign.md`
 Latest user intent: autonomous repeated verified cleanup slices.
 
-Current slice: ready to commit managed skill state dispatcher deletion.
+Current slice: ready to commit `plan-bakeoff` manifest ownership split.
 
 Last proof:
-- `bun test scripts/lib/skill-state-lifecycle.test.ts scripts/lib/sync-local-commands-skills.test.ts` PASS
+- `bun test skills/plan-bakeoff/scripts/run_plan_bakeoff.test.ts` PASS
 - `bun run check` PASS
-- `bun run check:shell` PASS
 - `git diff --check` PASS
 
 Next proof:

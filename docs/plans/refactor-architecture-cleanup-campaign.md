@@ -39,8 +39,8 @@ and easier to navigate.
 
 ## Rolling Candidate Queue
 
-Empty. Run a fresh discovery handoff after the managed skill state dispatcher
-deletion commit lands.
+Empty. Run a fresh discovery handoff after the `plan-bakeoff` manifest
+ownership split commit lands.
 
 ## Parked Gates
 
@@ -141,3 +141,10 @@ P1/P2 slice after shrink attempts.
   renamed the focused lifecycle test. Focused lifecycle/sync tests,
   `bun run check:shell`, `bun run check`, stale dispatcher reference search,
   and `git diff --check` passed.
+- 2026-06-23: Fresh discovery selected a safe bounded module-deepening slice in
+  `plan-bakeoff`. Moved manifest schema types, parsing, normalization,
+  validation, run-root defaults, slugging, and candidate proposal text behind
+  `plan_bakeoff_manifest.ts`; `run_plan_bakeoff.ts` still owns execution,
+  environment mapping, prompts, scorecard/report writing, and CLI behavior.
+  The public manifest schema and generated proposal text stayed unchanged.
+  Focused plan-bakeoff tests, `bun run check`, and `git diff --check` passed.
