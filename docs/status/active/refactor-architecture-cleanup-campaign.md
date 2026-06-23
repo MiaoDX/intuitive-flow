@@ -3,17 +3,20 @@
 Source gate: `docs/plans/refactor-architecture-cleanup-campaign.md`
 Latest user intent: autonomous repeated verified cleanup slices.
 
-Current slice: ready to commit managed skill state lifecycle owner split.
+Current slice: ready to commit `plan-bakeoff` report owner split.
 
 Last proof:
-- `bun test scripts/lib/managed-skill-state.test.ts scripts/lib/sync-local-commands-skills.test.ts` PASS
+- `bun test skills/plan-bakeoff/scripts/run_plan_bakeoff.test.ts` PASS
 - `bun run check` PASS
 - `git diff --check` PASS
 
 Next proof:
-- fresh discovery handoff after commit
+- for next slice, likely `bash -n scripts/update.sh scripts/tasks/*.sh scripts/lib/*.sh`
+- focused tests/checks selected after shrinking the candidate
 
-Next candidate: none queued; run fresh discovery against current `HEAD`.
+Next candidate: shrink `scripts/tasks/update-cli.sh` by moving the GSD workflow
+block to a task-owned internal file without changing update phase order or
+public task names.
 
 Parked work:
 - Codex config old managed status-line variant migration.

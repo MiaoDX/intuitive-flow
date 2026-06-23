@@ -3,10 +3,14 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "no
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { describe, expect, test } from "bun:test";
+import type { CandidateScorecard } from "./plan_bakeoff_report";
+import {
+  writeFinalReport,
+  writeScorecard,
+} from "./plan_bakeoff_report";
 import {
   bakeoffPrompt,
   candidateMappedEnv,
-  CandidateScorecard,
   executeBakeoff,
   normalizeManifest,
   parseResultStatus,
@@ -16,8 +20,6 @@ import {
   redactText,
   skillRunnerArgsForCandidate,
   validateManifest,
-  writeFinalReport,
-  writeScorecard,
 } from "./run_plan_bakeoff";
 
 const repoRoot = process.cwd();
