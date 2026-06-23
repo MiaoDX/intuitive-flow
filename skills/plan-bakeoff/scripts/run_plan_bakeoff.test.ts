@@ -792,6 +792,7 @@ describe("plan-bakeoff runner", () => {
           "#!/usr/bin/env bash",
           "set -euo pipefail",
           "cat >/dev/null",
+          "test \"${PLAN_BAKEOFF_CANDIDATE_ID:-}\" = local-route",
           "printf '%s\\n' 'RESULT_STATUS: SUCCESS' 'SUMMARY: local command route' 'CHANGED_FILES: none' 'COMMITS: none' 'VERIFICATION: local-command' 'OPEN_DECISIONS: none' 'SKILL_BEHAVIOR_NOTES: none' 'ACCEPTANCE_EVIDENCE: command harness ran' 'RECOMMENDED_GOAL_REVISION: none'",
           "",
         ].join("\n"),

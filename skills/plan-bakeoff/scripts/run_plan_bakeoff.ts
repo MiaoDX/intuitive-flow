@@ -727,6 +727,11 @@ export const runSkillRunnerCandidate = (
         ...candidateMappedEnv(candidate, env),
         HOME: home,
         CODEX_HOME: codexHome,
+        PLAN_BAKEOFF_CANDIDATE_ID: candidate.id,
+        PLAN_BAKEOFF_CANDIDATE_DIR: candidateDir,
+        PLAN_BAKEOFF_RUN_DIR: runDir,
+        PLAN_BAKEOFF_TARGET_REPO: manifest.target_repo,
+        PLAN_BAKEOFF_WORKTREE: worktree,
       },
     },
   ).then((result) => {
