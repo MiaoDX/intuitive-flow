@@ -9,8 +9,10 @@ import {
 import type {
   GoalSummary,
   PreflightContract,
-  SessionEvidence,
 } from "./track_goal";
+import type {
+  SessionEvidence,
+} from "./track_goal_session_evidence";
 
 type RenderableIssue = {
   identifier?: string;

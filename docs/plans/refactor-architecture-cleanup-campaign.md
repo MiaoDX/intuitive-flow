@@ -39,8 +39,8 @@ and easier to navigate.
 
 ## Rolling Candidate Queue
 
-Empty. Run a fresh discovery handoff after the Multica goal attempt timeline
-split commit lands.
+Empty. Run a fresh discovery handoff after the Multica session evidence split
+commit lands.
 
 ## Parked Gates
 
@@ -155,5 +155,14 @@ P1/P2 slice after shrink attempts.
   `track_goal.ts` still owns CLI/Multica/session/preflight behavior, while
   `track_goal_markdown.ts` only renders comments from attempt records.
   Existing comment markers, legacy raw-json metadata support, markdown text,
+  and command behavior stayed unchanged. Focused Multica tracker tests,
+  `bun run check`, and `git diff --check` passed.
+- 2026-06-23: Fresh discovery selected another safe internal Multica goal
+  tracker deepening slice. Moved pure transcript normalization, outcome
+  selection, Codex JSONL evidence matching, skill-runner artifact transcript
+  loading, and `SessionEvidence` typing behind `track_goal_session_evidence.ts`.
+  `track_goal.ts` still owns Multica CLI calls, issue/run/message loading,
+  option fallback, preflight parsing, goal summarization, and command dispatch.
+  Existing session evidence text, Codex goal matching behavior, markdown output,
   and command behavior stayed unchanged. Focused Multica tracker tests,
   `bun run check`, and `git diff --check` passed.

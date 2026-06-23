@@ -3,7 +3,6 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
-  evidenceFromCodexJsonl,
   extractGoal,
   extractGoalFromPreflight,
   extractTrackedGoalFromComments,
@@ -14,9 +13,6 @@ import {
   multicaEnv,
   resolveWorkspaceIdFromList,
   selectLatestRunId,
-  sessionEvidenceFromSessionText,
-  sessionEvidenceFromSkillRunnerDir,
-  sessionEvidenceFromTranscript,
   summarizeGoal,
 } from "./track_goal";
 import {
@@ -26,6 +22,12 @@ import {
   buildGoalTimeline,
   nextAttemptSequence,
 } from "./track_goal_attempts";
+import {
+  evidenceFromCodexJsonl,
+  sessionEvidenceFromSessionText,
+  sessionEvidenceFromSkillRunnerDir,
+  sessionEvidenceFromTranscript,
+} from "./track_goal_session_evidence";
 import {
   agentCommentBanner,
   markdownCodeBlock,
