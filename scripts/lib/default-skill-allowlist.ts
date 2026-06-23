@@ -26,11 +26,13 @@ export type DefaultSkillAllowlist = {
   gsdSkills: string[];
 };
 
-type AllowlistKind =
+type InstallAllowlistKind =
   | "root-skill"
   | "external-skill"
   | "gstack-skill"
-  | "gsd-skill"
+  | "gsd-skill";
+
+type PruneLedgerKind =
   | "legacy-skill"
   | "legacy-command";
 
@@ -104,7 +106,7 @@ export const parseDefaultSkillAllowlistText = (text: string): DefaultSkillAllowl
     }
 
     const parts = line.split(/\s+/);
-    const [kind] = parts as [AllowlistKind | string, ...string[]];
+    const [kind] = parts as [InstallAllowlistKind | PruneLedgerKind | string, ...string[]];
     if (![
       "root-skill",
       "external-skill",
@@ -206,7 +208,7 @@ export const parsePruneLedgerText = (text: string): PruneLedger => {
     }
 
     const parts = line.split(/\s+/);
-    const [kind] = parts as [AllowlistKind | string, ...string[]];
+    const [kind] = parts as [PruneLedgerKind | string, ...string[]];
     if (!["legacy-skill", "legacy-command"].includes(kind)) {
       throw new Error(`default skill prune ledger must contain only legacy entries on line ${lineNumber}: ${rawLine}`);
     }
