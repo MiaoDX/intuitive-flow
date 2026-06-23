@@ -148,8 +148,9 @@ evidence are context, not current truth unless a human doc promotes them.
 
 `scripts/dev/paseo-keep-going.sh start` runs a local background monitor for
 active Paseo agents created within the last 24 hours. It watches recent logs for
-transient model-capacity system errors and sends one "keep going" prompt through
-`paseo send`, with a per-agent cooldown to avoid loops. Use
+transient API/system errors and sends one "keep going" prompt through
+`paseo send`, then skips agents whose recent logs already contain a resume
+prompt or whose per-agent cooldown is still active. Use
 `scripts/dev/paseo-keep-going.sh run --once --dry-run --verbose` to inspect what
 it would do without sending prompts; pass `--max-age-hours 0` to disable the age
 filter.

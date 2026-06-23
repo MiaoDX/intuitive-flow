@@ -11,7 +11,7 @@ usage() {
 Usage: scripts/dev/paseo-keep-going.sh <start|stop|status|restart|run> [monitor options]
 
 Starts a small background monitor that scans active Paseo agents for transient
-model-capacity errors and sends one "keep going" prompt through `paseo send`.
+API errors and sends one "keep going" prompt through `paseo send`.
 
 Common monitor options:
   --dry-run              Report matches without sending prompts
@@ -19,7 +19,7 @@ Common monitor options:
   --cooldown <seconds>   Duplicate-send cooldown per agent (default: 600)
   --max-age-hours <n>    Only inspect agents created within n hours; 0 disables (default: 24)
   --tail <n>             Log lines to inspect per agent (default: 20)
-  --statuses <csv>       Agent statuses to monitor (default: running)
+  --statuses <csv>       Agent statuses to monitor (default: running,error)
 
 Examples:
   scripts/dev/paseo-keep-going.sh start

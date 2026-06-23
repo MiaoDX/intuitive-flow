@@ -293,11 +293,12 @@ Local workstation utilities that are not part of the updater contract live under
 
 `scripts/dev/paseo-keep-going.sh` is a local helper for unstable API periods. It
 wraps `scripts/lib/paseo-keep-going.ts`, which polls `paseo ls`, inspects recent
-`paseo logs` output for the capacity system error, and uses `paseo send
+`paseo logs` output for transient API/system errors, and uses `paseo send
 --no-wait` to ask matching active sessions to continue. By default it only
-inspects `running` agents created within the last 24 hours before reading logs.
-State is kept under the user cache directory so the monitor can suppress
-duplicate sends per agent and error fingerprint.
+inspects `running` and `error` agents created within the last 24 hours before
+reading logs. State is kept under the user cache directory so the monitor can
+suppress duplicate sends per agent, and recent log tails suppress sessions that
+already contain the monitor's resume prompt.
 
 Codex hook writers must merge into `~/.codex/hooks.json` instead of replacing
 the file. `scripts/dev/tmux-richer.sh` uses `scripts/lib/ensure-codex-hooks.ts`

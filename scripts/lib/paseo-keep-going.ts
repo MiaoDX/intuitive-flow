@@ -60,10 +60,19 @@ type LogCandidate = {
 
 const DEFAULT_PATTERNS = [
   /^\[System Error\]\s*Selected model is at capacity\. Please try a different model\.$/i,
+  /^.*\[System Error\]\s*stream disconnected before completion:\s*error sending request for url\s*\(.+\)\s*$/i,
+  /^.*\[System Error\]\s*stream disconnected before completion:\s*Transport error:\s*timeout\s*$/i,
 ];
 
 const DEFAULT_PROMPT =
-  "The previous turn appears to have been interrupted by a transient model-capacity/API error. Please continue from your last valid state and keep going. Do not restart from scratch.";
+  "The previous turn appears to have been interrupted by a transient API error. Please continue from your last valid state and keep going. Do not restart from scratch.";
+
+const KEEP_GOING_PROMPT_PATTERNS = [
+  /the previous turn appears to have been interrupted by a transient (?:model-capacity\/)?api error/i,
+  /a transient api error interrupted your previous turn/i,
+  /please continue from your last valid state and keep going\. do not restart from scratch/i,
+  /continue from the last valid state\. do not restart from scratch/i,
+];
 
 async function main(): Promise<void> {
   const config = parseArgs(process.argv.slice(2));
@@ -137,7 +146,8 @@ export function planKeepGoingActions(
   readAgentLog: (agent: PaseoAgent) => string,
   state: KeepGoingState,
   now: number,
-  config: Pick<KeepGoingConfig, "statuses" | "patterns" | "cooldownMs" | "maxAgeMs" | "includeSelf" | "selfAgentId">,
+  config: Pick<KeepGoingConfig, "statuses" | "patterns" | "cooldownMs" | "maxAgeMs" | "includeSelf" | "selfAgentId"> &
+    Partial<Pick<KeepGoingConfig, "prompt">>,
 ): ScanAction[] {
   const actions: ScanAction[] = [];
 
@@ -185,7 +195,7 @@ function planCandidateLogAction(
   logText: string,
   state: KeepGoingState,
   now: number,
-  config: Pick<KeepGoingConfig, "patterns" | "cooldownMs">,
+  config: Pick<KeepGoingConfig, "patterns" | "cooldownMs"> & Partial<Pick<KeepGoingConfig, "prompt">>,
 ): ScanAction {
   const match = findCapacityError(logText, config.patterns);
   if (match === undefined) {
@@ -197,13 +207,23 @@ function planCandidateLogAction(
     };
   }
 
-  const prior = state.sent[candidate.agentId];
-  if (prior?.fingerprint === match.fingerprint && now - prior.sentAt < config.cooldownMs) {
+  const promptMatch = findKeepGoingPrompt(logText, config.prompt);
+  if (promptMatch !== undefined) {
     return {
       kind: "skip",
       agentId: candidate.agentId,
       agentName: candidate.agentName,
-      reason: "matching error is still cooling down",
+      reason: "recent logs already contain a keep-going prompt",
+    };
+  }
+
+  const prior = state.sent[candidate.agentId];
+  if (prior !== undefined && now - prior.sentAt < config.cooldownMs) {
+    return {
+      kind: "skip",
+      agentId: candidate.agentId,
+      agentName: candidate.agentName,
+      reason: "agent already received keep-going recently",
     };
   }
 
@@ -229,6 +249,28 @@ export function findCapacityError(logText: string, patterns: RegExp[] = DEFAULT_
   }
 
   return undefined;
+}
+
+function findKeepGoingPrompt(logText: string, prompt = DEFAULT_PROMPT): { line: string } | undefined {
+  const lines = logText.split(/\r?\n/);
+  for (let index = lines.length - 1; index >= 0; index--) {
+    const line = lines[index]?.trim();
+    if (line === undefined || line.length === 0) continue;
+    if (!isKeepGoingPromptLine(line, prompt)) continue;
+    return { line };
+  }
+
+  return undefined;
+}
+
+function isKeepGoingPromptLine(line: string, prompt: string): boolean {
+  const text = stripLogSpeaker(line);
+  if (prompt.trim().length > 0 && text.includes(prompt.trim())) return true;
+  return KEEP_GOING_PROMPT_PATTERNS.some((pattern) => pattern.test(text));
+}
+
+function stripLogSpeaker(line: string): string {
+  return line.trim().replace(/^\[[^\]]+\]\s*/, "");
 }
 
 export function readState(path: string): KeepGoingState {
@@ -324,7 +366,7 @@ function sendKeepGoing(config: KeepGoingConfig, agentId: string): void {
 export function parseArgs(args: string[], env: NodeJS.ProcessEnv = process.env): KeepGoingConfig {
   const home = env.HOME ?? ".";
   const config: KeepGoingConfig = {
-    statuses: new Set(["running"]),
+    statuses: new Set(["running", "error"]),
     patterns: [...DEFAULT_PATTERNS],
     cooldownMs: 10 * 60 * 1000,
     tail: 20,
@@ -474,7 +516,7 @@ function sleep(ms: number): Promise<void> {
 function printHelp(): void {
   process.stdout.write(`Usage: bun scripts/lib/paseo-keep-going.ts [options]
 
-Monitor active Paseo agents for transient model-capacity errors and send a
+Monitor active Paseo agents for transient API errors and send a
 single keep-going prompt when one is observed.
 
 Options:
@@ -485,7 +527,7 @@ Options:
   --cooldown <seconds>   Per-agent duplicate-send cooldown (default: 600)
   --max-age-hours <n>    Only inspect agents created within n hours; 0 disables (default: 24)
   --tail <n>             Paseo log tail size per agent (default: 20)
-  --statuses <csv>       Agent statuses to monitor (default: running)
+  --statuses <csv>       Agent statuses to monitor (default: running,error)
   --state <path>         State file path
   --paseo-bin <path>     Paseo binary (default: paseo)
   --prompt <text>        Prompt sent through paseo send

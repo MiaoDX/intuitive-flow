@@ -21,6 +21,9 @@ const baseConfig = {
   selfAgentId: undefined,
 };
 
+const keepGoingPrompt =
+  "The previous turn appears to have been interrupted by a transient API error. Please continue from your last valid state and keep going. Do not restart from scratch.";
+
 describe("paseo keep-going monitor", () => {
   test("matches the model-capacity system error from recent Paseo logs", () => {
     const match = findCapacityError(`
@@ -29,6 +32,18 @@ describe("paseo keep-going monitor", () => {
     `);
 
     expect(match?.line).toBe("[System Error] Selected model is at capacity. Please try a different model.");
+  });
+
+  test("matches stream-disconnected API errors from dropped Paseo sessions", () => {
+    const urlError = findCapacityError(
+      "metadata refresh.[System Error] stream disconnected before completion: error sending request for url (https://api-router.evad.mioffice.cn/v1/responses)",
+    );
+    const timeoutError = findCapacityError(
+      "editing files.[System Error] stream disconnected before completion: Transport error: timeout",
+    );
+
+    expect(urlError?.line).toContain("stream disconnected before completion");
+    expect(timeoutError?.line).toContain("Transport error: timeout");
   });
 
   test("plans a send only for monitored active agents with matching logs", () => {
@@ -106,11 +121,11 @@ describe("paseo keep-going monitor", () => {
     expect(parseCreatedAgeMs("unknown")).toBeUndefined();
   });
 
-  test("suppresses duplicate sends while the same error is cooling down", () => {
+  test("suppresses duplicate sends while the agent is cooling down", () => {
     const state: KeepGoingState = {
       sent: {
         agent: {
-          fingerprint: "[System Error] Selected model is at capacity. Please try a different model.",
+          fingerprint: "previous transient error",
           sentAt: 1_000,
         },
       },
@@ -128,7 +143,7 @@ describe("paseo keep-going monitor", () => {
       {
         kind: "skip",
         agentId: "agent",
-        reason: "matching error is still cooling down",
+        reason: "agent already received keep-going recently",
       },
     ]);
   });
@@ -152,6 +167,74 @@ describe("paseo keep-going monitor", () => {
     );
 
     expect(actions[0]?.kind).toBe("send");
+  });
+
+  test("skips when logs already contain the monitor keep-going prompt", () => {
+    const actions = planKeepGoingActions(
+      [{ id: "agent", status: "running" }],
+      () => `
+        [System Error] Selected model is at capacity. Please try a different model.
+        [User] ${keepGoingPrompt}
+      `,
+      { sent: {} },
+      1_000,
+      baseConfig,
+    );
+
+    expect(actions).toEqual([
+      {
+        kind: "skip",
+        agentId: "agent",
+        reason: "recent logs already contain a keep-going prompt",
+      },
+    ]);
+  });
+
+  test("skips when a resumed session later logs another transient error", () => {
+    const actions = planKeepGoingActions(
+      [{ id: "agent", status: "running" }],
+      () => `
+        editing files.[System Error] stream disconnected before completion: Transport error: timeout
+        [User] ${keepGoingPrompt}
+        [System Error] Selected model is at capacity. Please try a different model.
+      `,
+      { sent: {} },
+      1_000,
+      {
+        ...baseConfig,
+        patterns: [
+          ...baseConfig.patterns,
+          /^.*\[System Error\]\s*stream disconnected before completion:\s*Transport error:\s*timeout\s*$/i,
+        ],
+      },
+    );
+
+    expect(actions).toEqual([
+      {
+        kind: "skip",
+        agentId: "agent",
+        reason: "recent logs already contain a keep-going prompt",
+      },
+    ]);
+  });
+
+  test("recognizes the shorter resume prompt variant from manual recovery", () => {
+    const actions = planKeepGoingActions(
+      [{ id: "agent", status: "running" }],
+      () => `
+        [System Error] Selected model is at capacity. Please try a different model.
+        [User] A transient API error interrupted your previous turn. Continue from the last valid state. Do not restart from scratch.
+      `,
+      { sent: {} },
+      1_000,
+      baseConfig,
+    );
+
+    expect(actions[0]).toMatchObject({
+      kind: "skip",
+      agentId: "agent",
+      reason: "recent logs already contain a keep-going prompt",
+    });
   });
 
   test("excludes the monitor's own Paseo agent when an id is provided", () => {
@@ -215,7 +298,7 @@ describe("paseo keep-going monitor", () => {
 
   test("parses max age and default status options", () => {
     const defaults = parseArgs([], { HOME: "/home/demo" });
-    expect(defaults.statuses).toEqual(new Set(["running"]));
+    expect(defaults.statuses).toEqual(new Set(["running", "error"]));
     expect(defaults.tail).toBe(20);
     expect(parseArgs(["--max-age-hours", "0"], { HOME: "/home/demo" }).maxAgeMs).toBeUndefined();
     expect(parseArgs(["--max-age-hours", "6"], { HOME: "/home/demo" }).maxAgeMs).toBe(6 * 60 * 60 * 1000);
