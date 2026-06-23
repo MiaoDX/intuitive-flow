@@ -60,6 +60,14 @@ likely miss important scope:
 Do not use it for one-file fixes, simple status checks, obvious bug fixes, or a
 plan that already has accepted scope and verification.
 
+When the loop is run against an existing plan artifact, assume the plan is the
+intended execution unit unless the user asks for slice selection or the plan is
+plainly too broad for their goal. Scouts may recommend phase order, stop gates,
+or risk isolation, but the main-session recommendation should not quietly shrink
+the final action to "only implement slice 1." If only a subset is safe, say why
+full-plan execution is blocked and ask for that decision instead of presenting
+the subset as the normal next action.
+
 ## Main-Session Control Model
 
 Keep the main session as the control plane.
@@ -119,8 +127,11 @@ Use this only for high-risk or broad plans:
 
 Review the current recommended plan as a skeptic. Look for over-design,
 scope drift, missing proof, hidden cost, user-preference assumptions, and
-alternatives that preserve more optionality. Return blockers first, then the
-smallest safer plan if the recommendation is too broad.
+alternatives that preserve more optionality. Return blockers first. If the
+recommendation is too broad for the user's stated goal, propose the smallest
+safer plan; if the user supplied a plan file as the target, prefer keeping the
+full plan and adding phase order plus stop gates unless full-plan execution is
+actually dishonest.
 
 ## Main-Session Filter
 
@@ -156,6 +167,11 @@ Include: planning loop status, what ran, rejected/parked items, one recommended
 plan with scope/non-goals/acceptance/verification/risk, alternatives only when
 material, user decisions, `Plan artifact:`, `Recommended next action:`, and
 `Shortcut:`.
+
+For plan-file loops, the `Recommended next action` should normally execute or
+preflight the whole plan through the appropriate route. It may name the first
+phase as the starting point, but should not make that phase the whole approved
+scope unless the user asked for that narrowing or a stop gate blocks the rest.
 
 If no material plan remains, say so directly and explain what evidence caused
 the stop. Do not fill the packet with weak alternatives. Still include

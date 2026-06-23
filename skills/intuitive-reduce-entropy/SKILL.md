@@ -36,7 +36,12 @@ Recommend less before more. For every material candidate, first ask whether the
 maintainer surprise is best removed by deleting stale surface, merging duplicate
 guidance, narrowing scope, reusing an existing route, or documenting current
 truth. Recommend a new durable entity only when the shrink/reuse path cannot
-make the evidence honest.
+make the evidence honest. When the user points at a concrete plan file, treat
+that file as the selected scope by default: surface risky phases, sequencing,
+and stop gates, but do not turn the final recommended action into "implement
+only the first slice" unless the plan is demonstrably overbroad for the user's
+goal, the user asked for slice selection, or a hard stop gate makes full-plan
+execution dishonest.
 
 Use the cleanup discovery lens when repo entropy shows stale APIs, duplicate
 owners, compatibility wrappers, pass-through modules, stale tests/docs, or
@@ -186,8 +191,13 @@ clear enough for preflight or execution.
 
 When reviewing a plan, suggest shrinking the existing plan before adding new
 phases, components, tests, workers, docs, compatibility bridges, or tracking
-artifacts. If a new entity remains necessary, state what existing option was
-rejected and what proof makes the addition unavoidable.
+artifacts. For an existing `docs/plans/<slug>.md`, shrink scope only when the
+plan itself is broader than the user's stated goal or cannot be executed
+honestly without a user decision. If the plan already defines the intended
+scope, preserve that full scope and express risk as phase order, stop gates,
+verification gates, or parked alternatives rather than recommending that flow
+execute only one slice. If a new entity remains necessary, state what existing
+option was rejected and what proof makes the addition unavoidable.
 
 ## Plan Artifact And Handoff
 

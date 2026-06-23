@@ -23,6 +23,14 @@ observable outcome can be achieved by deleting, merging, narrowing, reusing, or
 documenting existing behavior. Record any necessary new entity with its reason
 and re-approval trigger.
 
+When the user gives an existing plan file as the task source, "smallest honest"
+means the smallest honest contract for executing that plan, not the smallest
+slice inside it. Preserve the plan's full intended scope by default and encode
+risky pieces as ordering, stop gates, local/live validation gates, or
+`BLOCKED_NEEDS_DECISION` conditions. Narrow the preflight to a subset only when
+the user asks for partial execution, the plan is broader than the user's stated
+goal, or full-plan execution would be dishonest without another decision.
+
 ## Boundary
 
 `$intuitive-preflight` owns scope, non-goals, acceptance criteria, context
