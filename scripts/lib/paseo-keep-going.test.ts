@@ -34,6 +34,14 @@ describe("paseo keep-going monitor", () => {
     expect(match?.line).toBe("[System Error] Selected model is at capacity. Please try a different model.");
   });
 
+  test("matches model-capacity errors that are appended to a progress line", () => {
+    const match = findCapacityError(
+      "I found the signature and I am starting it now.[System Error] Selected model is at capacity. Please try a different model.",
+    );
+
+    expect(match?.line).toContain("[System Error] Selected model is at capacity");
+  });
+
   test("matches stream-disconnected API errors from dropped Paseo sessions", () => {
     const urlError = findCapacityError(
       "metadata refresh.[System Error] stream disconnected before completion: error sending request for url (https://api-router.evad.mioffice.cn/v1/responses)",
@@ -169,7 +177,7 @@ describe("paseo keep-going monitor", () => {
     expect(actions[0]?.kind).toBe("send");
   });
 
-  test("skips when logs already contain the monitor keep-going prompt", () => {
+  test("skips when a matching error has a later monitor keep-going prompt", () => {
     const actions = planKeepGoingActions(
       [{ id: "agent", status: "running" }],
       () => `
@@ -185,12 +193,12 @@ describe("paseo keep-going monitor", () => {
       {
         kind: "skip",
         agentId: "agent",
-        reason: "recent logs already contain a keep-going prompt",
+        reason: "matching error already has a later keep-going prompt",
       },
     ]);
   });
 
-  test("skips when a resumed session later logs another transient error", () => {
+  test("sends when a resumed session later logs another transient error", () => {
     const actions = planKeepGoingActions(
       [{ id: "agent", status: "running" }],
       () => `
@@ -211,9 +219,9 @@ describe("paseo keep-going monitor", () => {
 
     expect(actions).toEqual([
       {
-        kind: "skip",
+        kind: "send",
         agentId: "agent",
-        reason: "recent logs already contain a keep-going prompt",
+        fingerprint: "[System Error] Selected model is at capacity. Please try a different model.",
       },
     ]);
   });
@@ -233,7 +241,7 @@ describe("paseo keep-going monitor", () => {
     expect(actions[0]).toMatchObject({
       kind: "skip",
       agentId: "agent",
-      reason: "recent logs already contain a keep-going prompt",
+      reason: "matching error already has a later keep-going prompt",
     });
   });
 
@@ -299,7 +307,7 @@ describe("paseo keep-going monitor", () => {
   test("parses max age and default status options", () => {
     const defaults = parseArgs([], { HOME: "/home/demo" });
     expect(defaults.statuses).toEqual(new Set(["running", "error"]));
-    expect(defaults.tail).toBe(20);
+    expect(defaults.tail).toBe(300);
     expect(parseArgs(["--max-age-hours", "0"], { HOME: "/home/demo" }).maxAgeMs).toBeUndefined();
     expect(parseArgs(["--max-age-hours", "6"], { HOME: "/home/demo" }).maxAgeMs).toBe(6 * 60 * 60 * 1000);
   });

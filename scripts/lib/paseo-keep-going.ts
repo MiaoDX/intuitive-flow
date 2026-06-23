@@ -59,7 +59,7 @@ type LogCandidate = {
 };
 
 const DEFAULT_PATTERNS = [
-  /^\[System Error\]\s*Selected model is at capacity\. Please try a different model\.$/i,
+  /^.*\[System Error\]\s*Selected model is at capacity\. Please try a different model\.\s*$/i,
   /^.*\[System Error\]\s*stream disconnected before completion:\s*error sending request for url\s*\(.+\)\s*$/i,
   /^.*\[System Error\]\s*stream disconnected before completion:\s*Transport error:\s*timeout\s*$/i,
 ];
@@ -197,8 +197,8 @@ function planCandidateLogAction(
   now: number,
   config: Pick<KeepGoingConfig, "patterns" | "cooldownMs"> & Partial<Pick<KeepGoingConfig, "prompt">>,
 ): ScanAction {
-  const match = findCapacityError(logText, config.patterns);
-  if (match === undefined) {
+  const scan = scanLogSignals(logText, config.patterns, config.prompt);
+  if (scan.latestError === undefined) {
     return {
       kind: "skip",
       agentId: candidate.agentId,
@@ -207,13 +207,12 @@ function planCandidateLogAction(
     };
   }
 
-  const promptMatch = findKeepGoingPrompt(logText, config.prompt);
-  if (promptMatch !== undefined) {
+  if (scan.latestPromptIndex !== undefined && scan.latestPromptIndex > scan.latestError.index) {
     return {
       kind: "skip",
       agentId: candidate.agentId,
       agentName: candidate.agentName,
-      reason: "recent logs already contain a keep-going prompt",
+      reason: "matching error already has a later keep-going prompt",
     };
   }
 
@@ -231,36 +230,51 @@ function planCandidateLogAction(
     kind: "send",
     agentId: candidate.agentId,
     agentName: candidate.agentName,
-    fingerprint: match.fingerprint,
+    fingerprint: scan.latestError.fingerprint,
   };
 }
 
 export function findCapacityError(logText: string, patterns: RegExp[] = DEFAULT_PATTERNS): { line: string; fingerprint: string } | undefined {
-  const lines = logText.split(/\r?\n/);
-  for (let index = lines.length - 1; index >= 0; index--) {
-    const line = lines[index]?.trim();
-    if (line === undefined || line.length === 0) continue;
-    if (!patterns.some((pattern) => pattern.test(line))) continue;
-
-    return {
-      line,
-      fingerprint: line,
-    };
-  }
-
-  return undefined;
+  const match = scanLogSignals(logText, patterns).latestError;
+  if (match === undefined) return undefined;
+  return {
+    line: match.line,
+    fingerprint: match.fingerprint,
+  };
 }
 
-function findKeepGoingPrompt(logText: string, prompt = DEFAULT_PROMPT): { line: string } | undefined {
+function scanLogSignals(
+  logText: string,
+  patterns: RegExp[] = DEFAULT_PATTERNS,
+  prompt = DEFAULT_PROMPT,
+): {
+  latestError?: { index: number; line: string; fingerprint: string };
+  latestPromptIndex?: number;
+} {
   const lines = logText.split(/\r?\n/);
+  let latestError: { index: number; line: string; fingerprint: string } | undefined;
+  let latestPromptIndex: number | undefined;
+
   for (let index = lines.length - 1; index >= 0; index--) {
     const line = lines[index]?.trim();
     if (line === undefined || line.length === 0) continue;
-    if (!isKeepGoingPromptLine(line, prompt)) continue;
-    return { line };
+
+    if (latestPromptIndex === undefined && isKeepGoingPromptLine(line, prompt)) {
+      latestPromptIndex = index;
+    }
+
+    if (latestError === undefined && patterns.some((pattern) => pattern.test(line))) {
+      latestError = {
+        index,
+        line,
+        fingerprint: line,
+      };
+    }
+
+    if (latestError !== undefined && latestPromptIndex !== undefined) break;
   }
 
-  return undefined;
+  return { latestError, latestPromptIndex };
 }
 
 function isKeepGoingPromptLine(line: string, prompt: string): boolean {
@@ -369,7 +383,7 @@ export function parseArgs(args: string[], env: NodeJS.ProcessEnv = process.env):
     statuses: new Set(["running", "error"]),
     patterns: [...DEFAULT_PATTERNS],
     cooldownMs: 10 * 60 * 1000,
-    tail: 20,
+    tail: 300,
     prompt: DEFAULT_PROMPT,
     statePath: `${home}/.cache/intuitive-flow/paseo-keep-going-state.json`,
     paseoBin: env.PASEO_BIN ?? "paseo",
@@ -526,7 +540,7 @@ Options:
   --interval <seconds>   Poll interval for daemon mode (default: 30)
   --cooldown <seconds>   Per-agent duplicate-send cooldown (default: 600)
   --max-age-hours <n>    Only inspect agents created within n hours; 0 disables (default: 24)
-  --tail <n>             Paseo log tail size per agent (default: 20)
+  --tail <n>             Paseo log tail size per agent (default: 300)
   --statuses <csv>       Agent statuses to monitor (default: running,error)
   --state <path>         State file path
   --paseo-bin <path>     Paseo binary (default: paseo)

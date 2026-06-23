@@ -18,7 +18,7 @@ Common monitor options:
   --interval <seconds>   Poll interval (default: 30)
   --cooldown <seconds>   Duplicate-send cooldown per agent (default: 600)
   --max-age-hours <n>    Only inspect agents created within n hours; 0 disables (default: 24)
-  --tail <n>             Log lines to inspect per agent (default: 20)
+  --tail <n>             Log lines to inspect per agent (default: 300)
   --statuses <csv>       Agent statuses to monitor (default: running,error)
 
 Examples:
