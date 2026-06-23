@@ -64,9 +64,9 @@ The current maintenance focus is keeping the repo dogfoodable:
 - keep the user-facing skill surface small: flow, refactor, reduce-entropy,
   agent-planning-loop, and squash; route or directly invoke specialists from
   the allowlist as needed, with docs/init/tests/preflight/
-  architecture-scanner/worktree-porting/issue tracking/skill-runner utilities
-  kept out of the primary choice set, and changed-code cleanup owned by
-  `intuitive-refactor`
+  architecture-scanner/worktree-porting/issue tracking/plan-bakeoff/
+  skill-runner utilities kept out of the primary choice set, and changed-code
+  cleanup owned by `intuitive-refactor`
 - keep default skill installs listed in `scripts/default-skill-allowlist.txt`
   with role-tier comments that distinguish primary choices, routed specialists,
   direct utilities, trial community skills, managed GStack tooling, and GSD

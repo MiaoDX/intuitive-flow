@@ -39,8 +39,7 @@ and easier to navigate.
 
 ## Rolling Candidate Queue
 
-1. Align human docs with the default-visible `plan-bakeoff` direct utility.
-2. Shrink managed skill state ownership by moving one lifecycle slice behind a
+1. Shrink managed skill state ownership by moving one lifecycle slice behind a
    clearer internal owner while preserving CLI commands and state paths.
 
 ## Parked Gates
@@ -74,3 +73,6 @@ P1/P2 slice after shrink attempts.
   helper/tests so `skill-runner` remains the only in-repo owner of real
   candidate command construction. Focused plan-bakeoff tests, `bun run check`,
   stale-reference search, and `git diff --check` passed.
+- 2026-06-23: Aligned root human docs and the skill audit with the
+  default-visible `plan-bakeoff` direct utility. `bun run check:skills`,
+  `plan-bakeoff` reference search, and `git diff --check` passed.

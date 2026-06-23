@@ -109,8 +109,9 @@ Keep the public choice small:
 Common routed specialists include `$intuitive-preflight`, `$intuitive-doc`,
 `$intuitive-init`, `$intuitive-tests`, and `$improve-codebase-architecture` for
 report-only architecture discovery; direct-use utilities such as
-`$intuitive-port-worktree`, `$multica-goal-tracker`, and `$skill-runner` are
-installed too. Changed-code reuse/quality/efficiency review now lives in
+`$intuitive-port-worktree`, `$multica-goal-tracker`, `$plan-bakeoff`, and
+`$skill-runner` are installed too. Changed-code reuse/quality/efficiency
+review now lives in
 `$intuitive-refactor` as changed-code cleanup. The complete default install
 surface lives in
 `scripts/default-skill-allowlist.txt`, whose comments mark primary choices,

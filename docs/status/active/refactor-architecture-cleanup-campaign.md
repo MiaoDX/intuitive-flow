@@ -3,21 +3,21 @@
 Source gate: `docs/plans/refactor-architecture-cleanup-campaign.md`
 Latest user intent: autonomous repeated verified cleanup slices.
 
-Current slice: ready to commit `plan-bakeoff` stale command renderer deletion.
+Current slice: ready to commit `plan-bakeoff` direct utility docs alignment.
 
 Last proof:
-- `bun test skills/plan-bakeoff/scripts/run_plan_bakeoff.test.ts` PASS
-- `bun run check` PASS
-- stale-reference search for `renderCandidateCommand` PASS
+- `bun run check:skills` PASS
+- `plan-bakeoff` reference search PASS
 - `git diff --check` PASS
 
 Next proof:
-- `bun run check:skills`
-- `rg -n -F 'plan-bakeoff' README.md ARCHITECTURE.md STATUS.md docs/human scripts/default-skill-allowlist.txt skills`
+- `bun test scripts/lib/managed-skill-state.test.ts scripts/lib/sync-local-commands-skills.test.ts`
+- `bun run check`
 - `git diff --check`
 
-Next candidate: align human docs with the default-visible `plan-bakeoff` direct
-utility.
+Next candidate: shrink managed skill state ownership by moving one lifecycle
+slice behind a clearer internal owner while preserving CLI commands and state
+paths.
 
 Parked work:
 - Codex config old managed status-line variant migration.
