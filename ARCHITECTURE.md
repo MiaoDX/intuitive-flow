@@ -291,6 +291,14 @@ live under `scripts/tasks/`. TypeScript helpers and their tests live under
 Local workstation utilities that are not part of the updater contract live under
 `scripts/dev/`.
 
+`scripts/dev/paseo-keep-going.sh` is a local helper for unstable API periods. It
+wraps `scripts/lib/paseo-keep-going.ts`, which polls `paseo ls`, inspects recent
+`paseo logs` output for the capacity system error, and uses `paseo send
+--no-wait` to ask matching active sessions to continue. By default it only
+inspects `running` agents created within the last 24 hours before reading logs.
+State is kept under the user cache directory so the monitor can suppress
+duplicate sends per agent and error fingerprint.
+
 Codex hook writers must merge into `~/.codex/hooks.json` instead of replacing
 the file. `scripts/dev/tmux-richer.sh` uses `scripts/lib/ensure-codex-hooks.ts`
 to add tmux-agent-status lifecycle hooks while preserving other hook owners.

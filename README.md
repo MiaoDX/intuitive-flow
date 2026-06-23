@@ -144,7 +144,16 @@ evidence are context, not current truth unless a human doc promotes them.
 | `bun run check:shell` | Run ShellCheck error-level validation for the updater, Bash helper scripts, and the Git hook entrypoint |
 | `bun run setup:hooks` | Configure this checkout to use repo-owned Git hooks from `.githooks/` |
 | `scripts/update.sh` | Install or update agent surfaces, skills, GSD, and gstack |
-| `scripts/dev/*.sh` | Local developer utilities for tmux and workstation sessions |
+| `scripts/dev/*.sh` | Local developer utilities for tmux, Paseo, and workstation sessions |
+
+`scripts/dev/paseo-keep-going.sh start` runs a local background monitor for
+active Paseo agents created within the last 24 hours. It watches recent logs for
+transient model-capacity system errors and sends one "keep going" prompt through
+`paseo send`, with a per-agent cooldown to avoid loops. Use
+`scripts/dev/paseo-keep-going.sh run --once --dry-run --verbose` to inspect what
+it would do without sending prompts; pass `--max-age-hours 0` to disable the age
+filter.
+
 `scripts/update.sh` uses the direct npm registry by default. If Codex is already
 running, the updater warns and continues; pass `--require-no-running-codex` when
 you want that condition to block the run. Pass `--npm-mirror` to force mirror
