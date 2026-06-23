@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { describe, expect, test } from "bun:test";
 import {
   bakeoffPrompt,
@@ -21,10 +21,11 @@ import {
 } from "./run_plan_bakeoff";
 
 const repoRoot = process.cwd();
+const scriptDir = dirname(import.meta.path);
 
-const git = (cwd: string, args: string[]) => {
+const git = (cwd: string, args: string[], options: { allowFail?: boolean } = {}) => {
   const result = spawnSync("git", args, { cwd, encoding: "utf8" });
-  if (result.status !== 0) {
+  if (result.status !== 0 && !options.allowFail) {
     throw new Error(`git ${args.join(" ")} failed\n${result.stdout}\n${result.stderr}`);
   }
   return result;
@@ -88,6 +89,7 @@ describe("plan-bakeoff runner", () => {
       expect(manifest.execution?.worker_timeout_min).toBe(60);
       expect(manifest.execution?.timeout_grace_min).toBe(15);
       expect(manifest.candidates[0].runtime).toBe("host");
+      expect(manifest.worktree_setup?.commands ?? []).toEqual([]);
     } finally {
       rmSync(repo, { recursive: true, force: true });
     }
@@ -135,21 +137,26 @@ describe("plan-bakeoff runner", () => {
   });
 
   test("allows real harness validation when execute-real is explicit", () => {
-    const errors = validateManifest(
-      {
-        schema: "plan_bakeoff_manifest_v1",
-        target_repo: repoRoot,
-        plan: join(repoRoot, ".planning", "plan-bakeoff-skill.md"),
-        candidates: [
-          { id: "codex", harness: "codex-cli", required_env: ["CODEX_API_KEY"], env: { CODEX_API_KEY: "CODEX_API_KEY" } },
-          { id: "fake", harness: "fake" },
-        ],
-      },
-      { CODEX_API_KEY: "fake-codex-key" },
-      { allowReal: true },
-    );
+    const repo = createTempRepo();
+    try {
+      const errors = validateManifest(
+        {
+          schema: "plan_bakeoff_manifest_v1",
+          target_repo: repo,
+          plan: join(repo, "plan.md"),
+          candidates: [
+            { id: "codex", harness: "codex-cli", required_env: ["CODEX_API_KEY"], env: { CODEX_API_KEY: "CODEX_API_KEY" } },
+            { id: "fake", harness: "fake" },
+          ],
+        },
+        { CODEX_API_KEY: "fake-codex-key" },
+        { allowReal: true },
+      );
 
-    expect(errors).toEqual([]);
+      expect(errors).toEqual([]);
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+    }
   });
 
   test("redacts known secret values", () => {
@@ -232,6 +239,36 @@ describe("plan-bakeoff runner", () => {
     expect(claude).toContain("--verbose");
     expect(claude).toContain("--permission-mode auto");
     expect(claude).toContain("--model sonnet");
+  });
+
+  test("renders arbitrary command harness through bash", () => {
+    const command = renderCandidateCommand(
+      {
+        id: "local-route",
+        harness: "command",
+        command: "scripts/run-local-agent --flag",
+      },
+      "/tmp/last-message.md",
+    );
+
+    expect(command).toEqual(["bash", "-lc", "scripts/run-local-agent --flag"]);
+  });
+
+  test("requires command for command harness", () => {
+    expect(() =>
+      normalizeManifest(
+        {
+          schema: "plan_bakeoff_manifest_v1",
+          target_repo: repoRoot,
+          plan: join(repoRoot, "README.md"),
+          candidates: [
+            { id: "local-route", harness: "command" },
+            { id: "fake-a", harness: "fake" },
+          ],
+        },
+        join(repoRoot, "manifest.json"),
+      ),
+    ).toThrow("command harness requires command");
   });
 
   test("maps Claude-compatible local provider env", () => {
@@ -344,6 +381,71 @@ describe("plan-bakeoff runner", () => {
       expect(prompt).toContain("Use $intuitive-flow to execute the goal");
       expect(prompt).toContain("until you can name a concrete blocker");
       expect(prompt).toContain("# Plan");
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
+  test("normalizes generic worktree setup commands", () => {
+    const repo = createTempRepo();
+    try {
+      const manifest = normalizeManifest(
+        {
+          schema: "plan_bakeoff_manifest_v1",
+          target_repo: repo,
+          plan: join(repo, "plan.md"),
+          worktree_setup: {
+            commands: [
+              "test -f plan.md",
+              {
+                id: "write-readiness",
+                command: "printf '{\"ok\":true}\\n'",
+                artifact: "readiness.json",
+                artifact_stream: "stdout",
+              },
+            ],
+          },
+          candidates: [
+            { id: "fake-a", harness: "fake" },
+            { id: "fake-b", harness: "fake" },
+          ],
+        },
+        join(repo, "manifest.json"),
+      );
+
+      expect(manifest.worktree_setup?.commands?.length).toBe(2);
+      expect(manifest.worktree_setup?.commands?.[1]).toEqual({
+        id: "write-readiness",
+        command: "printf '{\"ok\":true}\\n'",
+        artifact: "readiness.json",
+        artifact_stream: "stdout",
+        required: undefined,
+      });
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects unsafe worktree setup artifacts", () => {
+    const repo = createTempRepo();
+    try {
+      expect(() =>
+        normalizeManifest(
+          {
+            schema: "plan_bakeoff_manifest_v1",
+            target_repo: repo,
+            plan: join(repo, "plan.md"),
+            worktree_setup: {
+              commands: [{ command: "true", artifact: "../leak.txt" }],
+            },
+            candidates: [
+              { id: "fake-a", harness: "fake" },
+              { id: "fake-b", harness: "fake" },
+            ],
+          },
+          join(repo, "manifest.json"),
+        ),
+      ).toThrow("artifact must be a relative path");
     } finally {
       rmSync(repo, { recursive: true, force: true });
     }
@@ -484,6 +586,103 @@ describe("plan-bakeoff runner", () => {
     }
   }, 20000);
 
+  test("runs worktree setup before workers and saves setup artifacts", async () => {
+    const repo = createTempRepo();
+    const runRoot = mkdtempSync(join(tmpdir(), "plan-bakeoff-setup-"));
+    try {
+      const manifest = normalizeManifest(
+        {
+          schema: "plan_bakeoff_manifest_v1",
+          target_repo: repo,
+          plan: join(repo, "plan.md"),
+          run_root: runRoot,
+          worktree_setup: {
+            commands: [
+              {
+                id: "readiness",
+                command: "printf '{\"candidate\":\"%s\",\"ok\":true}\\n' \"$PLAN_BAKEOFF_CANDIDATE_ID\"",
+                artifact: "readiness.json",
+                artifact_stream: "stdout",
+              },
+            ],
+          },
+          candidates: [
+            { id: "fake-a", harness: "fake", command_profile: "fake-success" },
+            { id: "fake-b", harness: "fake", command_profile: "fake-success" },
+          ],
+        },
+        join(repo, "manifest.json"),
+      );
+
+      const runDir = await executeBakeoff(manifest);
+      const scorecard = readFileSync(join(runDir, "candidates", "fake-a", "scorecard.json"), "utf8");
+      const markdown = readFileSync(join(runDir, "candidates", "fake-a", "scorecard.md"), "utf8");
+      const readiness = readFileSync(join(runDir, "candidates", "fake-a", "readiness.json"), "utf8");
+
+      expect(scorecard).toContain('"setup"');
+      expect(scorecard).toContain('"id": "readiness"');
+      expect(markdown).toContain("## Worktree Setup");
+      expect(markdown).toContain("- pass: `printf");
+      expect(readiness).toContain('"candidate":"fake-a"');
+      expect(readiness).toContain('"ok":true');
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+      rmSync(runRoot, { recursive: true, force: true });
+    }
+  }, 20000);
+
+  test("blocks candidate before worker when required worktree setup fails", async () => {
+    const repo = createTempRepo();
+    const runRoot = mkdtempSync(join(tmpdir(), "plan-bakeoff-setup-fail-"));
+    try {
+      const manifest = normalizeManifest(
+        {
+          schema: "plan_bakeoff_manifest_v1",
+          target_repo: repo,
+          plan: join(repo, "plan.md"),
+          run_root: runRoot,
+          worktree_setup: {
+            commands: [
+              {
+                id: "readiness",
+                command: "echo not-ready >&2; exit 42",
+                artifact: "readiness.log",
+                artifact_stream: "stderr",
+              },
+            ],
+          },
+          candidates: [
+            { id: "fake-a", harness: "fake", command_profile: "fake-success" },
+            { id: "fake-b", harness: "fake", command_profile: "fake-success" },
+          ],
+        },
+        join(repo, "manifest.json"),
+      );
+
+      const runDir = await executeBakeoff(manifest);
+      const scorecard = readFileSync(join(runDir, "candidates", "fake-a", "scorecard.json"), "utf8");
+      const report = readFileSync(join(runDir, "final-report.md"), "utf8");
+      const readiness = readFileSync(join(runDir, "candidates", "fake-a", "readiness.log"), "utf8");
+
+      expect(scorecard).toContain('"status": "BLOCKED"');
+      expect(scorecard).toContain('"worker_status": "BLOCKED"');
+      expect(scorecard).toContain('"run_dir": ""');
+      expect(scorecard).toContain("worktree setup failed before worker launch: readiness");
+      expect(report).toContain("worktree setup failed: readiness");
+      expect(readiness).toContain("not-ready");
+      expect(git(repo, ["worktree", "list", "--porcelain"]).stdout).toContain(runDir);
+    } finally {
+      const worktreeList = git(repo, ["worktree", "list", "--porcelain"], { allowFail: true }).stdout;
+      for (const line of worktreeList.split(/\r?\n/)) {
+        if (line.startsWith("worktree ") && line.includes(runRoot)) {
+          git(repo, ["worktree", "remove", "--force", line.slice("worktree ".length)], { allowFail: true });
+        }
+      }
+      rmSync(repo, { recursive: true, force: true });
+      rmSync(runRoot, { recursive: true, force: true });
+    }
+  }, 20000);
+
   test("executes fake candidates in parallel by default", async () => {
     const repo = createTempRepo();
     const runRoot = mkdtempSync(join(tmpdir(), "plan-bakeoff-parallel-"));
@@ -580,6 +779,96 @@ describe("plan-bakeoff runner", () => {
     } finally {
       rmSync(repo, { recursive: true, force: true });
       rmSync(runRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("runs arbitrary command harness under skill-runner when execute-real is explicit", async () => {
+    const repo = createTempRepo();
+    const runRoot = mkdtempSync(join(tmpdir(), "plan-bakeoff-command-"));
+    try {
+      writeFileSync(
+        join(repo, "local-agent.sh"),
+        [
+          "#!/usr/bin/env bash",
+          "set -euo pipefail",
+          "cat >/dev/null",
+          "printf '%s\\n' 'RESULT_STATUS: SUCCESS' 'SUMMARY: local command route' 'CHANGED_FILES: none' 'COMMITS: none' 'VERIFICATION: local-command' 'OPEN_DECISIONS: none' 'SKILL_BEHAVIOR_NOTES: none' 'ACCEPTANCE_EVIDENCE: command harness ran' 'RECOMMENDED_GOAL_REVISION: none'",
+          "",
+        ].join("\n"),
+      );
+      spawnSync("chmod", ["+x", join(repo, "local-agent.sh")]);
+      git(repo, ["add", "."]);
+      git(repo, ["commit", "-m", "add local agent"]);
+      const manifest = normalizeManifest(
+        {
+          schema: "plan_bakeoff_manifest_v1",
+          target_repo: repo,
+          plan: join(repo, "plan.md"),
+          run_root: runRoot,
+          candidates: [
+            { id: "local-route", harness: "command", command: "./local-agent.sh" },
+            { id: "fake-a", harness: "fake", command_profile: "fake-success" },
+          ],
+        },
+        join(repo, "manifest.json"),
+      );
+
+      const runDir = await executeBakeoff(manifest, { allowReal: true });
+      const scorecard = readFileSync(join(runDir, "candidates", "local-route", "scorecard.json"), "utf8");
+
+      expect(scorecard).toContain('"status": "SUCCESS"');
+      expect(scorecard).toContain('"harness": "command"');
+      expect(scorecard).toContain("local-command");
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+      rmSync(runRoot, { recursive: true, force: true });
+    }
+  }, 20000);
+
+  test("dry-run accepts real harness manifests without execute-real", () => {
+    const repo = createTempRepo();
+    const runRoot = mkdtempSync(join(tmpdir(), "plan-bakeoff-dry-real-"));
+    const manifestDir = mkdtempSync(join(tmpdir(), "plan-bakeoff-manifest-"));
+    try {
+      const manifestPath = join(manifestDir, "manifest.json");
+      writeFileSync(
+        manifestPath,
+        JSON.stringify({
+          schema: "plan_bakeoff_manifest_v1",
+          target_repo: repo,
+          plan: join(repo, "plan.md"),
+          run_root: runRoot,
+          candidates: [
+            {
+              id: "codex-real",
+              harness: "codex-cli",
+              provider_profile: "codex-router-responses",
+              model: "gpt-5.5",
+              required_env: ["CODEX_API_KEY"],
+              env: { CODEX_API_KEY: "CODEX_API_KEY" },
+            },
+            { id: "fake-a", harness: "fake" },
+          ],
+        }),
+      );
+
+      const result = spawnSync(
+        "bun",
+        [join(scriptDir, "run_plan_bakeoff.ts"), "--manifest", manifestPath, "--dry-run"],
+        {
+          cwd: repoRoot,
+          encoding: "utf8",
+          env: { ...process.env, CODEX_API_KEY: "fake-codex-key" },
+        },
+      );
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain(runRoot);
+      expect(result.stderr).not.toContain("real harness requires --execute-real");
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+      rmSync(runRoot, { recursive: true, force: true });
+      rmSync(manifestDir, { recursive: true, force: true });
     }
   });
 });

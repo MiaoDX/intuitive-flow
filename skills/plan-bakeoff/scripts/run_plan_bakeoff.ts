@@ -37,6 +37,7 @@ export type Manifest = {
     mode?: string;
     ref?: string;
   };
+  worktree_setup?: WorktreeSetup;
   verification?: {
     commands?: string[];
   };
@@ -53,6 +54,7 @@ export type Manifest = {
 export type Candidate = {
   id: string;
   harness: string;
+  command?: string;
   provider_profile?: string;
   model?: string;
   env_file?: string;
@@ -61,9 +63,34 @@ export type Candidate = {
   command_profile?: string;
   runtime?: string;
   skills?: string[];
+  worktree_setup?: WorktreeSetup;
   timeout_min?: number;
   idle_timeout_min?: number;
   timeout_grace_min?: number;
+};
+
+export type WorktreeSetup = {
+  commands?: WorktreeSetupCommand[];
+};
+
+export type WorktreeSetupCommand =
+  | string
+  | {
+      id?: string;
+      command: string;
+      artifact?: string;
+      artifact_stream?: "stdout" | "stderr" | "combined";
+      required?: boolean;
+    };
+
+export type WorktreeSetupResult = {
+  id: string;
+  command: string;
+  status: "pass" | "fail";
+  exit_code: number | null;
+  required: boolean;
+  output: string;
+  artifact?: string;
 };
 
 export type CandidateScorecard = {
@@ -74,6 +101,7 @@ export type CandidateScorecard = {
   worktree: string;
   branch: string;
   run_dir: string;
+  setup?: WorktreeSetupResult[];
   verification: Array<{ command: string; status: "pass" | "fail"; output: string }>;
   diff_stats: {
     files_changed: number;
@@ -210,6 +238,7 @@ export const normalizeManifest = (manifest: Manifest, manifestPath: string, runR
     verification: {
       commands: manifest.verification?.commands ?? [],
     },
+    worktree_setup: normalizeWorktreeSetup(manifest.worktree_setup),
     execution: {
       parallel: manifest.execution?.parallel ?? true,
       worker_timeout_min: manifest.execution?.worker_timeout_min ?? DEFAULT_WORKER_TIMEOUT_MIN,
@@ -233,12 +262,62 @@ const normalizeCandidate = (candidate: Candidate, seen: Set<string>): Candidate 
   if (runtime !== "host") {
     throw new Error(`unsupported runtime for ${candidate.id}: ${runtime}`);
   }
+  const harness = candidate.harness ?? "fake";
+  if (harness === "command" && !candidate.command?.trim()) {
+    throw new Error(`candidate ${candidate.id}: command harness requires command`);
+  }
   return {
     ...candidate,
-    harness: candidate.harness ?? "fake",
+    harness,
     required_env: candidate.required_env ?? [],
     runtime,
     skills: candidate.skills ?? [],
+    worktree_setup: normalizeWorktreeSetup(candidate.worktree_setup),
+  };
+};
+
+const normalizeWorktreeSetup = (setup: WorktreeSetup | undefined): WorktreeSetup | undefined => {
+  if (!setup) {
+    return undefined;
+  }
+  if (!Array.isArray(setup.commands)) {
+    return { commands: [] };
+  }
+  return {
+    commands: setup.commands.map((command, index) => normalizeWorktreeSetupCommand(command, index)),
+  };
+};
+
+const normalizeWorktreeSetupCommand = (
+  command: WorktreeSetupCommand,
+  index: number,
+): WorktreeSetupCommand => {
+  if (typeof command === "string") {
+    if (!command.trim()) {
+      throw new Error(`worktree_setup command ${index + 1}: command must not be empty`);
+    }
+    return command;
+  }
+  if (!isRecord(command) || typeof command.command !== "string" || !command.command.trim()) {
+    throw new Error(`worktree_setup command ${index + 1}: command must be a non-empty string`);
+  }
+  if (command.artifact !== undefined) {
+    validateArtifactPath(command.artifact, `worktree_setup command ${index + 1}`);
+  }
+  if (
+    command.artifact_stream !== undefined
+    && !["stdout", "stderr", "combined"].includes(command.artifact_stream)
+  ) {
+    throw new Error(
+      `worktree_setup command ${index + 1}: artifact_stream must be stdout, stderr, or combined`,
+    );
+  }
+  return {
+    id: typeof command.id === "string" && command.id.trim() ? command.id.trim() : undefined,
+    command: command.command,
+    artifact: command.artifact,
+    artifact_stream: command.artifact_stream,
+    required: command.required,
   };
 };
 
@@ -266,8 +345,11 @@ export const validateManifest = (
     if (candidate.harness !== "fake" && !options.allowReal) {
       errors.push(`candidate ${candidate.id}: real harness requires --execute-real`);
     }
-    if (!["fake", "codex-cli", "claude-code"].includes(candidate.harness)) {
+    if (!["fake", "codex-cli", "claude-code", "command"].includes(candidate.harness)) {
       errors.push(`candidate ${candidate.id}: unsupported harness ${candidate.harness}`);
+    }
+    if (candidate.harness === "command" && !candidate.command?.trim()) {
+      errors.push(`candidate ${candidate.id}: command harness requires command`);
     }
     for (const key of candidate.required_env ?? []) {
       if (!env[key]) {
@@ -411,6 +493,29 @@ const normalizeMappedEnv = (targetKey: string, value: string, provider: string):
 const stripTrailingV1 = (value: string): string =>
   value.replace(/\/v1\/?$/, "");
 
+const validateArtifactPath = (artifact: string, context: string): void => {
+  if (!artifact || artifact.startsWith("/") || artifact.includes("..")) {
+    throw new Error(`${context}: artifact must be a relative path without '..'`);
+  }
+};
+
+const setupCommandLabel = (command: WorktreeSetupCommand, index: number): string =>
+  typeof command === "string"
+    ? `setup-${index + 1}`
+    : command.id ?? `setup-${index + 1}`;
+
+const setupCommandText = (command: WorktreeSetupCommand): string =>
+  typeof command === "string" ? command : command.command;
+
+const setupCommandRequired = (command: WorktreeSetupCommand): boolean =>
+  typeof command === "string" ? true : command.required !== false;
+
+const setupCommandArtifact = (command: WorktreeSetupCommand): string | undefined =>
+  typeof command === "string" ? undefined : command.artifact;
+
+const setupCommandArtifactStream = (command: WorktreeSetupCommand): "stdout" | "stderr" | "combined" =>
+  typeof command === "string" ? "combined" : command.artifact_stream ?? "combined";
+
 export const renderCandidateCommand = (
   candidate: Candidate,
   lastMessagePath: string,
@@ -446,6 +551,9 @@ export const renderCandidateCommand = (
       command.push("--model", candidate.model);
     }
     return command;
+  }
+  if (candidate.harness === "command" && candidate.command?.trim()) {
+    return ["bash", "-lc", candidate.command];
   }
   throw new Error(`candidate ${candidate.id}: unsupported real harness ${candidate.harness}`);
 };
@@ -837,6 +945,63 @@ export const runVerification = (worktree: string, commands: string[], env: Recor
     };
   });
 
+const mergedSetupCommands = (manifest: Manifest, candidate: Candidate): WorktreeSetupCommand[] => [
+  ...(manifest.worktree_setup?.commands ?? []),
+  ...(candidate.worktree_setup?.commands ?? []),
+];
+
+export const runWorktreeSetup = (
+  manifest: Manifest,
+  candidate: Candidate,
+  worktree: string,
+  candidateDir: string,
+  runDir: string,
+  env: Record<string, string | undefined> = process.env,
+): WorktreeSetupResult[] => {
+  const commands = mergedSetupCommands(manifest, candidate);
+  const results: WorktreeSetupResult[] = [];
+  for (let index = 0; index < commands.length; index += 1) {
+    const command = commands[index];
+    const commandText = setupCommandText(command);
+    const result = spawnSync("bash", ["-lc", commandText], {
+      cwd: worktree,
+      encoding: "utf8",
+      env: {
+        ...env,
+        PLAN_BAKEOFF_CANDIDATE_ID: candidate.id,
+        PLAN_BAKEOFF_CANDIDATE_DIR: candidateDir,
+        PLAN_BAKEOFF_RUN_DIR: runDir,
+        PLAN_BAKEOFF_TARGET_REPO: manifest.target_repo,
+        PLAN_BAKEOFF_WORKTREE: worktree,
+        ROBOCLAWS_CANDIDATE_ID: candidate.id,
+      },
+    });
+    const combined = `${result.stdout}\n${result.stderr}`;
+    const stream = setupCommandArtifactStream(command);
+    const artifactText = stream === "stdout" ? result.stdout : stream === "stderr" ? result.stderr : combined;
+    const artifact = setupCommandArtifact(command);
+    if (artifact) {
+      const artifactPath = join(candidateDir, artifact);
+      mkdirSync(dirname(artifactPath), { recursive: true });
+      writeFileSync(artifactPath, redactText(artifactText, env));
+    }
+    const setupResult: WorktreeSetupResult = {
+      id: setupCommandLabel(command, index),
+      command: commandText,
+      status: result.status === 0 ? "pass" : "fail",
+      exit_code: result.status,
+      required: setupCommandRequired(command),
+      output: redactText(combined.slice(-4000), env),
+      artifact,
+    };
+    results.push(setupResult);
+    if (setupResult.status === "fail" && setupResult.required) {
+      break;
+    }
+  }
+  return results;
+};
+
 export const writeScorecard = (scorecard: CandidateScorecard, candidateDir: string): void => {
   writeFileSync(join(candidateDir, "scorecard.json"), JSON.stringify(scorecard, null, 2) + "\n");
   writeFileSync(
@@ -852,6 +1017,14 @@ export const writeScorecard = (scorecard: CandidateScorecard, candidateDir: stri
       `- Diff: ${scorecard.diff_stats.files_changed} files, +${scorecard.diff_stats.insertions}/-${scorecard.diff_stats.deletions}`,
       ...(shouldShowDiagnostics(scorecard)
         ? [`- Diagnostic reason: ${scorecard.diagnostics.reason || "none"}`]
+        : []),
+      ...(scorecard.setup?.length
+        ? [
+            "",
+            "## Worktree Setup",
+            "",
+            ...scorecard.setup.map((item) => `- ${item.status}: \`${item.command}\`${item.artifact ? ` -> ${item.artifact}` : ""}`),
+          ]
         : []),
       "",
       "## Verification",
@@ -878,6 +1051,7 @@ export const writeScorecard = (scorecard: CandidateScorecard, candidateDir: stri
 const shouldShowDiagnostics = (scorecard: CandidateScorecard): boolean =>
   scorecard.status !== "SUCCESS"
   || scorecard.worker_status === "UNKNOWN"
+  || (scorecard.setup ?? []).some((item) => item.status === "fail" && item.required)
   || scorecard.verification.some((item) => item.status === "fail");
 
 const fenced = (text: string): string => ["```text", text, "```"].join("\n");
@@ -969,6 +1143,10 @@ const rankingReason = (scorecard: CandidateScorecard): string => {
   if (scorecard.status === "SUCCESS" && verificationFailures === 0) {
     return `clean success; ${scorecard.diff_stats.files_changed} changed file${scorecard.diff_stats.files_changed === 1 ? "" : "s"}`;
   }
+  const setupFailure = (scorecard.setup ?? []).find((item) => item.status === "fail" && item.required);
+  if (setupFailure) {
+    return `worktree setup failed: ${setupFailure.id}`;
+  }
   if (scorecard.diagnostics.reason) {
     return scorecard.diagnostics.reason;
   }
@@ -1009,9 +1187,10 @@ const candidateDiagnosticLines = (scorecard: CandidateScorecard): string[] => {
   if (!shouldShowDiagnostics(scorecard)) {
     return [`- ${scorecard.candidate_id}: none`];
   }
+  const setupFailure = (scorecard.setup ?? []).find((item) => item.status === "fail" && item.required);
   const artifactNames = scorecard.diagnostics.artifacts.map((artifact) => artifact.name).join(", ") || "none";
   return [
-    `- ${scorecard.candidate_id}: ${scorecard.diagnostics.reason || "inspect scorecard diagnostics"} (artifacts: ${artifactNames})`,
+    `- ${scorecard.candidate_id}: ${scorecard.diagnostics.reason || (setupFailure ? `worktree setup failed: ${setupFailure.id}` : "inspect scorecard diagnostics")} (artifacts: ${artifactNames})`,
   ];
 };
 
@@ -1049,7 +1228,44 @@ export const executeBakeoff = async (
   const runCandidate = async ({ candidate, candidateDir, branch, worktree }: typeof candidateRuns[number]) => {
     const startedAtMs = Date.now();
     const startedAt = new Date(startedAtMs).toISOString();
+    let keepWorktreeAfterRun = options.keepWorktrees ?? false;
     try {
+      mkdirSync(candidateDir, { recursive: true });
+      const setup = runWorktreeSetup(manifest, candidate, worktree, candidateDir, runDir, env);
+      const setupFailure = setup.find((item) => item.status === "fail" && item.required);
+      if (setupFailure) {
+        keepWorktreeAfterRun = true;
+        const finishedAtMs = Date.now();
+        const scorecard: CandidateScorecard = {
+          candidate_id: candidate.id,
+          status: "BLOCKED",
+          worker_status: "BLOCKED",
+          base_ref: baseRef,
+          worktree,
+          branch,
+          run_dir: "",
+          setup,
+          verification: [],
+          diff_stats: diffStats(worktree),
+          route: {
+            harness: candidate.harness,
+            provider_profile: candidate.provider_profile ?? "",
+            model: candidate.model ?? "",
+          },
+          timing: {
+            started_at: startedAt,
+            finished_at: new Date(finishedAtMs).toISOString(),
+            elapsed_ms: finishedAtMs - startedAtMs,
+          },
+          diagnostics: {
+            reason: `worktree setup failed before worker launch: ${setupFailure.id}`,
+            output_tail: setupFailure.output,
+            artifacts: [],
+          },
+        };
+        writeScorecard(scorecard, candidateDir);
+        return scorecard;
+      }
       const worker = await runSkillRunnerCandidate(manifest, candidate, runDir, worktree, env, { allowReal: options.allowReal });
       const verification = runVerification(worktree, manifest.verification?.commands ?? [], env);
       const verificationFailures = verification.filter((item) => item.status === "fail").length;
@@ -1063,6 +1279,7 @@ export const executeBakeoff = async (
         worktree,
         branch,
         run_dir: worker.runDir,
+        setup,
         verification,
         diff_stats: diffStats(worktree),
         route: {
@@ -1085,7 +1302,7 @@ export const executeBakeoff = async (
       writeScorecard(scorecard, candidateDir);
       return scorecard;
     } finally {
-      if (!options.keepWorktrees) {
+      if (!keepWorktreeAfterRun) {
         removeWorktree(manifest.target_repo, worktree, branch);
       }
     }
@@ -1114,6 +1331,12 @@ const dryRunText = (manifest: Manifest, baseRef: string): string =>
     "",
       ...manifest.candidates.map((candidate) => `- ${candidate.id}: ${candidate.harness} ${candidate.provider_profile ?? ""} ${candidate.model ?? ""}`.trim()),
       "",
+    "## Worktree Setup",
+    "",
+    ...(manifest.worktree_setup?.commands?.length
+      ? manifest.worktree_setup.commands.map((command, index) => `- ${setupCommandLabel(command, index)}: ${setupCommandText(command)}`)
+      : ["- none"]),
+    "",
     ].join("\n");
 
 export const proposalText = (manifest: Manifest, candidates: Candidate[]): string =>
@@ -1179,12 +1402,13 @@ const main = async () => {
     console.log(proposalText(manifest, proposeCandidates()));
     return;
   }
-  const errors = validateManifest(manifest, process.env, { allowReal: args.executeReal });
+  const isDryRunOnly = args.dryRun && !args.execute;
+  const errors = validateManifest(manifest, process.env, { allowReal: args.executeReal || isDryRunOnly });
   if (errors.length > 0) {
     throw new Error(errors.join("\n"));
   }
   const runDir = await executeBakeoff(manifest, {
-    dryRun: args.dryRun && !args.execute,
+    dryRun: isDryRunOnly,
     keepWorktrees: args.keepWorktrees,
     allowReal: args.executeReal,
   });

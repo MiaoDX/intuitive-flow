@@ -67,6 +67,9 @@ that as a bakeoff blocker instead of expanding the prompt into a one-off SOP.
    bash skills/plan-bakeoff/scripts/run_plan_bakeoff.sh --manifest <manifest> --dry-run
    ```
 
+   Dry-run must not launch real providers, so it does not require
+   `--execute-real`.
+
 7. Execute fake candidates, or real candidates only after explicit approval:
 
    ```bash
@@ -168,6 +171,18 @@ Optional fields:
 - `worker_goal`: explicit first instruction for each candidate worker when the
   task must trigger a goal-style skill route, for example
   `/goal execute docs/plans/example.md with intuitive-flow`.
+- `worktree_setup.commands`: shell commands to run in each candidate worktree
+  after worktree creation and before worker launch. Use this for repo-local
+  bootstrap, readiness checks, submodule/assets setup, or any target-repo
+  preparation that should be shared and judged separately from model quality.
+  Commands may be strings or objects:
+  `{ "id": "readiness", "command": "...", "artifact": "readiness.json",
+  "artifact_stream": "stdout", "required": true }`.
+  `artifact` paths are relative to the candidate artifact directory.
+  `artifact_stream` is `stdout`, `stderr`, or `combined`; default is
+  `combined`. `required` defaults to true. A required setup failure marks that
+  candidate `BLOCKED`, saves setup evidence, keeps its worktree for inspection,
+  and does not launch the worker.
 - `verification.commands`: shared post-run commands
 - `execution.parallel`: run candidates concurrently, default `true`; set
   `false` only for harness debugging.
@@ -180,7 +195,12 @@ Optional fields:
 Candidate fields:
 
 - `id`: run-local id.
-- `harness`: `fake`, `codex-cli`, or `claude-code`.
+- `harness`: `fake`, `codex-cli`, `claude-code`, or `command`.
+- `command`: shell command for `harness=command`. The command runs in the
+  candidate worktree, receives the worker prompt on stdin, and should emit a
+  `RESULT_STATUS: SUCCESS|PARTIAL|BLOCKED|FAILED` line for best scoring. Use
+  this when the local route already has its own launcher and plan-bakeoff
+  should not understand its provider/runtime details.
 - `provider_profile`: route/profile name such as `codex-router-responses`.
 - `model`: model id or route default.
 - `required_env`: env key names that must be present.
@@ -188,6 +208,8 @@ Candidate fields:
 - `command_profile`: deterministic command template.
 - `runtime`: `host`; Docker is intentionally unsupported in v0.
 - `skills`: skills expected in the candidate worker environment.
+- `worktree_setup.commands`: extra per-candidate setup commands appended after
+  shared setup commands.
 - `timeout_min`, `idle_timeout_min`, `timeout_grace_min`: candidate-specific
   timing overrides for unusually large or tiny tasks.
 
