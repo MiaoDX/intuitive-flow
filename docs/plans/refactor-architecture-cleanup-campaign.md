@@ -39,7 +39,7 @@ and easier to navigate.
 
 ## Rolling Candidate Queue
 
-Empty. Run a fresh discovery handoff after the Multica renderer split commit
+Empty. Run a fresh discovery handoff after the Codex config task split commit
 lands.
 
 ## Parked Gates
@@ -97,4 +97,10 @@ P1/P2 slice after shrink attempts.
   `track_goal_markdown.ts`. Existing finish/final-review/start/preflight/raw
   comment shapes, hidden markers, and legacy raw-json attempt parsing stayed
   unchanged. Focused Multica tracker tests, `bun run check`, and
+  `git diff --check` passed.
+- 2026-06-23: Fresh discovery pass 1 selected a safe internal slice from the
+  remaining `update-cli.sh` phase mix. Moved the `Codex config` update phase
+  into `update-codex-config.sh`; `scripts/update.sh` still runs
+  `run_codex_config` under the same phase name and ordering. Shell syntax,
+  Codex config tests, `bun run check:shell`, `bun run check`, and
   `git diff --check` passed.

@@ -1,4 +1,6 @@
 import { describe, expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { ensureCodexConfigText } from "./ensure-codex-config";
 
 const defaultStatusLine =
@@ -62,5 +64,16 @@ describe("codex config helper", () => {
   test("is idempotent", () => {
     const once = ensureCodexConfigText("[tui]\n");
     expect(ensureCodexConfigText(once)).toBe(once);
+  });
+
+  test("update task owns Codex config mutation", () => {
+    const repoRoot = process.cwd();
+    const updateScript = readFileSync(join(repoRoot, "scripts", "update.sh"), "utf8");
+    const updateTask = readFileSync(join(repoRoot, "scripts", "tasks", "update-codex-config.sh"), "utf8");
+
+    expect(updateScript).toContain('source "$SCRIPT_DIR/tasks/update-codex-config.sh"');
+    expect(updateScript).toContain('task_run "Codex config" run_codex_config');
+    expect(updateTask).toContain("run_codex_config()");
+    expect(updateTask).toContain("ensure-codex-config.ts");
   });
 });
