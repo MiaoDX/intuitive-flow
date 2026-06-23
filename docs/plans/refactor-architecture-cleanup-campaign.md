@@ -39,8 +39,8 @@ and easier to navigate.
 
 ## Rolling Candidate Queue
 
-Empty. Run a fresh discovery handoff after the `plan-bakeoff` manifest
-ownership split commit lands.
+Empty. Run a fresh discovery handoff after the Multica goal attempt timeline
+split commit lands.
 
 ## Parked Gates
 
@@ -148,3 +148,12 @@ P1/P2 slice after shrink attempts.
   environment mapping, prompts, scorecard/report writing, and CLI behavior.
   The public manifest schema and generated proposal text stayed unchanged.
   Focused plan-bakeoff tests, `bun run check`, and `git diff --check` passed.
+- 2026-06-23: Fresh discovery selected a safe internal Multica goal tracker
+  deepening slice. Moved attempt status, hidden attempt metadata encoding and
+  decoding, legacy raw-json attempt metadata parsing, deduplication, timeline
+  accumulation, and next-sequence selection behind `track_goal_attempts.ts`.
+  `track_goal.ts` still owns CLI/Multica/session/preflight behavior, while
+  `track_goal_markdown.ts` only renders comments from attempt records.
+  Existing comment markers, legacy raw-json metadata support, markdown text,
+  and command behavior stayed unchanged. Focused Multica tracker tests,
+  `bun run check`, and `git diff --check` passed.

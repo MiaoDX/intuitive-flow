@@ -3,10 +3,10 @@
 Source gate: `docs/plans/refactor-architecture-cleanup-campaign.md`
 Latest user intent: autonomous repeated verified cleanup slices.
 
-Current slice: ready to commit `plan-bakeoff` manifest ownership split.
+Current slice: ready to commit Multica goal attempt timeline split.
 
 Last proof:
-- `bun test skills/plan-bakeoff/scripts/run_plan_bakeoff.test.ts` PASS
+- `bun test skills/multica-goal-tracker/scripts/track_goal.test.ts` PASS
 - `bun run check` PASS
 - `git diff --check` PASS
 

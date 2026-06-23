@@ -1,9 +1,13 @@
-import { Buffer } from "node:buffer";
 import type {
   AttemptStatus,
   GoalAttemptRecord,
-  GoalSummary,
   GoalTimeline,
+} from "./track_goal_attempts";
+import {
+  encodeAttemptRecords,
+} from "./track_goal_attempts";
+import type {
+  GoalSummary,
   PreflightContract,
   SessionEvidence,
 } from "./track_goal";
@@ -22,19 +26,6 @@ type FinalReviewAttempt = {
 };
 
 export const agentCommentBanner = "> Agent 提交：以下内容由 Agent 帮忙整理并提交，用于和人工手写评论区分。\n\n";
-
-export const attemptMetaPrefix = "<!-- multica-goal-tracker:attempt ";
-export const attemptMetaSuffix = " -->";
-export const encodedAttemptMetaPrefix = "v1:";
-
-export function encodeAttemptRecord(record: GoalAttemptRecord): string {
-  const encoded = Buffer.from(JSON.stringify(record), "utf8").toString("base64");
-  return `${attemptMetaPrefix}${encodedAttemptMetaPrefix}${encoded}${attemptMetaSuffix}`;
-}
-
-export function encodeAttemptRecords(records: GoalAttemptRecord[]): string {
-  return records.map(encodeAttemptRecord).join("\n");
-}
 
 export function markdownForStart(summary: GoalSummary): string {
   const sources = summary.sources.length ? summary.sources.map((s) => `\`${s}\``).join(", ") : "未在 goal 中明确。";

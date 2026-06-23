@@ -1,13 +1,20 @@
 #!/usr/bin/env bun
-import { Buffer } from "node:buffer";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import {
-  attemptMetaPrefix,
-  attemptMetaSuffix,
-  encodedAttemptMetaPrefix,
+  attemptRecordsFromComments,
+  buildAttemptRecord,
+  buildGoalTimeline,
+  isAttemptStatus,
+  nextAttemptSequence,
+} from "./track_goal_attempts";
+import type {
+  AttemptStatus,
+  GoalAttemptRecord,
+} from "./track_goal_attempts";
+import {
   markdownForFinalReview,
   markdownForFinish,
   markdownForPreflightIssueDescription,
@@ -55,32 +62,6 @@ export type SessionEvidence = {
   startedAt?: string;
   completedAt?: string;
   durationMs?: number;
-};
-
-export type AttemptStatus = "complete" | "partial" | "blocked" | "failed";
-
-export type GoalAttemptRecord = {
-  sequence: number;
-  status: AttemptStatus;
-  goal: string;
-  purpose: string;
-  route: string;
-  proof: string;
-  source: string;
-  outcome: string;
-  proofNote: string;
-  messageCount: number;
-  startedAt?: string;
-  completedAt?: string;
-  durationMs?: number;
-  recordedAt: string;
-};
-
-export type GoalTimeline = {
-  attempts: GoalAttemptRecord[];
-  totalDurationMs?: number;
-  startedAt?: string;
-  completedAt?: string;
 };
 
 type Options = {
@@ -142,10 +123,6 @@ export type PreflightContract = {
 };
 
 const skillDir = dirname(dirname(new URL(import.meta.url).pathname));
-
-function isAttemptStatus(value: string): value is AttemptStatus {
-  return value === "complete" || value === "partial" || value === "blocked" || value === "failed";
-}
 
 function usage(): never {
   console.error(`Usage:
@@ -1113,146 +1090,6 @@ function loadFinalReviewAttempts(opts: Options): FinalReviewAttempt[] {
 function getIssueComments(opts: Options): unknown[] {
   const out = runMultica(opts, ["issue", "comment", "list", opts.issue!, "--output", "json"]);
   return nestedArray(JSON.parse(out) as unknown, ["comments", "items", "threads", "data"]);
-}
-
-function parseAttemptRecord(value: unknown): GoalAttemptRecord | undefined {
-  const record = asRecord(value);
-  if (!record) return undefined;
-  const status = textFromUnknown(record.status);
-  if (!isAttemptStatus(status)) return undefined;
-  const sequence = typeof record.sequence === "number" && Number.isFinite(record.sequence) ? Math.max(1, Math.round(record.sequence)) : 1;
-  const goal = textFromUnknown(record.goal);
-  const purpose = textFromUnknown(record.purpose);
-  const route = textFromUnknown(record.route);
-  const proof = textFromUnknown(record.proof);
-  const source = textFromUnknown(record.source);
-  const outcome = textFromUnknown(record.outcome);
-  const proofNote = textFromUnknown(record.proofNote);
-  const recordedAt = textFromUnknown(record.recordedAt) || new Date(0).toISOString();
-  const messageCount = typeof record.messageCount === "number" && Number.isFinite(record.messageCount) ? Math.max(0, Math.round(record.messageCount)) : 0;
-  const durationMs = typeof record.durationMs === "number" && Number.isFinite(record.durationMs) ? Math.max(0, Math.round(record.durationMs)) : undefined;
-  return {
-    sequence,
-    status,
-    goal,
-    purpose,
-    route,
-    proof,
-    source,
-    outcome,
-    proofNote,
-    messageCount,
-    startedAt: textFromUnknown(record.startedAt) || undefined,
-    completedAt: textFromUnknown(record.completedAt) || undefined,
-    durationMs,
-    recordedAt,
-  };
-}
-
-export function attemptRecordFromCommentText(text: string): GoalAttemptRecord | undefined {
-  return attemptRecordsFromCommentText(text)[0];
-}
-
-export function attemptRecordsFromCommentText(text: string): GoalAttemptRecord[] {
-  const records: GoalAttemptRecord[] = [];
-  let searchFrom = 0;
-  while (searchFrom < text.length) {
-    const idx = text.indexOf(attemptMetaPrefix, searchFrom);
-    if (idx < 0) break;
-    const start = idx + attemptMetaPrefix.length;
-    const end = text.indexOf(attemptMetaSuffix, start);
-    if (end < 0) break;
-    const record = parseAttemptRecordPayload(text.slice(start, end));
-    if (record) {
-      records.push(record);
-      searchFrom = end + attemptMetaSuffix.length;
-      continue;
-    }
-
-    const lastEnd = text.lastIndexOf(attemptMetaSuffix);
-    if (lastEnd > end) {
-      const legacyRecord = parseAttemptRecordPayload(text.slice(start, lastEnd));
-      if (legacyRecord) records.push(legacyRecord);
-    }
-    break;
-  }
-  return records;
-}
-
-export function attemptRecordsFromComments(comments: unknown[]): GoalAttemptRecord[] {
-  const records = comments.flatMap((comment) => attemptRecordsFromCommentText(textFromUnknown(comment)));
-  const deduped = new Map<string, GoalAttemptRecord>();
-  for (const record of records) {
-    const key = [
-      record.sequence,
-      record.status,
-      record.startedAt ?? "",
-      record.completedAt ?? "",
-      record.recordedAt,
-      record.goal,
-    ].join("\u0000");
-    deduped.set(key, record);
-  }
-  return [...deduped.values()].sort((a, b) => {
-    const bySequence = a.sequence - b.sequence;
-    if (bySequence !== 0) return bySequence;
-    return Date.parse(a.recordedAt) - Date.parse(b.recordedAt);
-  });
-}
-
-function parseAttemptRecordPayload(payload: string): GoalAttemptRecord | undefined {
-  try {
-    const trimmed = payload.trim();
-    const rawJson = trimmed.startsWith(encodedAttemptMetaPrefix)
-      ? Buffer.from(trimmed.slice(encodedAttemptMetaPrefix.length), "base64").toString("utf8")
-      : trimmed;
-    return parseAttemptRecord(JSON.parse(rawJson) as unknown);
-  } catch {
-    return undefined;
-  }
-}
-
-export function buildAttemptRecord(summary: GoalSummary, session: SessionEvidence, status: AttemptStatus, sequence: number): GoalAttemptRecord {
-  return {
-    sequence,
-    status,
-    goal: summary.rawGoal,
-    purpose: summary.purpose,
-    route: summary.route,
-    proof: summary.proof,
-    source: session.source,
-    outcome: session.outcome,
-    proofNote: session.proofNote,
-    messageCount: session.messageCount,
-    startedAt: session.startedAt,
-    completedAt: session.completedAt,
-    durationMs: session.durationMs,
-    recordedAt: new Date().toISOString(),
-  };
-}
-
-export function buildGoalTimeline(attempts: GoalAttemptRecord[]): GoalTimeline {
-  let totalDurationMs = 0;
-  let hasDuration = false;
-  let startedAt: string | undefined;
-  let completedAt: string | undefined;
-  for (const attempt of attempts) {
-    if (attempt.durationMs !== undefined && Number.isFinite(attempt.durationMs)) {
-      totalDurationMs += attempt.durationMs;
-      hasDuration = true;
-    }
-    if (attempt.startedAt && (!startedAt || Date.parse(attempt.startedAt) < Date.parse(startedAt))) {
-      startedAt = attempt.startedAt;
-    }
-    if (attempt.completedAt && (!completedAt || Date.parse(attempt.completedAt) > Date.parse(completedAt))) {
-      completedAt = attempt.completedAt;
-    }
-  }
-  return { attempts, totalDurationMs: hasDuration ? totalDurationMs : undefined, startedAt, completedAt };
-}
-
-export function nextAttemptSequence(attempts: GoalAttemptRecord[]): number {
-  return attempts.reduce((max, attempt) => Math.max(max, attempt.sequence), 0) + 1;
 }
 
 function stripCodeFenceNoise(text: string): string {
