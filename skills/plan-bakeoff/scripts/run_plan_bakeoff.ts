@@ -1183,7 +1183,11 @@ const candidateDiagnosticLines = (scorecard: CandidateScorecard): string[] => {
     return [`- ${scorecard.candidate_id}: none`];
   }
   const setupFailure = (scorecard.setup ?? []).find((item) => item.status === "fail" && item.required);
-  const artifactNames = scorecard.diagnostics.artifacts.map((artifact) => artifact.name).join(", ") || "none";
+  const setupArtifacts = (scorecard.setup ?? []).flatMap((item) => item.artifact ? [item.artifact] : []);
+  const artifactNames = [
+    ...setupArtifacts,
+    ...scorecard.diagnostics.artifacts.map((artifact) => artifact.name),
+  ].join(", ") || "none";
   return [
     `- ${scorecard.candidate_id}: ${scorecard.diagnostics.reason || (setupFailure ? `worktree setup failed: ${setupFailure.id}` : "inspect scorecard diagnostics")} (artifacts: ${artifactNames})`,
   ];

@@ -702,6 +702,7 @@ describe("plan-bakeoff runner", () => {
       expect(scorecard).toContain('"run_dir": ""');
       expect(scorecard).toContain("worktree setup failed before worker launch: readiness");
       expect(report).toContain("worktree setup failed: readiness");
+      expect(report).toContain("artifacts: readiness.log");
       expect(readiness).toContain("not-ready");
       expect(git(repo, ["worktree", "list", "--porcelain"]).stdout).toContain(runDir);
     } finally {
