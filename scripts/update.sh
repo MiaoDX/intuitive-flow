@@ -140,6 +140,7 @@ fi
 source "$SCRIPT_DIR/lib/ensure-no-running-codex.sh"
 source "$SCRIPT_DIR/lib/ensure-clean-env.sh"
 source "$SCRIPT_DIR/lib/task-runner.sh"
+source "$SCRIPT_DIR/tasks/update-claude-tools.sh"
 source "$SCRIPT_DIR/tasks/update-cli.sh"
 source "$SCRIPT_DIR/tasks/update-codex-config.sh"
 source "$SCRIPT_DIR/tasks/update-gsd-workflow.sh"

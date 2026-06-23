@@ -39,7 +39,7 @@ and easier to navigate.
 
 ## Rolling Candidate Queue
 
-Empty. Run a fresh discovery handoff after the Codex config task split commit
+Empty. Run a fresh discovery handoff after the Claude tools task split commit
 lands.
 
 ## Parked Gates
@@ -104,3 +104,9 @@ P1/P2 slice after shrink attempts.
   `run_codex_config` under the same phase name and ordering. Shell syntax,
   Codex config tests, `bun run check:shell`, `bun run check`, and
   `git diff --check` passed.
+- 2026-06-23: Fresh discovery pass 2 selected another safe internal slice from
+  the remaining `update-cli.sh` phase mix. Moved Claude plugin installation and
+  MCP fetch setup into `update-claude-tools.sh`; `scripts/update.sh` still runs
+  `run_mcp_fetch` and `run_claude_plugins` under the same phase names and
+  ordering. Shell syntax, Claude tools wiring tests, `bun run check:shell`,
+  `bun run check`, and `git diff --check` passed.

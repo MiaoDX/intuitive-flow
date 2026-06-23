@@ -3,11 +3,11 @@
 Source gate: `docs/plans/refactor-architecture-cleanup-campaign.md`
 Latest user intent: autonomous repeated verified cleanup slices.
 
-Current slice: ready to commit Codex config update task owner split.
+Current slice: ready to commit Claude tools update task owner split.
 
 Last proof:
 - `bash -n scripts/update.sh scripts/tasks/*.sh scripts/lib/*.sh` PASS
-- `bun test scripts/lib/ensure-codex-config.test.ts` PASS
+- `bun test scripts/tasks/update-claude-tools.test.ts` PASS
 - `bun run check:shell` PASS
 - `bun run check` PASS
 - `git diff --check` PASS
