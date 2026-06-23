@@ -14,7 +14,6 @@ import {
   proposalText,
   proposeCandidates,
   redactText,
-  renderCandidateCommand,
   skillRunnerArgsForCandidate,
   validateManifest,
   writeFinalReport,
@@ -200,51 +199,6 @@ describe("plan-bakeoff runner", () => {
     expect(candidates[4].launch_mode).toBe("interactive-tmux");
   });
 
-  test("renders real harness commands without inline secrets", () => {
-    const codex = renderCandidateCommand(
-      {
-        id: "codex",
-        harness: "codex-cli",
-        provider_profile: "codex-router-responses",
-        model: "gpt-5.5",
-        required_env: ["CODEX_API_KEY"],
-      },
-      "/tmp/last-message.md",
-      { CODEX_BASE_URL: "https://codex.example.test/v1" },
-    ).join(" ");
-    const minimax = renderCandidateCommand(
-      {
-        id: "minimax",
-        harness: "codex-cli",
-        provider_profile: "minimax-responses",
-        model: "MiniMax-M3",
-        required_env: ["MM_API_KEY"],
-      },
-      "/tmp/last-message.md",
-      { MM_BASE_URL: "https://minimax.example.test/v1", MM_API_KEY: "fake-mm-key" },
-    ).join(" ");
-    const claude = renderCandidateCommand(
-      {
-        id: "claude",
-        harness: "claude-code",
-        model: "sonnet",
-        required_env: ["ANTHROPIC_API_KEY"],
-      },
-      "/tmp/last-message.md",
-    ).join(" ");
-
-    expect(codex).toContain("codex exec");
-    expect(codex).toContain("model_provider");
-    expect(codex).not.toContain("fake-codex-key");
-    expect(minimax).toContain("minimax-responses");
-    expect(minimax).toContain("MM_API_KEY");
-    expect(minimax).not.toContain("fake-mm-key");
-    expect(claude).toContain("claude -p");
-    expect(claude).toContain("--verbose");
-    expect(claude).toContain("--permission-mode auto");
-    expect(claude).toContain("--model sonnet");
-  });
-
   test("renders structured skill-runner args for real candidates", () => {
     const timing = {
       timeoutMin: 60,
@@ -291,19 +245,6 @@ describe("plan-bakeoff runner", () => {
     expect(claude).toContain("--model");
     expect(claude).toContain("kimi-k2.7-code");
     expect(claude.join(" ")).not.toContain("claude -p");
-  });
-
-  test("renders arbitrary command harness through bash", () => {
-    const command = renderCandidateCommand(
-      {
-        id: "local-route",
-        harness: "command",
-        command: "scripts/run-local-agent --flag",
-      },
-      "/tmp/last-message.md",
-    );
-
-    expect(command).toEqual(["bash", "-lc", "scripts/run-local-agent --flag"]);
   });
 
   test("requires command for command harness", () => {

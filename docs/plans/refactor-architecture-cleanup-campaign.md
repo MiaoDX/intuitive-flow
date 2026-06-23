@@ -39,12 +39,8 @@ and easier to navigate.
 
 ## Rolling Candidate Queue
 
-1. Delete stale `plan-bakeoff` direct command rendering helpers/tests now that
-   `skill-runner` owns provider command construction.
-2. Remove the `plan-bakeoff` `base.mode` legacy no-op after confirming no
-   in-repo manifest depends on it.
-3. Align human docs with the default-visible `plan-bakeoff` direct utility.
-4. Shrink managed skill state ownership by moving one lifecycle slice behind a
+1. Align human docs with the default-visible `plan-bakeoff` direct utility.
+2. Shrink managed skill state ownership by moving one lifecycle slice behind a
    clearer internal owner while preserving CLI commands and state paths.
 
 ## Parked Gates
@@ -56,6 +52,8 @@ and easier to navigate.
 - MiMoCode command-wrapper pruning drift: planning history and current tests
   disagree on ownership; needs a current owner decision before changing prune
   behavior.
+- `plan-bakeoff` `base.mode` legacy no-op: documented manifest key, so removal
+  needs an explicit schema/public artifact migration decision.
 
 ## Stop Condition
 
@@ -72,3 +70,7 @@ P1/P2 slice after shrink attempts.
 - 2026-06-23: Split live install allowlist kind ownership from prune-ledger kind
   ownership in `scripts/lib/default-skill-allowlist.ts`; focused allowlist
   tests, `bun run check`, and `git diff --check` passed.
+- 2026-06-23: Deleted stale `plan-bakeoff` direct provider command rendering
+  helper/tests so `skill-runner` remains the only in-repo owner of real
+  candidate command construction. Focused plan-bakeoff tests, `bun run check`,
+  stale-reference search, and `git diff --check` passed.

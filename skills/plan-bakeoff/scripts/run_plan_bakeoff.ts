@@ -531,48 +531,6 @@ const setupCommandArtifact = (command: WorktreeSetupCommand): string | undefined
 const setupCommandArtifactStream = (command: WorktreeSetupCommand): "stdout" | "stderr" | "combined" =>
   typeof command === "string" ? "combined" : command.artifact_stream ?? "combined";
 
-export const renderCandidateCommand = (
-  candidate: Candidate,
-  lastMessagePath: string,
-  env: Record<string, string | undefined> = process.env,
-): string[] => {
-  if (candidate.harness === "codex-cli") {
-    const provider = candidate.provider_profile ?? "codex-router-responses";
-    const command = [
-      "codex",
-      "exec",
-      "--ignore-user-config",
-      "--ignore-rules",
-      "--json",
-      "--output-last-message",
-      lastMessagePath,
-      "--sandbox",
-      "workspace-write",
-    ];
-    if (candidate.model) {
-      command.push("-c", `model=${JSON.stringify(candidate.model)}`);
-    }
-    command.push("-c", `model_provider=${JSON.stringify(provider)}`);
-    command.push("-c", `model_providers.${provider}.name=${JSON.stringify(provider)}`);
-    command.push("-c", `model_providers.${provider}.base_url=${JSON.stringify(codexProviderBaseUrl(provider, env))}`);
-    command.push("-c", `model_providers.${provider}.env_key=${JSON.stringify(PROVIDER_ENV_KEY[provider] ?? "CODEX_API_KEY")}`);
-    command.push("-c", `model_providers.${provider}.wire_api="responses"`);
-    command.push("-");
-    return command;
-  }
-  if (candidate.harness === "claude-code") {
-    const command = ["claude", "-p", "--verbose", "--output-format", "stream-json", "--permission-mode", "auto"];
-    if (candidate.model) {
-      command.push("--model", candidate.model);
-    }
-    return command;
-  }
-  if (candidate.harness === "command" && candidate.command?.trim()) {
-    return ["bash", "-lc", candidate.command];
-  }
-  throw new Error(`candidate ${candidate.id}: unsupported real harness ${candidate.harness}`);
-};
-
 export const skillRunnerArgsForCandidate = (
   candidate: Candidate,
   worktree: string,
