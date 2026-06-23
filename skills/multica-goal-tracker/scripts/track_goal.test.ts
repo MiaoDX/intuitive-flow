@@ -3,7 +3,6 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
-  agentCommentBanner,
   attemptRecordFromCommentText,
   attemptRecordsFromComments,
   buildAttemptRecord,
@@ -13,18 +12,11 @@ import {
   extractGoalFromPreflight,
   extractTrackedGoalFromComments,
   issueWorkspaceIdFromCreateOutput,
-  markdownCodeBlock,
-  markdownForFinalReview,
-  markdownForFinish,
-  markdownForPreflightIssueDescription,
-  markdownForRawSessionOutput,
-  markdownForStart,
   nextAttemptSequence,
   normalizeLines,
   parseWorkspaceListOutput,
   parsePreflightContract,
   multicaEnv,
-  replaceMarkedBlock,
   resolveWorkspaceIdFromList,
   selectLatestRunId,
   sessionEvidenceFromSessionText,
@@ -32,6 +24,16 @@ import {
   sessionEvidenceFromTranscript,
   summarizeGoal,
 } from "./track_goal";
+import {
+  agentCommentBanner,
+  markdownCodeBlock,
+  markdownForFinalReview,
+  markdownForFinish,
+  markdownForPreflightIssueDescription,
+  markdownForRawSessionOutput,
+  markdownForStart,
+  replaceMarkedBlock,
+} from "./track_goal_markdown";
 
 describe("multica goal tracker", () => {
   const tempDirs: string[] = [];

@@ -39,9 +39,8 @@ and easier to navigate.
 
 ## Rolling Candidate Queue
 
-- `skills/multica-goal-tracker/scripts/track_goal.ts` rendering ownership:
-  candidate for a later internal rendering slice if proof stays local and
-  hidden comment markers / existing issue comment formats are preserved.
+Empty. Run a fresh discovery handoff after the Multica renderer split commit
+lands.
 
 ## Parked Gates
 
@@ -93,3 +92,9 @@ P1/P2 slice after shrink attempts.
   hook pruning, settings cleanup, and managed-state sync stayed unchanged.
   Shell syntax, managed-state tests, `bun run check:shell`, `bun run check`,
   and `git diff --check` passed.
+- 2026-06-23: Moved Multica goal tracker comment markdown rendering,
+  score-summary blocks, and encoded attempt marker output behind
+  `track_goal_markdown.ts`. Existing finish/final-review/start/preflight/raw
+  comment shapes, hidden markers, and legacy raw-json attempt parsing stayed
+  unchanged. Focused Multica tracker tests, `bun run check`, and
+  `git diff --check` passed.

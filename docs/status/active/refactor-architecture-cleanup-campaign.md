@@ -3,22 +3,17 @@
 Source gate: `docs/plans/refactor-architecture-cleanup-campaign.md`
 Latest user intent: autonomous repeated verified cleanup slices.
 
-Current slice: ready to commit GSD workflow task owner split.
+Current slice: ready to commit Multica goal tracker markdown renderer split.
 
 Last proof:
-- `bash -n scripts/update.sh scripts/tasks/*.sh scripts/lib/*.sh` PASS
-- `bun test scripts/lib/managed-skill-state.test.ts` PASS
-- `bun run check:shell` PASS
+- `bun test skills/multica-goal-tracker/scripts/track_goal.test.ts` PASS
 - `bun run check` PASS
 - `git diff --check` PASS
 
 Next proof:
-- for next slice, likely `bun test skills/multica-goal-tracker/scripts/track_goal.test.ts`
-- `bun run check`
+- fresh discovery handoff after commit
 
-Next candidate: shrink `skills/multica-goal-tracker/scripts/track_goal.ts` by
-moving markdown rendering helpers behind an internal rendering owner while
-preserving hidden markers, issue comment formats, and Multica invocation order.
+Next candidate: none queued; run fresh discovery against current `HEAD`.
 
 Parked work:
 - Codex config old managed status-line variant migration.
