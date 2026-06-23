@@ -39,7 +39,7 @@ and easier to navigate.
 
 ## Rolling Candidate Queue
 
-Empty. Run a fresh discovery handoff after the Claude tools task split commit
+Empty. Run a fresh discovery handoff after the global CLI task rename commit
 lands.
 
 ## Parked Gates
@@ -110,3 +110,9 @@ P1/P2 slice after shrink attempts.
   `run_mcp_fetch` and `run_claude_plugins` under the same phase names and
   ordering. Shell syntax, Claude tools wiring tests, `bun run check:shell`,
   `bun run check`, and `git diff --check` passed.
+- 2026-06-23: Fresh discovery selected the final safe internal `update-cli.sh`
+  slice after prior phase moves. Renamed it to `update-global-cli.sh`, leaving
+  `run_global_cli_tools` and `print_npm_failure_hint` as the same public update
+  phase functions. Shell syntax, global CLI / Claude tools wiring tests,
+  `bun run check:shell`, `bun run check`, stale-reference search, and
+  `git diff --check` passed.

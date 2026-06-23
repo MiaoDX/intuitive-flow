@@ -7,7 +7,7 @@ describe("Claude update task wiring", () => {
     const repoRoot = process.cwd();
     const updateScript = readFileSync(join(repoRoot, "scripts", "update.sh"), "utf8");
     const task = readFileSync(join(repoRoot, "scripts", "tasks", "update-claude-tools.sh"), "utf8");
-    const globalCliTask = readFileSync(join(repoRoot, "scripts", "tasks", "update-cli.sh"), "utf8");
+    const globalCliTask = readFileSync(join(repoRoot, "scripts", "tasks", "update-global-cli.sh"), "utf8");
 
     expect(updateScript).toContain('source "$SCRIPT_DIR/tasks/update-claude-tools.sh"');
     expect(updateScript).toContain('task_run "MCP: fetch" run_mcp_fetch');
