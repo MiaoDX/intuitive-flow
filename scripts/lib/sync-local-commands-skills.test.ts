@@ -63,6 +63,7 @@ const copySyncTaskHelpers = (fixture: string) => {
   for (const helper of [
     "default-skill-allowlist.ts",
     "external-skill-state.ts",
+    "gsd-skill-state.ts",
     "managed-skill-state-common.ts",
     "managed-skill-state.ts",
     "owned-root-skill-state.ts",

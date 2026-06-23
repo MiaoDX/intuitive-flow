@@ -3,7 +3,7 @@
 Source gate: `docs/plans/refactor-architecture-cleanup-campaign.md`
 Latest user intent: autonomous repeated verified cleanup slices.
 
-Current slice: ready to commit external skill state lifecycle split.
+Current slice: ready to commit GSD skill state lifecycle split.
 
 Last proof:
 - `bun test scripts/lib/managed-skill-state.test.ts scripts/lib/sync-local-commands-skills.test.ts` PASS

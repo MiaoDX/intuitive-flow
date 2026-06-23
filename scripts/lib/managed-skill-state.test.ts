@@ -4,8 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   syncGsdSkillState,
-  syncGstackSkillState,
-} from "./managed-skill-state";
+} from "./gsd-skill-state";
+import { syncGstackSkillState } from "./managed-skill-state";
 import {
   pruneRemovedExternalSkillStates,
   syncExternalSkillState,

@@ -39,8 +39,8 @@ and easier to navigate.
 
 ## Rolling Candidate Queue
 
-Empty. Run a fresh discovery handoff after the external skill state lifecycle
-split commit lands.
+Empty. Run a fresh discovery handoff after the GSD skill state lifecycle split
+commit lands.
 
 ## Parked Gates
 
@@ -122,3 +122,8 @@ P1/P2 slice after shrink attempts.
   `external-skill-state.ts`; `managed-skill-state.ts` still owns the same
   `external-sync` and `external-prune-removed` CLI commands. Focused
   managed-state/sync tests, `bun run check`, and `git diff --check` passed.
+- 2026-06-23: Fresh discovery selected another safe managed-state lifecycle
+  split. Moved GSD skill state and managed GSD wrapper pruning behind
+  `gsd-skill-state.ts`; `managed-skill-state.ts` still owns the same
+  `gsd-sync` CLI command. Focused managed-state/sync tests, `bun run check`,
+  and `git diff --check` passed.
