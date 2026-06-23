@@ -3,20 +3,22 @@
 Source gate: `docs/plans/refactor-architecture-cleanup-campaign.md`
 Latest user intent: autonomous repeated verified cleanup slices.
 
-Current slice: ready to commit `plan-bakeoff` report owner split.
+Current slice: ready to commit GSD workflow task owner split.
 
 Last proof:
-- `bun test skills/plan-bakeoff/scripts/run_plan_bakeoff.test.ts` PASS
+- `bash -n scripts/update.sh scripts/tasks/*.sh scripts/lib/*.sh` PASS
+- `bun test scripts/lib/managed-skill-state.test.ts` PASS
+- `bun run check:shell` PASS
 - `bun run check` PASS
 - `git diff --check` PASS
 
 Next proof:
-- for next slice, likely `bash -n scripts/update.sh scripts/tasks/*.sh scripts/lib/*.sh`
-- focused tests/checks selected after shrinking the candidate
+- for next slice, likely `bun test skills/multica-goal-tracker/scripts/track_goal.test.ts`
+- `bun run check`
 
-Next candidate: shrink `scripts/tasks/update-cli.sh` by moving the GSD workflow
-block to a task-owned internal file without changing update phase order or
-public task names.
+Next candidate: shrink `skills/multica-goal-tracker/scripts/track_goal.ts` by
+moving markdown rendering helpers behind an internal rendering owner while
+preserving hidden markers, issue comment formats, and Multica invocation order.
 
 Parked work:
 - Codex config old managed status-line variant migration.

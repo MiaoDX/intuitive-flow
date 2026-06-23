@@ -406,13 +406,13 @@ describe("managed skill state", () => {
   test("update tasks run managed skill state after installs", () => {
     const updateGstack = readFileSync(join(repoRoot, "scripts", "tasks", "update-gstack.sh"), "utf8");
     const updateSkills = readFileSync(join(repoRoot, "scripts", "tasks", "update-skills.sh"), "utf8");
-    const updateCli = readFileSync(join(repoRoot, "scripts", "tasks", "update-cli.sh"), "utf8");
+    const updateGsdWorkflow = readFileSync(join(repoRoot, "scripts", "tasks", "update-gsd-workflow.sh"), "utf8");
     const syncLocal = readFileSync(join(repoRoot, "scripts", "tasks", "sync-local-commands-skills.sh"), "utf8");
 
     expectManagedStateCommand(updateGstack, "gstack-sync");
     expectManagedStateCommand(updateSkills, "external-sync");
     expectManagedStateCommand(updateSkills, "external-prune-removed");
-    expectManagedStateCommand(updateCli, "gsd-sync");
+    expectManagedStateCommand(updateGsdWorkflow, "gsd-sync");
     expectManagedStateToolCall(syncLocal, "prune-legacy-artifacts", "$default_skill_prune_ledger");
     expectManagedStateToolCall(syncLocal, "prune-owned-root-skills", "$default_skill_allowlist");
     expectManagedStateToolCall(syncLocal, "record-owned-root-skills", "$default_skill_allowlist");

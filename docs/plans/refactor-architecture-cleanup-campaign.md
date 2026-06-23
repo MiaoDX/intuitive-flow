@@ -39,9 +39,6 @@ and easier to navigate.
 
 ## Rolling Candidate Queue
 
-- `scripts/tasks/update-cli.sh` GSD workflow ownership: shrink by moving the
-  GSD workflow block to a task-owned internal file while preserving phase order,
-  task names, installer behavior, hook/config defaults, and public CLI surface.
 - `skills/multica-goal-tracker/scripts/track_goal.ts` rendering ownership:
   candidate for a later internal rendering slice if proof stays local and
   hidden comment markers / existing issue comment formats are preserved.
@@ -90,3 +87,9 @@ P1/P2 slice after shrink attempts.
   schema, generated scorecard/report shapes, and execution behavior stayed
   unchanged. Focused plan-bakeoff tests, `bun run check`, and `git diff --check`
   passed.
+- 2026-06-23: Moved the `GSD workflow` update phase implementation from
+  `update-cli.sh` into `update-gsd-workflow.sh`. `scripts/update.sh` still runs
+  the same `run_gsd_workflow` phase in the same order, and installer behavior,
+  hook pruning, settings cleanup, and managed-state sync stayed unchanged.
+  Shell syntax, managed-state tests, `bun run check:shell`, `bun run check`,
+  and `git diff --check` passed.
