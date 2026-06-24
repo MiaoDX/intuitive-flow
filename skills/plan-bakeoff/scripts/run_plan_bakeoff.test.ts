@@ -17,12 +17,14 @@ import {
 } from "./plan_bakeoff_manifest";
 import {
   bakeoffPrompt,
-  candidateMappedEnv,
   executeBakeoff,
   parseResultStatus,
+} from "./run_plan_bakeoff";
+import {
+  candidateMappedEnv,
   redactText,
   skillRunnerArgsForCandidate,
-} from "./run_plan_bakeoff";
+} from "./plan_bakeoff_runtime";
 
 const repoRoot = process.cwd();
 const scriptDir = dirname(import.meta.path);

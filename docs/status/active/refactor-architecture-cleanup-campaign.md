@@ -3,7 +3,7 @@
 Source gate: `docs/plans/refactor-architecture-cleanup-campaign.md`
 Latest user intent: autonomous repeated verified cleanup slices.
 
-Current slice: ready to commit Multica workspace/CLI response parsing split.
+Current slice: ready to commit plan-bakeoff runtime routing split.
 
 Last proof:
 - `bun test skills/multica-goal-tracker/scripts/track_goal.test.ts` PASS

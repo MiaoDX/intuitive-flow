@@ -183,3 +183,12 @@ P1/P2 slice after shrink attempts.
   dispatch. Existing workspace resolution, issue post-create verification, run
   selection, comment output, and CLI behavior stayed unchanged. Focused
   Multica tracker tests, `bun run check`, and `git diff --check` passed.
+- 2026-06-24: Fresh discovery selected a safe bounded module-deepening slice in
+  `plan-bakeoff`. Moved dotenv loading, secret redaction, provider/env mapping,
+  shared skill-runner argument construction, and real-harness command argument
+  construction behind `plan_bakeoff_runtime.ts`. `run_plan_bakeoff.ts` still
+  owns run orchestration, fake harness setup, worktree setup, process
+  execution, verification, scorecard/report writing, and CLI behavior.
+  Existing provider routing, redaction, worker launch args, manifest schema,
+  generated reports, and execution behavior stayed unchanged. Focused
+  plan-bakeoff tests, `bun run check`, and `git diff --check` passed.
