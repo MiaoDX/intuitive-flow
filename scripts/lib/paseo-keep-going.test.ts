@@ -64,6 +64,14 @@ describe("paseo keep-going monitor", () => {
     expect(match?.line).toContain("stream closed before response.completed");
   });
 
+  test("matches account concurrency stream-disconnected errors", () => {
+    const match = findCapacityError(
+      "[System Error] stream disconnected before completion: Concurrency limit exceeded for account, please retry later",
+    );
+
+    expect(match?.line).toContain("Concurrency limit exceeded for account");
+  });
+
   test("plans a send only for monitored active agents with matching logs", () => {
     const agents: PaseoAgent[] = [
       { id: "running-match", status: "running", name: "active" },
