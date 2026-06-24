@@ -3,7 +3,6 @@
 import { spawn, spawnSync } from "node:child_process";
 import {
   chmodSync,
-  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -47,6 +46,12 @@ import {
   setupCommandLabel,
   setupCommandText,
 } from "./plan_bakeoff_worktree_setup";
+import {
+  parseResultStatus,
+  statusFromWorker,
+  workerDiagnostics,
+  workerStatusText,
+} from "./plan_bakeoff_worker_result";
 
 type Args = {
   manifest?: string;
@@ -246,15 +251,6 @@ const runProcess = (
     });
   });
 
-const workerStatusText = (workerDir: string, candidateDir: string): string =>
-  [
-    ...workerArtifactPaths(workerDir).map(([, path]) => path),
-    join(candidateDir, "last-message.md"),
-  ]
-    .filter((path) => path && existsSync(path))
-    .map((path) => readFileSync(path, "utf8"))
-    .join("\n");
-
 export const bakeoffPrompt = (manifest: Manifest, candidate: Candidate): string =>
   manifest.worker_goal
     ? [
@@ -284,91 +280,6 @@ export const bakeoffPrompt = (manifest: Manifest, candidate: Candidate): string 
         "Use the accepted plan as scope. Do not delegate to skill-runner, tmux, or another coding agent.",
         "End with RESULT_STATUS: SUCCESS, PARTIAL, BLOCKED, or FAILED plus concise acceptance evidence.",
       ].join("\n");
-
-export const parseResultStatus = (text: string): string => {
-  const direct = /^\s*RESULT_STATUS:\s*(SUCCESS|PARTIAL|BLOCKED(?:_NEEDS_DECISION)?|FAILED)\b/im.exec(text);
-  if (direct) {
-    return direct[1].toUpperCase() === "BLOCKED_NEEDS_DECISION" ? "BLOCKED" : direct[1].toUpperCase();
-  }
-  const match = /-\s*Status:\s*([A-Z_]+)/.exec(text);
-  return match?.[1] ?? "UNKNOWN";
-};
-
-const statusFromWorker = (workerStatus: string, exitCode: number): CandidateStatus => {
-  if (workerStatus === "SUCCESS") return "SUCCESS";
-  if (workerStatus === "PARTIAL") return "PARTIAL";
-  if (workerStatus === "BLOCKED" || workerStatus === "BLOCKED_NEEDS_DECISION") return "BLOCKED";
-  if (workerStatus === "FAILED") return "FAILED";
-  return exitCode === 0 ? "SUCCESS" : "FAILED";
-};
-
-const workerDiagnostics = ({
-  workerDir,
-  candidateDir,
-  workerStatus,
-  status,
-  exitCode,
-  output,
-  env,
-}: {
-  workerDir: string;
-  candidateDir: string;
-  workerStatus: string;
-  status: CandidateStatus;
-  exitCode: number;
-  output: string;
-  env: Record<string, string | undefined>;
-}): CandidateDiagnostics => {
-  const artifacts = workerArtifactTails(workerDir, candidateDir, env);
-  const resultReason = artifactReason(artifacts);
-  const reason = resultReason
-    || (workerStatus === "UNKNOWN" ? `no parseable worker status; exit code ${exitCode}` : "")
-    || (status !== "SUCCESS" ? `worker reported RESULT_STATUS: ${workerStatus}; cli exit code ${exitCode}` : "");
-  return {
-    reason,
-    output_tail: tail(output, 2000),
-    artifacts,
-  };
-};
-
-const workerArtifactTails = (
-  workerDir: string,
-  candidateDir: string,
-  env: Record<string, string | undefined>,
-): CandidateDiagnostics["artifacts"] => {
-  const paths = [
-    ...workerArtifactPaths(workerDir),
-    ["last-message.md", join(candidateDir, "last-message.md")],
-  ];
-  return paths.flatMap(([name, path]) => {
-    if (!path || !existsSync(path)) {
-      return [];
-    }
-    const text = redactText(readFileSync(path, "utf8"), env).trim();
-    return text ? [{ name, tail: tail(text, 2000) }] : [];
-  });
-};
-
-const workerArtifactPaths = (workerDir: string): Array<[string, string]> =>
-  workerDir
-    ? [
-        ["result.md", join(workerDir, "result.md")],
-        ["eval.md", join(workerDir, "eval.md")],
-        ["stderr.log", join(workerDir, "stderr.log")],
-        ["pane-before-stop.log", join(workerDir, "pane-before-stop.log")],
-        ["terminal.log", join(workerDir, "terminal.log")],
-        ["events.jsonl", join(workerDir, "events.jsonl")],
-      ]
-    : [];
-
-const artifactReason = (artifacts: CandidateDiagnostics["artifacts"]): string => {
-  const result = artifacts.find((artifact) => artifact.name === "result.md")?.tail ?? "";
-  const match = /-\s*Reason:\s*(.+)/.exec(result);
-  return match?.[1]?.trim() ?? "";
-};
-
-const tail = (text: string, limit: number): string =>
-  text.length > limit ? text.slice(-limit).trimStart() : text;
 
 export const diffStats = (worktree: string): CandidateScorecard["diff_stats"] => {
   const result = git(worktree, ["diff", "--numstat"], { allowFail: true });

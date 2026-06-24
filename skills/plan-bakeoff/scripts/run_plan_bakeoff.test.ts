@@ -18,13 +18,15 @@ import {
 import {
   bakeoffPrompt,
   executeBakeoff,
-  parseResultStatus,
 } from "./run_plan_bakeoff";
 import {
   candidateMappedEnv,
   redactText,
   skillRunnerArgsForCandidate,
 } from "./plan_bakeoff_runtime";
+import {
+  parseResultStatus,
+} from "./plan_bakeoff_worker_result";
 
 const repoRoot = process.cwd();
 const scriptDir = dirname(import.meta.path);

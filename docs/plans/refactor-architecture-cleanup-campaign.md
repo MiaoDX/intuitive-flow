@@ -202,3 +202,13 @@ P1/P2 slice after shrink attempts.
   setup fields, setup artifact output, setup failure behavior, and execution
   order stayed unchanged. Focused plan-bakeoff tests, `bun run check`, and
   `git diff --check` passed.
+- 2026-06-24: Fresh discovery selected another safe bounded module-deepening
+  slice in `plan-bakeoff`. Moved worker artifact discovery, worker result status
+  parsing, worker status-to-candidate-status mapping, worker diagnostics,
+  diagnostic artifact tails, and generic tail formatting behind
+  `plan_bakeoff_worker_result.ts`. `run_plan_bakeoff.ts` still owns worker
+  launch, candidate execution policy, post-run verification policy, scorecard
+  construction, report writing, and CLI behavior. Existing worker status
+  parsing, diagnostics text, artifact tail redaction, scorecard/report fields,
+  and execution behavior stayed unchanged. Focused plan-bakeoff tests,
+  `bun run check`, and `git diff --check` passed.
