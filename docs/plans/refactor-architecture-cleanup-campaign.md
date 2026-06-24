@@ -39,11 +39,8 @@ and easier to navigate.
 
 ## Rolling Candidate Queue
 
-- Shared skill metadata parser merge: ready to commit; focused checker/audit
-  tests, `bun run check`, and `git diff --check` passed.
-- `paseo-keep-going` pure decision planning owner split: shrink candidate from
-  fresh architecture scout; execute only if behavior can be preserved with
-  focused tests.
+- `paseo-keep-going` pure decision planning owner split: ready to commit;
+  focused tests, `bun run check`, and `git diff --check` passed.
 - Root `STATUS.md` active-campaign drift cleanup: queued as a docs-only slice
   if the next discovery handoff finds no higher-value code cleanup.
 
@@ -233,3 +230,12 @@ P1/P2 slice after shrink attempts.
   checker validation behavior, upstream audit discovery, and markdown output
   stayed unchanged. Focused checker/audit tests, `bun run check`, and
   `git diff --check` passed.
+- 2026-06-24: Fresh discovery selected a safe bounded module-deepening slice in
+  `paseo-keep-going`. Moved pure agent preflight, log-signal scanning,
+  keep-going prompt detection, cooldown/send planning, relative-age parsing,
+  and legacy fingerprint normalization behind `paseo-keep-going-plan.ts`.
+  `paseo-keep-going.ts` still owns CLI argument parsing, state file IO, Paseo
+  process adapters, send execution, daemon loop, and user-visible command
+  behavior. Existing dry-run behavior, state writes, CLI options, prompt text,
+  transient-error matching, and send planning stayed unchanged. Focused
+  paseo-keep-going tests, `bun run check`, and `git diff --check` passed.

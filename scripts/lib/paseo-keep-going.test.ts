@@ -4,14 +4,16 @@ import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import {
-  findCapacityError,
   parseArgs,
+  readState,
+} from "./paseo-keep-going";
+import {
+  findCapacityError,
   parseCreatedAgeMs,
   planKeepGoingActions,
-  readState,
   type KeepGoingState,
   type PaseoAgent,
-} from "./paseo-keep-going";
+} from "./paseo-keep-going-plan";
 
 const baseConfig = {
   statuses: new Set(["running", "error"]),

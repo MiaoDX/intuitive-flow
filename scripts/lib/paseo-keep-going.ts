@@ -1,24 +1,19 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { spawn, spawnSync } from "node:child_process";
-
-export type PaseoAgent = {
-  id?: string;
-  shortId?: string;
-  name?: string;
-  status?: string;
-  cwd?: string;
-  created?: string;
-};
-
-export type KeepGoingState = {
-  sent: Record<string, SentRecord>;
-};
-
-export type SentRecord = {
-  fingerprint: string;
-  sentAt: number;
-};
+import {
+  DEFAULT_PATTERNS,
+  DEFAULT_PROMPT,
+  normalizeFingerprint,
+  normalizeStatus,
+  planCandidateLogAction,
+  preflightAgent,
+  type KeepGoingState,
+  type LogCandidate,
+  type PaseoAgent,
+  type ScanAction,
+  type SentRecord,
+} from "./paseo-keep-going-plan";
 
 export type KeepGoingConfig = {
   statuses: Set<string>;
@@ -36,44 +31,6 @@ export type KeepGoingConfig = {
   includeSelf: boolean;
   selfAgentId?: string;
 };
-
-export type ScanAction =
-  | {
-      kind: "send";
-      agentId: string;
-      agentName?: string;
-      fingerprint: string;
-    }
-  | {
-      kind: "skip";
-      agentId: string;
-      agentName?: string;
-      reason: string;
-    };
-
-type LogCandidate = {
-  kind: "candidate";
-  agent: PaseoAgent;
-  agentId: string;
-  agentName?: string;
-};
-
-const DEFAULT_PATTERNS = [
-  /^.*\[System Error\]\s*Selected model is at capacity\. Please try a different model\.\s*$/i,
-  /^.*\[System Error\]\s*stream disconnected before completion:\s*error sending request for url\s*\(.+\)\s*$/i,
-  /^.*\[System Error\]\s*stream disconnected before completion:\s*Transport error:\s*timeout\s*$/i,
-  /^.*\[System Error\]\s*stream disconnected before completion:\s*stream closed before response\.completed\s*$/i,
-];
-
-const DEFAULT_PROMPT =
-  "The previous turn appears to have been interrupted by a transient API error. Please continue from your last valid state and keep going. Do not restart from scratch.";
-
-const KEEP_GOING_PROMPT_PATTERNS = [
-  /the previous turn appears to have been interrupted by a transient (?:model-capacity\/)?api error/i,
-  /a transient api error interrupted your previous turn/i,
-  /please continue from your last valid state and keep going\. do not restart from scratch/i,
-  /continue from the last valid state\. do not restart from scratch/i,
-];
 
 async function main(): Promise<void> {
   const config = parseArgs(process.argv.slice(2));
@@ -140,152 +97,6 @@ async function scanOnce(config: KeepGoingConfig): Promise<void> {
       log(`failed to send keep-going to ${label(action)}: ${message}`);
     }
   }
-}
-
-export function planKeepGoingActions(
-  agents: PaseoAgent[],
-  readAgentLog: (agent: PaseoAgent) => string,
-  state: KeepGoingState,
-  now: number,
-  config: Pick<KeepGoingConfig, "statuses" | "patterns" | "cooldownMs" | "maxAgeMs" | "includeSelf" | "selfAgentId"> &
-    Partial<Pick<KeepGoingConfig, "prompt">>,
-): ScanAction[] {
-  const actions: ScanAction[] = [];
-
-  for (const agent of agents) {
-    const decision = preflightAgent(agent, config);
-    if (decision === undefined) continue;
-    if (decision.kind !== "candidate") {
-      actions.push(decision);
-      continue;
-    }
-
-    actions.push(planCandidateLogAction(decision, readAgentLog(agent), state, now, config));
-  }
-
-  return actions;
-}
-
-function preflightAgent(
-  agent: PaseoAgent,
-  config: Pick<KeepGoingConfig, "statuses" | "maxAgeMs" | "includeSelf" | "selfAgentId">,
-): LogCandidate | ScanAction | undefined {
-  const agentId = agent.id ?? agent.shortId;
-  if (agentId === undefined || agentId.length === 0) return undefined;
-  const agentName = agent.name;
-
-  if (!config.includeSelf && config.selfAgentId !== undefined && [agent.id, agent.shortId].includes(config.selfAgentId)) {
-    return { kind: "skip", agentId, agentName, reason: "self agent excluded" };
-  }
-
-  const status = normalizeStatus(agent.status);
-  if (!config.statuses.has(status)) {
-    return { kind: "skip", agentId, agentName, reason: `status ${status || "unknown"} not monitored` };
-  }
-
-  const ageMs = parseCreatedAgeMs(agent.created);
-  if (config.maxAgeMs !== undefined && ageMs !== undefined && ageMs > config.maxAgeMs) {
-    return { kind: "skip", agentId, agentName, reason: `created ${agent.created ?? "unknown"} exceeds max age` };
-  }
-
-  return { kind: "candidate", agent, agentId, agentName };
-}
-
-function planCandidateLogAction(
-  candidate: LogCandidate,
-  logText: string,
-  state: KeepGoingState,
-  now: number,
-  config: Pick<KeepGoingConfig, "patterns" | "cooldownMs"> & Partial<Pick<KeepGoingConfig, "prompt">>,
-): ScanAction {
-  const scan = scanLogSignals(logText, config.patterns, config.prompt);
-  if (scan.latestError === undefined) {
-    return {
-      kind: "skip",
-      agentId: candidate.agentId,
-      agentName: candidate.agentName,
-      reason: "no matching transient error",
-    };
-  }
-
-  if (scan.latestPromptIndex !== undefined && scan.latestPromptIndex > scan.latestError.index) {
-    return {
-      kind: "skip",
-      agentId: candidate.agentId,
-      agentName: candidate.agentName,
-      reason: "matching error already has a later keep-going prompt",
-    };
-  }
-
-  const prior = state.sent[candidate.agentId];
-  if (prior !== undefined && now - prior.sentAt < config.cooldownMs) {
-    return {
-      kind: "skip",
-      agentId: candidate.agentId,
-      agentName: candidate.agentName,
-      reason: "agent already received keep-going recently",
-    };
-  }
-
-  return {
-    kind: "send",
-    agentId: candidate.agentId,
-    agentName: candidate.agentName,
-    fingerprint: scan.latestError.fingerprint,
-  };
-}
-
-export function findCapacityError(logText: string, patterns: RegExp[] = DEFAULT_PATTERNS): { line: string; fingerprint: string } | undefined {
-  const match = scanLogSignals(logText, patterns).latestError;
-  if (match === undefined) return undefined;
-  return {
-    line: match.line,
-    fingerprint: match.fingerprint,
-  };
-}
-
-function scanLogSignals(
-  logText: string,
-  patterns: RegExp[] = DEFAULT_PATTERNS,
-  prompt = DEFAULT_PROMPT,
-): {
-  latestError?: { index: number; line: string; fingerprint: string };
-  latestPromptIndex?: number;
-} {
-  const lines = logText.split(/\r?\n/);
-  let latestError: { index: number; line: string; fingerprint: string } | undefined;
-  let latestPromptIndex: number | undefined;
-
-  for (let index = lines.length - 1; index >= 0; index--) {
-    const line = lines[index]?.trim();
-    if (line === undefined || line.length === 0) continue;
-
-    if (latestPromptIndex === undefined && isKeepGoingPromptLine(line, prompt)) {
-      latestPromptIndex = index;
-    }
-
-    if (latestError === undefined && patterns.some((pattern) => pattern.test(line))) {
-      latestError = {
-        index,
-        line,
-        fingerprint: line,
-      };
-    }
-
-    if (latestError !== undefined && latestPromptIndex !== undefined) break;
-  }
-
-  return { latestError, latestPromptIndex };
-}
-
-function isKeepGoingPromptLine(line: string, prompt: string): boolean {
-  const text = stripLogSpeaker(line);
-  if (prompt.trim().length > 0 && text.includes(prompt.trim())) return true;
-  return KEEP_GOING_PROMPT_PATTERNS.some((pattern) => pattern.test(text));
-}
-
-function stripLogSpeaker(line: string): string {
-  return line.trim().replace(/^\[[^\]]+\]\s*/, "");
 }
 
 export function readState(path: string): KeepGoingState {
@@ -474,37 +285,6 @@ function parseNonNegativeNumber(value: string, flag: string): number {
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed < 0) throw new Error(`${flag} must be a non-negative number`);
   return parsed;
-}
-
-function normalizeStatus(value: string | undefined): string {
-  return value?.trim().toLowerCase() ?? "";
-}
-
-export function parseCreatedAgeMs(value: string | undefined): number | undefined {
-  const text = value?.trim().toLowerCase();
-  if (text === undefined || text.length === 0) return undefined;
-  if (text === "now" || text === "just now") return 0;
-  if (text === "yesterday") return 24 * 60 * 60 * 1000;
-
-  const match = text.match(/^(\d+(?:\.\d+)?)\s+(second|minute|hour|day|week|month|year)s?\s+ago$/);
-  if (match === null) return undefined;
-
-  const amount = Number(match[1]);
-  const unit = match[2];
-  const unitMs: Record<string, number> = {
-    second: 1000,
-    minute: 60 * 1000,
-    hour: 60 * 60 * 1000,
-    day: 24 * 60 * 60 * 1000,
-    week: 7 * 24 * 60 * 60 * 1000,
-    month: 30 * 24 * 60 * 60 * 1000,
-    year: 365 * 24 * 60 * 60 * 1000,
-  };
-  return amount * unitMs[unit];
-}
-
-function normalizeFingerprint(value: string): string {
-  return value.replace(/^\d+:/, "");
 }
 
 function stringField(record: Record<string, unknown>, key: string): string | undefined {

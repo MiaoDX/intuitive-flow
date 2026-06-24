@@ -3,20 +3,18 @@
 Source gate: `docs/plans/refactor-architecture-cleanup-campaign.md`
 Latest user intent: autonomous repeated verified cleanup slices.
 
-Current slice: ready to commit shared skill metadata parser merge.
+Current slice: ready to commit paseo keep-going decision owner split.
 
 Last proof:
-- `bun test scripts/lib/check-skills.test.ts scripts/lib/audit-skill-upstreams.test.ts` PASS
+- `bun test scripts/lib/paseo-keep-going.test.ts` PASS
 - `bun run check` PASS
 - `git diff --check` PASS
 
 Next proof:
 - fresh discovery/shrink proof after commit
 
-Next candidate: shrink `scripts/lib/paseo-keep-going.ts` pure decision planning
-into an internal owner if behavior can be preserved with focused tests. Root
-`STATUS.md` active-campaign drift cleanup is the docs-only fallback if no
-higher-value code cleanup remains.
+Next candidate: root `STATUS.md` active-campaign drift cleanup if the next
+fresh discovery handoff finds no higher-value code cleanup.
 
 Parked work:
 - Codex config old managed status-line variant migration.
