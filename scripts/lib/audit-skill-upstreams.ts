@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { readDefaultSkillAllowlist, type DefaultSkillAllowlist } from "./default-skill-allowlist";
+import { skillBlockValue, skillFrontmatter, skillFrontmatterValue } from "./skill-metadata";
 
 export type DiscoveredSkill = {
   name: string;
@@ -43,35 +44,6 @@ const githubCloneUrl = (repo: string) => {
   return `https://github.com/${repo}.git`;
 };
 
-const frontmatter = (text: string): string | undefined => /^---\n([\s\S]*?)\n---\n/.exec(text)?.[1];
-
-const frontmatterValue = (frontmatterText: string, key: string): string | undefined => {
-  const match = new RegExp(`^${key}:\\s*(.*)$`, "m").exec(frontmatterText);
-  return match?.[1]?.trim().replace(/^["']|["']$/g, "");
-};
-
-const blockValue = (frontmatterText: string, key: string): string => {
-  const lines = frontmatterText.split("\n");
-  const start = lines.findIndex((line) => line.startsWith(`${key}:`));
-  if (start === -1) {
-    return "";
-  }
-
-  const first = lines[start].slice(`${key}:`.length).trim();
-  if (first !== "|" && first !== ">") {
-    return first.replace(/^["']|["']$/g, "");
-  }
-
-  const body: string[] = [];
-  for (const line of lines.slice(start + 1)) {
-    if (/^[A-Za-z0-9_-]+:\s*/.test(line)) {
-      break;
-    }
-    body.push(line.replace(/^ {2}/, ""));
-  }
-  return body.join(" ").replace(/\s+/g, " ").trim();
-};
-
 const listSkillFiles = (dir: string, prefix = ""): string[] => {
   const ownSkillPath = join(dir, "SKILL.md");
   try {
@@ -107,10 +79,12 @@ export const discoverSkills = (sourceRoot: string, options: DiscoverOptions = {}
   const byName = new Map<string, DiscoveredSkill>();
   for (const skillPath of listSkillFiles(sourceRoot)) {
     const text = readFileSync(join(sourceRoot, skillPath), "utf8");
-    const header = frontmatter(text);
-    const name = header ? frontmatterValue(header, "name") : undefined;
+    const header = skillFrontmatter(text);
+    const name = header ? skillFrontmatterValue(header, "name") : undefined;
     const skillName = options.nameMode === "directory" ? basename(dirname(skillPath)) : name && name.length > 0 ? name : basename(dirname(skillPath));
-    const description = header ? blockValue(header, "description") : "";
+    const description = header
+      ? skillBlockValue(header, "description", { normalizeWhitespace: true, stripScalarQuotes: true })
+      : "";
     if (!byName.has(skillName)) {
       byName.set(skillName, {
         name: skillName,

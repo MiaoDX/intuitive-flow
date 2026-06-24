@@ -3,18 +3,20 @@
 Source gate: `docs/plans/refactor-architecture-cleanup-campaign.md`
 Latest user intent: autonomous repeated verified cleanup slices.
 
-Current slice: ready to commit plan-bakeoff worktree helper split.
+Current slice: ready to commit shared skill metadata parser merge.
 
 Last proof:
-- `bun test skills/plan-bakeoff/scripts/run_plan_bakeoff.test.ts` PASS
+- `bun test scripts/lib/check-skills.test.ts scripts/lib/audit-skill-upstreams.test.ts` PASS
 - `bun run check` PASS
 - `git diff --check` PASS
 
 Next proof:
-- fresh discovery handoff after commit
+- fresh discovery/shrink proof after commit
 
-Next candidate: none queued; run fresh discovery against current `HEAD` after
-the worktree helper split commit lands.
+Next candidate: shrink `scripts/lib/paseo-keep-going.ts` pure decision planning
+into an internal owner if behavior can be preserved with focused tests. Root
+`STATUS.md` active-campaign drift cleanup is the docs-only fallback if no
+higher-value code cleanup remains.
 
 Parked work:
 - Codex config old managed status-line variant migration.

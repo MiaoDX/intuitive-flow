@@ -39,8 +39,13 @@ and easier to navigate.
 
 ## Rolling Candidate Queue
 
-Empty. Run a fresh discovery handoff after the Multica goal/preflight parsing
-split commit lands.
+- Shared skill metadata parser merge: ready to commit; focused checker/audit
+  tests, `bun run check`, and `git diff --check` passed.
+- `paseo-keep-going` pure decision planning owner split: shrink candidate from
+  fresh architecture scout; execute only if behavior can be preserved with
+  focused tests.
+- Root `STATUS.md` active-campaign drift cleanup: queued as a docs-only slice
+  if the next discovery handoff finds no higher-value code cleanup.
 
 ## Parked Gates
 
@@ -221,3 +226,10 @@ P1/P2 slice after shrink attempts.
   naming, worktree lifecycle behavior, diff-stat fields, manifest schema, and
   generated reports stayed unchanged. Focused plan-bakeoff tests,
   `bun run check`, and `git diff --check` passed.
+- 2026-06-24: Fresh discovery selected a safe duplicate-owner merge in the
+  skill metadata checker/audit layer. Moved `SKILL.md` frontmatter, scalar, and
+  block-description parsing behind `skill-metadata.ts`, then migrated
+  `check-skills.ts` and `audit-skill-upstreams.ts` to that owner. Existing
+  checker validation behavior, upstream audit discovery, and markdown output
+  stayed unchanged. Focused checker/audit tests, `bun run check`, and
+  `git diff --check` passed.

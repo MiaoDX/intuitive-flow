@@ -3,6 +3,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, normalize } from "node:path";
 import { checkRootSkills, readDefaultSkillAllowlist, readPruneLedger } from "./default-skill-allowlist";
+import { skillBlockValue, skillFrontmatter, skillFrontmatterValue } from "./skill-metadata";
 
 export type SkillCheckOptions = {
   skillsRoot: string;
@@ -70,38 +71,6 @@ const skillNames = (skillsRoot: string): string[] => {
     const skillDir = join(skillsRoot, entry);
     return statSync(skillDir).isDirectory() && existsSync(join(skillDir, "SKILL.md"));
   });
-};
-
-const frontmatter = (text: string): string | undefined => {
-  const match = /^---\n([\s\S]*?)\n---\n/.exec(text);
-  return match?.[1];
-};
-
-const frontmatterValue = (frontmatterText: string, key: string): string | undefined => {
-  const match = new RegExp(`^${key}:\\s*(.*)$`, "m").exec(frontmatterText);
-  return match?.[1]?.trim().replace(/^["']|["']$/g, "");
-};
-
-const blockValue = (frontmatterText: string, key: string): string => {
-  const lines = frontmatterText.split("\n");
-  const start = lines.findIndex((line) => line.startsWith(`${key}:`));
-  if (start === -1) {
-    return "";
-  }
-
-  const first = lines[start].slice(`${key}:`.length).trim();
-  if (first !== "|" && first !== ">") {
-    return first;
-  }
-
-  const body: string[] = [];
-  for (const line of lines.slice(start + 1)) {
-    if (/^[A-Za-z0-9_-]+:\s*/.test(line)) {
-      break;
-    }
-    body.push(line.replace(/^ {2}/, ""));
-  }
-  return body.join("\n").trim();
 };
 
 type ResourceMention = {
@@ -177,17 +146,17 @@ const checkSkill = (skillsRoot: string, skillName: string, projectRoot: string):
   const skillDir = join(skillsRoot, skillName);
   const skillPath = join(skillDir, "SKILL.md");
   const text = readFileSync(skillPath, "utf8");
-  const header = frontmatter(text);
+  const header = skillFrontmatter(text);
 
   if (!header) {
     errors.push(`missing frontmatter: skills/${skillName}/SKILL.md`);
   } else {
-    const name = frontmatterValue(header, "name");
+    const name = skillFrontmatterValue(header, "name");
     if (name !== skillName) {
       errors.push(`frontmatter name mismatch in skills/${skillName}/SKILL.md: expected ${skillName}, got ${name ?? "<missing>"}`);
     }
 
-    const description = blockValue(header, "description");
+    const description = skillBlockValue(header, "description");
     if (description.length === 0) {
       errors.push(`missing description in skills/${skillName}/SKILL.md`);
     } else if (description.length > 1024) {
@@ -198,7 +167,7 @@ const checkSkill = (skillsRoot: string, skillName: string, projectRoot: string):
   for (const file of listFiles(skillDir)) {
     const filePath = join(skillDir, file);
     const fileText = readFileSync(filePath, "utf8");
-    if (isMarkdownFile(file) && file !== "SKILL.md" && frontmatter(fileText)) {
+    if (isMarkdownFile(file) && file !== "SKILL.md" && skillFrontmatter(fileText)) {
       errors.push(`non-entrypoint markdown must not have skill frontmatter: skills/${skillName}/${file}`);
     }
     if (fileText.includes("{{>")) {
