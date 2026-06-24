@@ -1,18 +1,18 @@
 ---
 refactor_scope: architecture-cleanup-campaign
-status: CONTINUE
+status: DONE
 accepted_severities:
   - P1
   - P2
 campaign_overlay: true
-last_verified: 2026-06-23
+last_verified: 2026-06-24
 ---
 
 # Refactor Scope: Architecture Cleanup Campaign
 
 ## Status
 
-CONTINUE
+DONE
 
 ## Target
 
@@ -39,9 +39,8 @@ and easier to navigate.
 
 ## Rolling Candidate Queue
 
-- Active campaign status drift cleanup: ready to commit; stale-text search,
-  `bun run check:skills`, and `git diff --check` passed.
-- After that commit, run fresh discovery handoff pass 2 against current `HEAD`.
+- Empty. Fresh discovery pass 2 after `5b2acbb` found no clear safe P1/P2 code
+  or docs slice outside parked gates after shrink attempts.
 
 ## Parked Gates
 
@@ -61,6 +60,9 @@ Continue through selected safe P1/P2 slices. When the queue is empty, run a
 fresh discovery handoff against current `HEAD`. Stop only after two consecutive
 fresh discovery handoffs, both after the latest commit, return no clear safe
 P1/P2 slice after shrink attempts.
+
+Met on 2026-06-24. Two consecutive fresh discovery handoffs after the latest
+cleanup commits found no clear safe P1/P2 slice outside the parked gates.
 
 ## Campaign Log
 
@@ -255,3 +257,8 @@ P1/P2 slice after shrink attempts.
   campaign gate and active capsule were live. Updating `STATUS.md`, the active
   capsule, and the rolling queue preserves behavior and removes status drift.
   Stale-text search, `bun run check:skills`, and `git diff --check` passed.
+- 2026-06-24: Fresh discovery pass 2 after `5b2acbb` found no clear safe P1/P2
+  code or docs slice outside parked gates after shrink attempts. The remaining
+  candidates are parked behind explicit compatibility, ownership, behavior, or
+  schema migration decisions. Campaign status moved to `DONE`; focused
+  closeout proof used `bun run check:skills` and `git diff --check`.
