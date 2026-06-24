@@ -16,15 +16,24 @@ rules, local hazards, command pointers, and skill routing, but do not treat them
 as human-authoritative project truth by default.
 
 Agent planning, generated evidence, history, and working notes belong in
-explicit agent/process surfaces such as `.planning/**`, `docs/plans/**`,
-`docs/retrospectives/**`, `docs/status/active/**`, and `output/**` unless a
-human doc intentionally promotes a specific artifact into current truth.
+explicit agent/process surfaces such as GSD-owned `.planning/**`, flat
+`docs/plans/<slug>.md` plan contracts, `docs/retrospectives/**`,
+`docs/status/active/**`, and `output/**` unless a human doc intentionally
+promotes a specific artifact into current truth.
+
+`docs/plans/` is a flat plan-contract surface. Do not create lifecycle
+subdirectories under `docs/plans/` during cleanup or reorganization; record
+lifecycle in each plan's status fields and use `docs/status/active/` for compact
+active execution capsules.
 
 AI coding docs are agent/process-facing docs that help future coding agents but
 do not need to be human project truth. Prefer `docs/agents/**` for durable
 agent runbooks, repo-specific coding procedures, tool quirks, and long harness
-notes. Prefer `.planning/**`, `docs/plans/**`, `docs/retrospectives/**`,
-`docs/status/active/**`, and `output/**` for execution state, plans,
+notes. Do not create `docs/agents/prompts/` for one-off delegation prompts by
+default; promote reusable agent rules to a durable runbook instead. Prefer
+GSD-owned `.planning/**`, flat `docs/plans/<slug>.md`,
+`docs/retrospectives/**`, `docs/status/active/**`, and `output/**` for
+execution state, plans,
 retrospectives, generated evidence, and proof artifacts.
 
 When any default human surface is missing, `$intuitive-doc` should make the
@@ -89,7 +98,7 @@ Identify the human-facing doc surface, then verify its testable claims against t
    - Then look for architecture indexes such as `ARCHITECTURE.md`, `docs/architecture/README.md`, or similar
 2. Classify docs into:
    - **Human-authoritative**: root `README.md`, `ARCHITECTURE.md`, `STATUS.md`, and docs under `docs/human/**`
-   - **Stage-authoritative**: docs authoritative only for a workflow stage (`docs/plans/`, `.planning/STATE.md`, ADRs, active status notes)
+   - **Stage-authoritative**: docs authoritative only for a workflow stage (flat `docs/plans/<slug>.md`, `.planning/STATE.md`, ADRs, active status notes)
    - **Evidence/history**: retrospectives, generated reports, proof bundles, logs, screenshots, benchmark output
    - **Implementation detail**: low-level internals, generated API notes, detailed phase implementation references
    - **Agent-operational**: `AGENTS.md`, `CLAUDE.md`, `.claude/**`, `.codex/**`, and similar agent runtime guidance
@@ -236,8 +245,9 @@ cleanup after a code refactor.
      `$intuitive-init refresh`
    - **Move to process/history/evidence**: stage state, old plans,
      retrospectives, generated analysis, reports, proof bundles, or logs; move
-     to `.planning/**`, `docs/plans/**`, `docs/retrospectives/**`,
-     `docs/status/active/**`, or `output/**` according to the repo convention
+     to GSD-owned `.planning/**`, flat `docs/plans/<slug>.md`,
+     `docs/retrospectives/**`, `docs/status/active/**`, or `output/**`
+     according to the repo convention
    - **Remove**: obsolete, duplicated, or misleading after the current human
      truth has been rewritten and path consumers are updated
 3. Rewrite every kept human doc against live implementation facts. Prefer

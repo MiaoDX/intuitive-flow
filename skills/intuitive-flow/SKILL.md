@@ -102,6 +102,10 @@ boundary. Do not preload every reference.
   explicit unknown-unknown scout result or skip reason in the canonical plan,
   unless the task is tiny direct work that is not using a plan as source of
   truth.
+- Canonical plan files use the fixed flat surface `docs/plans/<slug>.md`.
+  Do not create lifecycle subdirectories under `docs/plans/`; record lifecycle
+  in the plan status and use `docs/status/active/<task-slug>.md` for compact
+  active execution state.
 - Changed-code cleanup: use `$intuitive-refactor` changed-code review on the
   changed scope, then rerun relevant proof.
 

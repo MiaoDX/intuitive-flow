@@ -9,7 +9,7 @@ Keep one authoritative artifact family per stage:
 
 | Stage | Source of truth |
 | --- | --- |
-| Before committed execution | `docs/plans/*.md` or GitHub issues |
+| Before committed execution | `docs/plans/<slug>.md` or GitHub issues |
 | During execution | `.planning/STATE.md` and `.planning/phases/*` |
 | After shipping | verification reports, summaries, retrospectives, and release/closeout notes |
 
@@ -17,11 +17,19 @@ When handing work from one stage to the next, update the canonical artifact in
 place. Treat generated review logs, restore files, chat history, and temporary
 notes as evidence only.
 
+`docs/plans/` is a stable flat plan-contract surface: one plan, one
+`docs/plans/<slug>.md` file. Do not create lifecycle subdirectories under
+`docs/plans/` for active, proposed, or archived work. Lifecycle belongs in the
+plan's `Status`, `Last reviewed`, shipped evidence, remaining gates, and
+superseded-by links. Current execution progress belongs in
+`docs/status/active/<task-slug>.md`; GSD runtime state belongs only in
+GSD-owned `.planning/*` artifacts.
+
 ## Plan-Like Intake
 
 If the user points at exactly one markdown file that looks like a plan, accept:
 
-- `docs/plans/**/*.md`
+- `docs/plans/*.md`
 - `docs/adr/**/*.md`
 - `docs/adrs/**/*.md`
 - `docs/human/**/*.md`
@@ -36,6 +44,10 @@ human-facing docs unless the user explicitly asked to update that document.
 If the supplied file is mostly reference material, create a draft
 `docs/plans/<slug>.md` with clear unknowns and stop before review unless the run
 contract explicitly says to continue.
+
+If a legacy repo already has plan lifecycle subdirectories, normalize new and
+touched plans back to the flat `docs/plans/<slug>.md` surface unless the user
+explicitly protects the old layout for this slice.
 
 ## Context Files
 
@@ -84,6 +96,10 @@ progress. If `docs/status/active/` does not exist, create it. The active file is
 a compact capsule for current execution state; `STATUS.md` remains the
 project-level human status surface.
 
+Do not create parallel resume files such as `.continue-here.md` or
+`.planning/HANDOFF.json`. `.planning/*` is GSD-owned state, and ad hoc resume
+notes should be folded into the active capsule or the canonical plan.
+
 ## Plan Freshness At Closeout
 
 When a flow implements work from `docs/plans/<slug>.md`, update that source plan
@@ -126,7 +142,12 @@ Artifact rules:
 - ADRs are not default outputs of this skill. Create/update ADRs only when an
   ADR-capable skill is explicitly used or the user asks.
 - `.planning/*` files are GSD-owned. Do not approximate GSD by editing
-  `.planning/` inline; use `gsd-ingest-docs` and `gsd-plan-phase`.
+  `.planning/` inline or by writing `.planning/HANDOFF.json`; use
+  `gsd-ingest-docs` and `gsd-plan-phase`.
+- One-off worker prompts and delegation packets are transient execution
+  material. Do not create `docs/agents/prompts/` by default; promote reusable
+  agent rules to `docs/agents/<runbook>.md` and keep one-run prompt summaries in
+  the active capsule only when they affect resume.
 - `~/.gstack` artifacts, review logs, and restore points are evidence only.
 
 ## Phase Granularity

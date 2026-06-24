@@ -75,16 +75,25 @@ rules, local hazards, command pointers, and skill routing, but do not treat them
 as human-authoritative project truth by default.
 
 Agent planning, generated evidence, history, and working notes belong in
-explicit agent/process surfaces such as `.planning/**`, `docs/plans/**`,
-`docs/retrospectives/**`, `docs/status/active/**`, and `output/**` unless a
-human doc intentionally promotes a specific artifact into current truth.
+explicit agent/process surfaces such as GSD-owned `.planning/**`, flat
+`docs/plans/<slug>.md` plan contracts, `docs/retrospectives/**`,
+`docs/status/active/**`, and `output/**` unless a human doc intentionally
+promotes a specific artifact into current truth.
+
+Keep the plan file surface fixed: one canonical plan file at
+`docs/plans/<slug>.md`, lifecycle in that plan's status fields, and compact
+current execution state in `docs/status/active/<task-slug>.md`. Do not introduce
+plan lifecycle subdirectories, `.continue-here.md`, or manual
+`.planning/HANDOFF.json` as recommended repo surfaces.
 
 AI coding docs are agent/process-facing docs that help future coding agents but
 do not need to be human project truth. Prefer `docs/agents/**` for durable
 agent runbooks, repo-specific coding procedures, tool quirks, and long harness
-notes. Prefer `.planning/**`, `docs/plans/**`, `docs/retrospectives/**`,
-`docs/status/active/**`, and `output/**` for execution state, plans,
-retrospectives, generated evidence, and proof artifacts.
+notes. Do not create `docs/agents/prompts/` for one-off delegation prompts by
+default; promote reusable agent rules to a durable runbook instead. Prefer
+GSD-owned `.planning/**`, flat `docs/plans/<slug>.md`,
+`docs/retrospectives/**`, `docs/status/active/**`, and `output/**` for
+execution state, plans, retrospectives, generated evidence, and proof artifacts.
 
 Agent files may point to human-authoritative docs and say how agents should
 react when those docs conflict with a request. Do not copy milestone goals,
@@ -118,6 +127,8 @@ Root `AGENTS.md` and `CLAUDE.md` should contain only:
 - critical local hazards and permissions
 - canonical install/test/verify commands or the pointer to them
 - source-of-truth boundaries
+- stable planning-surface pointers (`docs/plans/<slug>.md`,
+  `docs/status/active/<task-slug>.md`, and GSD-owned `.planning/*`)
 - short skill routing
 - host/orchestrator control-message hazards that can change stop/continue
   behavior, especially Paseo XML-like envelopes in Codex sessions

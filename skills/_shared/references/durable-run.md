@@ -38,6 +38,10 @@ The capsule is a resume surface, not the canonical plan. Keep the canonical
 plan, issue, or refactor gate as the source of truth for scope, accepted
 checklist, decisions, and final status.
 
+Do not create parallel resume files such as `.continue-here.md` or
+`.planning/HANDOFF.json`. If GSD owns the run, update state through GSD tools;
+otherwise keep resumable state in the active capsule and canonical plan.
+
 Keep the capsule compact enough to read during a hot resume. It should summarize
 state, not preserve history. Do not paste reusable prompts, long command
 transcripts, worker raw logs, or every completed slice into the capsule; put

@@ -74,9 +74,17 @@ Root `AGENTS.md` and `CLAUDE.md` should answer:
 - What the agent must know before acting.
 - How to run setup, tests, verification, demos, and safe workflows.
 - Where to find durable human docs and agent runbooks.
+- Where fixed plan contracts, active capsules, and GSD-owned execution state
+  live.
 - What must not be done in this repo.
 - How host control metadata affects stop/continue decisions when the repo uses
   Paseo or another orchestrator.
+
+When root guidance names planning surfaces, keep it stable: canonical plans are
+`docs/plans/<slug>.md`, compact resume state is
+`docs/status/active/<task-slug>.md`, and `.planning/*` is owned by GSD tools.
+Do not recommend `.continue-here.md`, manual `.planning/HANDOFF.json`, or
+one-off prompt folders as default repo surfaces.
 
 Avoid copying broad official docs or all intuitive workflow rules into each
 repo. Distill only the local invariant and point to local tools/docs for detail.

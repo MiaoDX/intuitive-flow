@@ -54,6 +54,8 @@ is followed. If you only recommend the step, say no GSD artifact was generated.
 
 Do not manually turn `docs/plans/<slug>.md` into phase `CONTEXT.md`.
 `gsd-plan-phase --prd` generates phase context from the approved plan.
+Do not create or edit `.planning/HANDOFF.json`, `.planning/STATE.md`, or phase
+files by hand as a shortcut around GSD tools.
 
 ## Optional Issues
 
