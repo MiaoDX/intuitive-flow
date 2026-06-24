@@ -27,6 +27,11 @@ logs. Correct but lengthy procedures should usually move out of root startup
 files into `docs/agents/**`, reusable skills, scripts, or human docs, with the
 root files keeping only the rule, trigger, and pointer.
 
+When extracting mixed repo-specific agent procedures, prefer the standard file
+name `docs/agents/operating-runbook.md`. Use narrower
+`docs/agents/<topic>.md` files only when the procedure has a clear standalone
+owner, such as issue tracking, triage labels, release, or domain vocabulary.
+
 Use these size signals:
 
 - Target: each root agent file is short enough to skim before work starts,
@@ -109,9 +114,11 @@ plan lifecycle subdirectories, `.continue-here.md`, or manual
 AI coding docs are agent/process-facing docs that help future coding agents but
 do not need to be human project truth. Prefer `docs/agents/**` for durable
 agent runbooks, repo-specific coding procedures, tool quirks, and long harness
-notes. Do not create `docs/agents/prompts/` for one-off delegation prompts by
-default; promote reusable agent rules to a durable runbook instead. Prefer
-GSD-owned `.planning/**`, flat `docs/plans/<slug>.md`,
+notes. For mixed operating detail, prefer
+`docs/agents/operating-runbook.md` as the cross-repo default name. Do not create
+`docs/agents/prompts/` for one-off delegation prompts by default; promote
+reusable agent rules to a durable runbook instead. Prefer GSD-owned
+`.planning/**`, flat `docs/plans/<slug>.md`,
 `docs/retrospectives/**`, `docs/status/active/**`, and `output/**` for
 execution state, plans, retrospectives, generated evidence, and proof artifacts.
 
@@ -142,6 +149,9 @@ Rules:
   architecture, or documentation.
 - Put the newest and most actionable status at the top. Move old shipped detail
   to plans, ADRs, retrospectives, or `docs/human/**` and leave links.
+- If `STATUS.md` needs a recent-changes section, keep it short and
+  reverse-chronological. Newest changes go first; old completed changes should
+  age out instead of turning the file into a changelog.
 - Keep "current blocker" concrete. If there is no blocker, say so once; do not
   list every historical external validation caveat in the startup path.
 - Keep first-read policies conditional: architecture work reads
@@ -158,6 +168,12 @@ reorganizations, or generated-doc cleanup to `$intuitive-doc`.
 
 Use `docs/agents/**` for repo-specific agent reference material that is too long
 for the root files but still useful to coding agents.
+
+Default to `docs/agents/operating-runbook.md` for mixed agent operating detail:
+setup caveats, local hazards, test wrappers, command routing, browser QA,
+provider keys, git hygiene, and similar cross-cutting procedures. Use
+topic-specific files only when the repo already has or clearly needs a focused
+owner.
 
 Good candidates for `docs/agents/**`:
 
@@ -282,7 +298,8 @@ Use this workflow unless the user asks for report-only or a specific file.
    - whether `AGENTS.md` is injected by the host and then reread manually
    - whether the first-read path is fixed or task-routed
    - whether `STATUS.md` is newest-first or a cumulative changelog
-   - whether long examples/procedures belong in `docs/agents/**`,
+   - whether long examples/procedures belong in
+     `docs/agents/operating-runbook.md`, another `docs/agents/**` file,
      `docs/human/**`, scripts, or skills
 4. Use init-style discovery when it is available and worth the extra evidence:
    - Prefer `/init`, `codex init` when available, or the tool's equivalent in
@@ -314,8 +331,9 @@ Use this workflow unless the user asks for report-only or a specific file.
      and links to current plans/ADRs/human docs.
    - **Collapse**: repeated implemented-plan summaries into a short current
      state plus links.
-   - **Extract**: long run procedures to `docs/agents/**` or `docs/human/**`
-     depending on audience.
+   - **Extract**: long run procedures to `docs/agents/operating-runbook.md`,
+     a focused `docs/agents/<topic>.md`, or `docs/human/**` depending on
+     audience.
    - **Remove**: stale shipped history, obsolete compatibility notes, duplicate
      links, and old validation caveats that no longer change today's work.
 7. Add or refresh a short preferred-skills block when relevant:
@@ -363,7 +381,8 @@ Use this workflow unless the user asks for report-only or a specific file.
    - Report first-read pressure for any root human docs that agent guidance
      requires before commands.
    - Explain what was preserved, collapsed, extracted, replaced, and removed.
-   - Name any new `docs/agents/**`, skill, script, or human-doc destination for
+   - Name any new `docs/agents/operating-runbook.md`,
+     `docs/agents/<topic>.md`, skill, script, or human-doc destination for
      extracted content.
    - Call out any nested instruction files, hooks, skills, or MCP config that
      should be created, left alone, or moved out of the root files.
@@ -540,7 +559,8 @@ Default result:
 - `AGENTS.md`: short injected startup contract, with conditional reads.
 - `CLAUDE.md`: import or delta only.
 - `STATUS.md`: latest current state first, next action, blocker, and links.
-- Optional `docs/agents/<topic>.md` or `docs/human/<topic>.md`: extracted long
+- Optional `docs/agents/operating-runbook.md`,
+  `docs/agents/<topic>.md`, or `docs/human/<topic>.md`: extracted long
   procedures or history.
 
 Steps:
@@ -550,7 +570,8 @@ Steps:
    `AGENTS.md`.
 3. Replace fixed "read everything" instructions with task-routed reads.
 4. Put status guidance in `STATUS.md` itself: keep it newest-first, compact,
-   and pointer-based; old shipped history should move out.
+   and pointer-based. Recent changes, if present, should be newest-first; old
+   shipped history should move out.
 5. Keep critical hazards in the root agent file even if they are long, but
    collapse examples into pointers.
 6. Verify with line counts and, for Codex when available, `codex debug
@@ -567,9 +588,11 @@ Default result:
 - `AGENTS.md`: repo-wide rules all agents must see immediately.
 - `CLAUDE.md`: Claude-specific deltas only, not a full duplicate of
   `AGENTS.md`.
-- `docs/agents/README.md`: index of longer agent-only runbooks when any exist.
+- `docs/agents/operating-runbook.md`: default home for mixed long agent
+  procedures.
 - `docs/agents/<topic>.md`: extracted procedures for release, CI triage,
-  environment setup, GPU/simulator setup, PR workflows, or similar long tasks.
+  environment setup, GPU/simulator setup, PR workflows, or similar focused
+  long tasks.
 
 Steps:
 
@@ -579,9 +602,9 @@ Steps:
 3. Draft the thin root files first using the WHY / WHAT / HOW shape when it
    helps agents orient quickly.
 4. Move lint/format details, long command recipes, and repeatable operational
-   loops to hooks, scripts, skills, or `docs/agents/**` as appropriate.
-5. Draft extracted `docs/agents/**` runbooks only for procedures that remain
-   useful.
+   loops to hooks, scripts, skills, `docs/agents/operating-runbook.md`, or a
+   focused `docs/agents/<topic>.md` as appropriate.
+5. Draft extracted agent runbooks only for procedures that remain useful.
 6. Verify root files contain pointers to extracted runbooks and no long copied
    procedures.
 7. Show the deletion/extraction diff unless the user already approved applying.
@@ -638,10 +661,11 @@ Move reusable procedures into skills instead of expanding root guidance.
 Examples: documentation audits, test suite cleanup, repo entropy scans, phase
 pipelines, and bounded refactor gates.
 
-Move repo-specific long procedures into `docs/agents/**` instead of expanding
-root guidance. Examples: release process, CI log investigation, GPU setup,
-visual validation workflow, PR fix strategy, dependency bootstrap, and
-environment-specific caveats.
+Move repo-specific long procedures into `docs/agents/operating-runbook.md` by
+default instead of expanding root guidance. Use focused `docs/agents/<topic>.md`
+files when the owner is clear. Examples: release process, CI log investigation,
+GPU setup, visual validation workflow, PR fix strategy, dependency bootstrap,
+and environment-specific caveats.
 
 ## Stop Conditions
 
@@ -670,7 +694,8 @@ Stop after edits when:
   shared assets
 - copied human-facing project state has been replaced with stable pointers to
   the human docs that own it
-- long operational procedures have been extracted to `docs/agents/**`, skills,
+- long operational procedures have been extracted to
+  `docs/agents/operating-runbook.md`, focused `docs/agents/**` files, skills,
   scripts, or human docs as appropriate
 - preferred skills are routed by task, not mandated for every turn
 - validation/search checks show no obvious stale claims in touched files

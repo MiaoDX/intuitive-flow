@@ -51,8 +51,11 @@ guidance.
    setup.
 3. Preserve project-specific commands, hazards, test gates, and current source
    of truth.
-4. Move long operational procedures out of root guidance into durable repo
-   locations such as `docs/agents/**`, skills, hooks, scripts, or human docs.
+4. Move long operational procedures out of root guidance. Prefer the standard
+   `docs/agents/operating-runbook.md` for mixed repo-specific agent procedures;
+   use topic-specific `docs/agents/<topic>.md` only when the scope is clearly
+   independent. Use skills, hooks, scripts, or human docs when those are the
+   better owner.
 5. Check the high-frequency startup context: `AGENTS.md`, `CLAUDE.md`, and the
    root orientation docs they require such as `README.md`, `ARCHITECTURE.md`,
    and `STATUS.md`. The first-read path should be bounded, newest-first, and
@@ -98,8 +101,9 @@ When root guidance tells agents to read human docs before acting, make those
 docs fit that role:
 
 - `STATUS.md` should be current-state first: latest material, next action, and
-  blockers near the top; old shipped detail should be removed or replaced by
-  links to plans, ADRs, retrospectives, or `docs/human/**`.
+  blockers near the top. If it includes recent changes, list them newest-first.
+  Old shipped detail should be removed or replaced by links to plans, ADRs,
+  retrospectives, or `docs/human/**`.
 - `README.md` should orient and route, not become a full manual.
 - `ARCHITECTURE.md` may be longer, but its first screen should summarize the
   code map and layer contract so agents can decide what to read next.
@@ -132,7 +136,7 @@ When the task is LSP, language-server, Serena, or MCP setup:
 | Apply/create | A repo lacks local `AGENTS.md` / `CLAUDE.md` or needs initial setup. | Project-local guidance from repo evidence and accepted defaults. | The user wants only current-state human docs. |
 | Refresh | Existing local guidance needs current repo truth or init suggestions merged. | Updated guidance with stale/generic content removed. | Generated init output should only be reviewed, not applied. |
 | Slim/cleanup | Root guidance is overgrown, generic, duplicated, or stale. | Shorter root guidance with long detail routed to durable homes. | The long detail belongs in human docs owned by `$intuitive-doc`. |
-| Startup-context cleanup | First-read policy or orientation docs force too much context before work. | Bounded first-read policy plus reasonable `README` / `ARCHITECTURE` / `STATUS` entrypoints. | The request is broad human documentation cleanup. |
+| Startup-context cleanup | First-read policy or orientation docs force too much context before work. | Bounded first-read policy, reasonable `README` / `ARCHITECTURE` / `STATUS` entrypoints, and standard `docs/agents/operating-runbook.md` extraction when needed. | The request is broad human documentation cleanup. |
 | Symlink migration | Root guidance is linked to shared/external files. | Project-local files preserving target repo rules. | The repo intentionally owns external guidance as its contract. |
 | LSP/MCP setup | The request names LSP, language server, Serena, or MCP setup. | Agent-facing setup or a concrete blocked/parked reason. | The target already has a better concrete setup. |
 
