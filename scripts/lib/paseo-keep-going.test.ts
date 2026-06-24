@@ -54,6 +54,14 @@ describe("paseo keep-going monitor", () => {
     expect(timeoutError?.line).toContain("Transport error: timeout");
   });
 
+  test("matches stream-closed response completion errors from dropped Paseo sessions", () => {
+    const match = findCapacityError(
+      "Architecture claim recorded.[System Error] stream disconnected before completion: stream closed before response.completed",
+    );
+
+    expect(match?.line).toContain("stream closed before response.completed");
+  });
+
   test("plans a send only for monitored active agents with matching logs", () => {
     const agents: PaseoAgent[] = [
       { id: "running-match", status: "running", name: "active" },

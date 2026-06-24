@@ -62,6 +62,7 @@ const DEFAULT_PATTERNS = [
   /^.*\[System Error\]\s*Selected model is at capacity\. Please try a different model\.\s*$/i,
   /^.*\[System Error\]\s*stream disconnected before completion:\s*error sending request for url\s*\(.+\)\s*$/i,
   /^.*\[System Error\]\s*stream disconnected before completion:\s*Transport error:\s*timeout\s*$/i,
+  /^.*\[System Error\]\s*stream disconnected before completion:\s*stream closed before response\.completed\s*$/i,
 ];
 
 const DEFAULT_PROMPT =
