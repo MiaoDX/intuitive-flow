@@ -39,10 +39,9 @@ and easier to navigate.
 
 ## Rolling Candidate Queue
 
-- `plan-bakeoff` worker launch owner split: ready to commit; focused tests,
-  `bun run check`, and `git diff --check` passed.
-- Root `STATUS.md` active-campaign drift cleanup: queued as a docs-only slice
-  if the next discovery handoff finds no higher-value code cleanup.
+- Active campaign status drift cleanup: ready to commit; stale-text search,
+  `bun run check:skills`, and `git diff --check` passed.
+- After that commit, run fresh discovery handoff pass 2 against current `HEAD`.
 
 ## Parked Gates
 
@@ -250,3 +249,9 @@ P1/P2 slice after shrink attempts.
   parsing, manifest schema, scorecard/report fields, and execution behavior
   stayed unchanged. Focused plan-bakeoff tests, `bun run check`, and
   `git diff --check` passed.
+- 2026-06-24: Fresh discovery pass 1 after `5765769` found no higher-value
+  safe code cleanup outside parked gates, but confirmed a safe source-of-truth
+  drift slice: root `STATUS.md` still denied active roadmap state while the
+  campaign gate and active capsule were live. Updating `STATUS.md`, the active
+  capsule, and the rolling queue preserves behavior and removes status drift.
+  Stale-text search, `bun run check:skills`, and `git diff --check` passed.

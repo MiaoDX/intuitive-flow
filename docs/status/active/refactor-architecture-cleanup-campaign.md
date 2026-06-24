@@ -3,18 +3,21 @@
 Source gate: `docs/plans/refactor-architecture-cleanup-campaign.md`
 Latest user intent: autonomous repeated verified cleanup slices.
 
-Current slice: ready to commit plan-bakeoff worker launch owner split.
+Current slice: ready to commit active campaign status drift cleanup.
 
 Last proof:
-- `bun test skills/plan-bakeoff/scripts/run_plan_bakeoff.test.ts` PASS
-- `bun run check` PASS
+- fresh discovery handoff after `5765769` found no higher-value safe code slice
+  outside parked gates.
+- stale roadmap-denial search across `STATUS.md`, `docs/status`, and
+  `docs/plans` returned no matches
+- `bun run check:skills` PASS
 - `git diff --check` PASS
 
 Next proof:
-- fresh discovery/shrink proof after commit
+- fresh discovery pass 2 after commit
 
-Next candidate: root `STATUS.md` active-campaign drift cleanup if the next
-fresh discovery handoff finds no higher-value code cleanup.
+Next candidate: none queued; run fresh discovery pass 2 after this status
+cleanup commit.
 
 Parked work:
 - Codex config old managed status-line variant migration.

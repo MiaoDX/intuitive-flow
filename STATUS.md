@@ -104,7 +104,10 @@ The current maintenance focus is keeping the repo dogfoodable:
   under `scripts/dev/` or `scripts/support/`
 - verify changes with `bun run verify`
 
-There is no active `.planning/` roadmap or GSD phase in this checkout.
+Active execution state lives in `docs/status/active/**` when a durable campaign
+is running. The current architecture cleanup campaign is tracked in
+`docs/status/active/refactor-architecture-cleanup-campaign.md`; historical
+`.planning/**` files remain locked summaries, not the active roadmap.
 
 ## Known Boundaries
 
