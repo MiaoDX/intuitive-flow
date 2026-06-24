@@ -4,16 +4,14 @@ description: |
   Initialize, audit, aggressively slim, merge, and refresh project-local
   AGENTS.md and CLAUDE.md files from existing repo guidance, agent /init
   suggestions, stdin-bundled Codex init-style discovery, and intuitive workflow
-  defaults, including target-repo LSP and agent-facing Serena MCP setup. Use
-  when setting up a repo for Claude Code/Codex, replacing symlinked agent files
-  with local guidance, rerunning agent init after weeks of drift, cleaning
-  overgrown root agent files, or configuring agent-facing LSP/MCP guidance
-  without overwriting project-specific hints. Route human docs, test layout,
-  execution flow, refactor scope, and entropy discovery to their own skills
-  unless the change is only the agent guidance that points at them. When the
-  user asks to "setup LSP" for a coding-agent repo, treat Serena MCP as the
-  preferred agent-facing LSP path unless it is already configured or concretely
-  blocked.
+  defaults. Use when setting up a repo for Claude Code/Codex, replacing
+  symlinked agent files with local guidance, rerunning agent init after weeks
+  of drift, cleaning overgrown root agent files or first-read policies,
+  optimizing startup context across AGENTS/CLAUDE/README/ARCHITECTURE/STATUS,
+  or configuring target-repo LSP and agent-facing Serena MCP guidance. Route
+  broad human docs, tests, execution flow, refactor scope, and entropy
+  discovery to their own skills unless the change is the startup/orientation
+  harness that points at them.
 ---
 
 # Intuitive Init
@@ -55,16 +53,21 @@ guidance.
    of truth.
 4. Move long operational procedures out of root guidance into durable repo
    locations such as `docs/agents/**`, skills, hooks, scripts, or human docs.
-5. For Codex/Paseo harnesses, preserve or add a short rule that XML-like host
+5. Check the high-frequency startup context: `AGENTS.md`, `CLAUDE.md`, and the
+   root orientation docs they require such as `README.md`, `ARCHITECTURE.md`,
+   and `STATUS.md`. The first-read path should be bounded, newest-first, and
+   task-routed; it should not require agents to reread injected files or consume
+   every long root doc before a simple command.
+6. For Codex/Paseo harnesses, preserve or add a short rule that XML-like host
    control envelopes such as `<turn_aborted>`, `<paseo-system>`,
    `<subagent_notification>`, `<goal_context>`, and `<environment_context>` are
    orchestrator metadata unless accompanied by natural-language user intent.
    They must not be treated as a human stop request by themselves.
-6. Prefer deterministic hooks/tools for lint, format, setup, and verification
+7. Prefer deterministic hooks/tools for lint, format, setup, and verification
    rules instead of expanding root prose.
-7. For large repos and monorepos, prefer nested `AGENTS.md` / `CLAUDE.md` files
+8. For large repos and monorepos, prefer nested `AGENTS.md` / `CLAUDE.md` files
    only when local scope differences are real.
-8. Verify the final files are concise, local, and non-contradictory.
+9. Verify the final files are concise, local, and non-contradictory.
 
 ## Root Guidance Shape
 
@@ -89,6 +92,26 @@ one-off prompt folders as default repo surfaces.
 Avoid copying broad official docs or all intuitive workflow rules into each
 repo. Distill only the local invariant and point to local tools/docs for detail.
 
+## Orientation Doc Hygiene
+
+When root guidance tells agents to read human docs before acting, make those
+docs fit that role:
+
+- `STATUS.md` should be current-state first: latest material, next action, and
+  blockers near the top; old shipped detail should be removed or replaced by
+  links to plans, ADRs, retrospectives, or `docs/human/**`.
+- `README.md` should orient and route, not become a full manual.
+- `ARCHITECTURE.md` may be longer, but its first screen should summarize the
+  code map and layer contract so agents can decide what to read next.
+- First-read policies should usually require only the already-injected
+  `AGENTS.md` plus `STATUS.md` or the active task/plan. Read `README.md`,
+  `ARCHITECTURE.md`, `CLAUDE.md`, and longer runbooks only when the task needs
+  them.
+
+If the user asks for startup-context or first-read optimization, `$intuitive-init`
+may edit these root orientation docs in the same scoped pass. For broad human
+doc cleanup, route to `$intuitive-doc`.
+
 ## LSP And MCP Setup
 
 When the task is LSP, language-server, Serena, or MCP setup:
@@ -109,6 +132,7 @@ When the task is LSP, language-server, Serena, or MCP setup:
 | Apply/create | A repo lacks local `AGENTS.md` / `CLAUDE.md` or needs initial setup. | Project-local guidance from repo evidence and accepted defaults. | The user wants only current-state human docs. |
 | Refresh | Existing local guidance needs current repo truth or init suggestions merged. | Updated guidance with stale/generic content removed. | Generated init output should only be reviewed, not applied. |
 | Slim/cleanup | Root guidance is overgrown, generic, duplicated, or stale. | Shorter root guidance with long detail routed to durable homes. | The long detail belongs in human docs owned by `$intuitive-doc`. |
+| Startup-context cleanup | First-read policy or orientation docs force too much context before work. | Bounded first-read policy plus reasonable `README` / `ARCHITECTURE` / `STATUS` entrypoints. | The request is broad human documentation cleanup. |
 | Symlink migration | Root guidance is linked to shared/external files. | Project-local files preserving target repo rules. | The repo intentionally owns external guidance as its contract. |
 | LSP/MCP setup | The request names LSP, language server, Serena, or MCP setup. | Agent-facing setup or a concrete blocked/parked reason. | The target already has a better concrete setup. |
 
@@ -120,8 +144,9 @@ a better owner matters.
 ## Stop Conditions
 
 Stop when root agent guidance is local, concise, and aligned with current repo
-truth; long detail is routed to appropriate local docs/skills/scripts; and any
-LSP/MCP setup is either configured, documented as blocked, or explicitly parked.
+truth; any required first-read docs are bounded and latest-first; long detail is
+routed to appropriate local docs/skills/scripts; and any LSP/MCP setup is either
+configured, documented as blocked, or explicitly parked.
 
 Report changed files, verification run, remaining risks, and whether generated
 init output was merged, rejected, or not used.

@@ -63,11 +63,14 @@ surfaces, or maintenance state.
 
 `AGENTS.md` and `CLAUDE.md` are starter guidance for this repo and examples for
 target repos. They should remain self-contained enough for their host agents to
-act without chasing a long manual.
+act without chasing a long manual. When they name first-read human docs,
+`STATUS.md`, `README.md`, and `ARCHITECTURE.md` should stay bounded enough to
+serve as orientation instead of startup-time history dumps.
 
 Target repos should not inherit these files wholesale. `$intuitive-init`
 combines local repo evidence, any available `/init` output, and Intuitive Flow
-defaults into project-local `AGENTS.md` and `CLAUDE.md` files.
+defaults into project-local startup harnesses: `AGENTS.md`, `CLAUDE.md`, long
+`docs/agents/**` runbooks, and small task-routed orientation entrypoints.
 
 ## Skill Contract
 

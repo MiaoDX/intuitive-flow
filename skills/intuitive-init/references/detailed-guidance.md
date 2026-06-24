@@ -20,10 +20,12 @@ unknown tags. Root guidance should tell agents not to infer that the human asked
 to stop, discard worker output, or skip summarization from those labels alone;
 natural-language user text outside the envelope still wins.
 
-Default posture: keep root agent files aggressively small. Correct but lengthy
-procedures should usually move out of `AGENTS.md` and `CLAUDE.md` into
-`docs/agents/**`, reusable skills, or scripts, with the root files keeping only
-the rule, trigger, and pointer.
+Default posture: keep the startup context bounded. `AGENTS.md` and `CLAUDE.md`
+should be aggressively small, and any human docs they force agents to read
+before acting should be reasonable orientation surfaces rather than unlimited
+logs. Correct but lengthy procedures should usually move out of root startup
+files into `docs/agents/**`, reusable skills, scripts, or human docs, with the
+root files keeping only the rule, trigger, and pointer.
 
 Use these size signals:
 
@@ -36,6 +38,18 @@ Use these size signals:
 
 These are signals, not hard limits. Keep a longer root file only when the
 content is a critical safety rule that agents must see before any other read.
+
+For root human orientation docs, use softer but real pressure signals:
+
+- `STATUS.md` should usually fit under about 120 lines. Over 180 lines or
+  repeated shipped-history paragraphs is a cleanup signal.
+- `README.md` should orient, route, and list runnable entrypoints; long setup or
+  operator detail belongs under `docs/human/**`, `docs/agents/**`, or scripts.
+- `ARCHITECTURE.md` can be longer, but it needs a compact first screen that
+  names the active layer map and tells agents what to read next.
+- Any first-read policy that requires `README.md`, `ARCHITECTURE.md`,
+  `STATUS.md`, `AGENTS.md`, and tool-specific files on every session should be
+  treated as a startup-context smell unless the repo is tiny.
 
 ## Official Reference Sources
 
@@ -74,6 +88,12 @@ The default human-facing source of truth is intentionally small:
 rules, local hazards, command pointers, and skill routing, but do not treat them
 as human-authoritative project truth by default.
 
+Because Codex injects `AGENTS.md` into the model-visible startup context,
+`AGENTS.md` should not instruct Codex to reread itself. It may say "this file is
+already startup context when injected" and then route additional reads by task.
+Claude may import `AGENTS.md` from `CLAUDE.md`; avoid duplicating the same long
+repo rules in both files.
+
 Agent planning, generated evidence, history, and working notes belong in
 explicit agent/process surfaces such as GSD-owned `.planning/**`, flat
 `docs/plans/<slug>.md` plan contracts, `docs/retrospectives/**`,
@@ -100,6 +120,39 @@ react when those docs conflict with a request. Do not copy milestone goals,
 non-goals, steering policy, documentation taxonomy, or other human-facing
 project state into agent files. Those copied blocks drift after `$intuitive-doc`
 cleans or reorganizes the human surface.
+
+## Startup Orientation Hygiene
+
+Use this when the user complains that new sessions burn too much context, or
+when first-read policies force a large fixed bundle before every task.
+
+The target shape is a small, layered startup path:
+
+1. `AGENTS.md` / `CLAUDE.md`: critical hazards, permission boundaries, command
+   pointers, and when to read more.
+2. `STATUS.md`: newest current state, next action, blockers, and links to
+   active source-of-truth docs.
+3. `README.md`: project orientation and public commands.
+4. `ARCHITECTURE.md`: layer map, current contracts, and extension points.
+5. `docs/human/**`, `docs/agents/**`, plans, ADRs, and runbooks: read on demand.
+
+Rules:
+
+- Start with `STATUS.md` for current focus unless the task is pure setup,
+  architecture, or documentation.
+- Put the newest and most actionable status at the top. Move old shipped detail
+  to plans, ADRs, retrospectives, or `docs/human/**` and leave links.
+- Keep "current blocker" concrete. If there is no blocker, say so once; do not
+  list every historical external validation caveat in the startup path.
+- Keep first-read policies conditional: architecture work reads
+  `ARCHITECTURE.md`; demo/run work reads command docs; GSD work reads
+  `.planning/**`; domain naming reads domain docs.
+- Do not make every agent read tool-specific overlays such as `CLAUDE.md` unless
+  the current host is that tool or the file carries a necessary local delta.
+
+`$intuitive-init` owns this startup harness cleanup when the change is tightly
+coupled to `AGENTS.md` / `CLAUDE.md`. Route broad human-doc audits,
+reorganizations, or generated-doc cleanup to `$intuitive-doc`.
 
 ## Agent Reference File Boundary
 
@@ -223,7 +276,15 @@ Use this workflow unless the user asks for report-only or a specific file.
    - language manifests, lockfiles, compiler config, virtualenv/toolchain files,
      and existing language-server config
    - skill folders or command folders
-3. Use init-style discovery when it is available and worth the extra evidence:
+3. Measure startup-context pressure:
+   - line counts for `AGENTS.md`, `CLAUDE.md`, `README.md`, `ARCHITECTURE.md`,
+     and `STATUS.md`
+   - whether `AGENTS.md` is injected by the host and then reread manually
+   - whether the first-read path is fixed or task-routed
+   - whether `STATUS.md` is newest-first or a cumulative changelog
+   - whether long examples/procedures belong in `docs/agents/**`,
+     `docs/human/**`, scripts, or skills
+4. Use init-style discovery when it is available and worth the extra evidence:
    - Prefer `/init`, `codex init` when available, or the tool's equivalent in
      suggestion/refactor mode.
    - If `/init` refuses because `AGENTS.md` or `CLAUDE.md` already exists,
@@ -232,7 +293,7 @@ Use this workflow unless the user asks for report-only or a specific file.
    - If native slash commands are not exposed, either continue from repo
      evidence or use the stdin-bundled Codex CLI discovery below when the host
      supports it. Missing nested-agent support is not a blocker.
-4. Classify current guidance:
+5. Classify current guidance:
    - **Preserve**: project commands, env setup, permissions, local hazards,
      workflow source-of-truth rules, domain vocabulary, test gates, and
      host/orchestrator control-message rules such as treating Paseo XML-like
@@ -248,7 +309,16 @@ Use this workflow unless the user asks for report-only or a specific file.
      generic best practices, duplicated Claude/Codex sections, copied human
      project state, process notes that belong in skills instead of root
      guidance, or compatibility shims that are no longer the live path.
-5. Add or refresh a short preferred-skills block when relevant:
+6. Classify root orientation docs when they are part of the first-read path:
+   - **Preserve**: current commands, active contracts, next action, blockers,
+     and links to current plans/ADRs/human docs.
+   - **Collapse**: repeated implemented-plan summaries into a short current
+     state plus links.
+   - **Extract**: long run procedures to `docs/agents/**` or `docs/human/**`
+     depending on audience.
+   - **Remove**: stale shipped history, obsolete compatibility notes, duplicate
+     links, and old validation caveats that no longer change today's work.
+7. Add or refresh a short preferred-skills block when relevant:
    - `$intuitive-init` for agent guidance initialization and periodic refresh.
    - `$intuitive-doc` for human-facing docs and doc drift.
    - `$intuitive-tests` for test-suite structure and behavior-focused cleanup.
@@ -263,7 +333,7 @@ Use this workflow unless the user asks for report-only or a specific file.
    - `$intuitive-squash` for cleaning local agent commit history before handoff.
    Keep this block as routing guidance only. Do not use it to define the human
    documentation surface; `$intuitive-doc` owns that split.
-6. Check harness-specific surfaces:
+8. Check harness-specific surfaces:
    - nested `CLAUDE.md` / `AGENTS.md` files for monorepos or package-local rules
    - `.claude/skills/**`, `.codex/skills/**`, `.agents/skills/**`, or
      project-owned `skills/**` for repeated workflows
@@ -273,7 +343,7 @@ Use this workflow unless the user asks for report-only or a specific file.
    - Codex/Paseo delegation policy docs, when present; root guidance should
      point to the policy and keep only the short XML-envelope rule that prevents
      false auto-stop behavior
-7. Set up or verify target-repo LSP:
+9. Set up or verify target-repo LSP:
    - Detect the repo's primary language stack from manifests and lockfiles.
    - Verify or create the repo-local language-server config first.
    - Then verify, configure, or propose Serena MCP as the agent-facing symbol
@@ -286,10 +356,12 @@ Use this workflow unless the user asks for report-only or a specific file.
      language-server path and the agent-facing MCP path.
    - If setup is unsafe or ambiguous, stop with a concrete proposal and command
      instead of guessing.
-8. Produce a merged proposal first:
+10. Produce a merged proposal first:
    - Summarize the source inputs used.
    - Report root file sizes and whether cleanup pressure is low, medium, or
      high.
+   - Report first-read pressure for any root human docs that agent guidance
+     requires before commands.
    - Explain what was preserved, collapsed, extracted, replaced, and removed.
    - Name any new `docs/agents/**`, skill, script, or human-doc destination for
      extracted content.
@@ -300,7 +372,7 @@ Use this workflow unless the user asks for report-only or a specific file.
      Mark Serena/MCP as configured, refreshed, already covered, skipped with a
      concrete blocker, or needing user approval.
    - Show the diff or proposed file contents.
-9. Apply changes only when the user has asked for direct implementation or
+11. Apply changes only when the user has asked for direct implementation or
    approves the proposal. When applying, update both `AGENTS.md` and
    `CLAUDE.md` if both exist and the rule applies to both agents. Also apply
    recognized repo-local LSP setup changes in the same pass when they are safe
@@ -397,8 +469,10 @@ Report:
 Agent files:
 Init discovery:
 Root file size / cleanup pressure:
+First-read / orientation-doc pressure:
 Project-specific guidance to preserve:
 Correct but lengthy guidance to extract:
+Status/README/architecture cleanup candidates:
 Shared boilerplate to remove:
 Missing preferred-skill routing:
 Harness surfaces to add or leave alone:
@@ -428,6 +502,8 @@ Steps:
    harness surfaces instead of pasting their full procedures into root guidance.
 7. Verify or document target-repo LSP setup for the primary language stack.
 8. Search for stale setup/init claims after editing.
+9. When first-read policy changed, run a small prompt-input or line-count check
+   when available, or at least report the new fixed-read set.
 
 ### Refresh
 
@@ -441,13 +517,44 @@ root guidance into a manual.
 Also use Refresh after `$intuitive-doc` has created, moved, or clarified the
 human documentation surface. In that case, update agent files to point at the
 final surface and remove copied project strategy, milestone state, or doc-tier
-policy that now belongs in human docs.
+policy that now belongs in human docs. If `STATUS.md` or other first-read docs
+have accumulated old shipped state, refresh may compact them while preserving
+current links; route to `$intuitive-doc` only when the cleanup becomes a broad
+human-doc rewrite.
 
 Refresh is allowed and expected to delete root guidance that is obsolete,
 duplicated, generic, copied from human docs, or correct-but-better-extracted.
-When the root files are over the strong cleanup signal, prefer a thin-root
-rewrite over a patchwork edit: rebuild `AGENTS.md` and `CLAUDE.md` from the
-preserve list, then move long runbooks into `docs/agents/**`.
+When the root files are over the strong cleanup signal, or the fixed first-read
+path is too large, prefer a thin-root rewrite over a patchwork edit: rebuild
+`AGENTS.md` and `CLAUDE.md` from the preserve list, compact `STATUS.md` to
+current state when it is in scope, then move long runbooks into
+`docs/agents/**` or `docs/human/**`.
+
+### Startup-Context Cleanup
+
+Use when the user says every new session reads too much, context is wasted on
+orientation, or first-read policy forces long root docs.
+
+Default result:
+
+- `AGENTS.md`: short injected startup contract, with conditional reads.
+- `CLAUDE.md`: import or delta only.
+- `STATUS.md`: latest current state first, next action, blocker, and links.
+- Optional `docs/agents/<topic>.md` or `docs/human/<topic>.md`: extracted long
+  procedures or history.
+
+Steps:
+
+1. Measure line counts and fixed-read order for all startup docs.
+2. Confirm which files the host injects automatically, especially Codex
+   `AGENTS.md`.
+3. Replace fixed "read everything" instructions with task-routed reads.
+4. Put status guidance in `STATUS.md` itself: keep it newest-first, compact,
+   and pointer-based; old shipped history should move out.
+5. Keep critical hazards in the root agent file even if they are long, but
+   collapse examples into pointers.
+6. Verify with line counts and, for Codex when available, `codex debug
+   prompt-input` or equivalent prompt-input inspection.
 
 ### Slim / Cleanup
 
@@ -505,6 +612,14 @@ Good root agent guidance is short, local, and operational:
 - which local network, API, hardware, or sandbox constraints matter
 - which custom skills to use for recurring work
 
+Good first-read human orientation is also bounded:
+
+- `STATUS.md` answers "what is true now?" before history.
+- `README.md` answers "what is this and how do I start?" before details.
+- `ARCHITECTURE.md` answers "what layers and contracts exist?" before deep
+  subsystem prose.
+- Long history remains linked, not inlined into every startup turn.
+
 Deletion is part of the job. Remove or extract content even when it is accurate
 if it makes the root files hard to scan and can be represented by a short rule
 plus a pointer.
@@ -549,6 +664,8 @@ Stop after edits when:
   request
 - root files are slim enough to scan, or remaining length is justified by
   critical first-read safety rules
+- first-read human docs are compact enough for their role, newest-first, and
+  linked to deeper detail instead of acting as cumulative logs
 - stale symlink-first guidance has been removed or explicitly narrowed to
   shared assets
 - copied human-facing project state has been replaced with stable pointers to
