@@ -192,3 +192,13 @@ P1/P2 slice after shrink attempts.
   Existing provider routing, redaction, worker launch args, manifest schema,
   generated reports, and execution behavior stayed unchanged. Focused
   plan-bakeoff tests, `bun run check`, and `git diff --check` passed.
+- 2026-06-24: Fresh discovery selected another safe bounded module-deepening
+  slice in `plan-bakeoff`. Moved worktree setup command labeling, command text,
+  required/artifact handling, setup environment, setup artifact writing, and
+  setup result construction behind `plan_bakeoff_worktree_setup.ts`.
+  `run_plan_bakeoff.ts` still owns candidate execution ordering, setup failure
+  scorecard policy, worktree retention policy, fake harness execution,
+  verification, scorecard/report writing, and CLI behavior. Existing worktree
+  setup fields, setup artifact output, setup failure behavior, and execution
+  order stayed unchanged. Focused plan-bakeoff tests, `bun run check`, and
+  `git diff --check` passed.
