@@ -174,3 +174,12 @@ P1/P2 slice after shrink attempts.
   writes, and command dispatch. Existing goal summaries, preflight parsing,
   markdown output, and command behavior stayed unchanged. Focused Multica
   tracker tests, `bun run check`, and `git diff --check` passed.
+- 2026-06-24: Fresh discovery selected another safe internal Multica goal
+  tracker deepening slice. Moved Multica workspace list parsing, workspace
+  resolution, issue create output parsing, CLI JSON extraction, nested
+  array/text helpers, run-id selection, and `Issue` typing behind
+  `track_goal_multica.ts`. `track_goal.ts` still owns command parsing, Multica
+  CLI invocation, issue/run/comment loading, artifact writes, and command
+  dispatch. Existing workspace resolution, issue post-create verification, run
+  selection, comment output, and CLI behavior stayed unchanged. Focused
+  Multica tracker tests, `bun run check`, and `git diff --check` passed.

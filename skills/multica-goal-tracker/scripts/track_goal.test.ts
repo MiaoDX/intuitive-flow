@@ -8,7 +8,7 @@ import {
   multicaEnv,
   resolveWorkspaceIdFromList,
   selectLatestRunId,
-} from "./track_goal";
+} from "./track_goal_multica";
 import {
   attemptRecordFromCommentText,
   attemptRecordsFromComments,
