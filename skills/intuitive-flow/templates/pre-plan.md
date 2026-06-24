@@ -1,5 +1,17 @@
 # <Plan Title>
 
+## Plan Ledger
+
+- Plan status: PROPOSED
+- Session scope: <short-session-name>
+- Parent plan: <path or none>
+- Child plans: <paths or none>
+- Last updated: <YYYY-MM-DD>
+- Current slice: <one or two lines>
+- Next action: <one concrete next step>
+- Blocked on: <blocker or none>
+- Do not touch from this session: <unrelated plans/files>
+
 ## Goal
 
 <Concrete outcome.>

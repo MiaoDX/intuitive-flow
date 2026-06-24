@@ -38,6 +38,13 @@ The capsule is a resume surface, not the canonical plan. Keep the canonical
 plan, issue, or refactor gate as the source of truth for scope, accepted
 checklist, decisions, and final status.
 
+When the repo uses `docs/plans/README.md` as a plan dashboard or puts a
+`## Plan Ledger` at the top of plan files, treat those as the session selector.
+Before continuing in a shared worktree with multiple active plans, identify the
+active plan/session scope and keep edits inside that scope. Cross-plan
+dependencies may be linked, but do not reclassify unrelated plans or refresh
+their ledgers unless the user explicitly switches scope.
+
 Do not create parallel resume files such as `.continue-here.md` or
 `.planning/HANDOFF.json`. If GSD owns the run, update state through GSD tools;
 otherwise keep resumable state in the active capsule and canonical plan.
@@ -49,6 +56,8 @@ durable history in commits and compact gate summaries.
 
 Include only compact state:
 
+- capsule status (`ACTIVE`, `PARKED`, `BLOCKED`, `DONE`, `SUPERSEDED`, or
+  `ABSORBED`);
 - source plan/gate/issue path;
 - latest user intent classification;
 - current slice or blocker;

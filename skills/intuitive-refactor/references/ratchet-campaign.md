@@ -54,11 +54,17 @@ Use two state surfaces:
 
 - Canonical gate: `docs/plans/refactor-<target>.md` or the existing plan/gate.
   It owns scope, accepted severities, checklist, status, stop condition,
-  verification inventory, parked items, and final evidence.
+  verification inventory, parked items, final evidence, and the top
+  `## Plan Ledger` when it lives under `docs/plans/`.
 - Active capsule: `docs/status/active/<gate-slug>.md`. If
   `docs/status/active/` does not exist, create it. It owns compact resume
   state: current slice, last proof, next candidate/proof, blocker fingerprint,
-  parked gates, and resume hint.
+  parked gates, resume hint, and `Capsule status`.
+
+If `docs/plans/README.md` exists or the campaign creates the first plan-backed
+dashboard, keep its row for this gate current. Do not update unrelated plan
+rows during a campaign checkpoint unless the user explicitly changes session
+scope.
 
 Do not create a second canonical plan for the same seam. Do not use chat
 history, commit history, or temporary logs as the campaign handoff source.
@@ -224,8 +230,11 @@ a long campaign. The checkpoint should update:
 
 - active capsule with current status, last proof, next slice/proof, and parked
   work;
-- canonical gate when accepted checklist, verification inventory, stop
-  condition, campaign overlay status, or final evidence changes;
+- canonical gate and its Plan Ledger when accepted checklist, verification
+  inventory, stop condition, campaign overlay status, current slice, next
+  action, blocker, or final evidence changes;
+- `docs/plans/README.md` dashboard row when the gate status/session/next action
+  changes;
 - semantic commit for verified implementation slices by default, following the
   commit policy above;
 - discovery pass count, clear candidates executed, and parked candidates when

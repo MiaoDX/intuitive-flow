@@ -117,6 +117,11 @@ For durable or repeated execution, also maintain the shared active capsule from
 `../../_shared/references/durable-run.md` at `docs/status/active/<gate-slug>.md`;
 create `docs/status/active/` when it is missing. The gate remains canonical for
 scope/status/checklist, while the capsule is only the compact resume surface.
+When the gate is under `docs/plans/`, include or refresh the top `## Plan
+Ledger` and update `docs/plans/README.md` if the gate's status, session scope,
+current slice, next action, blocker, or parent/child relation changed. Keep the
+refactor session locked to this gate; do not opportunistically rewrite other
+plan ledgers while working this seam.
 
 Use one source of truth:
 
@@ -140,6 +145,7 @@ When creating or updating the gate file, write the status in both places:
 
 - YAML frontmatter `status: <DONE|CONTINUE|REOPEN|PARK>` for quick parsing
 - `## Status` for human scanning
+- `## Plan Ledger` near the top when the gate lives under `docs/plans/`
 
 The gate file should contain this shape:
 
@@ -155,6 +161,18 @@ last_verified: null
 ---
 
 # Refactor Scope: <target>
+
+## Plan Ledger
+
+- Plan status: ACTIVE
+- Session scope: refactor-<target-slug>
+- Parent plan: <path or none>
+- Child plans: <paths or none>
+- Last updated: <YYYY-MM-DD>
+- Current slice: <accepted cleanup slice or gate creation>
+- Next action: <one concrete next step>
+- Blocked on: <blocker or none>
+- Do not touch from this session: <unrelated plans/files>
 
 ## Status
 

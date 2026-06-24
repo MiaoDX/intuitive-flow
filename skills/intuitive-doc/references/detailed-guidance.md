@@ -23,8 +23,9 @@ promotes a specific artifact into current truth.
 
 `docs/plans/` is a flat plan-contract surface. Do not create lifecycle
 subdirectories under `docs/plans/` during cleanup or reorganization; record
-lifecycle in each plan's status fields and use `docs/status/active/` for compact
-active execution capsules.
+lifecycle in each plan's `## Plan Ledger`/status fields, keep
+`docs/plans/README.md` as the plan dashboard when present, and use
+`docs/status/active/` for compact active execution capsules.
 
 AI coding docs are agent/process-facing docs that help future coding agents but
 do not need to be human project truth. Prefer `docs/agents/**` for durable

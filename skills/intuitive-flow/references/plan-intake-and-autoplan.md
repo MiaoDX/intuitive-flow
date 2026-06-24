@@ -111,6 +111,7 @@ canonical review/input artifact must be `docs/plans/<slug>.md`.
 
 Pre-plan contents:
 
+- plan ledger near the top
 - problem / goal
 - shaping mode
 - decisions already made
@@ -123,6 +124,12 @@ Pre-plan contents:
 - source evidence links
 
 Use `templates/pre-plan.md` when drafting a new plan.
+
+When drafting or revising `docs/plans/<slug>.md`, follow
+`source-of-truth.md`'s Plan Ledger And Dashboard rules: set the session scope,
+record parent/child relationships, name the no-touch boundary, and update
+`docs/plans/README.md` when the plan set or next action changes. If multiple
+plans exist, do not update unrelated plan ledgers while shaping this one.
 
 ## Unknown-Unknown Scout Before Preflight
 
@@ -211,7 +218,8 @@ once reconciled into the plan.
 
 When the user asks to implement a specific plan, says "LGTM", says "impl" while
 pointing at a plan, or approves a plan-backed run, first resolve the canonical
-`docs/plans/<slug>.md` path. Before implementation edits, read the plan's
+`docs/plans/<slug>.md` path and read its `Plan Ledger` if present so the run is
+locked to one session scope. Before implementation edits, read the plan's
 referenced context files. If the repo has `CONTEXT-MAP.md`, use it to find the
 relevant `CONTEXT.md` section; otherwise read root `CONTEXT.md` when the plan
 depends on domain terms, durable boundaries, public/private data rules,

@@ -18,8 +18,10 @@ artifacts, scratch notes, and agent-only runbooks should stay outside the human
 surface unless a human doc intentionally promotes them.
 
 Plan contracts use the fixed flat surface `docs/plans/<slug>.md`. Put lifecycle
-in the plan status and current execution state in `docs/status/active/`, not in
-plan lifecycle directories or one-off prompt files.
+in the plan's `## Plan Ledger` and current execution state in
+`docs/status/active/`, not in plan lifecycle directories or one-off prompt
+files. Treat `docs/plans/README.md`, when present, as the plan dashboard rather
+than a human-facing project manual.
 
 This compact entrypoint preserves full mode-specific guidance in
 `references/detailed-guidance.md`. Read it for detailed audit/update/cleanup

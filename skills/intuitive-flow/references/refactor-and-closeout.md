@@ -27,6 +27,7 @@ The refactor scope gate comes from `$intuitive-refactor` or an equivalent
 approved refactor contract. It is the source of truth for the pass and must name:
 
 - target module or boundary
+- plan ledger/session scope when the gate is a `docs/plans/<slug>.md` file
 - status marker: `DONE`, `CONTINUE`, `REOPEN`, or `PARK`
 - accepted severities
 - accepted issue checklist
@@ -95,6 +96,7 @@ not lie about shipped work after the implementation lands.
 
 Update the plan when the run changed any of:
 
+- plan ledger fields or `docs/plans/README.md` dashboard row;
 - implementation status;
 - public command/API/profile/MCP/tool contract;
 - accepted scope or non-goals;
@@ -103,10 +105,12 @@ Update the plan when the run changed any of:
 
 Prefer a compact closeout block or metadata refresh over a long execution
 ledger. A good plan closeout tells the next agent whether the plan is
-`Implemented`, `Partially implemented`, `Superseded`, or still `Active`, and
-which exact gates remain. If the plan remains unchanged, record why in the
-Flow closeout, such as "source plan already marked implemented" or "direct edit
-was not plan-backed".
+`DONE`, `ACTIVE`, `PARKED`, `SUPERSEDED`, or partially complete, which session
+scope is current, and which exact gates remain. Refresh the source plan's
+`## Plan Ledger` and the `docs/plans/README.md` dashboard row when the status,
+current slice, next action, blocker, parent/child relation, or no-touch scope
+changed. If the plan remains unchanged, record why in the Flow closeout, such
+as "source plan ledger already current" or "direct edit was not plan-backed".
 
 ## Serena Memory Maintenance
 

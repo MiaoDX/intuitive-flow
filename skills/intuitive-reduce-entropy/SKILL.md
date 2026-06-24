@@ -199,6 +199,13 @@ verification gates, or parked alternatives rather than recommending that flow
 execute only one slice. If a new entity remains necessary, state what existing
 option was rejected and what proof makes the addition unavoidable.
 
+For an existing plan with a `## Plan Ledger`, keep plan entropy edits scoped to
+that plan's session. If entropy review changes status, current slice, next
+action, blocker, parent/child relation, or no-touch boundary, update the ledger
+and the plan's row in `docs/plans/README.md`. Do not opportunistically
+reclassify unrelated plans; report stale neighboring plans as parked
+observations unless the user switches scope.
+
 ## Plan Artifact And Handoff
 
 Use or update a plan document only when the work spans multiple directions,

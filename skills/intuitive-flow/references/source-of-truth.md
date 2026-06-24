@@ -20,10 +20,53 @@ notes as evidence only.
 `docs/plans/` is a stable flat plan-contract surface: one plan, one
 `docs/plans/<slug>.md` file. Do not create lifecycle subdirectories under
 `docs/plans/` for active, proposed, or archived work. Lifecycle belongs in the
-plan's `Status`, `Last reviewed`, shipped evidence, remaining gates, and
-superseded-by links. Current execution progress belongs in
+plan's `Plan Ledger`, `Status`, `Last reviewed`, shipped evidence, remaining
+gates, and superseded-by links. Current execution progress belongs in
 `docs/status/active/<task-slug>.md`; GSD runtime state belongs only in
 GSD-owned `.planning/*` artifacts.
+
+## Plan Ledger And Dashboard
+
+When creating or materially updating `docs/plans/<slug>.md`, keep a compact
+`## Plan Ledger` near the top of the file, before long rationale. The ledger is
+the hot-resume selector for shared-worktree projects where multiple plan-backed
+sessions may be active at once; it should answer "what session am I in?" before
+an agent reads the full plan.
+
+Use this shape, preserving equivalent local wording when a repo already has a
+ledger convention:
+
+```markdown
+## Plan Ledger
+
+- Plan status: ACTIVE | PARKED | PROPOSED | DONE | SUPERSEDED
+- Session scope: short-session-name
+- Parent plan: path or none
+- Child plans: paths or none
+- Last updated: YYYY-MM-DD
+- Current slice: one or two lines
+- Next action: one concrete next step
+- Blocked on: blocker or none
+- Do not touch from this session: unrelated plans/files
+```
+
+`docs/plans/README.md`, when present or useful to create, is the plan dashboard.
+It should list the current plan set and enough session scope to choose the right
+plan without opening every file. Update the dashboard row when creating a plan
+or changing a plan's status, session scope, parent/child relation, current
+slice, next action, or blocker. Do not turn the dashboard into a transcript; it
+is an index.
+
+Before editing a plan-backed repo with multiple active plans, identify the
+active plan/session scope from the user prompt, `docs/plans/README.md`, the
+plan ledger, or the active capsule. Lock the run to that scope. Update only that
+plan's ledger, its related active capsule/result notes, and files in its
+accepted scope unless the user explicitly switches sessions.
+
+Cross-plan artifacts may be linked as evidence or dependencies, but do not
+opportunistically reclassify another plan, tick its checklist, or rewrite its
+ledger/dashboard row from inside the current session. If another plan appears
+stale, mention it as a parked observation or ask for a session switch.
 
 ## Plan-Like Intake
 
@@ -96,6 +139,11 @@ progress. If `docs/status/active/` does not exist, create it. The active file is
 a compact capsule for current execution state; `STATUS.md` remains the
 project-level human status surface.
 
+When maintaining active capsules, include a compact `Capsule status` field such
+as `ACTIVE`, `PARKED`, `BLOCKED`, `DONE`, `SUPERSEDED`, or `ABSORBED`. A capsule
+is not proof that every referenced plan is current; use the plan dashboard and
+the source plan's ledger to choose the active session.
+
 Do not create parallel resume files such as `.continue-here.md` or
 `.planning/HANDOFF.json`. `.planning/*` is GSD-owned state, and ad hoc resume
 notes should be folded into the active capsule or the canonical plan.
@@ -110,8 +158,13 @@ canonical state and will misroute future agents.
 
 Refresh only the planning truth that changed:
 
-- `Status`: `Implemented`, `Partially implemented`, `Superseded`, or still
-  `Active` with explicit remaining gates.
+- `Plan Ledger`: `Plan status`, `Last updated`, `Current slice`, `Next action`,
+  `Blocked on`, `Parent plan`, `Child plans`, and `Do not touch from this
+  session` when those changed.
+- `docs/plans/README.md`: the dashboard row for that plan when status/session
+  or next action changed.
+- `Status`: `Done`, `Partially implemented`, `Superseded`, or still `Active`
+  with explicit remaining gates, if the plan keeps a separate status section.
 - `Last reviewed`: the closeout date.
 - `Current implementation contract`: current command/API/profile/tool shape if
   it changed.

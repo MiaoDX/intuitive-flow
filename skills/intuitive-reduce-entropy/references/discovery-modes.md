@@ -145,6 +145,13 @@ Use plan entropy mode when the user points at an idea, draft plan, named
 ambiguity before execution. The output is a plan-review selection packet, not
 implementation and not approval.
 
+When the target is a `docs/plans/<slug>.md` file, read its `## Plan Ledger`
+first if present and keep the review locked to that session scope. If the
+review updates the plan's status, current slice, next action, blocker,
+parent/child relation, or no-touch boundary, refresh the ledger and the plan's
+row in `docs/plans/README.md`. Cross-plan risks may be linked or parked, but do
+not reclassify unrelated plan ledgers without an explicit session switch.
+
 Inspect only the smallest context needed to test the plan's decision quality:
 the plan or idea text, referenced human docs/context files, acceptance criteria,
 verification gates, and source evidence named by the plan. Do not broaden into
@@ -224,9 +231,10 @@ Discovery and implementation have different boundaries:
   already has a materiality reason.
 - For large loops, create or update one discovery artifact under
   `docs/plans/` when the target repo convention allows planning docs. Record
-  audit rounds, selected candidates, parked items, suggested proof, and the stop
-  condition in that one artifact instead of scattering partial batches through
-  chat.
+  a top `## Plan Ledger`, audit rounds, selected candidates, parked items,
+  suggested proof, and the stop condition in that one artifact instead of
+  scattering partial batches through chat. Update `docs/plans/README.md` when
+  this creates or changes a plan-backed discovery artifact's dashboard row.
 - Before adding another group in a loop, run a saturation audit: name the next
   candidate, its materiality reason, and why it still deserves review after the
   previous rounds. If that sentence is weak, stop with `Selected candidates:

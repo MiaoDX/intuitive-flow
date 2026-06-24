@@ -23,7 +23,7 @@ Scope changes:
 - <none | accepted changes from unknown-unknown scout/plan reconciliation/GSD handoff/refactor gate/execution discoveries>
 
 Source plan:
-- <updated docs/plans/<slug>.md to Implemented/Partially implemented/Superseded/Active with remaining gates | checked and left unchanged because ... | not applicable>
+- <updated docs/plans/<slug>.md Plan Ledger/body to DONE/ACTIVE/PARKED/SUPERSEDED/partially complete with remaining gates | updated docs/plans/README.md dashboard row | checked and left unchanged because ... | not applicable>
 
 STATUS.md:
 - <checked and updated | checked and left unchanged | not applicable>
