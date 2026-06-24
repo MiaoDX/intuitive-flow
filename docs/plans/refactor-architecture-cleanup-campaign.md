@@ -39,8 +39,8 @@ and easier to navigate.
 
 ## Rolling Candidate Queue
 
-- `paseo-keep-going` pure decision planning owner split: ready to commit;
-  focused tests, `bun run check`, and `git diff --check` passed.
+- `plan-bakeoff` worker launch owner split: ready to commit; focused tests,
+  `bun run check`, and `git diff --check` passed.
 - Root `STATUS.md` active-campaign drift cleanup: queued as a docs-only slice
   if the next discovery handoff finds no higher-value code cleanup.
 
@@ -239,3 +239,14 @@ P1/P2 slice after shrink attempts.
   behavior. Existing dry-run behavior, state writes, CLI options, prompt text,
   transient-error matching, and send planning stayed unchanged. Focused
   paseo-keep-going tests, `bun run check`, and `git diff --check` passed.
+- 2026-06-24: Fresh discovery selected another safe bounded module-deepening
+  slice in `plan-bakeoff`. Moved worker prompt rendering, fake harness script
+  generation, worker timing selection, skill-runner process launch, candidate
+  environment construction, and worker result normalization behind
+  `plan_bakeoff_worker.ts`. `run_plan_bakeoff.ts` still owns candidate
+  execution policy, worktree setup ordering, post-run verification policy,
+  scorecard construction, report writing, worktree retention, and CLI behavior.
+  Existing prompt text, fake harness behavior, real-harness gate, worker result
+  parsing, manifest schema, scorecard/report fields, and execution behavior
+  stayed unchanged. Focused plan-bakeoff tests, `bun run check`, and
+  `git diff --check` passed.

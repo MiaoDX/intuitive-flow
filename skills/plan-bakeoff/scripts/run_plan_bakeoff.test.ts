@@ -16,9 +16,11 @@ import {
   validateManifest,
 } from "./plan_bakeoff_manifest";
 import {
-  bakeoffPrompt,
   executeBakeoff,
 } from "./run_plan_bakeoff";
+import {
+  bakeoffPrompt,
+} from "./plan_bakeoff_worker";
 import {
   candidateMappedEnv,
   redactText,

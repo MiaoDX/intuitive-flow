@@ -3,10 +3,10 @@
 Source gate: `docs/plans/refactor-architecture-cleanup-campaign.md`
 Latest user intent: autonomous repeated verified cleanup slices.
 
-Current slice: ready to commit paseo keep-going decision owner split.
+Current slice: ready to commit plan-bakeoff worker launch owner split.
 
 Last proof:
-- `bun test scripts/lib/paseo-keep-going.test.ts` PASS
+- `bun test skills/plan-bakeoff/scripts/run_plan_bakeoff.test.ts` PASS
 - `bun run check` PASS
 - `git diff --check` PASS
 
