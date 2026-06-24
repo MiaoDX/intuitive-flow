@@ -3,17 +3,18 @@
 Source gate: `docs/plans/refactor-architecture-cleanup-campaign.md`
 Latest user intent: autonomous repeated verified cleanup slices.
 
-Current slice: ready to commit plan-bakeoff worker result split.
+Current slice: ready to commit plan-bakeoff worktree helper split.
 
 Last proof:
-- `bun test skills/multica-goal-tracker/scripts/track_goal.test.ts` PASS
+- `bun test skills/plan-bakeoff/scripts/run_plan_bakeoff.test.ts` PASS
 - `bun run check` PASS
 - `git diff --check` PASS
 
 Next proof:
 - fresh discovery handoff after commit
 
-Next candidate: none queued; run fresh discovery against current `HEAD`.
+Next candidate: none queued; run fresh discovery against current `HEAD` after
+the worktree helper split commit lands.
 
 Parked work:
 - Codex config old managed status-line variant migration.

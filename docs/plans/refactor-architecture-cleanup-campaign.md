@@ -212,3 +212,12 @@ P1/P2 slice after shrink attempts.
   parsing, diagnostics text, artifact tail redaction, scorecard/report fields,
   and execution behavior stayed unchanged. Focused plan-bakeoff tests,
   `bun run check`, and `git diff --check` passed.
+- 2026-06-24: Fresh discovery selected another safe bounded module-deepening
+  slice in `plan-bakeoff`. Moved run-directory creation, git command execution,
+  worktree add/remove, and candidate diff-stat collection behind
+  `plan_bakeoff_worktree.ts`. `run_plan_bakeoff.ts` still owns execution
+  policy, setup/worker/verification ordering, scorecard construction, report
+  writing, worktree retention decisions, and CLI behavior. Existing branch
+  naming, worktree lifecycle behavior, diff-stat fields, manifest schema, and
+  generated reports stayed unchanged. Focused plan-bakeoff tests,
+  `bun run check`, and `git diff --check` passed.
