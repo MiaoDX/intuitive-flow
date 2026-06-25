@@ -54,6 +54,14 @@ const normalizeEntry = (entry: unknown): HookEntry | undefined => {
 const entryHasCommand = (entry: HookEntry, command: string) =>
   entry.hooks.some((hook) => hook.type === "command" && hook.command === command);
 
+const commandReferencesGsdHook = (command: unknown, codexHome: string) => {
+  if (typeof command !== "string") {
+    return false;
+  }
+
+  return command.includes(`${codexHome}/hooks/gsd-`) || command.includes("/.codex/hooks/gsd-");
+};
+
 const upsertManagedEntry = (entries: HookEntry[], managed: HookEntry) => {
   const command = managed.hooks
     .map((hook) => (typeof hook.command === "string" ? hook.command : ""))
@@ -93,9 +101,59 @@ export const ensureCodexHooksText = (original: string, pluginDir: string) => {
   return `${JSON.stringify({ ...root, hooks: nextHooks }, null, 2)}\n`;
 };
 
+export const pruneGsdCodexHooksText = (original: string, codexHome: string) => {
+  if (!original.trim()) {
+    return original;
+  }
+
+  let root: JsonRecord;
+  try {
+    root = asRecord(JSON.parse(original) as unknown) ?? {};
+  } catch {
+    return original;
+  }
+
+  const existingHooks = asRecord(root.hooks);
+  if (!existingHooks) {
+    return original;
+  }
+
+  const nextHooks: Record<string, HookEntry[]> = {};
+
+  for (const [event, value] of Object.entries(existingHooks)) {
+    const entries = Array.isArray(value) ? value.map(normalizeEntry).filter((entry): entry is HookEntry => entry !== undefined) : [];
+    const pruned = entries
+      .map((entry) => ({
+        ...entry,
+        hooks: entry.hooks.filter((hook) => !commandReferencesGsdHook(hook.command, codexHome)),
+      }))
+      .filter((entry) => entry.hooks.length > 0);
+
+    if (pruned.length > 0) {
+      nextHooks[event] = pruned;
+    }
+  }
+
+  return `${JSON.stringify({ ...root, hooks: nextHooks }, null, 2)}\n`;
+};
+
 if (import.meta.main) {
-  const hooksPath = process.argv[2];
-  const pluginDir = process.argv[3];
+  const [firstArg, secondArg, thirdArg] = process.argv.slice(2);
+
+  if (firstArg === "prune-gsd") {
+    if (!secondArg || !thirdArg) {
+      console.error("Usage: ensure-codex-hooks.ts prune-gsd <hooks-path> <codex-home>");
+      process.exit(1);
+    }
+
+    if (existsSync(secondArg)) {
+      writeFileSync(secondArg, pruneGsdCodexHooksText(readFileSync(secondArg, "utf8"), thirdArg));
+    }
+    process.exit(0);
+  }
+
+  const hooksPath = firstArg;
+  const pluginDir = secondArg;
 
   if (!hooksPath || !pluginDir) {
     console.error("Usage: ensure-codex-hooks.ts <hooks-path> <tmux-agent-status-plugin-dir>");

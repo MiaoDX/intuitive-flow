@@ -40,6 +40,10 @@ prune_gsd_hooks() {
     if [ "$removed" -gt 0 ]; then
         echo "  ! removed $removed existing $label GSD hook file(s)"
     fi
+
+    if [ "$label" = "Codex" ] && [ -f "$config_dir/hooks.json" ]; then
+        bun "$SCRIPT_DIR/lib/ensure-codex-hooks.ts" prune-gsd "$config_dir/hooks.json" "$config_dir"
+    fi
 }
 
 gsd_current_for_target() {

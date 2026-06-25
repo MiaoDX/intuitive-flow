@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { ensureCodexHooksText } from "./ensure-codex-hooks";
+import { ensureCodexHooksText, pruneGsdCodexHooksText } from "./ensure-codex-hooks";
 
 const pluginDir = "/home/mi/.config/tmux/plugins/tmux-agent-status";
 
@@ -52,5 +52,63 @@ describe("codex hooks helper", () => {
   test("is idempotent", () => {
     const once = ensureCodexHooksText("", pluginDir);
     expect(ensureCodexHooksText(once, pluginDir)).toBe(once);
+  });
+
+  test("prunes stale GSD hook registrations while preserving other owners", () => {
+    const output = pruneGsdCodexHooksText(
+      JSON.stringify({
+        hooks: {
+          SessionStart: [
+            {
+              matcher: "startup|resume",
+              hooks: [{ type: "command", command: `bash ${pluginDir}/hooks/codex-hook.sh SessionStart` }],
+            },
+            {
+              hooks: [
+                {
+                  type: "command",
+                  command: '"/home/mi/.nvm/versions/node/v24.16.0/bin/node" "/home/mi/.codex/hooks/gsd-check-update.js"',
+                },
+              ],
+            },
+          ],
+          Stop: [
+            {
+              hooks: [{ type: "command", command: "agent-deck notify stop" }],
+            },
+          ],
+        },
+      }),
+      "/home/mi/.codex",
+    );
+
+    const parsed = JSON.parse(output);
+    expect(parsed.hooks.SessionStart).toHaveLength(1);
+    expect(parsed.hooks.SessionStart[0].hooks[0].command).toBe(
+      `bash ${pluginDir}/hooks/codex-hook.sh SessionStart`,
+    );
+    expect(parsed.hooks.Stop[0].hooks[0].command).toBe("agent-deck notify stop");
+  });
+
+  test("prunes only the GSD command when an entry has mixed hooks", () => {
+    const output = pruneGsdCodexHooksText(
+      JSON.stringify({
+        hooks: {
+          SessionStart: [
+            {
+              hooks: [
+                { type: "command", command: "/home/mi/.codex/hooks/gsd-session-state.sh" },
+                { type: "command", command: "custom startup hook" },
+              ],
+            },
+          ],
+        },
+      }),
+      "/home/mi/.codex",
+    );
+
+    const parsed = JSON.parse(output);
+    expect(parsed.hooks.SessionStart).toHaveLength(1);
+    expect(parsed.hooks.SessionStart[0].hooks).toEqual([{ type: "command", command: "custom startup hook" }]);
   });
 });
