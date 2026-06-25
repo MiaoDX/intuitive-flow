@@ -47,6 +47,36 @@ export type LogCandidate = {
   agentName?: string;
 };
 
+export type CodexAppServerProcess = {
+  pid: number;
+  ppid?: number;
+  pgid?: number;
+  ageMs: number;
+  paseoAgentId?: string;
+  command: string;
+};
+
+export type OrphanCodexCleanupAction =
+  | {
+      kind: "terminate";
+      pid: number;
+      pids: number[];
+      pgid?: number;
+      paseoAgentId: string;
+      ageMs: number;
+      processCount: number;
+    }
+  | {
+      kind: "skip";
+      pid: number;
+      pids: number[];
+      pgid?: number;
+      paseoAgentId?: string;
+      ageMs: number;
+      processCount: number;
+      reason: string;
+    };
+
 export const DEFAULT_PATTERNS = [
   /^.*\[System Error\]\s*Selected model is at capacity\. Please try a different model\.\s*$/i,
   /^.*\[System Error\]\s*stream disconnected before completion:\s*error sending request for url\s*\(.+\)\s*$/i,
@@ -111,6 +141,67 @@ export function preflightAgent(
   }
 
   return { kind: "candidate", agent, agentId, agentName };
+}
+
+export function planOrphanCodexCleanup(
+  processes: CodexAppServerProcess[],
+  activeAgentIds: Set<string>,
+  minAgeMs: number,
+): OrphanCodexCleanupAction[] {
+  const groups = new Map<string, CodexAppServerProcess[]>();
+  for (const process of processes) {
+    const key = String(process.pgid ?? process.pid);
+    groups.set(key, [...(groups.get(key) ?? []), process]);
+  }
+
+  const actions: OrphanCodexCleanupAction[] = [];
+  for (const group of groups.values()) {
+    const representative = group[0];
+    if (representative === undefined) continue;
+
+    const agentIds = new Set(group.map((process) => process.paseoAgentId).filter((value): value is string => value !== undefined));
+    const ageMs = Math.min(...group.map((process) => process.ageMs));
+    const base = {
+      pid: representative.pid,
+      pids: group.map((process) => process.pid).sort((left, right) => left - right),
+      pgid: representative.pgid,
+      ageMs,
+      processCount: group.length,
+    };
+
+    if (agentIds.size === 0) {
+      actions.push({ ...base, kind: "skip", reason: "not Paseo-managed" });
+      continue;
+    }
+
+    if (agentIds.size > 1) {
+      actions.push({ ...base, kind: "skip", paseoAgentId: [...agentIds].join(","), reason: "ambiguous Paseo agent ids" });
+      continue;
+    }
+
+    const [agentId] = agentIds;
+    if (agentId === undefined) {
+      actions.push({ ...base, kind: "skip", reason: "not Paseo-managed" });
+      continue;
+    }
+
+    if (activeAgentIds.has(agentId)) {
+      actions.push({ ...base, kind: "skip", paseoAgentId: agentId, reason: "active Paseo agent" });
+      continue;
+    }
+
+    if (ageMs < minAgeMs) {
+      actions.push({ ...base, kind: "skip", paseoAgentId: agentId, reason: "younger than cleanup minimum" });
+      continue;
+    }
+
+    actions.push({ ...base, kind: "terminate", paseoAgentId: agentId });
+  }
+
+  return actions.sort((left, right) => {
+    if (left.kind !== right.kind) return left.kind === "terminate" ? -1 : 1;
+    return right.ageMs - left.ageMs;
+  });
 }
 
 export function planCandidateLogAction(

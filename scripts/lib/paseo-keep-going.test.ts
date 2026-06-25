@@ -6,11 +6,14 @@ import { join, resolve } from "node:path";
 import {
   parseArgs,
   readState,
+  validateConfig,
 } from "./paseo-keep-going";
 import {
   findCapacityError,
   parseCreatedAgeMs,
   planKeepGoingActions,
+  planOrphanCodexCleanup,
+  type CodexAppServerProcess,
   type KeepGoingState,
   type PaseoAgent,
 } from "./paseo-keep-going-plan";
@@ -326,8 +329,164 @@ describe("paseo keep-going monitor", () => {
     const defaults = parseArgs([], { HOME: "/home/demo" });
     expect(defaults.statuses).toEqual(new Set(["running", "error"]));
     expect(defaults.tail).toBe(300);
+    expect(defaults.cleanupOrphanCodex).toBe(false);
+    expect(defaults.cleanupApply).toBe(false);
+    expect(defaults.cleanupOnly).toBe(false);
+    expect(defaults.cleanupMinAgeMs).toBe(30 * 60 * 1000);
     expect(parseArgs(["--max-age-hours", "0"], { HOME: "/home/demo" }).maxAgeMs).toBeUndefined();
     expect(parseArgs(["--max-age-hours", "6"], { HOME: "/home/demo" }).maxAgeMs).toBe(6 * 60 * 60 * 1000);
+    expect(parseArgs(["--cleanup-orphans"], { HOME: "/home/demo" }).cleanupOrphanCodex).toBe(true);
+    expect(parseArgs(["--cleanup-apply"], { HOME: "/home/demo" })).toMatchObject({
+      cleanupOrphanCodex: true,
+      cleanupApply: true,
+    });
+    expect(parseArgs(["--cleanup-only"], { HOME: "/home/demo" })).toMatchObject({
+      cleanupOrphanCodex: true,
+      cleanupOnly: true,
+    });
+    expect(parseArgs(["--cleanup-apply", "--no-cleanup-orphans"], { HOME: "/home/demo" })).toMatchObject({
+      cleanupOrphanCodex: false,
+      cleanupApply: false,
+      cleanupOnly: false,
+    });
+    expect(parseArgs(["--cleanup-min-age-minutes", "5"], { HOME: "/home/demo" }).cleanupMinAgeMs).toBe(5 * 60 * 1000);
+  });
+
+  test("refuses orphan cleanup with a custom Paseo binary unless explicitly allowed", () => {
+    const config = parseArgs(["--cleanup-orphans", "--paseo-bin", "/tmp/fake-paseo"], { HOME: "/home/demo" });
+
+    expect(() => validateConfig(config)).toThrow(/custom --paseo-bin/);
+    expect(() =>
+      validateConfig(
+        parseArgs(["--cleanup-orphans", "--paseo-bin", "/tmp/fake-paseo"], {
+          HOME: "/home/demo",
+          PASEO_KEEP_GOING_ALLOW_CUSTOM_PASEO_BIN_CLEANUP: "1",
+        }),
+      ),
+    ).not.toThrow();
+  });
+
+  test("plans orphan Codex cleanup only for stale inactive Paseo app-server groups", () => {
+    const processes: CodexAppServerProcess[] = [
+      {
+        pid: 101,
+        pgid: 100,
+        ageMs: 2 * 60 * 60 * 1000,
+        paseoAgentId: "active-agent",
+        command: "node codex app-server --enable goals",
+      },
+      {
+        pid: 102,
+        pgid: 100,
+        ageMs: 2 * 60 * 60 * 1000,
+        paseoAgentId: "active-agent",
+        command: "codex app-server --enable goals",
+      },
+      {
+        pid: 201,
+        pgid: 200,
+        ageMs: 2 * 60 * 60 * 1000,
+        paseoAgentId: "old-orphan",
+        command: "node codex app-server --enable goals",
+      },
+      {
+        pid: 202,
+        pgid: 200,
+        ageMs: 2 * 60 * 60 * 1000,
+        paseoAgentId: "old-orphan",
+        command: "codex app-server --enable goals",
+      },
+      {
+        pid: 301,
+        pgid: 300,
+        ageMs: 5 * 60 * 1000,
+        paseoAgentId: "fresh-orphan",
+        command: "node codex app-server --enable goals",
+      },
+      {
+        pid: 401,
+        pgid: 400,
+        ageMs: 2 * 60 * 60 * 1000,
+        command: "node codex app-server --enable goals",
+      },
+    ];
+
+    const actions = planOrphanCodexCleanup(processes, new Set(["active-agent"]), 30 * 60 * 1000);
+
+    expect(actions).toContainEqual({
+      kind: "terminate",
+      pid: 201,
+      pids: [201, 202],
+      pgid: 200,
+      paseoAgentId: "old-orphan",
+      ageMs: 2 * 60 * 60 * 1000,
+      processCount: 2,
+    });
+    expect(actions).toContainEqual({
+      kind: "skip",
+      pid: 101,
+      pids: [101, 102],
+      pgid: 100,
+      paseoAgentId: "active-agent",
+      ageMs: 2 * 60 * 60 * 1000,
+      processCount: 2,
+      reason: "active Paseo agent",
+    });
+    expect(actions).toContainEqual({
+      kind: "skip",
+      pid: 301,
+      pids: [301],
+      pgid: 300,
+      paseoAgentId: "fresh-orphan",
+      ageMs: 5 * 60 * 1000,
+      processCount: 1,
+      reason: "younger than cleanup minimum",
+    });
+    expect(actions).toContainEqual({
+      kind: "skip",
+      pid: 401,
+      pids: [401],
+      pgid: 400,
+      ageMs: 2 * 60 * 60 * 1000,
+      processCount: 1,
+      reason: "not Paseo-managed",
+    });
+  });
+
+  test("does not terminate process groups with mixed Paseo agent ids", () => {
+    const actions = planOrphanCodexCleanup(
+      [
+        {
+          pid: 101,
+          pgid: 100,
+          ageMs: 2 * 60 * 60 * 1000,
+          paseoAgentId: "agent-a",
+          command: "node codex app-server --enable goals",
+        },
+        {
+          pid: 102,
+          pgid: 100,
+          ageMs: 2 * 60 * 60 * 1000,
+          paseoAgentId: "agent-b",
+          command: "codex app-server --enable goals",
+        },
+      ],
+      new Set(),
+      30 * 60 * 1000,
+    );
+
+    expect(actions).toEqual([
+      {
+        kind: "skip",
+        pid: 101,
+        pids: [101, 102],
+        pgid: 100,
+        paseoAgentId: "agent-a,agent-b",
+        ageMs: 2 * 60 * 60 * 1000,
+        processCount: 2,
+        reason: "ambiguous Paseo agent ids",
+      },
+    ]);
   });
 
   test("treats an empty state file as initial state", () => {
@@ -419,7 +578,50 @@ describe("paseo keep-going monitor", () => {
     }
   });
 
-  test("CLI records later successful sends even when an earlier agent send fails", () => {
+  test("CLI cleanup with a fake Paseo binary fails before process discovery", () => {
+    const tempDir = mkdtempSync(join(tmpdir(), "paseo-keep-going-cli-"));
+    const fakePaseo = join(tempDir, "paseo");
+    const fakePs = join(tempDir, "ps");
+    const psTouched = join(tempDir, "ps-touched");
+    const scriptPath = resolve(process.cwd(), "scripts", "lib", "paseo-keep-going.ts");
+
+    try {
+      writeFileSync(
+        fakePaseo,
+        [
+          "#!/usr/bin/env bash",
+          "set -euo pipefail",
+          "printf '%s\\n' '[{\"id\":\"fake-active\",\"status\":\"running\"}]'",
+          "",
+        ].join("\n"),
+        { mode: 0o755 },
+      );
+      writeFileSync(
+        fakePs,
+        [
+          "#!/usr/bin/env bash",
+          "set -euo pipefail",
+          `touch ${shellQuote(psTouched)}`,
+          "exit 0",
+          "",
+        ].join("\n"),
+        { mode: 0o755 },
+      );
+
+      const result = spawnSync("bun", [scriptPath, "--once", "--cleanup-only", "--paseo-bin", fakePaseo], {
+        encoding: "utf8",
+        env: { ...process.env, PATH: `${tempDir}:${process.env.PATH ?? ""}` },
+      });
+
+      expect(result.status).not.toBe(0);
+      expect(result.stderr).toContain("custom --paseo-bin");
+      expect(existsSync(psTouched)).toBe(false);
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  test("CLI records failed sends for cooldown while preserving later successful sends", () => {
     const tempDir = mkdtempSync(join(tmpdir(), "paseo-keep-going-cli-"));
     const fakePaseo = join(tempDir, "paseo");
     const statePath = join(tempDir, "state.json");
@@ -456,8 +658,52 @@ describe("paseo keep-going monitor", () => {
       });
       expect(result.status).toBe(0);
       const state = JSON.parse(readFileSync(statePath, "utf8"));
-      expect(state.sent.fails).toBeUndefined();
+      expect(state.sent.fails.fingerprint).toBe("[System Error] Selected model is at capacity. Please try a different model.");
       expect(state.sent.works.fingerprint).toBe("[System Error] Selected model is at capacity. Please try a different model.");
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  test("CLI records failed sends for cooldown suppression", () => {
+    const tempDir = mkdtempSync(join(tmpdir(), "paseo-keep-going-cli-"));
+    const fakePaseo = join(tempDir, "paseo");
+    const statePath = join(tempDir, "state.json");
+    const scriptPath = resolve(process.cwd(), "scripts", "lib", "paseo-keep-going.ts");
+
+    try {
+      writeFileSync(
+        fakePaseo,
+        [
+          "#!/usr/bin/env bash",
+          "set -euo pipefail",
+          "case \"$1\" in",
+          "  ls)",
+          "    printf '%s\\n' '[{\"id\":\"fails\",\"name\":\"fails\",\"status\":\"running\"}]'",
+          "    ;;",
+          "  logs)",
+          "    printf '%s\\n' '[System Error] Selected model is at capacity. Please try a different model.'",
+          "    ;;",
+          "  send)",
+          "    exit 1",
+          "    ;;",
+          "  *)",
+          "    exit 64",
+          "    ;;",
+          "esac",
+          "",
+        ].join("\n"),
+        { mode: 0o755 },
+      );
+
+      const result = spawnSync("bun", [scriptPath, "--once", "--paseo-bin", fakePaseo, "--state", statePath], {
+        encoding: "utf8",
+      });
+
+      expect(result.status).toBe(0);
+      const state = JSON.parse(readFileSync(statePath, "utf8"));
+      expect(state.sent.fails.fingerprint).toBe("[System Error] Selected model is at capacity. Please try a different model.");
+      expect(typeof state.sent.fails.sentAt).toBe("number");
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }

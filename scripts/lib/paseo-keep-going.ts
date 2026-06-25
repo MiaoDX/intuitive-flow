@@ -7,9 +7,12 @@ import {
   normalizeFingerprint,
   normalizeStatus,
   planCandidateLogAction,
+  planOrphanCodexCleanup,
+  type CodexAppServerProcess,
   preflightAgent,
   type KeepGoingState,
   type LogCandidate,
+  type OrphanCodexCleanupAction,
   type PaseoAgent,
   type ScanAction,
   type SentRecord,
@@ -30,6 +33,11 @@ export type KeepGoingConfig = {
   maxAgeMs?: number;
   includeSelf: boolean;
   selfAgentId?: string;
+  cleanupOrphanCodex: boolean;
+  cleanupApply: boolean;
+  cleanupOnly: boolean;
+  cleanupMinAgeMs: number;
+  allowCustomPaseoBinCleanup: boolean;
 };
 
 async function main(): Promise<void> {
@@ -38,6 +46,8 @@ async function main(): Promise<void> {
 }
 
 export async function runMonitor(config: KeepGoingConfig): Promise<void> {
+  validateConfig(config);
+
   while (true) {
     try {
       await scanOnce(config);
@@ -55,6 +65,9 @@ export async function runMonitor(config: KeepGoingConfig): Promise<void> {
 async function scanOnce(config: KeepGoingConfig): Promise<void> {
   const state = readState(config.statePath);
   const agents = listAgents(config);
+  cleanupOrphanCodexIfEnabled(config, agents);
+  if (config.cleanupOnly) return;
+
   const now = Date.now();
   const actions: ScanAction[] = [];
   const candidates: LogCandidate[] = [];
@@ -93,6 +106,11 @@ async function scanOnce(config: KeepGoingConfig): Promise<void> {
       writeState(config.statePath, state);
       log(`sent keep-going to ${label(action)}`);
     } catch (error) {
+      state.sent[action.agentId] = {
+        fingerprint: action.fingerprint,
+        sentAt: Date.now(),
+      };
+      writeState(config.statePath, state);
       const message = error instanceof Error ? error.message : String(error);
       log(`failed to send keep-going to ${label(action)}: ${message}`);
     }
@@ -140,6 +158,128 @@ function listAgents(config: KeepGoingConfig): PaseoAgent[] {
     cwd: stringField(agent, "cwd"),
     created: stringField(agent, "created"),
   }));
+}
+
+function cleanupOrphanCodexIfEnabled(config: KeepGoingConfig, agents: PaseoAgent[]): void {
+  if (!config.cleanupOrphanCodex) return;
+
+  const activeAgentIds = new Set<string>();
+  for (const agent of agents) {
+    if (agent.id !== undefined) activeAgentIds.add(agent.id);
+    if (agent.shortId !== undefined) activeAgentIds.add(agent.shortId);
+  }
+
+  const actions = planOrphanCodexCleanup(listCodexAppServerProcesses(), activeAgentIds, config.cleanupMinAgeMs);
+  const terminateActions = actions.filter((action): action is Extract<OrphanCodexCleanupAction, { kind: "terminate" }> => {
+    return action.kind === "terminate";
+  });
+
+  if (config.verbose) {
+    const skipCounts = new Map<string, number>();
+    for (const action of actions) {
+      if (action.kind === "skip") skipCounts.set(action.reason, (skipCounts.get(action.reason) ?? 0) + 1);
+    }
+    if (skipCounts.size > 0) {
+      log(`orphan cleanup skips: ${[...skipCounts.entries()].map(([reason, count]) => `${reason}=${count}`).join(", ")}`);
+    }
+  }
+
+  if (terminateActions.length === 0) return;
+
+  if (config.dryRun || !config.cleanupApply) {
+    log(
+      `${config.dryRun ? "dry-run would terminate" : "cleanup candidate"} ${terminateActions.length} orphan Codex app-server group(s): ${formatCleanupActions(
+        terminateActions.slice(0, 12),
+      )}${terminateActions.length > 12 ? ", ..." : ""}`,
+    );
+    return;
+  }
+
+  let terminated = 0;
+  for (const action of terminateActions) {
+    if (terminateCodexAction(action)) terminated++;
+  }
+
+  if (terminated > 0) {
+    log(`terminated ${terminated} orphan Codex app-server group(s): ${formatCleanupActions(terminateActions.slice(0, 12))}`);
+  }
+}
+
+function listCodexAppServerProcesses(): CodexAppServerProcess[] {
+  const result = spawnSync("ps", ["-eo", "pid=,ppid=,pgid=,etimes=,args="], {
+    encoding: "utf8",
+    maxBuffer: 16 * 1024 * 1024,
+  });
+  if (result.status !== 0) {
+    throw new Error(`ps failed while listing Codex app-server processes: ${result.stderr || result.stdout}`);
+  }
+
+  const processes: CodexAppServerProcess[] = [];
+  for (const line of result.stdout.split(/\r?\n/)) {
+    const match = line.match(/^\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(.+)$/);
+    if (match === null) continue;
+
+    const command = match[5] ?? "";
+    if (!command.includes("codex app-server --enable goals")) continue;
+
+    const pid = Number(match[1]);
+    const ppid = Number(match[2]);
+    const pgid = Number(match[3]);
+    const elapsedSeconds = Number(match[4]);
+    if (!Number.isSafeInteger(pid) || !Number.isSafeInteger(elapsedSeconds)) continue;
+
+    processes.push({
+      pid,
+      ppid: Number.isSafeInteger(ppid) ? ppid : undefined,
+      pgid: Number.isSafeInteger(pgid) ? pgid : undefined,
+      ageMs: elapsedSeconds * 1000,
+      paseoAgentId: readProcessEnv(pid).PASEO_AGENT_ID,
+      command,
+    });
+  }
+
+  return processes;
+}
+
+function readProcessEnv(pid: number): Record<string, string> {
+  try {
+    const raw = readFileSync(`/proc/${pid}/environ`, "utf8");
+    const env: Record<string, string> = {};
+    for (const entry of raw.split("\0")) {
+      const separator = entry.indexOf("=");
+      if (separator <= 0) continue;
+      env[entry.slice(0, separator)] = entry.slice(separator + 1);
+    }
+    return env;
+  } catch {
+    return {};
+  }
+}
+
+function terminateCodexAction(action: Extract<OrphanCodexCleanupAction, { kind: "terminate" }>): boolean {
+  let terminated = false;
+  const pids = [...action.pids].sort((left, right) => right - left);
+  const targets = pids.length > 0 ? pids : [action.pid];
+
+  for (const pid of targets) {
+    try {
+      process.kill(pid, "SIGTERM");
+      terminated = true;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      log(`failed to terminate orphan Codex app-server pid=${pid} groupPid=${action.pid}: ${message}`);
+    }
+  }
+
+  return terminated;
+}
+
+function formatCleanupActions(actions: Array<Extract<OrphanCodexCleanupAction, { kind: "terminate" }>>): string {
+  return actions
+    .map((action) => {
+      return `agent=${action.paseoAgentId.slice(0, 8)} pids=${action.pids.join("+")} age=${formatDuration(action.ageMs)}`;
+    })
+    .join(", ");
 }
 
 async function readLogs(config: KeepGoingConfig, agent: PaseoAgent): Promise<string> {
@@ -206,6 +346,11 @@ export function parseArgs(args: string[], env: NodeJS.ProcessEnv = process.env):
     maxAgeMs: 24 * 60 * 60 * 1000,
     includeSelf: false,
     selfAgentId: env.PASEO_KEEP_GOING_SELF_AGENT_ID,
+    cleanupOrphanCodex: false,
+    cleanupApply: false,
+    cleanupOnly: false,
+    cleanupMinAgeMs: 30 * 60 * 1000,
+    allowCustomPaseoBinCleanup: env.PASEO_KEEP_GOING_ALLOW_CUSTOM_PASEO_BIN_CLEANUP === "1",
   };
 
   for (let index = 0; index < args.length; index++) {
@@ -222,6 +367,25 @@ export function parseArgs(args: string[], env: NodeJS.ProcessEnv = process.env):
         break;
       case "--include-self":
         config.includeSelf = true;
+        break;
+      case "--no-cleanup-orphans":
+        config.cleanupOrphanCodex = false;
+        config.cleanupOnly = false;
+        config.cleanupApply = false;
+        break;
+      case "--cleanup-orphans":
+        config.cleanupOrphanCodex = true;
+        break;
+      case "--cleanup-apply":
+        config.cleanupOrphanCodex = true;
+        config.cleanupApply = true;
+        break;
+      case "--cleanup-only":
+        config.cleanupOrphanCodex = true;
+        config.cleanupOnly = true;
+        break;
+      case "--cleanup-min-age-minutes":
+        config.cleanupMinAgeMs = parsePositiveNumber(nextArg(args, ++index, arg), arg) * 60 * 1000;
         break;
       case "--interval":
         config.intervalMs = parsePositiveNumber(nextArg(args, ++index, arg), arg) * 1000;
@@ -269,6 +433,15 @@ export function parseArgs(args: string[], env: NodeJS.ProcessEnv = process.env):
   return config;
 }
 
+export function validateConfig(config: KeepGoingConfig): void {
+  if (!config.cleanupOrphanCodex) return;
+  if (config.paseoBin === "paseo" || config.allowCustomPaseoBinCleanup) return;
+
+  throw new Error(
+    "orphan cleanup refuses a custom --paseo-bin by default; set PASEO_KEEP_GOING_ALLOW_CUSTOM_PASEO_BIN_CLEANUP=1 only for a trusted real Paseo binary",
+  );
+}
+
 function nextArg(args: string[], index: number, flag: string): string {
   const value = args[index];
   if (value === undefined || value.startsWith("--")) throw new Error(`${flag} requires a value`);
@@ -300,6 +473,14 @@ function label(action: { agentId: string; agentName?: string }): string {
   return action.agentName === undefined ? action.agentId : `${action.agentName} (${action.agentId})`;
 }
 
+function formatDuration(ms: number): string {
+  const minutes = Math.floor(ms / 60_000);
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 48) return `${hours}h`;
+  return `${Math.floor(hours / 24)}d`;
+}
+
 function log(message: string): void {
   process.stderr.write(`[paseo-keep-going] ${new Date().toISOString()} ${message}\n`);
 }
@@ -323,6 +504,12 @@ Options:
   --max-age-hours <n>    Only inspect agents created within n hours; 0 disables (default: 24)
   --tail <n>             Paseo log tail size per agent (default: 300)
   --statuses <csv>       Agent statuses to monitor (default: running,error)
+  --no-cleanup-orphans   Disable orphan Codex app-server cleanup (default)
+  --cleanup-orphans      Report orphan Codex app-server cleanup candidates
+  --cleanup-apply        Actually terminate cleanup candidates
+  --cleanup-only         Only scan orphan cleanup candidates; do not send keep-going prompts
+  --cleanup-min-age-minutes <n>
+                         Only terminate orphan app-servers older than n minutes (default: 30)
   --state <path>         State file path
   --paseo-bin <path>     Paseo binary (default: paseo)
   --prompt <text>        Prompt sent through paseo send

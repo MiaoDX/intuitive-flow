@@ -8,7 +8,7 @@ LOG_FILE="$CACHE_DIR/paseo-keep-going.log"
 
 usage() {
     cat <<'EOF'
-Usage: scripts/dev/paseo-keep-going.sh <start|stop|status|restart|run> [monitor options]
+Usage: scripts/dev/paseo-keep-going.sh <start|stop|status|restart|run|cleanup> [monitor options]
 
 Starts a small background monitor that scans active Paseo agents for transient
 API errors and sends one "keep going" prompt through `paseo send`.
@@ -20,11 +20,20 @@ Common monitor options:
   --max-age-hours <n>    Only inspect agents created within n hours; 0 disables (default: 24)
   --tail <n>             Log lines to inspect per agent (default: 300)
   --statuses <csv>       Agent statuses to monitor (default: running,error)
+  --cleanup-orphans      Report stale Codex app-server processes whose PASEO_AGENT_ID
+                         no longer appears in active `paseo ls --json` output
+  --cleanup-apply        Actually terminate cleanup candidates; otherwise cleanup is report-only
+  --cleanup-only         Only scan cleanup candidates; do not send keep-going prompts
+  --no-cleanup-orphans   Disable orphan Codex app-server cleanup (default)
+  --cleanup-min-age-minutes <n>
+                         Only terminate orphan app-servers older than n minutes (default: 30)
 
 Examples:
   scripts/dev/paseo-keep-going.sh start
   scripts/dev/paseo-keep-going.sh start --dry-run --interval 10
   scripts/dev/paseo-keep-going.sh run --once --dry-run --verbose
+  scripts/dev/paseo-keep-going.sh cleanup
+  scripts/dev/paseo-keep-going.sh cleanup --cleanup-apply
   scripts/dev/paseo-keep-going.sh stop
 EOF
 }
@@ -105,6 +114,10 @@ case "$command" in
     run)
         cd "$ROOT_DIR"
         exec bun scripts/lib/paseo-keep-going.ts "$@"
+        ;;
+    cleanup)
+        cd "$ROOT_DIR"
+        exec bun scripts/lib/paseo-keep-going.ts --once --cleanup-only --verbose "$@"
         ;;
     *)
         usage >&2
