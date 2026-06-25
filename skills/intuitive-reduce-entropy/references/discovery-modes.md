@@ -223,6 +223,11 @@ Discovery and implementation have different boundaries:
   round no longer finds a P0/P1 or materially useful P2 direction. A typical
   loop is code/test/script surface, docs/agent/backlog surface, then saturation
   sweep, but follow the repo evidence instead of a fixed checklist.
+- When discovery is feeding a repo-wide architecture maintenance goal, return a
+  maintenance handoff instead of a chat-only ranked list. Separate findings into
+  `clear candidates`, `parked candidates`, and `rejected low-value
+  observations`, and give every parked or rejected item a stable fingerprint so
+  the executing campaign can deduplicate it in later rounds.
 - In broad discovery, treat history, generated output, planning workspaces, and
   very large test/profile surfaces as high-noise surfaces, not forbidden
   surfaces. They can absolutely produce real cleanup candidates, but they must
@@ -239,6 +244,11 @@ Discovery and implementation have different boundaries:
   candidate, its materiality reason, and why it still deserves review after the
   previous rounds. If that sentence is weak, stop with `Selected candidates:
   none`.
+- Before returning a candidate to an existing maintenance goal, compare it with
+  the goal's parked and rejected registries when those artifacts exist. A
+  repeated parked/rejected observation should update `last_confirmed` through
+  the handoff; it should not be presented as a new clear direction unless the
+  unblocker, risk, owner, or evidence materially changed.
 - Mark broad file moves, deletes with uncertain consumers, public API changes,
   paid/slow/local-provider gates, and product-scope decisions as execution
   risks. Do not hide them from the discovery packet just because they need
@@ -262,3 +272,57 @@ Discovery and implementation have different boundaries:
   next action, treat "LGTM", "sounds good", "do it", and equivalent short
   replies as approval to run that next action rather than asking the user to
   restate the workflow.
+
+## Repo-Wide Maintenance Handoff
+
+Use this shape when the discovery pass is part of an autonomous or periodic
+repo-wide architecture maintenance goal. The executing `$intuitive-refactor`
+campaign owns mutation, proof, checkpointing, and commits; this handoff owns the
+fresh candidate classification and deduplication evidence.
+
+```text
+Maintenance handoff for: <gate/capsule path or "new repo-wide goal">
+Discovery base: <HEAD commit or working tree state>
+Existing registries checked: <paths or none>
+
+Clear candidates:
+1. <candidate id>
+   severity: <P1 | P2>
+   fingerprint: <stable owner/path/contract>
+   materiality: <false confidence | live drift | stale surface | workflow friction | recurring rediscovery>
+   why new or still clear:
+   affected paths:
+   owner skill:
+   suggested proof:
+   execution risk:
+
+Parked candidates:
+1. <candidate id>
+   fingerprint: <stable owner/path/contract>
+   owner layer:
+   park reason:
+   exact unblocker:
+   first seen:
+   last confirmed:
+   do-not-reopen-unless:
+
+Rejected low-value observations:
+1. <observation id>
+   fingerprint: <stable owner/path/observation>
+   reason rejected:
+   materiality gap:
+   first seen:
+   last confirmed:
+   do-not-reopen-unless:
+
+Saturation note:
+<why another immediate discovery round is or is not expected to find new clear work>
+```
+
+Classify as `clear` only when the work is bounded, has a real owner, reduces a
+concept or stale surface, and has available proof. Classify as `parked` when the
+idea may be valuable but needs a human decision, public migration, unavailable
+proof, hardware/manual evidence, credentials, or broad design. Classify as
+`rejected low-value` when the observation is polish, taste, formatting, line
+shuffling, weak materiality, or a support-only change that should be bundled
+with a real behavior/gate cleanup instead of becoming its own slice.

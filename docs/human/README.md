@@ -18,8 +18,9 @@ Start here:
 - [skill-self-improvement-audit.md](skill-self-improvement-audit.md) for the
   dated baseline review of the default installed skill surface through the
   self-improvement lens
-- [reduce-repo-entropy.md](reduce-repo-entropy.md) for copy/paste
-  `$intuitive-reduce-entropy` repo entropy and plan entropy prompts
+- [reduce-repo-entropy.md](reduce-repo-entropy.md) for copy/paste repo-wide
+  architecture maintenance goals plus `$intuitive-reduce-entropy` repo entropy
+  and plan entropy prompts
 
 ## Doc Tiers
 

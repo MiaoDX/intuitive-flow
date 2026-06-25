@@ -10,6 +10,94 @@ Use plan entropy mode when the input is an idea, draft plan, or named
 `docs/plans/<slug>.md` and the goal is to find blind spots before
 `gstack-autoplan`, grill-batch, preflight, or `$intuitive-flow` execution.
 
+Use the repo-wide maintenance goal prompt when the goal is not merely to find a
+batch, but to keep finding and executing all clear architecture cleanup until
+the current `HEAD` is saturated. The short prompt is the default when the
+installed `$intuitive-refactor` skill is current; use the expanded fallback only
+in environments where named skills are unavailable or stale.
+
+## Repo-Wide Architecture Maintenance Goal Prompt
+
+```text
+/goal Use $intuitive-refactor to run the repo-wide architecture maintenance goal for the current repo until saturated.
+```
+
+Equivalent plain-language prompt:
+
+```text
+Use $intuitive-refactor to keep discovering and executing all clear, safe,
+verifiable architecture cleanup in this repo. Use the repo-wide maintenance
+goal loop, not the selected-slice campaign. Stop only after saturation finds no
+new clear P1/P2 after parked and low-value registry deduplication.
+```
+
+## Expanded Fallback Prompt
+
+Use this only when the environment does not have the current
+`$intuitive-refactor` skill description and references installed.
+
+```text
+/goal Run a repo-wide architecture maintenance loop for the current repo.
+
+Goal:
+Periodically maintain the whole repo's architecture and cleanup surface. Keep
+discovering and executing all clear, bounded, high-value architecture cleanup
+that is safe and verifiable now. Do not stop after one candidate packet. Stop
+only when a fresh saturation discovery round from current HEAD produces no new
+clear P1/P2 candidate after parked and low-value items are deduplicated.
+
+Route:
+- Start by reading the repo's first-read guidance and human truth docs.
+- Use $intuitive-reduce-entropy in repo entropy / discovery-loop mode for fresh
+  maintenance handoffs.
+- Use $intuitive-refactor to execute clear candidates.
+- Use the campaign overlay's repo-wide maintenance goal loop, not the narrower
+  selected-slice campaign stop rule.
+
+Execution policy:
+- Execute every clear candidate that is bounded, owner-backed, behavior-
+  preserving or explicitly accepted, and verifiable with available focused
+  proof.
+- Prefer deletion, duplicate-owner merge, canonical owner move, stale-surface
+  removal, and tests/docs updates that stop preserving stale concepts.
+- After the clear queue is empty, run fresh discovery from current HEAD inside
+  the same goal.
+- Do not treat a new discovery handoff as a new independent goal.
+
+State policy:
+- Maintain one canonical gate under the repo's plan convention, plus an active
+  capsule if the run is durable.
+- Track:
+  - clear queue
+  - parked registry
+  - rejected low-value registry
+  - verification inventory
+  - saturation stop rule
+- Give every parked or rejected item a stable fingerprint:
+  fingerprint, owner layer, park/reject reason, exact unblocker or materiality
+  gap, first seen, last confirmed, do-not-reopen-unless.
+- A rediscovered parked/rejected item updates `last_confirmed`; it is not a new
+  blocker or new direction unless the unblocker, risk, owner, or evidence
+  materially changed.
+
+Stop / park policy:
+- Park work needing human judgment, public API/CLI/schema/report migration,
+  hardware/manual evidence, credentials, unavailable proof, or broad design.
+- Reject low-value polish, taste, formatting, line shuffling, and weak
+  materiality observations instead of executing them.
+- Stop when the clear queue is empty and a saturation discovery round finds no
+  new clear P1/P2 after registry deduplication.
+
+Verification and commits:
+- Use the smallest sufficient proof for each slice.
+- Checkpoint after each meaningful slice or clear batch.
+- Commit verified implementation slices when repo/user policy allows and the
+  staged diff is only that slice plus matching gate/capsule updates.
+
+Latest user intent still wins. If the user asks for discussion, status, pause,
+or process review, switch to read-only control mode until execution is resumed.
+```
+
 ## Repo Entropy Prompt
 
 ```text

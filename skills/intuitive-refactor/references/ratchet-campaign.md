@@ -5,13 +5,24 @@ many workers, or many hours. A campaign is allowed to be long-lived, but it is
 not open-ended: every slice still needs an owner-backed simplification claim,
 focused proof, checkpoint, and stop condition.
 
-The campaign default is a selected-slice execution loop: use an accepted gate
-or `$intuitive-reduce-entropy` selected-candidate packet, execute only clear
-bounded slices, record uncertain or human-decision candidates as parked, and
-ask reduce-entropy for fresh discovery when the accepted packet is exhausted.
-Stop when repeated discovery handoffs cannot produce another safe P1/P2 slice,
-or when remaining work needs a public migration, unavailable proof, or design
-decision.
+The campaign has two valid long-running shapes:
+
+- `selected-slice campaign`: use an accepted gate or
+  `$intuitive-reduce-entropy` selected-candidate packet, execute only clear
+  bounded slices, record uncertain or human-decision candidates as parked, and
+  ask reduce-entropy for fresh discovery when the accepted packet is exhausted.
+- `repo-wide maintenance goal`: when the user explicitly asks for recurring or
+  whole-repo architecture maintenance, keep discovery and implementation inside
+  the same goal. Run fresh discovery rounds, execute every clear bounded P1/P2
+  cleanup slice that is safe and verifiable, fingerprint parked work, then
+  rediscover from current `HEAD` until the clear queue stays empty.
+
+Stop only when the active loop's stop condition is met. For a selected-slice
+campaign, stop when repeated discovery handoffs cannot produce another safe
+P1/P2 slice, or when remaining work needs a public migration, unavailable proof,
+or design decision. For a repo-wide maintenance goal, stop when a saturation
+round finds no new clear P1/P2 candidate after parked and low-value items are
+deduplicated by stable fingerprint.
 
 Read `../../_shared/references/durable-run.md` before starting or resuming a
 campaign. The shared file owns latest-user-intent gates, active capsules,
@@ -25,8 +36,8 @@ Add the campaign overlay only when one of these is true:
 - the user explicitly asks to keep refactoring, keep cleaning, continue a
   ratchet, or run a long cleanup campaign;
 - the user asks for periodic, automatic, or recurring architecture cleanup and
-  there is already an accepted gate or reduce-entropy candidate packet to
-  execute from;
+  either there is already an accepted gate or the prompt grants autonomy to run
+  repo-wide discovery and execute all clear safe candidates;
 - an existing refactor gate has status `CONTINUE` and the latest user message
   asks to continue or keep going;
 - the accepted objective is a code-size, complexity, stale-surface,
@@ -34,11 +45,12 @@ Add the campaign overlay only when one of these is true:
   known slices.
 
 Do not enter the campaign overlay for a vague "make it better" prompt without a
-gate. Use scope gate or `$intuitive-reduce-entropy` first. For periodic
-architecture cleanup where the user has not named a seam, start with
-`$intuitive-reduce-entropy` in repo entropy or discovery-loop mode. Once there
-is a selected candidate packet or refactor gate, the campaign overlay may ask
-for fresh discovery between batches without asking the user to choose every
+gate or an explicit repo-wide maintenance goal. Use scope gate or
+`$intuitive-reduce-entropy` first. For periodic architecture cleanup where the
+user has not named a seam, start with `$intuitive-reduce-entropy` in repo
+entropy or discovery-loop mode. Once there is a selected candidate packet,
+refactor gate, or explicit repo-wide maintenance goal, the campaign overlay may
+ask for fresh discovery between batches without asking the user to choose every
 obvious next slice.
 
 ## State Surfaces
@@ -54,8 +66,9 @@ Use two state surfaces:
 
 - Canonical gate: `docs/plans/refactor-<target>.md` or the existing plan/gate.
   It owns scope, accepted severities, checklist, status, stop condition,
-  verification inventory, parked items, final evidence, and the top
-  `## Plan Ledger` when it lives under `docs/plans/`.
+  verification inventory, clear queue, parked registry, rejected low-value
+  items, final evidence, and the top `## Plan Ledger` when it lives under
+  `docs/plans/`.
 - Active capsule: `docs/status/active/<gate-slug>.md`. If
   `docs/status/active/` does not exist, create it. It owns compact resume
   state: current slice, last proof, next candidate/proof, blocker fingerprint,
@@ -88,6 +101,10 @@ Discovery source:
 Surface metrics:
 Low-value stop signal:
 Discovery cadence:
+Clear queue:
+Parked registry:
+Rejected low-value registry:
+Saturation stop rule:
 Consecutive no-clear-candidate passes:
 ```
 
@@ -123,6 +140,68 @@ periodic:
 Do not count parked candidates as progress blockers. They are decision records
 that keep the campaign moving to the next clear slice. Do not keep re-auditing
 the same parked area unless new code or user intent changes the decision.
+
+## Repo-Wide Maintenance Goal Loop
+
+Use this loop when the user wants a goal that periodically cleans architecture
+across the whole repo rather than a single frozen slice packet. This loop is
+still bounded by materiality, proof, and stable parked decisions; it is not a
+license to chase taste or unrelated rewrites.
+
+1. Create or update one canonical gate for the maintenance run. Record accepted
+   severities, no-touch scope, verification inventory, clear queue, parked
+   registry, rejected low-value registry, and saturation stop rule.
+2. Run `$intuitive-reduce-entropy` in repo entropy / discovery-loop mode from
+   current `HEAD`. Ask for a maintenance handoff with clear candidates, parked
+   candidates, rejected low-value observations, and stable fingerprints.
+3. Merge the handoff into the gate:
+   - `clear queue`: P1/P2 candidates that are bounded, behavior-preserving or
+     accepted behavior changes, and verifiable now.
+   - `parked registry`: candidates needing human decision, public migration,
+     unavailable proof, hardware/manual evidence, credentials, or broad design.
+   - `rejected low-value`: polish, taste, formatting, line shuffling, or weak
+     materiality observations that should not be rediscovered as work.
+4. Execute every item in the clear queue before starting unrelated discovery.
+   For each slice, state the architecture claim, edit code/tests/docs together,
+   run focused proof, checkpoint, and commit when the commit policy applies.
+5. After the clear queue is empty, rediscover from current `HEAD`. Discovery is
+   part of the same goal, not a fresh independent goal. Do not stop merely
+   because one candidate packet was exhausted.
+6. Before adding a rediscovered item to the clear queue, compare it with the
+   parked and rejected registries. A repeated item updates `last_confirmed`; it
+   is not a new blocker or new direction unless the unblocker, risk, owner, or
+   evidence materially changed.
+7. Stop when a saturation discovery round produces no new clear P1/P2
+   candidate after deduplication and all remaining observations are parked,
+   rejected low-value, unavailable to verify, or outside accepted no-touch
+   scope.
+
+Use this parked fingerprint shape in the gate and capsule:
+
+```text
+fingerprint: <stable owner/path/contract>
+owner layer:
+park reason:
+exact unblocker:
+first seen:
+last confirmed:
+do-not-reopen-unless:
+```
+
+Use this rejected-low-value shape:
+
+```text
+fingerprint: <stable owner/path/observation>
+reason rejected:
+materiality gap:
+first seen:
+last confirmed:
+do-not-reopen-unless:
+```
+
+The saturation closeout should answer three questions: what clear work was
+executed, what remains parked with stable unblockers, and why another immediate
+round should not discover more clear work from the same `HEAD`.
 
 ## Slice Selection
 
@@ -231,14 +310,15 @@ a long campaign. The checkpoint should update:
 - active capsule with current status, last proof, next slice/proof, and parked
   work;
 - canonical gate and its Plan Ledger when accepted checklist, verification
-  inventory, stop condition, campaign overlay status, current slice, next
-  action, blocker, or final evidence changes;
+  inventory, stop condition, campaign overlay status, clear queue, parked
+  registry, rejected low-value registry, current slice, next action, blocker,
+  or final evidence changes;
 - `docs/plans/README.md` dashboard row when the gate status/session/next action
   changes;
 - semantic commit for verified implementation slices by default, following the
   commit policy above;
 - discovery pass count, clear candidates executed, and parked candidates when
-  running the automated selected-slice loop.
+  running the automated selected-slice loop or repo-wide maintenance goal.
 
 Use batch summaries in the canonical gate. Do not append command transcripts or
 long per-slice prose that makes the plan harder to resume than the code. A
@@ -269,6 +349,9 @@ Park, stop, or ask when:
   canonical owner move, stale-surface removal, or material maintainer surprise;
 - two consecutive fresh discovery handoffs in autonomous campaign overlay
   produce no clear safe P1/P2 slice after parking uncertain items;
+- in a repo-wide maintenance goal, a saturation discovery round from current
+  `HEAD` produces no new clear P1/P2 candidate after deduplicating against the
+  parked and rejected-low-value registries;
 - a reduce-entropy discovery handoff recommends only public removals that need
   a human migration decision;
 - the latest user message asks for status, discussion, pause, or process
@@ -284,5 +367,6 @@ Close a campaign when the accepted checklist is complete, the gate status is
 - slices completed since the last checkpoint;
 - proof run and skipped gates;
 - parked items and why they were not implemented;
+- rejected low-value observations when they explain why the loop stopped;
 - whether another campaign should start from a new gate or reduce-entropy
   discovery handoff.

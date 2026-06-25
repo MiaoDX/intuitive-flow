@@ -12,7 +12,8 @@ description: |
   result instead of filling a requested count when only polish remains, choose
   an explicit discovery intensity, run saturation discovery when the user asks
   for all directions or unknown unknowns, and end with one recommended next
-  action plus a short reply shortcut.
+  action plus a short reply shortcut. For approved repo-wide maintenance goals,
+  return a deduplicated maintenance handoff for intuitive-refactor.
 ---
 
 # Intuitive Reduce Entropy

@@ -3,9 +3,15 @@ name: intuitive-refactor
 description: |
   Refactor and cleanup router for known code/module/API seams, stale surfaces,
   compatibility shims, architecture cleanup targets, changed-code quality
-  review, oversized modules, and repeated cleanup campaigns. Use this when the
-  user names a concrete seam or wants code/package layout made smaller and
-  truer. For unknown "what should we clean?" discovery, start with
+  review, oversized modules, repeated cleanup campaigns, and recurring
+  whole-repo architecture maintenance goals. Use this when the user names a
+  concrete seam, wants code/package layout made smaller and truer, asks to keep
+  refactoring, or asks for a goal that periodically cleans architecture across
+  the whole repo until saturated. For whole-repo maintenance goals, run the
+  repo-wide maintenance loop: alternate intuitive-reduce-entropy discovery
+  handoffs with execution of every clear safe candidate, deduplicate parked and
+  low-value registries, and stop only when saturation finds no new clear P1/P2.
+  For unknown "what should we clean?" discovery-only prompts, start with
   intuitive-reduce-entropy, then return here to execute selected candidates.
 ---
 
@@ -25,7 +31,7 @@ after the user names a target or selects a candidate packet.
 | --- | --- |
 | Route selection, scope gate, severity guide, evidence ladder | `references/mode-router.md` |
 | Repeated cleanup, oversized modules, stale surfaces, deletion/owner-move ratchets | `references/ratchet-mode.md` |
-| Long-running ratchet overlay, active capsule, repeated selected-slice loop | `references/ratchet-campaign.md` and `../_shared/references/durable-run.md` |
+| Long-running ratchet overlay, active capsule, selected-slice loop, or repo-wide maintenance goal | `references/ratchet-campaign.md` and `../_shared/references/durable-run.md` |
 | Diff-scoped reuse/quality/efficiency review after implementation | `references/changed-code-review.md` |
 | Full legacy guidance, templates, confidence ladder, command naming, persistent-state examples | `references/detailed-guidance.md` |
 
@@ -43,6 +49,10 @@ Start from a target and a stop condition, not from "make it cleaner."
 - Repeated cleanup or "keep going": run ratchet route, add the campaign overlay
   only for long-lived/resumed work, execute only selected clear P1/P2 slices,
   and park uncertain decisions.
+- Periodic whole-repo architecture maintenance: add the campaign overlay's
+  repo-wide maintenance goal loop, alternate fresh reduce-entropy handoffs with
+  execution of every clear queue item, and stop only after saturation
+  deduplicates parked and low-value registries.
 - Changed-code cleanup: stay diff-scoped; report findings first and fix only
   when authorized by the user or approved flow.
 
@@ -84,5 +94,5 @@ Then run one vertical slice at a time:
 
 Stop when the accepted checklist is complete and remaining candidates are
 parked, polish, public-contract migrations, or design decisions. With the
-campaign overlay, stop only after the selected-slice saturation rule in
-`references/ratchet-campaign.md` is met.
+campaign overlay, stop only after the selected-slice or repo-wide maintenance
+saturation rule in `references/ratchet-campaign.md` is met.

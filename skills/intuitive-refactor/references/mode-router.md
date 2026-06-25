@@ -19,8 +19,11 @@ packet as this skill's discovery source.
 
 Use the campaign overlay, not a separate route, when a ratchet is expected to
 span many slices, workers, hours, commits, or resumed sessions. The overlay
-adds an active capsule, checkpoint cadence, repeated selected-slice loop, and
-commit policy from `references/ratchet-campaign.md`.
+adds an active capsule, checkpoint cadence, commit policy, and one of two
+long-running loops from `references/ratchet-campaign.md`: a selected-slice loop
+for accepted candidate packets, or a repo-wide maintenance goal loop when the
+user explicitly asks for recurring whole-repo architecture cleanup that should
+keep discovering and executing clear work until saturated.
 
 For non-trivial runs, state:
 
@@ -112,5 +115,5 @@ enough evidence for a future selection decision.
 Stop and discuss or route to `$intuitive-reduce-entropy` when the next
 candidate cannot name a deletion, merge, canonical owner move, stale-surface
 removal, or material maintainer surprise. With the campaign overlay, use
-`references/ratchet-campaign.md` for the repeated selected-slice saturation
-rule.
+`references/ratchet-campaign.md` for the selected-slice or repo-wide
+maintenance saturation rule.

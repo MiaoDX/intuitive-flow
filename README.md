@@ -53,7 +53,7 @@ Pick the route by task shape:
 | --- | --- |
 | Tiny concrete change or status check | `Use $intuitive-flow for this bounded task: <task>` |
 | Complex idea, feature, refactor, or plan-backed work | Start a reduce-entropy planning loop before execution |
-| Repo maintenance or "what should we clean next?" | Use repo entropy mode to find a ranked candidate batch |
+| Repo maintenance or "what should we clean next?" | Use repo entropy mode to find a ranked candidate batch, or the repo-wide maintenance goal when you want cleanup executed to saturation |
 
 For complex work, start by asking for plan entropy mode and keep iterating until
 the plan has no more material blind spots:
@@ -68,8 +68,8 @@ remaining points are implementation defaults. Next route should be
 $grill-with-docs-batch, then $intuitive-preflight, then $intuitive-flow.
 ```
 
-For repo maintenance, give your AI agent the maintenance entrypoint and ask it
-to find the ranked batch of high-value entropy reduction candidates:
+For repo maintenance discovery, give your AI agent the maintenance entrypoint
+and ask it to find the ranked batch of high-value entropy reduction candidates:
 
 ```text
 Read this skill:
@@ -80,6 +80,11 @@ Use $intuitive-reduce-entropy to make this repo easier for humans and AI agents
 to work in. If agent guidance is the first entropy source, route to
 $intuitive-init. Start with a ranked candidate batch before applying changes.
 ```
+
+For periodic whole-repo architecture cleanup where the agent should keep
+discovering and executing clear work until the current `HEAD` is saturated, use
+the goal prompt in
+[docs/human/reduce-repo-entropy.md](docs/human/reduce-repo-entropy.md).
 
 <p align="center">
   <img src="docs/assets/workflow.svg" alt="Simple work goes to Flow; complex work loops through reduce entropy, grill batch, preflight, then Flow" width="820">
