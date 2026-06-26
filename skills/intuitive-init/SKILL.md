@@ -68,9 +68,13 @@ guidance.
    They must not be treated as a human stop request by themselves.
 7. Prefer deterministic hooks/tools for lint, format, setup, and verification
    rules instead of expanding root prose. For worktree-heavy workflows, verify or
-   propose a `.githooks/post-checkout` script that auto-creates `.venv` environments
-   when `git worktree add` runs, so both Claude Code and Codex get consistent
-   environment setup without tool-specific configuration.
+   propose a `.githooks/post-checkout` script that auto-creates `.venv`
+   environments when `git worktree add` runs, and may run
+   `git submodule sync --recursive` for URL config only. Do not auto-run
+   `git submodule update --init --recursive` for all worktrees by default; for
+   mostly read-only submodules, add root guidance telling agents to inspect the
+   main checkout's initialized submodule and initialize a local worktree copy
+   only when modification or isolated verification needs it.
 8. For large repos and monorepos, prefer nested `AGENTS.md` / `CLAUDE.md` files
    only when local scope differences are real.
 9. Verify the final files are concise, local, and non-contradictory.

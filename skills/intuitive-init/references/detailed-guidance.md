@@ -185,9 +185,15 @@ Good candidates for `docs/agents/**`:
 - model/tool-specific caveats
 - long examples and copy/paste command checklists
 - **worktree environment setup and maintenance**: when a repo uses multiple
-  `.venv` variants or heavy external runtimes, document the hook script, symlink
-  strategy, and any environment variables (e.g., `OMNI_KIT_ACCEPT_EULA`) that
-  must be pre-configured for automated worktree creation
+  `.venv` variants, Git submodules, or heavy external runtimes, document the
+  hook script, symlink/reference strategy, and any environment variables (e.g.,
+  `OMNI_KIT_ACCEPT_EULA`) that must be pre-configured for automated worktree
+  creation. Treat submodules as read-only in secondary worktrees by default:
+  agents should inspect `.gitmodules`, `git submodule status --recursive`, or
+  the main checkout's initialized submodule copy before initializing a local
+  submodule working tree. Initialize or update the submodule inside the current
+  worktree only when modification, isolated testing, or exact checkout
+  verification requires it.
 
 Prefer a reusable skill when the procedure applies across repos. Prefer a
 script, Makefile target, or just recipe when the procedure is mostly commands.
@@ -367,10 +373,18 @@ Use this workflow unless the user asks for report-only or a specific file.
      `git worktree` is created. This covers both Claude Code `--worktree` and
      Codex `git worktree add` workflows without tool-specific hooks. Configure
      `git config core.hooksPath .githooks` and ensure the script is executable.
-     For heavy environments that cannot be rebuilt declaratively (e.g., NVIDIA
-     Isaac Sim with system-level dependencies), symlink from the main repo instead
-     of recreating. See the Roboclaws `.githooks/post-checkout` pattern for a
-     concrete example.
+     If the repo has submodules, the same hook may safely run
+     `git submodule sync --recursive` to refresh initialized submodule URL
+     config, but should not auto-run `git submodule update --init --recursive`
+     for every new worktree because that checks out separate submodule working
+     trees and can consume large disk space. For mostly read-only submodules,
+     add root guidance telling agents to inspect `.gitmodules`,
+     `git submodule status --recursive`, or the main checkout's initialized
+     submodule copy; initialize the current worktree's submodule only for edits,
+     isolated tests, or exact checkout verification. For heavy environments that
+     cannot be rebuilt declaratively (e.g., NVIDIA Isaac Sim with system-level
+     dependencies), symlink from the main repo instead of recreating. See the
+     Roboclaws `.githooks/post-checkout` pattern for a concrete example.
    - checked-in `.mcp.json` or project-scoped MCP docs for shared external tools
    - Codex/Paseo delegation policy docs, when present; root guidance should
      point to the policy and keep only the short XML-envelope rule that prevents
