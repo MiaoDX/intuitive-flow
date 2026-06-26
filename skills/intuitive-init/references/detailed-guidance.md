@@ -184,16 +184,22 @@ Good candidates for `docs/agents/**`:
 - PR review/fix workflows
 - model/tool-specific caveats
 - long examples and copy/paste command checklists
-- **worktree environment setup and maintenance**: when a repo uses multiple
-  `.venv` variants, Git submodules, or heavy external runtimes, document the
-  hook script, symlink/reference strategy, and any environment variables (e.g.,
-  `OMNI_KIT_ACCEPT_EULA`) that must be pre-configured for automated worktree
-  creation. Treat submodules as read-only in secondary worktrees by default:
-  agents should inspect `.gitmodules`, `git submodule status --recursive`, or
-  the main checkout's initialized submodule copy before initializing a local
-  submodule working tree. Initialize or update the submodule inside the current
-  worktree only when modification, isolated testing, or exact checkout
-  verification requires it.
+- **worktree environment setup and maintenance**: when a repo already has
+  Python environment signals such as `.venv`, `uv.lock`, `pyproject.toml`, or
+  `.python-version`, explicitly recommend or add a `.githooks/post-checkout`
+  helper that prepares the worktree environment with the repo's existing
+  convention. When a repo has `.gitmodules` or populated `vendor/` submodule
+  paths, explicitly recommend or add the same hook for `git submodule sync
+  --recursive` and add a root hint for submodule handling. For repos with
+  multiple `.venv` variants, Git submodules, or heavy external runtimes,
+  document the hook script, symlink/reference strategy, and any environment
+  variables (e.g., `OMNI_KIT_ACCEPT_EULA`) that must be pre-configured for
+  automated worktree creation. Treat submodules as read-only in secondary
+  worktrees by default: agents should inspect `.gitmodules`, `git submodule
+  status --recursive`, or the main checkout's initialized submodule copy before
+  initializing a local submodule working tree. Initialize or update the
+  submodule inside the current worktree only when modification, isolated
+  testing, or exact checkout verification requires it.
 
 Prefer a reusable skill when the procedure applies across repos. Prefer a
 script, Makefile target, or just recipe when the procedure is mostly commands.
@@ -367,24 +373,28 @@ Use this workflow unless the user asks for report-only or a specific file.
      project-owned `skills/**` for repeated workflows
    - `.claude/settings.json`, `.codex/hooks/**`, or equivalent hook config for
      deterministic checks that must run after edits
-   - **Git worktree environment auto-setup**: When the repo uses `uv` (or similar
-     fast package managers with global caches), prefer a `.githooks/post-checkout`
-     script that automatically creates or symlinks `.venv` environments when a
-     `git worktree` is created. This covers both Claude Code `--worktree` and
-     Codex `git worktree add` workflows without tool-specific hooks. Configure
-     `git config core.hooksPath .githooks` and ensure the script is executable.
-     If the repo has submodules, the same hook may safely run
-     `git submodule sync --recursive` to refresh initialized submodule URL
-     config, but should not auto-run `git submodule update --init --recursive`
-     for every new worktree because that checks out separate submodule working
-     trees and can consume large disk space. For mostly read-only submodules,
-     add root guidance telling agents to inspect `.gitmodules`,
-     `git submodule status --recursive`, or the main checkout's initialized
-     submodule copy; initialize the current worktree's submodule only for edits,
-     isolated tests, or exact checkout verification. For heavy environments that
-     cannot be rebuilt declaratively (e.g., NVIDIA Isaac Sim with system-level
-     dependencies), symlink from the main repo instead of recreating. See the
-     Roboclaws `.githooks/post-checkout` pattern for a concrete example.
+   - **Git worktree environment auto-setup**: Always inspect for `.venv`,
+     `uv.lock`, `pyproject.toml`, `.python-version`, `.gitmodules`, and populated
+     `vendor/` submodule paths during apply/refresh/slim runs. If the repo has
+     `.venv` or uv/`pyproject.toml` signals, explicitly recommend or add a
+     `.githooks/post-checkout` script that automatically creates or symlinks
+     `.venv` environments when a `git worktree` is created, using the existing
+     repo convention rather than inventing a package manager. This covers both
+     Claude Code `--worktree` and Codex `git worktree add` workflows without
+     tool-specific hooks. Configure `git config core.hooksPath .githooks` and
+     ensure the script is executable. If the repo has submodules, explicitly
+     recommend or add the same hook to run `git submodule sync --recursive` to
+     refresh initialized submodule URL config, but do not auto-run
+     `git submodule update --init --recursive` for every new worktree because
+     that checks out separate submodule working trees and can consume large disk
+     space. For mostly read-only submodules, add root guidance telling agents to
+     inspect `.gitmodules`, `git submodule status --recursive`, or the main
+     checkout's initialized submodule copy; initialize the current worktree's
+     submodule only for edits, isolated tests, or exact checkout verification.
+     For heavy environments that cannot be rebuilt declaratively (e.g., NVIDIA
+     Isaac Sim with system-level dependencies), symlink from the main repo
+     instead of recreating. See the Roboclaws `.githooks/post-checkout` pattern
+     for a concrete example.
    - checked-in `.mcp.json` or project-scoped MCP docs for shared external tools
    - Codex/Paseo delegation policy docs, when present; root guidance should
      point to the policy and keep only the short XML-envelope rule that prevents

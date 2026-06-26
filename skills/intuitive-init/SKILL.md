@@ -8,10 +8,11 @@ description: |
   symlinked agent files with local guidance, rerunning agent init after weeks
   of drift, cleaning overgrown root agent files or first-read policies,
   optimizing startup context across AGENTS/CLAUDE/README/ARCHITECTURE/STATUS,
-  or configuring target-repo LSP and agent-facing Serena MCP guidance. Route
-  broad human docs, tests, execution flow, refactor scope, and entropy
-  discovery to their own skills unless the change is the startup/orientation
-  harness that points at them.
+  adding worktree-friendly .venv/submodule hooks and hints when repos already
+  show Python environment or git-submodule signals, or configuring target-repo
+  LSP and agent-facing Serena MCP guidance. Route broad human docs, tests,
+  execution flow, refactor scope, and entropy discovery to their own skills
+  unless the change is the startup/orientation harness that points at them.
 ---
 
 # Intuitive Init
@@ -67,14 +68,21 @@ guidance.
    orchestrator metadata unless accompanied by natural-language user intent.
    They must not be treated as a human stop request by themselves.
 7. Prefer deterministic hooks/tools for lint, format, setup, and verification
-   rules instead of expanding root prose. For worktree-heavy workflows, verify or
-   propose a `.githooks/post-checkout` script that auto-creates `.venv`
-   environments when `git worktree add` runs, and may run
-   `git submodule sync --recursive` for URL config only. Do not auto-run
+   rules instead of expanding root prose. Always inspect Python environment and
+   submodule signals while refreshing startup guidance: `.venv`, `uv.lock`,
+   `pyproject.toml`, `.python-version`, `.gitmodules`, and populated
+   `vendor/` submodule paths. When the repo already has `.venv` or uv/
+   `pyproject.toml` signals, explicitly recommend or add a
+   `.githooks/post-checkout` script that prepares the worktree `.venv` with the
+   repo's existing convention, plus a short root hint to enable it with
+   `git config core.hooksPath .githooks`. When the repo has submodules,
+   explicitly recommend or add the same hook to run `git submodule sync
+   --recursive` for URL config only, and add root guidance for inspecting
+   existing submodules before initializing local copies. Do not auto-run
    `git submodule update --init --recursive` for all worktrees by default; for
-   mostly read-only submodules, add root guidance telling agents to inspect the
-   main checkout's initialized submodule and initialize a local worktree copy
-   only when modification or isolated verification needs it.
+   mostly read-only submodules, tell agents to inspect the main checkout's
+   initialized submodule and initialize a local worktree copy only when
+   modification or isolated verification needs it.
 8. For large repos and monorepos, prefer nested `AGENTS.md` / `CLAUDE.md` files
    only when local scope differences are real.
 9. Verify the final files are concise, local, and non-contradictory.
