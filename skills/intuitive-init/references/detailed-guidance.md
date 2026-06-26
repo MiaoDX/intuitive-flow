@@ -184,6 +184,10 @@ Good candidates for `docs/agents/**`:
 - PR review/fix workflows
 - model/tool-specific caveats
 - long examples and copy/paste command checklists
+- **worktree environment setup and maintenance**: when a repo uses multiple
+  `.venv` variants or heavy external runtimes, document the hook script, symlink
+  strategy, and any environment variables (e.g., `OMNI_KIT_ACCEPT_EULA`) that
+  must be pre-configured for automated worktree creation
 
 Prefer a reusable skill when the procedure applies across repos. Prefer a
 script, Makefile target, or just recipe when the procedure is mostly commands.
@@ -357,6 +361,16 @@ Use this workflow unless the user asks for report-only or a specific file.
      project-owned `skills/**` for repeated workflows
    - `.claude/settings.json`, `.codex/hooks/**`, or equivalent hook config for
      deterministic checks that must run after edits
+   - **Git worktree environment auto-setup**: When the repo uses `uv` (or similar
+     fast package managers with global caches), prefer a `.githooks/post-checkout`
+     script that automatically creates or symlinks `.venv` environments when a
+     `git worktree` is created. This covers both Claude Code `--worktree` and
+     Codex `git worktree add` workflows without tool-specific hooks. Configure
+     `git config core.hooksPath .githooks` and ensure the script is executable.
+     For heavy environments that cannot be rebuilt declaratively (e.g., NVIDIA
+     Isaac Sim with system-level dependencies), symlink from the main repo instead
+     of recreating. See the Roboclaws `.githooks/post-checkout` pattern for a
+     concrete example.
    - checked-in `.mcp.json` or project-scoped MCP docs for shared external tools
    - Codex/Paseo delegation policy docs, when present; root guidance should
      point to the policy and keep only the short XML-envelope rule that prevents
