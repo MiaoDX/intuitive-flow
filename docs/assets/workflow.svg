@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 420" width="820" height="420" role="img" aria-labelledby="title desc">
-  <title id="title">Intuitive Flow recommended workflow</title>
-  <desc id="desc">Tiny concrete work can go directly to intuitive-flow. Complex work loops through reduce entropy and a plan before grill batch, preflight, and intuitive-flow execution.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 620" width="820" height="620" role="img" aria-labelledby="title desc">
+  <title id="title">Intuitive Flow work routes</title>
+  <desc id="desc">Intuitive Flow has a maintenance route and two feature planning routes. The thorough route uses reduce entropy and grill batch; the faster route uses agent-planning-loop. Both feature routes then share a separate preflight and flow execution block.</desc>
   <defs>
     <style>
       .font { font-family: Aptos, "IBM Plex Sans", "Segoe UI", sans-serif; }
@@ -8,113 +8,151 @@
       .title { font-size: 22px; font-weight: 750; }
       .subtitle { font-size: 12px; font-weight: 600; }
       .section { font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
-      .label { font-size: 12px; font-weight: 720; }
       .small { font-size: 10.5px; font-weight: 620; }
       .tiny { font-size: 9.5px; font-weight: 620; }
+      .micro { font-size: 6.4px; font-weight: 650; }
       .panel { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1; }
-      .simple { fill: #ecfdf5; stroke: #86efac; stroke-width: 1; }
-      .complex { fill: #fff7ed; stroke: #fdba74; stroke-width: 1; }
+      .lane { fill: #ffffff; stroke: #d8e0ea; stroke-width: 1; }
+      .maintenance { fill: #eefdf8; stroke: #5eead4; stroke-width: 1; }
+      .feature { fill: #fff7ed; stroke: #fdba74; stroke-width: 1; }
+      .contract { fill: #f8fafc; stroke: #94a3b8; stroke-width: 1; }
       .proof { fill: #eff6ff; stroke: #93c5fd; stroke-width: 1; }
+      .side { fill: #f5f3ff; stroke: #c4b5fd; stroke-width: 1; }
     </style>
     <marker id="arrow" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="7" markerHeight="6" orient="auto">
       <path d="M 0 0 L 10 4 L 0 8 Z" fill="#64748b"/>
     </marker>
-    <marker id="loopArrow" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="7" markerHeight="6" orient="auto">
+    <marker id="maintArrow" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="7" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 4 L 0 8 Z" fill="#0f766e"/>
+    </marker>
+    <marker id="featureArrow" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="7" markerHeight="6" orient="auto">
       <path d="M 0 0 L 10 4 L 0 8 Z" fill="#ea580c"/>
+    </marker>
+    <marker id="sideArrow" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="7" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 4 L 0 8 Z" fill="#7c3aed"/>
     </marker>
   </defs>
 
-  <rect x="0.5" y="0.5" width="819" height="419" rx="12" fill="#fbfcfe" stroke="#d8e0ea"/>
-  <text x="34" y="38" class="font title" fill="#0f172a">Recommended Workflow</text>
-  <text x="34" y="59" class="font subtitle" fill="#64748b">Direct execution for tiny work; explicit planning loop for complex work</text>
+  <rect x="0.5" y="0.5" width="819" height="619" rx="12" fill="#fbfcfe" stroke="#d8e0ea"/>
+  <text x="34" y="38" class="font title" fill="#0f172a">Recommended Routes</text>
+  <text x="34" y="59" class="font subtitle" fill="#64748b">Keep AI-coded repos simple; plan feature work before execution</text>
 
   <g>
-    <rect x="34" y="96" width="132" height="72" rx="8" class="panel"/>
-    <text x="54" y="122" class="font section" fill="#334155">User task</text>
-    <text x="54" y="146" class="mono small" fill="#0f172a">idea / bug / cleanup</text>
+    <rect x="36" y="84" width="170" height="72" rx="8" class="panel"/>
+    <text x="58" y="112" class="font section" fill="#334155">Work arrives</text>
+    <text x="58" y="136" class="mono small" fill="#0f172a">human + agent</text>
   </g>
 
-  <path d="M 166 132 H 214" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M 206 120 H 254" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
 
   <g>
-    <rect x="214" y="84" width="150" height="96" rx="8" class="panel"/>
-    <text x="236" y="112" class="font section" fill="#334155">Route by shape</text>
-    <text x="236" y="140" class="font small" fill="#166534">simple / bounded</text>
-    <text x="236" y="160" class="font small" fill="#9a3412">complex / unclear</text>
+    <rect x="254" y="84" width="160" height="72" rx="8" class="panel"/>
+    <text x="276" y="112" class="font section" fill="#334155">Choose path</text>
+    <text x="276" y="136" class="mono small" fill="#0f172a">$intuitive-flow</text>
   </g>
 
-  <path d="M 364 112 H 440" fill="none" stroke="#16a34a" stroke-width="1.5" marker-end="url(#arrow)"/>
-
   <g>
-    <rect x="440" y="72" width="156" height="76" rx="8" class="simple"/>
-    <text x="462" y="99" class="font section" fill="#166534">Simple route</text>
-    <text x="462" y="123" class="mono small" fill="#0f172a">$intuitive-flow</text>
+    <rect x="460" y="84" width="174" height="72" rx="8" class="side"/>
+    <text x="482" y="112" class="font section" fill="#6d28d9">Tiny bounded task</text>
+    <text x="482" y="136" class="mono small" fill="#0f172a">$intuitive-flow</text>
   </g>
 
-  <path d="M 596 110 H 654" fill="none" stroke="#16a34a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M 414 120 H 460" fill="none" stroke="#7c3aed" stroke-width="1.2" stroke-dasharray="5 5" marker-end="url(#sideArrow)"/>
+  <path d="M 334 156 V 188" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
 
   <g>
-    <rect x="654" y="72" width="132" height="76" rx="8" class="proof"/>
-    <text x="676" y="99" class="font section" fill="#1d4ed8">Verified</text>
-    <text x="676" y="123" class="font small" fill="#0f172a">change or answer</text>
+    <rect x="24" y="212" width="270" height="312" rx="10" class="lane"/>
   </g>
 
-  <path d="M 289 180 V 218" fill="none" stroke="#ea580c" stroke-width="1.5" marker-end="url(#loopArrow)"/>
-
   <g>
-    <rect x="62" y="218" width="132" height="76" rx="8" class="complex"/>
-    <text x="82" y="246" class="font section" fill="#9a3412">Reduce entropy</text>
-    <text x="82" y="269" class="mono small" fill="#0f172a">plan mode</text>
+    <rect x="312" y="212" width="218" height="240" rx="10" class="lane"/>
   </g>
 
-  <path d="M 194 256 H 232" fill="none" stroke="#ea580c" stroke-width="1.5" marker-end="url(#loopArrow)"/>
-
   <g>
-    <rect x="232" y="218" width="104" height="76" rx="8" class="complex"/>
-    <text x="256" y="246" class="font section" fill="#9a3412">Plan</text>
-    <text x="253" y="269" class="font small" fill="#0f172a">canonical scope</text>
+    <rect x="572" y="212" width="218" height="240" rx="10" class="lane"/>
   </g>
 
-  <path d="M 336 256 H 374" fill="none" stroke="#ea580c" stroke-width="1.5" marker-end="url(#loopArrow)"/>
-
   <g>
-    <rect x="374" y="218" width="132" height="76" rx="8" class="complex"/>
-    <text x="394" y="246" class="font section" fill="#9a3412">Repeat check</text>
-    <text x="394" y="269" class="font small" fill="#0f172a">until saturated</text>
+    <rect x="296" y="476" width="494" height="90" rx="10" class="lane"/>
   </g>
 
-  <path d="M 440 218 C 440 192 128 192 128 218" fill="none" stroke="#ea580c" stroke-width="1.3" stroke-dasharray="5 5" marker-end="url(#loopArrow)"/>
-  <text x="238" y="202" class="font tiny" fill="#9a3412">material blind spots loop back</text>
-
-  <path d="M 506 256 H 544" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M 334 188 H 159 V 264" fill="none" stroke="#0f766e" stroke-width="1.5" marker-end="url(#maintArrow)"/>
+  <path d="M 334 188 H 421 V 264" fill="none" stroke="#ea580c" stroke-width="1.5" marker-end="url(#featureArrow)"/>
+  <path d="M 334 188 H 681 V 264" fill="none" stroke="#ea580c" stroke-width="1.5" marker-end="url(#featureArrow)"/>
 
   <g>
-    <rect x="544" y="218" width="110" height="76" rx="8" class="panel"/>
-    <text x="564" y="246" class="font section" fill="#334155">Grill batch</text>
-    <text x="564" y="269" class="font small" fill="#0f172a">decisions</text>
+    <rect x="44" y="264" width="230" height="58" rx="8" class="maintenance"/>
+    <text x="66" y="289" class="font section" fill="#0f766e">Maintain / simplify</text>
+    <text x="66" y="310" class="mono tiny" fill="#0f172a">$intuitive-reduce-entropy</text>
   </g>
 
-  <path d="M 654 256 H 690" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M 159 322 V 346" fill="none" stroke="#0f766e" stroke-width="1.5" marker-end="url(#maintArrow)"/>
 
   <g>
-    <rect x="690" y="218" width="96" height="76" rx="8" class="panel"/>
-    <text x="710" y="246" class="font section" fill="#334155">Preflight</text>
-    <text x="710" y="269" class="font small" fill="#0f172a">contract</text>
+    <rect x="44" y="346" width="230" height="58" rx="8" class="maintenance"/>
+    <text x="66" y="371" class="font section" fill="#0f766e">Clean target</text>
+    <text x="66" y="392" class="mono micro" fill="#0f172a">$intuitive-refactor/$intuitive-doc/$intuitive-tests</text>
   </g>
 
-  <path d="M 738 294 V 332 H 538 V 310" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M 159 404 V 428" fill="none" stroke="#0f766e" stroke-width="1.5" marker-end="url(#maintArrow)"/>
 
   <g>
-    <rect x="430" y="310" width="156" height="76" rx="8" class="proof"/>
-    <text x="452" y="338" class="font section" fill="#1d4ed8">Execute</text>
-    <text x="452" y="361" class="mono small" fill="#0f172a">$intuitive-flow</text>
+    <rect x="44" y="428" width="230" height="58" rx="8" class="proof"/>
+    <text x="66" y="453" class="font section" fill="#1d4ed8">Verified</text>
+    <text x="66" y="474" class="mono tiny" fill="#0f172a">$intuitive-flow</text>
   </g>
 
-  <path d="M 586 348 H 654" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <g>
+    <rect x="336" y="264" width="170" height="42" rx="8" class="feature"/>
+    <text x="358" y="283" class="font section" fill="#9a3412">Thorough feature</text>
+    <text x="358" y="300" class="mono tiny" fill="#0f172a">$intuitive-reduce-entropy</text>
+  </g>
+
+  <path d="M 421 306 V 324" fill="none" stroke="#ea580c" stroke-width="1.5" marker-end="url(#featureArrow)"/>
 
   <g>
-    <rect x="654" y="310" width="132" height="76" rx="8" class="proof"/>
-    <text x="676" y="338" class="font section" fill="#1d4ed8">Verified</text>
-    <text x="676" y="361" class="font small" fill="#0f172a">implemented change</text>
+    <rect x="336" y="324" width="170" height="42" rx="8" class="feature"/>
+    <text x="358" y="343" class="font section" fill="#9a3412">Plan</text>
+    <text x="358" y="360" class="mono tiny" fill="#0f172a">$intuitive-reduce-entropy</text>
+  </g>
+
+  <path d="M 421 366 V 384" fill="none" stroke="#ea580c" stroke-width="1.5" marker-end="url(#featureArrow)"/>
+
+  <g>
+    <rect x="336" y="384" width="170" height="42" rx="8" class="contract"/>
+    <text x="358" y="403" class="font section" fill="#334155">Grill batch</text>
+    <text x="358" y="420" class="mono tiny" fill="#0f172a">$grill-with-docs-batch</text>
+  </g>
+
+  <path d="M 421 426 V 460 H 390 V 498" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <g>
+    <rect x="596" y="264" width="170" height="58" rx="8" class="feature"/>
+    <text x="618" y="289" class="font section" fill="#9a3412">Faster feature</text>
+    <text x="618" y="310" class="mono tiny" fill="#0f172a">$agent-planning-loop</text>
+  </g>
+
+  <path d="M 681 322 V 346" fill="none" stroke="#ea580c" stroke-width="1.5" marker-end="url(#featureArrow)"/>
+
+  <g>
+    <rect x="596" y="346" width="170" height="46" rx="8" class="feature"/>
+    <text x="618" y="366" class="font section" fill="#9a3412">Review packet</text>
+    <text x="618" y="385" class="mono tiny" fill="#0f172a">$agent-planning-loop</text>
+  </g>
+
+  <path d="M 681 392 V 460 H 390 V 498" fill="none" stroke="#ea580c" stroke-width="1.5" marker-end="url(#featureArrow)"/>
+
+  <g>
+    <rect x="326" y="498" width="170" height="46" rx="8" class="contract"/>
+    <text x="348" y="518" class="font section" fill="#334155">Preflight</text>
+    <text x="348" y="537" class="mono tiny" fill="#0f172a">$intuitive-preflight</text>
+  </g>
+
+  <path d="M 496 521 H 590" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <g>
+    <rect x="590" y="498" width="170" height="46" rx="8" class="proof"/>
+    <text x="612" y="518" class="font section" fill="#1d4ed8">Flow</text>
+    <text x="612" y="537" class="mono tiny" fill="#0f172a">$intuitive-flow</text>
   </g>
 </svg>

@@ -28,69 +28,71 @@ The human surface should **stay tiny**: `README.md`, `ARCHITECTURE.md`,
 `STATUS.md`, and `docs/human/**`. This is where I decide what the project is,
 what good means, and what must not break.
 
-**Everything else** is agent territory: source code, plans, logs, generated
+Everything else is agent territory: source code, plans, logs, generated
 evidence, retrospectives, scratch work, and low-level churn. Humans can inspect
 it when something is risky or broken. They should not have to live there.
 
-The workflow keeps the user-facing choices small by separating simple execution
-from complex planning. Tiny concrete work can still go straight to
-`$intuitive-flow`. Complex or plan-backed work should first reduce plan entropy,
-turn the result into a plan, repeat plan-entropy passes until the serious
-questions are found, run `$grill-with-docs-batch`, then use
-`$intuitive-preflight` before `$intuitive-flow` executes. For repo maintenance,
-use `$intuitive-reduce-entropy` in repo entropy mode. Use
-`$agent-planning-loop` when scout workers should debate a plan before one human
-review packet, `$intuitive-refactor` to clean a known target, and
-`$intuitive-squash` before branch handoff.
-See [BELIEFS.md](BELIEFS.md) for the supporting doctrine behind the workflow;
-current project truth stays in the small human surface above.
+`intuitive-flow` exists to make the counter-pressure explicit. AI coding changes
+the default shape of a repo: agents are good at adding code, tests, plans, logs,
+and helper surfaces, but they are less likely to stop and ask whether the repo
+became easier to understand.
 
-## Start In A Repo
+The first job is **maintenance through entropy reduction**. A repo needs regular
+passes that remove stale surfaces, merge duplicate guidance, clean known seams,
+realign docs with code, and make the next human or agent less surprised.
 
-Pick the route by task shape:
+The second job is **deliberate feature development**. New work should not jump
+straight from idea to implementation when the scope is fuzzy. It should become a
+plan, get challenged against the repo's language and boundaries, turn into an
+execution contract, and only then be implemented and verified.
 
-| Task shape | First prompt |
+See [BELIEFS.md](BELIEFS.md) for the doctrine behind this workflow.
+
+The operating bias is deliberately small:
+
+- Less is more.
+- Codex, Claude Code, similar harnesses, and models will keep evolving; refresh
+  skills against them.
+- Prefer community best practices when they survive local review.
+
+## Choose A Path
+
+Start by choosing the kind of work:
+
+| Work | Route |
 | --- | --- |
-| Tiny concrete change or status check | `Use $intuitive-flow for this bounded task: <task>` |
-| Complex idea, feature, refactor, or plan-backed work | Start a reduce-entropy planning loop before execution |
-| Repo maintenance or "what should we clean next?" | Use repo entropy mode to find a ranked candidate batch, or the repo-wide maintenance goal when you want cleanup executed to saturation |
+| Maintain or simplify a repo | `$intuitive-reduce-entropy` in repo entropy mode, then route selected cleanup to the owning skill and verify it |
+| Build a feature with the thorough path | `$intuitive-reduce-entropy` in plan mode -> plan -> repeat until blind spots are gone -> `$grill-with-docs-batch` -> `$intuitive-preflight` -> `$intuitive-flow` |
+| Build a feature with the faster path | `$agent-planning-loop` -> plan or review packet -> `$intuitive-preflight` -> `$intuitive-flow` |
+| Do a tiny bounded task | `$intuitive-flow` directly, when the change is local and easy to verify |
 
-For complex work, start by asking for plan entropy mode and keep iterating until
-the plan has no more material blind spots:
-
-```text
-Use $intuitive-reduce-entropy in plan entropy mode for this idea or plan:
-<paste idea or path to docs/plans/<plan>.md>
-
-Goal: find missing decisions, weak assumptions, proof gaps, and unknown-unknown
-scout needs. Update or produce a plan, then repeat plan entropy until the
-remaining points are implementation defaults. Next route should be
-$grill-with-docs-batch, then $intuitive-preflight, then $intuitive-flow.
-```
-
-For repo maintenance discovery, give your AI agent the maintenance entrypoint
-and ask it to find the ranked batch of high-value entropy reduction candidates:
-
-```text
-Read this skill:
-https://github.com/MiaoDX/intuitive-flow/blob/main/skills/intuitive-reduce-entropy/SKILL.md
-
-Then run:
-Use $intuitive-reduce-entropy to make this repo easier for humans and AI agents
-to work in. If agent guidance is the first entropy source, route to
-$intuitive-init. Start with a ranked candidate batch before applying changes.
-```
-
-For periodic whole-repo architecture cleanup where the agent should keep
-discovering and executing clear work until the current `HEAD` is saturated, use
-the goal prompt in
-[docs/human/reduce-repo-entropy.md](docs/human/reduce-repo-entropy.md).
+The rule of thumb is simple: reduce repo entropy when the codebase itself is
+getting harder to work in; use a planning path when the next feature is still
+unclear; use direct flow only when the task is already bounded.
 
 <p align="center">
-  <img src="docs/assets/workflow.svg" alt="Simple work goes to Flow; complex work loops through reduce entropy, grill batch, preflight, then Flow" width="820">
+  <img src="docs/assets/workflow.svg" alt="Intuitive Flow routes repo entropy reduction and feature development through planning, preflight, execution, and verification" width="820">
 </p>
 
-## Optional Tool Install (For Humans)
+## Selected Skill Sources
+
+The default install surface is explicit, not a broad import. This repo selects
+individual skills in
+[`scripts/default-skill-allowlist.txt`](scripts/default-skill-allowlist.txt)
+and leaves the rest upstream until real use justifies promotion.
+
+| Source | Stars | Selected | Skills used |
+| --- | --- | --- | --- |
+| [`anthropics/skills`](https://github.com/anthropics/skills) | [![GitHub stars](https://img.shields.io/github/stars/anthropics/skills?style=social)](https://github.com/anthropics/skills) | 1/18 | `skill-creator` |
+| [`skills-directory/skill-codex`](https://github.com/skills-directory/skill-codex) | [![GitHub stars](https://img.shields.io/github/stars/skills-directory/skill-codex?style=social)](https://github.com/skills-directory/skill-codex) | 1/1 | `codex` |
+| [`mattpocock/skills`](https://github.com/mattpocock/skills) | [![GitHub stars](https://img.shields.io/github/stars/mattpocock/skills?style=social)](https://github.com/mattpocock/skills) | 5/35 | `grill-with-docs`, `handoff`, `improve-codebase-architecture`, `tdd`, `zoom-out` |
+| [`DietrichGebert/ponytail`](https://github.com/DietrichGebert/ponytail) | [![GitHub stars](https://img.shields.io/github/stars/DietrichGebert/ponytail?style=social)](https://github.com/DietrichGebert/ponytail) | 5/6 | `ponytail`, `ponytail-audit`, `ponytail-debt`, `ponytail-help`, `ponytail-review` |
+| [`garrytan/gstack`](https://github.com/garrytan/gstack) | [![GitHub stars](https://img.shields.io/github/stars/garrytan/gstack?style=social)](https://github.com/garrytan/gstack) | 7/55 | `gstack-autoplan`, `gstack-browse`, `gstack-investigate`, `gstack-open-gstack-browser`, `gstack-plan-eng-review`, `gstack-qa`, `gstack-review` |
+| [`open-gsd/gsd-core`](https://github.com/open-gsd/gsd-core) | [![GitHub stars](https://img.shields.io/github/stars/open-gsd/gsd-core?style=social)](https://github.com/open-gsd/gsd-core) | 3/69 | `gsd-pause-work`, `gsd-progress`, `gsd-resume-work` |
+
+Ratios are a current snapshot from the allowlist and upstream skill discovery.
+
+## Optional Tool Install
 
 Clone Intuitive Flow when you want the update scripts and local skill sync:
 
@@ -99,74 +101,7 @@ git clone --depth=1 https://github.com/MiaoDX/intuitive-flow.git ~/intuitive-flo
 ~/intuitive-flow/scripts/update.sh
 ```
 
-## Primary Skills
-
-Keep the public choice small:
-
-| Skill | Use it for |
-| --- | --- |
-| **intuitive-flow** | Direct executor for tiny bounded tasks and execution router after an approved plan or preflight contract; vague prompts are compatibility-routed upstream |
-| **intuitive-refactor** | Directly clean a known module, seam, stale API, compatibility surface, code/package/module layout issue, or architecture target |
-| **intuitive-reduce-entropy** | Selects repo entropy mode for maintenance candidates or plan entropy mode for idea/plan blind spots; complex plans iterate here before grill-batch and preflight |
-| **agent-planning-loop** | Bounded autonomous planning loop: scouts run reduce-entropy and grill-batch style critique, while the main session judges scope and returns one review packet |
-| **intuitive-squash** | Compress noisy local agent history into a clean reviewable commit story |
-
-Common routed specialists include `$intuitive-preflight`, `$intuitive-doc`,
-`$intuitive-init`, `$intuitive-tests`, and `$improve-codebase-architecture` for
-report-only architecture discovery; direct-use utilities such as
-`$intuitive-port-worktree`, `$multica-goal-tracker`, `$plan-bakeoff`, and
-`$skill-runner` are installed too. Changed-code reuse/quality/efficiency
-review now lives in
-`$intuitive-refactor` as changed-code cleanup. The complete default install
-surface lives in
-`scripts/default-skill-allowlist.txt`, whose comments mark primary choices,
-routed specialists, direct utilities, trial community skills, managed GStack
-tooling, and GSD status helpers. Trial community skills are installed for
-dogfooding, not treated as core workflow routes until real use justifies
-promotion. Retired local artifacts that the updater may prune live separately in
-`scripts/default-skill-prune-ledger.txt`. The human-facing role audit is in
-`docs/human/skill-self-improvement-audit.md`.
-
-## Human Docs
-
-- [README.md](README.md): orientation, install commands, and public project map
-- [ARCHITECTURE.md](ARCHITECTURE.md): subsystem contracts, extension points, and proof boundaries
-- [STATUS.md](STATUS.md): current state, supported commands, and next maintenance focus
-- [docs/human/](docs/human/): human-facing detail that should not bloat root docs
-- [Agent harness references](docs/human/agent-harness-references.md): official
-  and field-practice sources that guide agent guidance, skills, hooks, and MCP setup
-- [Reduce repo entropy](docs/human/reduce-repo-entropy.md): copy/paste prompt
-  for periodic repo maintenance
-
-Generated diagrams, vendored tools, planning scratchpads, and implementation
-evidence are context, not current truth unless a human doc promotes them.
-
-## Scripts
-
-| Script | Purpose |
-| --- | --- |
-| `bun run audit:skill-upstreams` | Read-only audit for candidate skills in upstream skill repos that are outside the default allowlist |
-| `bun run check:skills` | Validate repo-owned skills, default allowlist coverage, frontmatter, local resource links, and Bun toolchain pin alignment |
-| `bun run check:shell` | Run ShellCheck error-level validation for the updater, Bash helper scripts, and the Git hook entrypoint |
-| `bun run setup:hooks` | Configure this checkout to use repo-owned Git hooks from `.githooks/` |
-| `scripts/update.sh` | Install or update agent surfaces, skills, GSD, and gstack |
-| `scripts/dev/*.sh` | Local developer utilities for tmux, Paseo, and workstation sessions |
-
-`scripts/dev/paseo-keep-going.sh start` runs a local background monitor for
-active Paseo agents created within the last 24 hours. It watches recent logs for
-transient API/system errors and sends one "keep going" prompt through
-`paseo send`, then skips agents whose recent logs already contain a resume
-prompt or whose per-agent cooldown is still active. Use
-`scripts/dev/paseo-keep-going.sh run --once --dry-run --verbose` to inspect what
-it would do without sending prompts; pass `--max-age-hours 0` to disable the age
-filter.
-
-`scripts/update.sh` uses the direct npm registry by default. If Codex is already
-running, the updater warns and continues; pass `--require-no-running-codex` when
-you want that condition to block the run. Pass `--npm-mirror` to force mirror
-registry access for every npm/npx task.
-
-For script development:
+For local development in this checkout:
 
 ```bash
 bun install
@@ -174,27 +109,22 @@ bun run setup:hooks
 bun run verify
 ```
 
-## How It Works
+## Current Map
 
-<p align="center">
-  <img src="docs/assets/architecture.svg" alt="Architecture and supported tooling" width="800">
-</p>
+- [ARCHITECTURE.md](ARCHITECTURE.md): subsystem contracts, extension points, and proof boundaries
+- [STATUS.md](STATUS.md): current state, supported commands, and maintenance focus
+- [docs/human/](docs/human/): human-facing detail that should not bloat the root docs
+- [Reduce repo entropy](docs/human/reduce-repo-entropy.md): copy/paste prompts for repo maintenance and plan entropy work
+- [BELIEFS.md](BELIEFS.md): supporting doctrine behind the workflow
 
-Human docs define repo truth, `AGENTS.md` and `CLAUDE.md` stay project-local,
-`skills/` is the canonical repo-owned skill surface, and `scripts/update.sh`
-syncs Claude Code, Codex, GSD, gstack, external skills, and repo-owned skills
-into user-level tooling according to `scripts/default-skill-allowlist.txt`;
-explicit retired artifacts are pruned from
-`scripts/default-skill-prune-ledger.txt`. See
-[ARCHITECTURE.md](ARCHITECTURE.md) for subsystem contracts and proof
-boundaries.
+Generated diagrams, vendored tools, planning scratchpads, and implementation
+evidence are context, not current truth unless a human doc promotes them.
 
 ## Contributing
 
 PRs are welcome from humans and AI agents. The most useful contributions are
-sharper shared rules and fixes to workflows that drift as the underlying CLIs evolve.
-
-Less is more.
+sharper shared rules and fixes to workflows that drift as the underlying CLIs
+evolve.
 
 ## License
 
