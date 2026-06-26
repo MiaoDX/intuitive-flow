@@ -24,7 +24,7 @@ describe("codex hooks helper", () => {
         hooks: {
           Stop: [
             {
-              hooks: [{ type: "command", command: "agent-deck notify stop" }],
+              hooks: [{ type: "command", command: "custom stop hook" }],
             },
           ],
           UserPromptSubmit: [
@@ -41,7 +41,7 @@ describe("codex hooks helper", () => {
     const parsed = JSON.parse(output);
     expect(parsed.custom).toBe(true);
     expect(parsed.hooks.Stop.map((entry: { hooks: Array<{ command: string }> }) => entry.hooks[0].command)).toEqual([
-      "agent-deck notify stop",
+      "custom stop hook",
       `bash ${pluginDir}/hooks/codex-hook.sh Stop`,
     ]);
     expect(
@@ -74,7 +74,7 @@ describe("codex hooks helper", () => {
           ],
           Stop: [
             {
-              hooks: [{ type: "command", command: "agent-deck notify stop" }],
+              hooks: [{ type: "command", command: "custom stop hook" }],
             },
           ],
         },
@@ -87,7 +87,7 @@ describe("codex hooks helper", () => {
     expect(parsed.hooks.SessionStart[0].hooks[0].command).toBe(
       `bash ${pluginDir}/hooks/codex-hook.sh SessionStart`,
     );
-    expect(parsed.hooks.Stop[0].hooks[0].command).toBe("agent-deck notify stop");
+    expect(parsed.hooks.Stop[0].hooks[0].command).toBe("custom stop hook");
   });
 
   test("prunes only the GSD command when an entry has mixed hooks", () => {
