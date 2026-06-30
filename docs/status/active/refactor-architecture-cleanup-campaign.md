@@ -3,8 +3,8 @@
 Source gate: `docs/plans/refactor-architecture-cleanup-campaign.md`
 Latest user intent: autonomous repeated verified cleanup slices.
 
-Current slice: none. Campaign saturated after a fresh current-HEAD discovery
-pass.
+Current slice: none. Campaign saturated after a fresh discovery pass against
+the latest implementation commit before this checkpoint.
 
 Last proof:
 - fresh discovery pass after `43d92ea` found no clear safe P1/P2 code, test,
@@ -44,6 +44,7 @@ Parked work:
 - `plan-bakeoff` `base.mode` public manifest-key migration; unblock with an
   accepted schema/public artifact migration.
 
-Stop condition: met. A fresh discovery pass against current `HEAD` (`43d92ea`)
-found no clear safe P1/P2 slice after shrink attempts; only the parked gates
-above remain.
+Stop condition: met. A fresh discovery pass against implementation commit
+`43d92ea` found no clear safe P1/P2 slice after shrink attempts; only the
+parked gates above remain. Later campaign-state commits only record that
+saturation evidence.

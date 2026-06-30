@@ -39,8 +39,9 @@ and easier to navigate.
 
 ## Rolling Candidate Queue
 
-- Empty. Fresh discovery after current `HEAD` (`43d92ea`) found no clear safe
-  P1/P2 code, test, or docs slice outside parked gates after shrink attempts.
+- Empty. Fresh discovery after implementation commit `43d92ea` found no clear
+  safe P1/P2 code, test, or docs slice outside parked gates after shrink
+  attempts.
 
 ## Parked Gates
 
@@ -61,11 +62,12 @@ fresh discovery handoff against current `HEAD`. Stop only after two consecutive
 fresh discovery handoffs, both after the latest commit, return no clear safe
 P1/P2 slice after shrink attempts.
 
-Met on 2026-06-30. Fresh discovery after current `HEAD` (`43d92ea`) found no
-clear safe P1/P2 slice outside the parked gates. Exact stale-surface searches,
-high-noise summary, hook-helper review, line-count review, and import/caller
-probes did not identify a new deletion, merge, canonical-owner move, stale
-surface removal, or material maintainer surprise.
+Met on 2026-06-30. Fresh discovery after implementation commit `43d92ea` found
+no clear safe P1/P2 slice outside the parked gates. Exact stale-surface
+searches, high-noise summary, hook-helper review, line-count review, and
+import/caller probes did not identify a new deletion, merge, canonical-owner
+move, stale surface removal, or material maintainer surprise. Later
+campaign-state commits only record that saturation evidence.
 
 ## Campaign Log
 
@@ -265,12 +267,12 @@ surface removal, or material maintainer surprise.
   candidates are parked behind explicit compatibility, ownership, behavior, or
   schema migration decisions. Campaign status moved to `DONE`; focused
   closeout proof used `bun run check:skills` and `git diff --check`.
-- 2026-06-30: Fresh discovery after current `HEAD` (`43d92ea`) rechecked the
-  campaign after the focused hook-fixture cleanup. High-noise summary found no
-  tracked generated/log/test residue requiring deep-read cleanup. Exact
+- 2026-06-30: Fresh discovery after implementation commit `43d92ea` rechecked
+  the campaign after the focused hook-fixture cleanup. High-noise summary found
+  no tracked generated/log/test residue requiring deep-read cleanup. Exact
   searches for `agent-deck`, `mimocode`, `base.mode`, `status-line`, and old
   managed variants either found no current surface or matched the parked gates.
-  Hook-helper review found no stale test or wrapper seam from the latest commit.
+  Hook-helper review found no stale test or wrapper seam from that commit.
   Line-count and import/caller probes found no new pass-through owner or
   duplicate concept owner outside already deepened modules and parked public
   surfaces. No clear safe P1/P2 code, test, or docs slice remains queued.
