@@ -83,6 +83,7 @@ export const DEFAULT_PATTERNS = [
   /^.*\[System Error\]\s*stream disconnected before completion:\s*Transport error:\s*timeout\s*$/i,
   /^.*\[System Error\]\s*stream disconnected before completion:\s*stream closed before response\.completed\s*$/i,
   /^.*\[System Error\]\s*stream disconnected before completion:\s*Concurrency limit exceeded for account,\s*please retry later\s*$/i,
+  /^.*\[System Error\]\s*stream disconnected before completion:\s*Upstream request failed\s*$/i,
 ];
 
 export const DEFAULT_PROMPT =
