@@ -112,6 +112,14 @@ current slice, next action, blocker, parent/child relation, or no-touch scope
 changed. If the plan remains unchanged, record why in the Flow closeout, such
 as "source plan ledger already current" or "direct edit was not plan-backed".
 
+Before writing closeout docs, run a small plan hygiene pass: if the plan or
+active capsule has become append-only, replace stale sections with the current
+objective, proof boundary, next gate, and evidence links. Do not add another
+"Updated:" paragraph when the useful outcome is to delete or compress old
+status. Routine command transcripts, worker play-by-play, repeated failed
+attempts, and superseded approach notes belong in result artifacts or commits,
+not in the hot-resume plan surface.
+
 ## Serena Memory Maintenance
 
 After canonical docs/status/plans are updated, check Serena memories when the

@@ -57,6 +57,14 @@ or changing a plan's status, session scope, parent/child relation, current
 slice, next action, or blocker. Do not turn the dashboard into a transcript; it
 is an index.
 
+Plan maintenance is replacement-first. When current truth changes, edit the
+ledger, dashboard row, and current contract in place; remove or compress stale
+next actions, superseded gates, rejected scene/profile details, completed
+worker slices, and old blocker prose. Prefer one current objective, one next
+gate, one blocker summary, and links to evidence notes over dated append blocks.
+If a plan is drifting away from its main goal or forcing agents to read long
+history before the next action is clear, compact it before continuing.
+
 Before editing a plan-backed repo with multiple active plans, identify the
 active plan/session scope from the user prompt, `docs/plans/README.md`, the
 plan ledger, or the active capsule. Lock the run to that scope. Update only that
@@ -144,6 +152,13 @@ as `ACTIVE`, `PARKED`, `BLOCKED`, `DONE`, `SUPERSEDED`, or `ABSORBED`. A capsule
 is not proof that every referenced plan is current; use the plan dashboard and
 the source plan's ledger to choose the active session.
 
+Active capsules are hot-resume indexes, not journals. Keep them short enough
+for a low-context resume. Replace old "current slice" and "next action" text
+when the run moves; do not append another dated status section unless the old
+section is archived into a result note or removed. If repeated updates make the
+capsule long, summarize completed batches, keep only the latest blocker
+fingerprint and proof links, and delete superseded execution narration.
+
 Do not create parallel resume files such as `.continue-here.md` or
 `.planning/HANDOFF.json`. `.planning/*` is GSD-owned state, and ad hoc resume
 notes should be folded into the active capsule or the canonical plan.
@@ -172,6 +187,12 @@ Refresh only the planning truth that changed:
   artifacts, or phase/retrospective links.
 - `Remaining work` / `Parked follow-ups`: items not implemented, with why they
   remain out of scope or what gate would unpark them.
+
+Before adding a new closeout paragraph, decide whether it should replace stale
+state. The default closeout edit is a compact refresh of existing fields plus
+evidence links. Add append-only history only when the old decision must remain
+visible for future agents and cannot be represented by a link to a result note,
+commit, ADR, or archive.
 
 Do not mark a plan implemented merely because code changed. If acceptance gates
 were not verified, local/hardware evidence is still pending, or in-scope work

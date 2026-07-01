@@ -54,6 +54,13 @@ state, not preserve history. Do not paste reusable prompts, long command
 transcripts, worker raw logs, or every completed slice into the capsule; put
 durable history in commits and compact gate summaries.
 
+Maintain the capsule by replacing stale state, not by appending dated blocks.
+When a new slice changes the objective, blocker, next action, or proof boundary,
+rewrite the relevant fields into the current truth and delete superseded prose.
+If history matters, link one result note or commit instead of keeping the story
+inline. A hot-resume capsule that no longer fits in one focused read is a
+maintenance bug; compact it before continuing the durable run.
+
 Include only compact state:
 
 - capsule status (`ACTIVE`, `PARKED`, `BLOCKED`, `DONE`, `SUPERSEDED`, or
@@ -126,6 +133,10 @@ minutes during long campaigns. A checkpoint should leave:
 
 Do not grow the canonical plan into a per-command transcript. Compress routine
 slice details into batch summaries and keep raw logs in artifacts.
+At each checkpoint, also check whether the plan ledger or active capsule has
+started to drift into a timeline. If so, replace the timeline with the current
+objective, latest evidence link, remaining gate, and no-touch scope before
+launching the next slice.
 
 ## Verification Inventory
 

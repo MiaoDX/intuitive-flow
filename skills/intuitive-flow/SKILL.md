@@ -4,9 +4,10 @@ description: |
   Stable execution/change router after an approved plan, preflight contract, or
   tiny concrete task. Refactor-shaped work delegates to intuitive-refactor, and
   durable work runs through staged planning, review, GSD handoff,
-  implementation, cleanup, and verification. Also accept vague prompts as a
-  compatibility route that names the upstream planning stage instead of hiding
-  planning inside execution.
+  implementation, cleanup, and verification while keeping plan ledgers and
+  active capsules compact by replacing stale state instead of appending history.
+  Also accept vague prompts as a compatibility route that names the upstream
+  planning stage instead of hiding planning inside execution.
 ---
 
 # Intuitive Flow
@@ -106,7 +107,10 @@ boundary. Do not preload every reference.
   Do not create lifecycle subdirectories under `docs/plans/`; record lifecycle
   in the plan's `## Plan Ledger`, keep `docs/plans/README.md` as the plan
   dashboard when present, and use `docs/status/active/<task-slug>.md` for
-  compact active execution state.
+  compact active execution state. Maintain those docs by replacement and
+  pruning, not append-only history: stale next actions, superseded contracts,
+  and completed slice detail should be summarized or moved to linked evidence
+  notes before they distract from the current objective.
 - Changed-code cleanup: use `$intuitive-refactor` changed-code review on the
   changed scope, then rerun relevant proof.
 
