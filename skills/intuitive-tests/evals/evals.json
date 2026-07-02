@@ -4,19 +4,19 @@
     {
       "id": 1,
       "prompt": "Our pytest suite is flat and has a lot of tiny tests. Propose a safe first refactor without breaking existing CI commands.",
-      "expected_output": "A marker-first taxonomy, preservation of explicit path entrypoints, and a bounded first slice.",
+      "expected_output": "A bounded proposal that names the UT value gate, recommends pruning-first when tiny tests are low-value, preserves explicit CI/path entrypoints, and lists deletion/consolidation candidates before any layout work.",
       "files": []
     },
     {
       "id": 2,
       "prompt": "Review these unit tests and identify which ones are low-signal versus contract tests worth keeping.",
-      "expected_output": "Classification by behavior value, refactor tolerance, and public contract protection.",
+      "expected_output": "Aggressive classification by behavior value, refactor tolerance, public contract protection, and default delete/merge/reclassify decisions for tests that cannot prove a real behavior or failure mode.",
       "files": []
     },
     {
       "id": 3,
       "prompt": "Help me reorganize test fixtures for a Python project with repeated dense dictionaries in many tests.",
-      "expected_output": "A recommendation to introduce explicit factories/builders after real duplication appears, with examples of what to keep local.",
+      "expected_output": "A recommendation to introduce explicit factories/builders only after real duplication appears, while rejecting fixture extraction that hides behavior or helps low-value tests survive.",
       "files": []
     }
   ]

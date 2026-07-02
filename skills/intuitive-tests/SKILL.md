@@ -1,19 +1,21 @@
 ---
 name: intuitive-tests
-description: Use this skill whenever the user asks about unit test best practices, test organization, flat test suites, redundant tests, test refactors, pytest/JUnit/Jest/xUnit layout, test taxonomy, flaky tests, coverage quality, fixtures, mocks, parametrization, pruning existing UTs, or "which tests are worth keeping." It turns broad testing advice into a practical, behavior-first cleanup workflow. For broad suite refactors, audit first, propose a recommended path across markers, folder layout, pruning, fixtures, and parameterization, then wait for user feedback before applying disruptive changes.
+description: Use this skill whenever the user asks about unit test best practices, test organization, flat test suites, redundant tests, test refactors, pytest/JUnit/Jest/xUnit layout, test taxonomy, flaky tests, coverage quality, fixtures, mocks, parametrization, pruning existing UTs, or "which tests are worth keeping." It aggressively turns broad testing advice into a clean, behavior-first UT suite by preventing random test growth, pruning low-value tests, consolidating redundant checks, and requiring each retained test to prove a real behavior, failure mode, or public contract. For broad suite refactors, audit first, propose a recommended path across pruning, markers, folder layout, fixtures, and parameterization, then wait for user feedback before applying disruptive changes.
 ---
 
 # Intuitive Tests
 
 Use this skill to make a test suite easier to understand, faster to run, and
 less coupled to implementation details. The goal is not "more tests." The goal
-is a suite where each test has an obvious reason to exist.
+is a smaller, cleaner suite where each test has an obvious reason to exist and
+future contributors can tell what behavior the suite protects.
 
-Existing tests are not grandfathered in. If a current unit test does not prove
-project logic, caller-visible behavior, a meaningful failure mode, or a real
-contract, remove it, merge it into a stronger behavior test, or reclassify it to
-the correct layer. Treat structure-only, metadata-only, wiring-only, and
-implementation-shape tests as deletion candidates by default.
+Existing tests are not grandfathered in. If a current unit test cannot name the
+project logic, caller-visible behavior, meaningful failure mode, or real contract
+it protects, remove it, merge it into a stronger behavior test, or reclassify it
+to the correct layer. Treat structure-only, metadata-only, wiring-only,
+implementation-shape, and "coverage went up" tests as debt by default, not as
+weak tests to tolerate.
 
 The workflow is framework-agnostic, but the examples assume Python/pytest.
 
@@ -21,7 +23,7 @@ The workflow is framework-agnostic, but the examples assume Python/pytest.
 
 For broad or ambiguous cleanup, audit first and stop after a decision-complete
 proposal. Do not move files, delete tests, rewrite guidance, or edit production
-code until the target slice, accepted checklist, evidence level, and stop
+code until the target slice, accepted value gate, evidence level, and stop
 condition are explicit.
 
 For a precise target where the user asks for implementation, apply one coherent
@@ -29,7 +31,10 @@ vertical slice. Keep newly discovered unrelated ideas parked instead of letting
 the work expand by drift.
 
 For test-suite cleanup, a good proposal lets the user choose between
-conservative, layout-first, pruning-first, or fixture-extraction paths.
+conservative, pruning-first, layout-first, or fixture-extraction paths. The
+default recommendation should be pruning-first when the suite is full of tiny,
+shape-oriented, or redundant UTs. Marker/layout work is a support move, not a
+substitute for improving test value.
 
 Verification skips are repo truth, not reusable skill truth. If some tests must
 not run because of network, credentials, simulator, hardware, paid APIs, or
@@ -40,16 +45,27 @@ then report those skipped checks explicitly.
 
 Prefer tests that verify observable behavior through public interfaces.
 
+Do not add or keep a UT just because code exists, a branch changed, or coverage
+is desired. A UT earns its place only when it can answer all five admission
+questions:
+
+- What behavior or failure mode does this test protect?
+- What realistic project bug would make it fail?
+- Which public, stable, or intentionally supported local interface exercises it?
+- Why is this not already covered by a stronger behavior, contract, or regression
+  test?
+- Would a harmless refactor keep this test green?
+
 Unit tests should exercise code logic at the right confidence level: parsing,
 validation, state transitions, branching, transformations, error handling,
 fallbacks, and domain rules. They should not exist just to assert static shape:
 repository layout, file names, file presence, import locations, decorator
 presence, registration tables, config keys, copied constants, class wiring, or
-implementation trivia. Those checks belong in contract tests only when
-packaging, runtime discovery, CLI behavior, plugin registration, schemas, or a
-documented public artifact actually depends on them.
+implementation trivia. Those checks belong outside UTs, and only survive as
+contract/regression tests when packaging, runtime discovery, CLI behavior, plugin
+registration, schemas, or a documented public artifact actually depends on them.
 
-Avoid tests that only prove:
+Delete, merge, or reclassify tests that only prove:
 
 - dataclass/record fields store values
 - a private helper was called
@@ -67,12 +83,31 @@ Avoid tests that only prove:
 - a mock saw an internal call that does not affect caller-visible behavior
 - coverage increased without a meaningful assertion
 
+## Suite Shaping Rules
+
+Prefer fewer, stronger tests over many narrow assertions. A clean suite should
+make architecture easier to change, not freeze incidental implementation shape.
+
+- Consolidate one-field-at-a-time tests into one behavior test when the fields
+  are parts of the same observable outcome.
+- Delete duplicated checks once a stronger behavior/contract/regression test
+  covers the same guarantee.
+- Replace brittle internal-call tests with assertions on returned values,
+  emitted artifacts, state transitions, errors, logs, or outbound public effects.
+- Move artifact/import/registry/config checks out of UT only when they protect a
+  documented runtime contract; otherwise delete them.
+- Treat net test-count reduction as a good outcome when behavior proof is
+  preserved or improved.
+- Park speculative edge cases unless the repo has domain evidence, a bug report,
+  or a real caller-visible risk.
+
 ## Organization Taxonomy
 
 Classify tests by the confidence they provide and the cost to run them.
 
 Recommended layers: `unit`, `contract`, `integration`, `regression`, `local`,
-and `slow`. Keep shared helpers under `tests/support/` only after reuse is real.
+and `slow`. `unit` is the narrowest layer: project logic through a stable
+interface. Keep shared helpers under `tests/support/` only after reuse is real.
 
 If the suite is already large and many commands reference exact paths, add
 markers first. Move files into directories only after the marker split is green
@@ -82,10 +117,10 @@ and path consumers have been updated.
 
 | Mode | Use when | Output | Redirect when |
 | --- | --- | --- | --- |
-| Audit / propose | The test-suite cleanup target is broad or ambiguous. | Inventory, classification, recommended slice, fallback, verification plan. | The user already selected a precise implementation slice. |
+| Audit / propose | The test-suite cleanup target is broad or ambiguous. | Inventory, classification, value gate, deletion/consolidation candidates, recommended slice, fallback, verification plan. | The user already selected a precise implementation slice. |
 | Marker | The approved path is marker-first or directory movement is risky. | Registered markers, marked touched tests, focused collection/tests. | The suite does not need layer selection. |
 | Layout | The approved path moves tests into a layer-based structure. | Moved classified files, updated path consumers, collection/tests proof. | Path consumers are unknown or the user has not approved movement. |
-| Prune / consolidate | The target is unnecessary, redundant, or low-signal tests. | Kept/merged/deleted/reclassified tests with behavior proof. | Deletion would remove the last meaningful behavior check. |
+| Prune / consolidate | The target is unnecessary, redundant, randomly accreted, or low-signal tests. | Kept/merged/deleted/reclassified tests with behavior proof and net suite impact. | Deletion would remove the last meaningful behavior check. |
 | Fixture / factory | Repeated setup obscures behavior or appears across tests. | Local fixture/factory extraction with focused tests. | Reuse is speculative. |
 | Parameterize | Repeated cases differ only by input, expected output, or edge case. | Table-driven tests with readable case ids. | Separate tests give better diagnosis. |
 
@@ -99,14 +134,17 @@ a better owner matters.
 Default for broad or ambiguous test-suite refactors.
 
 Inventory test files and current path consumers, classify the suite, identify
-low-signal tests and setup/table opportunities, then recommend one primary path
-and one fallback. Stop and ask for the slice unless the prompt already chooses.
+low-signal tests, redundant behavior coverage, and setup/table opportunities,
+then recommend one primary path and one fallback. Stop and ask for the slice
+unless the prompt already chooses.
 
 Use this decision prompt:
 
 ```text
 Recommended next slice: <marker-first | layout-first | pruning-first | fixture/factory-first | parametrization-first>
 Why: <short reason based on the inventory>
+Value gate: <what a test must prove to stay in UT for this slice>
+Deletion/consolidation candidates: <shape-only, redundant, or stale tests to remove/merge/reclassify>
 Expected changes: <files/config/tests likely touched>
 Verification plan: <commands to run, plus any checks skipped because the user/repo said so>
 Tradeoff: <main risk or cost>
@@ -148,23 +186,29 @@ tests into a layer-based structure.
 ### 4. PRUNE / CONSOLIDATE mode
 
 Use when the user approves pruning low-signal tests, or when the requested slice
-is explicitly about unnecessary unit tests.
+is explicitly about unnecessary unit tests. Also prefer this mode when the suite
+has grown through random branch coverage, shape checks, over-mocking, copied
+constant checks, import smoke tests, or many tests that fail under harmless
+refactors.
 
 **Steps:**
-1. For each candidate, decide whether it protects code logic, caller-visible
+1. Start each candidate at **Delete/Merge/Reclassify**. Upgrade it to **Keep**
+   only after it passes the admission questions.
+2. For each candidate, decide whether it protects code logic, caller-visible
    behavior, a failure mode, or a real public contract.
-2. If it protects a real guarantee, identify the stronger
+3. If it protects a real guarantee, identify the stronger
    behavior/contract/regression test that already covers it or should absorb it.
-3. Merge one-field-at-a-time tests into behavior tests when that improves
+4. Merge one-field-at-a-time tests into behavior tests when that improves
    readability.
-4. Delete tests that only assert static shape: file names, file existence,
+5. Delete tests that only assert static shape: file names, file existence,
    directory shape, import smoke, registry membership, decorator presence,
    config keys, language mechanics, copied constants, private-call
    choreography, or stale implementation layout.
-5. Reclassify file/artifact checks as contract tests only when they protect
+6. Reclassify file/artifact checks as contract tests only when they protect
    packaging, runtime discovery, CLI output, schemas, report payloads, or
    documented public artifacts.
-6. Keep a short report of what was kept, merged, deleted, or reclassified.
+7. Keep a short report of what was kept, merged, deleted, or reclassified, plus
+   the behavior guarantees preserved.
 
 ### 5. FIXTURE / FACTORY mode
 
@@ -186,15 +230,18 @@ Use when repeated tests differ only by input/expected output or edge case.
 3. Keep separate tests when setup, behavior, or failure diagnosis meaningfully
    differs.
 
-## Low-Signal Pruning Checklist
+## Value Gate And Pruning Checklist
 
-For each candidate test, ask:
+For each candidate test, ask. A "no" or unclear answer means the default action
+is delete, merge into a stronger behavior test, or reclassify out of UT.
 
 - Would a real bug make this test fail?
 - Would a harmless refactor make this test fail?
 - Is this assertion already covered by a stronger behavior or contract test?
 - Is this testing framework/language mechanics rather than project behavior?
 - Does this protect a public API, artifact, or compatibility promise?
+- Can the test name the behavior in domain language without mentioning private
+  implementation choreography?
 - Is this only checking a file name, file existence, directory listing, import
   path, or stale layout?
 - Is this only checking static shape, metadata, registration, wiring, decorator
@@ -202,8 +249,11 @@ For each candidate test, ask:
 
 Actions:
 
-- **Keep** if it protects safety, parsing, fallback behavior, schema, CLI/report compatibility, or a known regression.
-- **Merge** if several tests assert one behavior one field at a time.
+- **Keep** only if it protects safety, parsing, fallback behavior, state
+  transition, domain rule, schema, CLI/report compatibility, or a known
+  regression through a stable interface.
+- **Merge** if several tests assert one behavior one field at a time, or if a
+  narrower test is fully subsumed by a stronger behavior test.
 - **Delete** if it only asserts language mechanics, duplicated implementation
   shape, static metadata/wiring, file/path/name trivia, or a stale layout/API
   that is no longer canonical.
@@ -211,6 +261,8 @@ Actions:
   regression coverage.
 - **Replace** only when deletion would remove the last proof of meaningful
   behavior.
+- **Reject new tests** if they do not pass the admission questions; do not leave
+  TODO-quality tests in the suite to be cleaned later.
 
 ## Pytest Implementation Notes
 
@@ -228,6 +280,8 @@ Target:
 Change type:
 Classification / recommended slice:
 Low-signal tests changed:
+Behavior guarantees preserved:
+Net test-count intent:
 Entry points preserved:
 Commands run:
 Residual risk:
