@@ -275,18 +275,6 @@ const PROPOSAL_TEMPLATES: Candidate[] = [
     },
   },
   {
-    id: "claude-mimo-1000",
-    harness: "claude-code",
-    launch_mode: "interactive-tmux",
-    provider_profile: "mimo-ultraspeed-anthropic",
-    model: "mimo-1000",
-    required_env: ["MIMO_API_KEY", "MIMO_BASE_URL"],
-    env: {
-      ANTHROPIC_AUTH_TOKEN: "MIMO_API_KEY",
-      ANTHROPIC_BASE_URL: "MIMO_BASE_URL",
-    },
-  },
-  {
     id: "claude-kimi",
     harness: "claude-code",
     launch_mode: "interactive-tmux",
@@ -308,18 +296,6 @@ const PROPOSAL_TEMPLATES: Candidate[] = [
     env: {
       ANTHROPIC_AUTH_TOKEN: "MM_API_KEY",
       ANTHROPIC_BASE_URL: "MM_BASE_URL",
-    },
-  },
-  {
-    id: "claude-mimo-v2.5",
-    harness: "claude-code",
-    launch_mode: "interactive-tmux",
-    provider_profile: "mimo-tp-anthropic",
-    model: "mimo-v2.5",
-    required_env: ["MIMO_TP_KEY"],
-    env: {
-      ANTHROPIC_API_KEY: "MIMO_TP_KEY",
-      ANTHROPIC_BASE_URL: "MIMO_ANTHROPIC_BASE_URL",
     },
   },
 ];

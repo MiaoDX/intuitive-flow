@@ -52,34 +52,33 @@ Existing local surfaces:
 - `skills/intuitive-port-worktree/SKILL.md` already owns porting one chosen
   worktree back into the default checkout.
 
-Roboclaws model-routing evidence, read only for design:
+Reference repo model-routing evidence, read only for design:
 
-- `/home/mi/ws/gogo/roboclaws/docs/human/model-matrix.md` summarizes current
+- `<reference-repo>/docs/human/model-matrix.md` summarizes current
   model/provider routes.
-- `/home/mi/ws/gogo/roboclaws/docs/human/model-route-verdicts.yaml` records
-  route health by agent engine.
-- `/home/mi/ws/gogo/roboclaws/roboclaws/agents/provider_registry.py` models
-  provider profiles, required env keys, default models, wire APIs, and route
-  status.
-- `/home/mi/ws/gogo/roboclaws/scripts/dev/coding_agent_env.sh` converts
-  provider/profile env choices into Codex or Claude command arguments without
-  rewriting global config.
-- `/home/mi/ws/gogo/roboclaws/scripts/dev/coding_agent_docker.sh` provides a
-  pinned Codex/Claude CLI image and isolated Docker home, but it is specific to
-  Roboclaws.
+- `<reference-repo>/docs/human/model-route-verdicts.yaml` records route health
+  by agent engine.
+- `<reference-repo>/src/agents/provider_registry.py` models provider profiles,
+  required env keys, default models, wire APIs, and route status.
+- `<reference-repo>/scripts/dev/coding_agent_env.sh` converts provider/profile
+  env choices into Codex or Claude command arguments without rewriting global
+  config.
+- `<reference-repo>/scripts/dev/coding_agent_docker.sh` provides a pinned
+  Codex/Claude CLI image and isolated Docker home, but it is specific to that
+  repo.
 
-Important route facts from Roboclaws:
+Important route facts from the reference repo:
 
 - Codex CLI default route: `codex-router-responses`, model `gpt-5.5`, requiring
   `CODEX_BASE_URL` and `CODEX_API_KEY`.
-- Codex CLI non-default routes there include `mimo-mify-responses` and
-  `minimax-responses`, but route verdicts are not equally healthy.
+- Codex CLI non-default routes there include custom Responses-compatible
+  providers and `minimax-responses`, but route verdicts are not equally healthy.
 - Claude Code routes there can be selected through Anthropic-compatible env
   (`ANTHROPIC_API_KEY`, `ANTHROPIC_BASE_URL`) derived from provider profiles
-  such as `mimo-tp-anthropic`, `kimi-anthropic`, or `mimo-mify-anthropic`.
+  such as `custom-anthropic`, `kimi-anthropic`, or `minimax-anthropic`.
 - OpenAI Agents SDK routes include chat-style profiles such as
-  `mimo-inside-openai-chat` and `kimi-openai-chat`; these are not automatically
-  safe to treat as Codex CLI candidates without a smoke proof.
+  `custom-openai-chat` and `kimi-openai-chat`; these are not automatically safe
+  to treat as Codex CLI candidates without a smoke proof.
 - `.env` contains secret values and must never be copied into plans, logs, run
   summaries, or candidate manifests. The reusable shape is key names and
   provider-profile metadata, not secret values.
@@ -105,7 +104,7 @@ The skill should trigger when the user asks to:
 
 - run one approved plan through multiple models or harnesses;
 - do best-of-N implementation attempts;
-- compare Codex Fast vs Codex strong vs Claude/Kimi/MiMo/MiniMax routes;
+- compare Codex Fast vs Codex strong vs Claude/Kimi/MiniMax/custom routes;
 - create multiple worktrees for independent plan execution;
 - use a fast model for implementation and a stronger model for judging.
 
@@ -246,9 +245,8 @@ First-class harnesses:
   specific coding-agent command that reads the same plan prompt, writes a final
   `RESULT_STATUS`, and can edit the worktree safely.
 
-Do not assume every Roboclaws profile is portable to every target repo. Reuse
-the pattern, not the Roboclaws implementation, unless the target repo is
-Roboclaws.
+Do not assume every reference profile is portable to every target repo. Reuse
+the pattern, not the reference implementation.
 
 ## Runtime Policy
 
@@ -365,10 +363,10 @@ Deliver all of the following in one Flow run:
 
 - Do not run real provider/model calls by default.
 - Do not add a Docker image to this repo.
-- Do not import Roboclaws provider registry code.
+- Do not import reference-repo provider registry code.
 - Do not auto-port or auto-merge a winning candidate.
 - Do not change global Codex or Claude configuration.
-- Do not make `plan-bakeoff` depend on Roboclaws paths.
+- Do not make `plan-bakeoff` depend on reference-repo paths.
 
 ### Internal Execution Order
 
@@ -425,7 +423,7 @@ Flow must stop for a user decision before:
 - changing `skill-runner` behavior in a way that affects existing callers
   beyond a documented public `--agent-command`/candidate-command surface;
 - auto-porting or merging any candidate output;
-- adding a repo-wide provider registry or copying Roboclaws-specific code.
+- adding a repo-wide provider registry or copying reference-repo-specific code.
 
 ### Soft Continuations
 
@@ -466,9 +464,9 @@ blocked, not because the model was weak.
 
 Evidence:
 
-- Roboclaws route verdicts distinguish `codex-cli`, `claude-code`, and
+- Reference route verdicts distinguish `codex-cli`, `claude-code`, and
   `openai-agents-sdk` health for the same provider families.
-- Roboclaws marks some routes healthy for one engine and blocked/degraded for
+- The reference repo marks some routes healthy for one engine and blocked/degraded for
   another.
 
 Owner: `plan-bakeoff` manifest validator.
@@ -480,7 +478,7 @@ Proof:
   `--execute-real`.
 
 Risk: route health can become stale. The skill should allow explicit override
-with a run-local note, not bake Roboclaws verdicts into this repo as universal
+with a run-local note, not bake reference verdicts into this repo as universal
 truth.
 
 ### Candidate 2: Separate provider profiles from secret env values
@@ -497,8 +495,8 @@ inline token in a command would leak across artifacts.
 
 Evidence:
 
-- Roboclaws `.env.example` documents only key names.
-- Roboclaws has a redaction helper for provider logs.
+- The reference `.env.example` documents only key names.
+- The reference repo has a redaction helper for provider logs.
 - User explicitly called out environment-variable-driven model/harness choice.
 
 Owner: `plan-bakeoff` script.
@@ -526,7 +524,7 @@ implementation quality, or it could mutate the user's normal agent config.
 
 Evidence:
 
-- Roboclaws Docker wrapper uses isolated HOME and an optional empty Codex skills
+- The reference Docker wrapper uses isolated HOME and an optional empty Codex skills
   mount for isolated tasks.
 - Current `skill-runner` relies on installed skills being available in the
   worker environment.
@@ -561,9 +559,9 @@ user IDs, and dependency caches before testing the model.
 
 Evidence:
 
-- Roboclaws has a repo-specific coding-agent Docker image and wrapper.
+- The reference repo has a repo-specific coding-agent Docker image and wrapper.
 - This repo's target use case is cross-repo, so the runner cannot assume a
-  Roboclaws-specific Dockerfile exists.
+  reference-repo-specific Dockerfile exists.
 
 Owner: implementation plan.
 
@@ -645,7 +643,7 @@ Allowed new durable entities for v0:
 Avoid in v0:
 
 - repo-wide provider registry;
-- baked-in Roboclaws model matrix;
+- baked-in reference model matrix;
 - Docker image in this repo;
 - automatic merge/port;
 - live provider probes as normal validation tests.
@@ -659,19 +657,19 @@ Avoid in v0:
 2. Default candidate preset.
    Recommendation: keep a small built-in proposal for the requested routes when
    their env keys are present, and let the manifest own any larger matrix.
-   Requested Codex, Kimi, MiniMax, and MiMo routes now have smoke evidence; a
+   Requested Codex, Kimi, MiniMax, and custom routes now have smoke evidence; a
    target repo can still prune candidates before execution.
 
 3. Claude Code default handling.
    Recommendation: never assume or rewrite the user's current Claude default.
    For Claude candidates, use env-derived Anthropic-compatible route settings
-   inside an ephemeral HOME. Treat the user's "default Claude Code is MIMO 1000"
-   as current local state, not target configuration.
+   inside an ephemeral HOME. Treat a user's current Claude default as local
+   state, not target configuration.
 
-4. Whether to reuse Roboclaws provider registry.
+4. Whether to reuse a reference provider registry.
    Recommendation: reuse the pattern and maybe copy small command-rendering
-   ideas later, but do not import Roboclaws code into this repo. The skill must
-   work across target repos.
+   ideas later, but do not import reference-repo code into this repo. The skill
+   must work across target repos.
 
 5. Whether to formalize `skill-runner --agent-command`.
    Recommendation: yes, but keep it as a low-level escape hatch. The bakeoff
@@ -710,8 +708,7 @@ What changed:
   gitignore support, built-in proposal templates, `--execute-real`, and command
   rendering for `codex-cli` and `claude-code`.
 - Added the smoke-proven Anthropic-compatible mappings for Claude Kimi,
-  MiniMax, MiMo token-plan, and MiMo 1000 UltraSpeed. MiMo 1000 may identify as
-  `mimo-v2.5-pro`; treat it as the 256k-context UltraSpeed route.
+  MiniMax, and custom Anthropic-compatible routes.
 - Simplified after a real-task trial: Docker runtime is not advertised or
   accepted in v0, and candidate prompts now tell models to implement the plan
   directly instead of nesting `$intuitive-flow`/`skill-runner`.
@@ -731,11 +728,8 @@ Proof:
   - Codex `gpt-5.3-codex`: PASS.
   - Codex `MiniMax-M3` through `minimax-responses`: PASS.
   - Claude Code `MiniMax-M3` through Anthropic-compatible MiniMax route: PASS.
-  - Claude Code `mimo-1000` through MiMo UltraSpeed route: PASS.
   - Direct MiniMax Anthropic-compatible API: PASS.
-  - Direct MiMo 1000 Anthropic-compatible API: PASS; route may identify as
-    `mimo-v2.5-pro`, which is acceptable for MiMo v2.5 Pro UltraSpeed with a
-    256k context window.
+  - Direct custom Anthropic-compatible API: PASS.
   - Claude Code `kimi-k2.7-code`: PASS.
 - Real-task trial:
   - Plan: remove Docker runtime surface from `plan-bakeoff`.
@@ -760,7 +754,7 @@ Scope changes:
 - Docker runtime is intentionally unsupported in v0.
 - No global Codex or Claude config was modified.
 - No candidate output was ported or merged.
-- No Roboclaws code was imported.
+- No reference-repo code was imported.
 
 Parked work:
 

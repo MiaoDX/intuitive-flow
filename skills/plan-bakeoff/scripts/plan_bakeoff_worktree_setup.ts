@@ -53,7 +53,6 @@ export const runWorktreeSetup = (
         PLAN_BAKEOFF_RUN_DIR: runDir,
         PLAN_BAKEOFF_TARGET_REPO: manifest.target_repo,
         PLAN_BAKEOFF_WORKTREE: worktree,
-        ROBOCLAWS_CANDIDATE_ID: candidate.id,
       },
     });
     const combined = `${result.stdout}\n${result.stderr}`;

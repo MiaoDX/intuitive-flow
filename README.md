@@ -15,11 +15,6 @@ local `CLAUDE.md` / `AGENTS.md` guidance instead of a copied process manual.
   <img src="docs/assets/hero.png" alt="Human-readable docs guiding AI coding workflows" width="900">
 </p>
 
-<p align="center">
-  <a href="https://miaodx.com/LIP/share/ultrathink-to-goal/"><strong>From Ultrathink to Goal - A Year of AI Coding Engineering</strong></a><br>
-  <sub><i>The interactive slide deck behind this kit · 中文</i></sub>
-</p>
-
 ## Why This Exists
 
 AI agents write all my code, so the repo needs two surfaces.
@@ -97,7 +92,7 @@ Ratios are a current snapshot from the allowlist and upstream skill discovery.
 Clone Intuitive Flow when you want the update scripts and local skill sync:
 
 ```bash
-git clone --depth=1 https://github.com/MiaoDX/intuitive-flow.git ~/intuitive-flow
+git clone --depth=1 <repo-url> ~/intuitive-flow
 ~/intuitive-flow/scripts/update.sh
 ```
 

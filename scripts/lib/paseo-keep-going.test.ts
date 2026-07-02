@@ -49,7 +49,7 @@ describe("paseo keep-going monitor", () => {
 
   test("matches stream-disconnected API errors from dropped Paseo sessions", () => {
     const urlError = findCapacityError(
-      "metadata refresh.[System Error] stream disconnected before completion: error sending request for url (https://api-router.evad.mioffice.cn/v1/responses)",
+      "metadata refresh.[System Error] stream disconnected before completion: error sending request for url (https://router.example.test/v1/responses)",
     );
     const timeoutError = findCapacityError(
       "editing files.[System Error] stream disconnected before completion: Transport error: timeout",

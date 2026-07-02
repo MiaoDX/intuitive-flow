@@ -20,14 +20,14 @@ and focused managed-state / sync tests.
 ## Accepted Severities
 
 - P1: repo-owned root skills removed from the allowlist can leave generated
-  MiMoCode command wrappers reachable after owned-root pruning.
+  legacy command wrappers reachable after owned-root pruning.
 - P1: external skills removed from an allowlist label or removed source label
   can leave Codex installs under `~/.codex/skills` even though update installs
   external labels for both Claude Code and Codex.
 
 ## Accepted Cleanup Checklist
 
-- Remove MiMoCode command wrappers for previously owned root skills when they
+- Remove legacy command wrappers for previously owned root skills when they
   leave the root allowlist.
 - Remove Codex external skill installs during `external-sync` stale-skill
   pruning.
@@ -35,7 +35,7 @@ and focused managed-state / sync tests.
   label pruning.
 - Keep pruning guarded by prior managed state and safe skill names.
 - Preserve user-owned/untracked skill installs.
-- Update focused tests so stale Codex and MiMoCode surfaces are covered.
+- Update focused tests so stale Codex and legacy command surfaces are covered.
 
 ## Parked Cross-Seam / Future Ideas
 
@@ -52,15 +52,15 @@ and focused managed-state / sync tests.
 ## Stop Condition
 
 Stop when every accepted stale install surface is pruned from the managed-state
-owner, focused tests prove the missing Codex and MiMoCode paths, full
+owner, focused tests prove the missing Codex and legacy command paths, full
 verification passes, and unrelated managed-state cleanup remains parked.
 
 ## Execution Log
 
 - 2026-06-17: Scope gate created after read-only code scout found stale
-  reachable install surfaces for removed repo-owned MiMoCode wrappers and
+  reachable install surfaces for removed repo-owned legacy command wrappers and
   removed external Codex skill installs.
-- 2026-06-17: Added managed-state pruning for removed repo-owned MiMoCode
+- 2026-06-17: Added managed-state pruning for removed repo-owned legacy command
   wrappers and removed external Codex installs in both stale-skill and
   removed-source paths. Verified with focused managed-state/sync tests,
   `bun run check`, and `bun run verify`.

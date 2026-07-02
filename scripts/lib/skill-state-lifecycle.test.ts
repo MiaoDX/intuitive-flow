@@ -49,19 +49,19 @@ describe("skill state lifecycle", () => {
       mkdirSync(join(home, ".codex", "skills", "keep-skill"), { recursive: true });
       mkdirSync(join(home, ".claude", "commands"), { recursive: true });
       writeFileSync(join(home, ".claude", "commands", "old.md"), "");
-      mkdirSync(join(home, ".config", "mimocode", "command"), { recursive: true });
-      writeFileSync(join(home, ".config", "mimocode", "command", "stale.md"), "");
-      writeFileSync(join(home, ".config", "mimocode", "command", "old-skill.md"), "");
-      writeFileSync(join(home, ".config", "mimocode", "command", "keep.md"), "");
+      mkdirSync(join(home, ".config", "legacy-agent", "command"), { recursive: true });
+      writeFileSync(join(home, ".config", "legacy-agent", "command", "stale.md"), "");
+      writeFileSync(join(home, ".config", "legacy-agent", "command", "old-skill.md"), "");
+      writeFileSync(join(home, ".config", "legacy-agent", "command", "keep.md"), "");
 
       const removed = pruneLegacyArtifacts(pruneLedgerPath, home);
 
       expect(removed).toBe(2);
       expect(existsSync(join(home, ".codex", "skills", "old-skill"))).toBe(false);
       expect(existsSync(join(home, ".claude", "commands", "old.md"))).toBe(false);
-      expect(existsSync(join(home, ".config", "mimocode", "command", "stale.md"))).toBe(true);
-      expect(existsSync(join(home, ".config", "mimocode", "command", "old-skill.md"))).toBe(true);
-      expect(existsSync(join(home, ".config", "mimocode", "command", "keep.md"))).toBe(true);
+      expect(existsSync(join(home, ".config", "legacy-agent", "command", "stale.md"))).toBe(true);
+      expect(existsSync(join(home, ".config", "legacy-agent", "command", "old-skill.md"))).toBe(true);
+      expect(existsSync(join(home, ".config", "legacy-agent", "command", "keep.md"))).toBe(true);
       expect(existsSync(join(home, ".codex", "skills", "keep-skill"))).toBe(true);
     } finally {
       rmSync(home, { recursive: true, force: true });
@@ -83,9 +83,9 @@ describe("skill state lifecycle", () => {
       mkdirSync(join(home, ".codex", "skills", "removed"), { recursive: true });
       mkdirSync(join(home, ".agents", "skills", "removed"), { recursive: true });
       mkdirSync(join(home, ".codex", "skills", "user-skill"), { recursive: true });
-      mkdirSync(join(home, ".config", "mimocode", "command"), { recursive: true });
-      writeFileSync(join(home, ".config", "mimocode", "command", "removed.md"), "");
-      writeFileSync(join(home, ".config", "mimocode", "command", "user-skill.md"), "");
+      mkdirSync(join(home, ".config", "legacy-agent", "command"), { recursive: true });
+      writeFileSync(join(home, ".config", "legacy-agent", "command", "removed.md"), "");
+      writeFileSync(join(home, ".config", "legacy-agent", "command", "user-skill.md"), "");
 
       const removed = pruneRemovedOwnedRootSkills(allowlistPath, home);
 
@@ -93,9 +93,9 @@ describe("skill state lifecycle", () => {
       expect(existsSync(join(home, ".codex", "skills", "current"))).toBe(true);
       expect(existsSync(join(home, ".codex", "skills", "removed"))).toBe(false);
       expect(existsSync(join(home, ".agents", "skills", "removed"))).toBe(false);
-      expect(existsSync(join(home, ".config", "mimocode", "command", "removed.md"))).toBe(true);
+      expect(existsSync(join(home, ".config", "legacy-agent", "command", "removed.md"))).toBe(true);
       expect(existsSync(join(home, ".codex", "skills", "user-skill"))).toBe(true);
-      expect(existsSync(join(home, ".config", "mimocode", "command", "user-skill.md"))).toBe(true);
+      expect(existsSync(join(home, ".config", "legacy-agent", "command", "user-skill.md"))).toBe(true);
     } finally {
       rmSync(home, { recursive: true, force: true });
       rmSync(root, { recursive: true, force: true });

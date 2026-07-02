@@ -30,7 +30,7 @@
     </text>
 
     <text x="22" y="104" fill="#F9E2AF">&gt; Read this skill:</text>
-    <text x="42" y="126" fill="#89DCEB">github.com/MiaoDX/.../skills/intuitive-reduce-entropy/SKILL.md</text>
+    <text x="42" y="126" fill="#89DCEB">github.com/example-org/.../skills/intuitive-reduce-entropy/SKILL.md</text>
 
     <text x="22" y="164" fill="#F9E2AF">&gt; Use $intuitive-reduce-entropy for this repo.</text>
     <text x="42" y="188" fill="#CDD6F4">Inspect docs, agent guidance, tests, paths, and stale APIs.</text>

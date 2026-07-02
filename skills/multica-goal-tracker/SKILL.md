@@ -52,13 +52,13 @@ or `To execute` with the executable `/goal`.
 bun skills/multica-goal-tracker/scripts/track_goal.ts \
   create-from-preflight \
   --preflight-file /tmp/preflight.md \
-  --workspace-id roboclaws
+  --workspace-id product-workspace
 ```
 
 Never rely on the Multica CLI default workspace when creating an issue from a
 preflight. The default workspace may point at another product. If the user gives
-a URL such as `https://multica.evad.mioffice.cn/roboclaws/`, pass
-`--workspace-id roboclaws` or the full URL so the script can resolve and verify
+a URL such as `https://multica.example.test/product-workspace/`, pass
+`--workspace-id product-workspace` or the full URL so the script can resolve and verify
 the real workspace id before writing.
 
 Keep `create-from-preflight` issue descriptions intentionally short. Do not

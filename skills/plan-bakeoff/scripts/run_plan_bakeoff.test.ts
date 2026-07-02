@@ -188,8 +188,6 @@ describe("plan-bakeoff runner", () => {
       CODEX_BASE_URL: "https://codex.example.test/v1",
       CODEX_API_KEY: "fake-codex-key",
       MM_API_KEY: "fake-mm-key",
-      MIMO_API_KEY: "fake-mimo-key",
-      MIMO_BASE_URL: "https://mimo.example.test/v1",
       KIMI_API_KEY: "fake-kimi-key",
     };
     const candidates = proposeCandidates(env);
@@ -198,15 +196,12 @@ describe("plan-bakeoff runner", () => {
       "codex-gpt-5.5",
       "codex-gpt-5.3-codex",
       "codex-minimax",
-      "claude-mimo-1000",
       "claude-kimi",
       "claude-minimax",
     ]);
     expect(candidates[0].env).toEqual({ CODEX_BASE_URL: "CODEX_BASE_URL", CODEX_API_KEY: "CODEX_API_KEY" });
-    expect(candidates[3].model).toBe("mimo-1000");
+    expect(candidates[3].model).toBe("kimi-k2.7-code");
     expect(candidates[3].launch_mode).toBe("interactive-tmux");
-    expect(candidates[4].model).toBe("kimi-k2.7-code");
-    expect(candidates[4].launch_mode).toBe("interactive-tmux");
   });
 
   test("renders structured skill-runner args for real candidates", () => {
@@ -274,26 +269,26 @@ describe("plan-bakeoff runner", () => {
     ).toThrow("command harness requires command");
   });
 
-  test("maps Claude-compatible local provider env", () => {
+  test("maps Claude-compatible provider env", () => {
     expect(
       candidateMappedEnv(
         {
-          id: "mimo",
+          id: "local-anthropic",
           harness: "claude-code",
-          provider_profile: "mimo-ultraspeed-anthropic",
+          provider_profile: "custom-anthropic",
           env: {
-            ANTHROPIC_AUTH_TOKEN: "MIMO_API_KEY",
-            ANTHROPIC_BASE_URL: "MIMO_BASE_URL",
+            ANTHROPIC_AUTH_TOKEN: "LOCAL_API_KEY",
+            ANTHROPIC_BASE_URL: "LOCAL_BASE_URL",
           },
         },
         {
-          MIMO_API_KEY: "fake-mimo-key",
-          MIMO_BASE_URL: "https://mimo.example.test/v1",
+          LOCAL_API_KEY: "fake-local-key",
+          LOCAL_BASE_URL: "https://local-provider.example.test/v1",
         },
       ),
     ).toEqual({
-      ANTHROPIC_AUTH_TOKEN: "fake-mimo-key",
-      ANTHROPIC_BASE_URL: "https://mimo.example.test",
+      ANTHROPIC_AUTH_TOKEN: "fake-local-key",
+      ANTHROPIC_BASE_URL: "https://local-provider.example.test",
     });
     expect(
       candidateMappedEnv(

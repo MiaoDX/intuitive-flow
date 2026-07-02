@@ -9,7 +9,7 @@ the latest implementation commit before this checkpoint.
 Last proof:
 - fresh discovery pass after `43d92ea` found no clear safe P1/P2 code, test,
   or docs slice outside parked gates after shrink attempts.
-- exact stale-surface searches for `agent-deck`, `mimocode`, `base.mode`,
+- exact stale-surface searches for `agent-deck`, `legacy-agent`, `base.mode`,
   `status-line`, and old managed variants either found no current surface or
   matched the parked gates below.
 - hook-helper review confirmed the latest `agent-deck` fixture deletion did not
@@ -39,7 +39,7 @@ Parked work:
   explicit compatibility policy for existing user config.
 - Hook/config helper deepening; unblock with a behavior-preserving seam that
   does not alter settings merge behavior.
-- MiMoCode command-wrapper pruning; unblock with a current ownership decision
+- legacy command-wrapper pruning; unblock with a current ownership decision
   for those wrappers.
 - `plan-bakeoff` `base.mode` public manifest-key migration; unblock with an
   accepted schema/public artifact migration.

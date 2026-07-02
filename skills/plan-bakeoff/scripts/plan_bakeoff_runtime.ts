@@ -21,9 +21,6 @@ const PROVIDER_DEFAULTS: Record<string, Record<string, string>> = {
   "kimi-anthropic": {
     ANTHROPIC_BASE_URL: "https://api.kimi.com/coding/",
   },
-  "mimo-tp-anthropic": {
-    ANTHROPIC_BASE_URL: "https://token-plan-cn.xiaomimimo.com/anthropic",
-  },
 };
 
 const PROVIDER_ENV_KEY: Record<string, string> = {

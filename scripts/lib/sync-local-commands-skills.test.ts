@@ -380,8 +380,8 @@ describe("local command and skill sync task", () => {
       const { stubBin } = createCliStubs(home);
       prepareSyncTaskFixture(fixture);
       mkdirSync(join(home, ".codex", "skills", "old-skill"), { recursive: true });
-      mkdirSync(join(home, ".config", "mimocode", "command"), { recursive: true });
-      writeFileSync(join(home, ".config", "mimocode", "command", "old-skill.md"), "");
+      mkdirSync(join(home, ".config", "legacy-agent", "command"), { recursive: true });
+      writeFileSync(join(home, ".config", "legacy-agent", "command", "old-skill.md"), "");
       mkdirSync(join(fixture, "skills", "alpha"), { recursive: true });
       writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill alpha\n");
       writeFileSync(join(fixture, "scripts", "default-skill-prune-ledger.txt"), "legacy-skill old-skill\n");
@@ -408,7 +408,7 @@ describe("local command and skill sync task", () => {
       }
 
       expect(existsSync(join(home, ".codex", "skills", "old-skill"))).toBe(false);
-      expect(existsSync(join(home, ".config", "mimocode", "command", "old-skill.md"))).toBe(true);
+      expect(existsSync(join(home, ".config", "legacy-agent", "command", "old-skill.md"))).toBe(true);
       expect(existsSync(join(home, ".codex", "skills", "alpha", "SKILL.md"))).toBe(true);
     } finally {
       rmSync(home, { recursive: true, force: true });
@@ -459,8 +459,8 @@ describe("local command and skill sync task", () => {
 
       writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill alpha\n");
       rmSync(join(fixture, "skills", "beta"), { recursive: true, force: true });
-      mkdirSync(join(home, ".config", "mimocode", "command"), { recursive: true });
-      writeFileSync(join(home, ".config", "mimocode", "command", "beta.md"), "");
+      mkdirSync(join(home, ".config", "legacy-agent", "command"), { recursive: true });
+      writeFileSync(join(home, ".config", "legacy-agent", "command", "beta.md"), "");
       mkdirSync(join(home, ".codex", "skills", "user-skill"), { recursive: true });
       writeFileSync(join(home, ".codex", "skills", "user-skill", "SKILL.md"), "# User skill\n");
 
@@ -471,7 +471,7 @@ describe("local command and skill sync task", () => {
 
       expect(existsSync(join(home, ".codex", "skills", "alpha", "SKILL.md"))).toBe(true);
       expect(existsSync(join(home, ".codex", "skills", "beta"))).toBe(false);
-      expect(existsSync(join(home, ".config", "mimocode", "command", "beta.md"))).toBe(true);
+      expect(existsSync(join(home, ".config", "legacy-agent", "command", "beta.md"))).toBe(true);
       expect(existsSync(join(home, ".codex", "skills", "user-skill", "SKILL.md"))).toBe(true);
       expect(JSON.parse(readFileSync(join(home, ".intuitive-flow", "owned-root-skills.json"), "utf8"))).toEqual({
         schemaVersion: 1,

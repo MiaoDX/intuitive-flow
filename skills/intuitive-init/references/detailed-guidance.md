@@ -393,8 +393,8 @@ Use this workflow unless the user asks for report-only or a specific file.
      submodule only for edits, isolated tests, or exact checkout verification.
      For heavy environments that cannot be rebuilt declaratively (e.g., NVIDIA
      Isaac Sim with system-level dependencies), symlink from the main repo
-     instead of recreating. See the Roboclaws `.githooks/post-checkout` pattern
-     for a concrete example.
+     instead of recreating. A repo-local `.githooks/post-checkout` hook can keep
+     those links fresh for each worktree.
    - checked-in `.mcp.json` or project-scoped MCP docs for shared external tools
    - Codex/Paseo delegation policy docs, when present; root guidance should
      point to the policy and keep only the short XML-envelope rule that prevents

@@ -49,7 +49,7 @@ and easier to navigate.
   affect user config compatibility; safe internal slice not selected yet.
 - Hook/config helper deepening: potentially useful, but current smallest slice
   may alter settings merge behavior; needs a clearer behavior-preserving seam.
-- MiMoCode command-wrapper pruning drift: planning history and current tests
+- Legacy command-wrapper pruning drift: planning history and current tests
   disagree on ownership; needs a current owner decision before changing prune
   behavior.
 - `plan-bakeoff` `base.mode` legacy no-op: documented manifest key, so removal
@@ -270,7 +270,7 @@ campaign-state commits only record that saturation evidence.
 - 2026-06-30: Fresh discovery after implementation commit `43d92ea` rechecked
   the campaign after the focused hook-fixture cleanup. High-noise summary found
   no tracked generated/log/test residue requiring deep-read cleanup. Exact
-  searches for `agent-deck`, `mimocode`, `base.mode`, `status-line`, and old
+  searches for `agent-deck`, `legacy-agent`, `base.mode`, `status-line`, and old
   managed variants either found no current surface or matched the parked gates.
   Hook-helper review found no stale test or wrapper seam from that commit.
   Line-count and import/caller probes found no new pass-through owner or

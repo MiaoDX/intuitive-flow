@@ -6,7 +6,7 @@ description: |
   artifacts and rank the results. Use when the user asks for best-of-N plan
   execution, model or harness bakeoffs, parallel candidate worktrees, fast-model
   implementation with stronger-model judging, or safe evaluation of Codex,
-  Claude Code, MiMo, Kimi, MiniMax, or custom coding-agent routes against the
+  Claude Code, Kimi, MiniMax, or custom coding-agent routes against the
   same real project plan.
 ---
 
@@ -267,13 +267,8 @@ The built-in proposal is deliberately small:
 - `codex-gpt-5.3-codex`: `codex-cli`, `gpt-5.3-codex`, requiring
   `CODEX_BASE_URL` and `CODEX_API_KEY`.
 - `codex-minimax`: `codex-cli`, `MiniMax-M3`, requiring `MM_API_KEY`.
-- `claude-mimo-1000`: `claude-code`, MiMo 1000 UltraSpeed, requiring
-  `MIMO_API_KEY` and `MIMO_BASE_URL`. This route may identify as
-  `mimo-v2.5-pro`; treat that as the same UltraSpeed route. Its context window
-  is 256k.
 - `claude-kimi`: `claude-code`, `kimi-k2.7-code`, requiring `KIMI_API_KEY`.
 - `claude-minimax`: `claude-code`, `MiniMax-M3`, requiring `MM_API_KEY`.
-- `claude-mimo-v2.5`: `claude-code`, `mimo-v2.5`, requiring `MIMO_TP_KEY`.
 
 Real candidate example:
 
