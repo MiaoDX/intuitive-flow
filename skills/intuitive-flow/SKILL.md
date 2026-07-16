@@ -103,14 +103,12 @@ boundary. Do not preload every reference.
   explicit unknown-unknown scout result or skip reason in the canonical plan,
   unless the task is tiny direct work that is not using a plan as source of
   truth.
-- Canonical plan files use the fixed flat surface `docs/plans/<slug>.md`.
-  Do not create lifecycle subdirectories under `docs/plans/`; record lifecycle
-  in the plan's `## Plan Ledger`, keep `docs/plans/README.md` as the plan
-  dashboard when present, and use `docs/status/active/<task-slug>.md` for
-  compact active execution state. Maintain those docs by replacement and
-  pruning, not append-only history: stale next actions, superseded contracts,
-  and completed slice detail should be summarized or moved to linked evidence
-  notes before they distract from the current objective.
+- When the target repo has no explicit equivalent, canonical plan files use the
+  flat `docs/plans/<slug>.md` default and compact task state uses the path
+  selected by `../_shared/references/durable-run.md`, normally
+  `docs/status/active/<task-slug>.md`. Preserve local source-of-truth and resume
+  conventions instead of creating duplicate surfaces. Maintain selected docs
+  by replacement and pruning, not append-only history.
 - Changed-code cleanup: use `$intuitive-refactor` changed-code review on the
   changed scope, then rerun relevant proof.
 
@@ -148,9 +146,10 @@ verification.
 
 ## Execution Surface
 
-Keep the main session as route owner, integration point, and final verifier.
-Use main-session edits for tiny direct work. For durable, stateful, long-running,
-or parallel work, read `../_shared/references/durable-run.md`,
+Keep the main session as route owner, task control plane, and final verifier.
+It is not automatically the project-status integrator. Use main-session edits
+for tiny direct work. For durable, stateful, long-running, or parallel work,
+read `../_shared/references/durable-run.md`,
 `references/checkpoints-and-auto-run.md`, and the `$skill-runner` Codex
 delegation reference before launching workers.
 

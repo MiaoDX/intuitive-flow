@@ -3,6 +3,10 @@
 Use this reference whenever a route creates, promotes, or consumes planning
 artifacts.
 
+The paths below are Intuitive defaults. Preserve an equivalent source-of-truth
+or status surface explicitly selected by target-repo guidance; do not create a
+duplicate merely to normalize names.
+
 ## Stage Source Of Truth
 
 Keep one authoritative artifact family per stage:
@@ -127,41 +131,37 @@ Do not delete or relocate `CONTEXT.md` merely because `docs/plans` or
 `.planning` artifacts exist. Remove only obsolete entries after checking
 references and preserving the active domain language somewhere equivalent.
 
-## STATUS.md Cadence
+## Project Status Integration
 
-For non-trivial or durable `intuitive-flow` runs, check `STATUS.md` at both
-ends.
+Use the target-state discovery, roles, capsule selection, and lifecycle rules
+in `../../_shared/references/durable-run.md`.
 
-At start, read `STATUS.md` before creating the first workflow artifact or
-launching downstream skills. Update it if the flow changes current focus, next
-action, active phase, known blocker, or verification expectation. Keep it short;
-do not duplicate the plan, GSD ledger, or execution notes.
+At start, discover whether the repo already names `STATUS.md` or an equivalent
+project-level status surface. Read it when it is relevant to the task. If none
+exists, record project status as `not present/not adopted`; do not create it or
+fail the run.
 
-At closeout, read `STATUS.md` again and update it when focus, status, next
-action, blocker, verification state, or handoff expectation changed. If no
-update is needed, say it was checked and left unchanged.
+Project status changes only for material project truth:
 
-For parallel standalone terminal work or durable resume state, use
-`docs/status/active/<task-slug>.md` instead of editing `STATUS.md` for routine
-progress. If `docs/status/active/` does not exist, create it. The active file is
-a compact capsule for current execution state; `STATUS.md` remains the
-project-level human status surface.
+- supported commands or install/runtime surfaces;
+- public contracts or proof boundaries;
+- project-wide focus, blocker, verification state, or next action.
 
-When maintaining active capsules, include a compact `Capsule status` field such
-as `ACTIVE`, `PARKED`, `BLOCKED`, `DONE`, `SUPERSEDED`, or `ABSORBED`. A capsule
-is not proof that every referenced plan is current; use the plan dashboard and
-the source plan's ledger to choose the active session.
+Routine task slices, worker results, task-local blockers, handoff narration,
+and ordinary completion evidence stay in the task capsule and canonical task
+state. They do not make a project-status delta material.
 
-Active capsules are hot-resume indexes, not journals. Keep them short enough
-for a low-context resume. Replace old "current slice" and "next action" text
-when the run moves; do not append another dated status section unless the old
-section is archived into a result note or removed. If repeated updates make the
-capsule long, summarize completed batches, keep only the latest blocker
-fingerprint and proof links, and delete superseded execution narration.
+At checkpoint and closeout, the task control plane classifies
+`project-status delta: none|material`. Only the explicit project integrator may
+apply a material delta to the existing project-status surface. A task control
+plane without that role reports the delta in its handoff and leaves shared
+status unchanged. If project-writer ownership is ambiguous, stop the status
+edit rather than merging concurrent interpretations.
 
-Do not create parallel resume files such as `.continue-here.md` or
-`.planning/HANDOFF.json`. `.planning/*` is GSD-owned state, and ad hoc resume
-notes should be folded into the active capsule or the canonical plan.
+Keep project status short and project-level. Do not duplicate the plan, GSD
+ledger, active capsule, or execution notes. If an explicit project integrator
+checks an existing status surface and no material delta exists, report that it
+was checked and left unchanged.
 
 ## Plan Freshness At Closeout
 

@@ -7,8 +7,8 @@
 - Parent plan: none
 - Child plans: none
 - Last updated: 2026-07-17
-- Current slice: align the installed skill contract before adding verification
-- Next action: update shared durable-run and Flow source-of-truth guidance
+- Current slice: portable source contract and installation checks complete
+- Next action: run real Codex and Claude target-repository product scenarios
 - Blocked on: none
 - Do not touch from this session: unrelated workflow, installer, or documentation cleanup
 
@@ -68,8 +68,10 @@ layout, package manager, validation commands, or status artifacts.
   terminal-lifecycle contract.
 - Targets without `STATUS.md`, `docs/status/active/`, `package.json`, Bun, or a
   local validator still run normally.
-- Same-task competing integrators stop status mutation; coordinated workers and
-  independent task capsules remain supported.
+- Coordinated launches assign one task control plane before workers start, and
+  visible ownership conflicts stop status mutation. Independent tasks keep
+  separate capsules. This cooperative contract does not claim lock-level
+  exclusion for simultaneous uncoordinated processes.
 - Project status changes only for material project truth and only through an
   explicit project integrator.
 - Canonical evidence and remaining work are reconciled before terminal active
@@ -89,6 +91,19 @@ layout, package manager, validation commands, or status artifacts.
   `git diff --check` in this source repository only.
 - Real installed-skill product runs through Codex and Claude against temporary
   target repositories; inspect the resulting artifacts and handoffs.
+
+## Shipped Evidence
+
+- Portable ownership, path selection, lifecycle, closeout, Refactor, Runner,
+  and conditional Init adoption contracts implemented in the repo-owned skill
+  sources.
+- Fresh-home skill sync now creates host skill roots before mirroring root and
+  `_shared` resources; it does not touch target repositories.
+- Focused portable-contract and sync tests: 13 passed.
+- `bun run check:skills`, `bun run check:shell`, and `bun run check` passed.
+- Read-only changed-code review found two P1 portability gaps; both were fixed:
+  Hot Resume now respects host/session persistence, and the plan now states the
+  cooperative ownership limit instead of claiming lock-level exclusion.
 
 ## Stop Gates
 

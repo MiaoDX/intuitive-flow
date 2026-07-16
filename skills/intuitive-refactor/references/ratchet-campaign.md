@@ -69,10 +69,12 @@ Use two state surfaces:
   verification inventory, clear queue, parked registry, rejected low-value
   items, final evidence, and the top `## Plan Ledger` when it lives under
   `docs/plans/`.
-- Active capsule: `docs/status/active/<gate-slug>.md`. If
-  `docs/status/active/` does not exist, create it. It owns compact resume
-  state: current slice, last proof, next candidate/proof, blocker fingerprint,
-  parked gates, resume hint, and `Capsule status`.
+- Active capsule: the task-owned surface selected by
+  `../../_shared/references/durable-run.md`, normally
+  `docs/status/active/<gate-slug>.md` when no repo-defined equivalent exists and
+  the repo permits workflow artifacts. It owns compact resume state: current
+  slice, last proof, next candidate/proof, blocker fingerprint, parked gates,
+  resume hint, owner, and `Capsule status`.
 
 If `docs/plans/README.md` exists or the campaign creates the first plan-backed
 dashboard, keep its row for this gate current. Do not update unrelated plan
@@ -363,7 +365,8 @@ Close a campaign when the accepted checklist is complete, the gate status is
 `DONE` or `PARK`, and required proof is green or honestly blocked. Report:
 
 - canonical gate path and status;
-- active capsule path and whether it is still needed;
+- active capsule path and disposition; terminal campaigns reconcile canonical
+  evidence first, then remove the capsule from the active namespace;
 - slices completed since the last checkpoint;
 - proof run and skipped gates;
 - parked items and why they were not implemented;

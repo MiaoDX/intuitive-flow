@@ -60,8 +60,10 @@ verification, and before parked-todo closeout. This is part of the flow, not an
 optional cleanup note. The goal is to leave the human-facing documentation
 surface aligned after a large code change.
 
-The sub-phase must compare the changed implementation surface to `README.md`,
-`ARCHITECTURE.md`, `STATUS.md`, and `docs/human/**`.
+The sub-phase must compare the changed implementation surface to the target
+repo's existing human-facing surface: `README.md`, `ARCHITECTURE.md`,
+`STATUS.md`, `docs/human/**`, or explicitly named equivalents when present.
+Do not create a missing human-doc tier merely to complete Flow closeout.
 
 Use `$intuitive-doc guard` for focused changed-file checks only when the change
 is small. Use `$intuitive-doc cleanup <scope>` for big refactors and whenever

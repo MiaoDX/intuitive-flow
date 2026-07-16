@@ -64,6 +64,12 @@ use this runner as the isolation backend for durable, artifact-sensitive, or
 long-running skill work. The main session should stay responsible for route
 decisions, source-of-truth edits, integration, and final verification.
 
+Runner workers return structured evidence and handoffs. They must not edit a
+project-status surface, task capsule, plan ledger, or final task state unless
+the supervising prompt explicitly promotes that worker to task control plane.
+The parent applies status changes under the ownership rules of the selected
+umbrella skill.
+
 Codex delegation policy lives in
 [references/codex-delegation.md](references/codex-delegation.md). Other skills
 should link to that reference instead of repeating host-specific Paseo,
@@ -74,9 +80,9 @@ Do not assume a separate git worktree or custom model selection for runner jobs.
 Organize work to be safe in the current worktree unless the user chose a
 different workspace.
 
-For long-running umbrella runs, the parent skill may create a repo-local
-progress file at `docs/status/active/<task-slug>.md`. Runner artifacts are
-usually enough.
+For long-running umbrella runs, the parent skill may maintain the repo-local
+task state selected by the umbrella skill's portable durable-run rules. Runner
+artifacts are usually enough for the worker itself.
 
 The script's `RESULT_STATUS` final response is the machine-readable status
 contract, but the main session must inspect compact artifacts and actual diff

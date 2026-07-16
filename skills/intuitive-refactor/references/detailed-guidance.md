@@ -113,9 +113,10 @@ command output are not reliable stop conditions across repeated runs. Persist
 the refactor gate in the repo when the user asks for execution, repeated runs,
 or "all big known issues."
 
-For durable or repeated execution, also maintain the shared active capsule from
-`../../_shared/references/durable-run.md` at `docs/status/active/<gate-slug>.md`;
-create `docs/status/active/` when it is missing. The gate remains canonical for
+For durable or repeated execution, also maintain the task-owned active capsule
+selected by `../../_shared/references/durable-run.md`, normally
+`docs/status/active/<gate-slug>.md` when no repo-defined equivalent exists and
+the repo permits workflow artifacts. The gate remains canonical for
 scope/status/checklist, while the capsule is only the compact resume surface.
 When the gate is under `docs/plans/`, include or refresh the top `## Plan
 Ledger` and update `docs/plans/README.md` if the gate's status, session scope,

@@ -21,18 +21,38 @@ tests, or editing files:
   paid services, human records, or another outside actor, record that blocker
   and stop instead of switching to unrelated cleanup.
 
+## Target-Repo State Discovery
+
+Repo-local guidance and existing source-of-truth conventions win over Intuitive
+defaults. Before creating or editing status artifacts, inspect `AGENTS.md`,
+`CLAUDE.md`, current human docs, existing plan/issue state, and nearby resume
+artifacts for an explicit project-status surface and task-owned state path.
+
+Treat project status as optional. An existing `STATUS.md` or explicitly named
+equivalent may be integrated under the ownership rules below. If none exists,
+do not create one merely because an Intuitive skill ran, and do not treat its
+absence as an error.
+
 ## Active Capsule
 
-For every non-trivial durable run or campaign, maintain a compact active
-capsule at:
+For every non-trivial durable run or campaign, maintain compact task-owned
+resume state. Select its location in this order:
+
+1. the repo-defined task/resume surface;
+2. an already adopted `docs/status/active/<task-slug>.md` convention;
+3. the default path below when repo artifacts may be created;
+4. available host/session persistence when repo policy forbids a task artifact.
+
+The default path is:
 
 ```text
 docs/status/active/<task-slug>.md
 ```
 
-If `docs/status/active/` does not exist, create it. Do not skip the capsule
-because the repo has no existing status directory. Use an equivalent
-task-owned file only when repo policy explicitly forbids `docs/status/active/`.
+Create the default directory only in case 3. In case 4, report explicitly that
+repository-level cross-session resume is unavailable; do not invent another
+committed path. In the rules below, `active capsule` means whichever task-owned
+surface this selection produced.
 
 The capsule is a resume surface, not the canonical plan. Keep the canonical
 plan, issue, or refactor gate as the source of truth for scope, accepted
@@ -63,9 +83,11 @@ maintenance bug; compact it before continuing the durable run.
 
 Include only compact state:
 
-- capsule status (`ACTIVE`, `PARKED`, `BLOCKED`, `DONE`, `SUPERSEDED`, or
-  `ABSORBED`);
+- capsule status (`ACTIVE`, `PARKED`, or `BLOCKED` while it remains in the
+  target repo's active namespace);
 - source plan/gate/issue path;
+- current task control plane identity or stable session label;
+- project-status writer identity when one is explicitly assigned;
 - latest user intent classification;
 - current slice or blocker;
 - blocker fingerprint, if any;
@@ -76,6 +98,15 @@ Include only compact state:
 - stop condition;
 - no-touch scope;
 - parked work.
+
+On `DONE`, `SUPERSEDED`, or `ABSORBED`, first reconcile final status, evidence,
+remaining work, and links in the canonical plan, issue, gate, closeout, or local
+equivalent. Then remove the capsule from the active namespace. Delete it by
+default; when the repo already requires retained audit/history artifacts, move
+it to that existing non-active surface instead of creating a new archive
+convention. Migrate legacy terminal capsules only when a run resumes, closes,
+or an explicit initializer refresh owns that migration; skill installation
+must not rewrite target repos.
 
 On resume, read the capsule first, then `git status --short`, recent commits,
 and at most one focused artifact summary. Reopen the full canonical plan only
@@ -96,9 +127,32 @@ that lower context cannot support.
 
 ## Control Plane And Workers
 
-The main session is the control plane for durable work. It owns the route,
-source-of-truth decisions, active capsule, worker steering, checkpoint review,
-and final complete/blocked call.
+Use three distinct roles:
+
+- **Project integrator:** the only writer of a shared project-status surface.
+  In a coordinated multi-task run this is the umbrella session. Without an
+  explicit integrator, task sessions return a project-status delta and leave
+  shared status unchanged.
+- **Task control plane:** the main session for one durable task. It is the sole
+  writer of that task's capsule and canonical task state and owns routing,
+  worker steering, checkpoint review, and the task's final complete/blocked
+  call.
+- **Worker:** owns one bounded implementation or proof target and returns a
+  structured handoff. It does not edit project status, the task capsule, plan
+  ledgers, or final task state unless explicitly promoted to task control plane.
+
+A standalone main session may hold both integrator roles only when user intent,
+repo guidance, or the coordinated run makes that authority explicit. If another
+writer is active or ownership is ambiguous, stop status mutation. To transfer
+task ownership, stop the prior control plane and record the new owner in the
+capsule before work resumes.
+
+This is cooperative ownership, not a filesystem lock. The user, umbrella
+session, or host orchestrator must assign one task control plane before
+coordinated workers start. When an existing capsule or host activity exposes a
+different owner, stop. Two fully independent processes that start
+simultaneously without shared coordination cannot be made mutually exclusive by
+this contract; do not claim otherwise.
 
 Use worker sessions for bounded execution phases when the work is long-running,
 parallel, stateful, or likely to consume large context. A worker owns one

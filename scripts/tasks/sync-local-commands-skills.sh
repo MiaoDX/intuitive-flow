@@ -75,18 +75,15 @@ run_sync_local_commands_skills() {
         fi
         local skills_registry
         skills_registry=$(select_npm_registry "Skills CLI" skills) || return 1
+        mkdir -p "$codex_dest" "$claude_dest"
         if [ -d "$root_skills_src/_shared" ]; then
-            if [ -d "$codex_dest" ]; then
-                task_notice "Repo-local commands & skills: syncing shared Codex skill resources"
-                if ! _replace_dir_contents "$root_skills_src/_shared" "$codex_dest/_shared"; then
-                    return 1
-                fi
+            task_notice "Repo-local commands & skills: syncing shared Codex skill resources"
+            if ! _replace_dir_contents "$root_skills_src/_shared" "$codex_dest/_shared"; then
+                return 1
             fi
-            if [ -d "$claude_dest" ]; then
-                task_notice "Repo-local commands & skills: syncing shared Claude Code skill resources"
-                if ! _replace_dir_contents "$root_skills_src/_shared" "$claude_dest/_shared"; then
-                    return 1
-                fi
+            task_notice "Repo-local commands & skills: syncing shared Claude Code skill resources"
+            if ! _replace_dir_contents "$root_skills_src/_shared" "$claude_dest/_shared"; then
+                return 1
             fi
         fi
         while IFS= read -r skill_name; do
@@ -100,14 +97,12 @@ run_sync_local_commands_skills() {
                 root_skills_claude_failed=$((root_skills_claude_failed + 1))
             fi
 
-            if [ -d "$codex_dest" ]; then
-                # Replace contents so deleted or renamed skill resources do not
-                # survive in the installed Codex mirror.
-                if ! _replace_dir_contents "$skill_dir" "$codex_dest/$skill_name"; then
-                    return 1
-                fi
-                root_skills_codex_synced=$((root_skills_codex_synced + 1))
+            # Replace contents so deleted or renamed skill resources do not
+            # survive in the installed Codex mirror.
+            if ! _replace_dir_contents "$skill_dir" "$codex_dest/$skill_name"; then
+                return 1
             fi
+            root_skills_codex_synced=$((root_skills_codex_synced + 1))
 
             echo "  synced skill mirrors: $skill_name"
         done < <(_manifest_tool root-skills "$default_skill_allowlist")

@@ -251,8 +251,6 @@ describe("local command and skill sync task", () => {
     try {
       const { npxLog, stubBin } = createCliStubs(home);
       prepareSyncTaskFixture(fixture);
-      mkdirSync(join(home, ".codex", "skills"), { recursive: true });
-      mkdirSync(join(home, ".claude", "skills"), { recursive: true });
       mkdirSync(join(fixture, "skills", "alpha"), { recursive: true });
       mkdirSync(join(fixture, "skills", "_shared", "references"), { recursive: true });
       writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill alpha\n");
@@ -283,8 +281,15 @@ describe("local command and skill sync task", () => {
       }
 
       expect(existsSync(join(home, ".codex", "skills", "alpha", "SKILL.md"))).toBe(true);
+      expect(existsSync(join(home, ".claude", "skills"))).toBe(true);
       expect(existsSync(join(home, ".codex", "skills", "_shared", "references", "durable-run.md"))).toBe(true);
       expect(existsSync(join(home, ".claude", "skills", "_shared", "references", "durable-run.md"))).toBe(true);
+      expect(readFileSync(join(home, ".codex", "skills", "_shared", "references", "durable-run.md"), "utf8")).toBe(
+        "# Shared\n",
+      );
+      expect(readFileSync(join(home, ".claude", "skills", "_shared", "references", "durable-run.md"), "utf8")).toBe(
+        "# Shared\n",
+      );
       expect(readFileSync(npxLog, "utf8")).toContain(join(fixture, "skills", "alpha"));
       expect(readFileSync(npxLog, "utf8")).not.toContain(join(fixture, "skills", "_shared"));
     } finally {

@@ -101,11 +101,13 @@ Root `AGENTS.md` and `CLAUDE.md` should answer:
 - How host control metadata affects stop/continue decisions when the repo uses
   Paseo or another orchestrator.
 
-When root guidance names planning surfaces, keep it stable: canonical plans are
-`docs/plans/<slug>.md`, compact resume state is
-`docs/status/active/<task-slug>.md`, and `.planning/*` is owned by GSD tools.
-Do not recommend `.continue-here.md`, manual `.planning/HANDOFF.json`, or
-one-off prompt folders as default repo surfaces.
+When durable Intuitive workflow adoption is in scope, preserve repo-defined
+planning/status surfaces. If none exist and the repo accepts these defaults,
+root guidance may name `docs/plans/<slug>.md` for canonical plans and
+`docs/status/active/<task-slug>.md` for compact task state; `.planning/*`
+remains owned by GSD tools. Do not add these pointers during unrelated init
+work, and do not recommend `.continue-here.md`, manual
+`.planning/HANDOFF.json`, or one-off prompt folders.
 
 Avoid copying broad official docs or all intuitive workflow rules into each
 repo. Distill only the local invariant and point to local tools/docs for detail.
@@ -123,9 +125,17 @@ docs fit that role:
 - `ARCHITECTURE.md` may be longer, but its first screen should summarize the
   code map and layer contract so agents can decide what to read next.
 - First-read policies should usually require only the already-injected
-  `AGENTS.md` plus `STATUS.md` or the active task/plan. Read `README.md`,
+  `AGENTS.md` plus an existing project-status surface or the active task/plan.
+  Read `README.md`,
   `ARCHITECTURE.md`, `CLAUDE.md`, and longer runbooks only when the task needs
   them.
+
+When a repo explicitly adopts durable Intuitive workflows, add only its local
+path and ownership invariant: one task control plane writes each task capsule,
+workers return evidence, and only an explicit project integrator writes shared
+project status. Keep the portable lifecycle detail in the installed skills.
+Do not create `STATUS.md`, a validator, or a status directory merely because
+Init ran.
 
 If the user asks for startup-context or first-read optimization, `$intuitive-init`
 may edit these root orientation docs in the same scoped pass. For broad human

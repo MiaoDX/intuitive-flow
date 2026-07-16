@@ -34,18 +34,20 @@ source files, or large JSON artifacts.
 
 Read only:
 
-1. the task capsule, if one exists
-   (`docs/status/active/<plan-slug>.md` for plan-backed runs);
+1. the task-owned state selected by the shared durable-run rules, if it exists,
+   or the available host/session resume summary when repo artifacts are
+   forbidden;
 2. `git status --short`;
 3. `git log -3 --oneline`;
 4. at most one focused machine-readable artifact summary.
 
 If no capsule exists and the run is a non-trivial plan-backed durable run,
-create `docs/status/active/<plan-slug>.md` from the current active slice before
-implementation. Do not create a same-directory `-process` plan; the source plan
-stays canonical and the capsule is only the resume surface. Continue in the
-same turn only when the experiment contract is trivial and the next command is
-low-risk.
+apply the shared task-state selector. Create a capsule from the current active
+slice only when it selects a repo artifact. When it selects host/session
+persistence, keep the compact resume summary there and report reduced
+cross-session durability; do not create a file. Do not create a same-directory
+`-process` plan; the source plan stays canonical. Continue in the same turn only
+when the experiment contract is trivial and the next command is low-risk.
 
 If that low-context check or stop gate says the next required evidence is
 blocked on a human action, local hardware, paid account, external service, or

@@ -99,17 +99,19 @@ already startup context when injected" and then route additional reads by task.
 Claude may import `AGENTS.md` from `CLAUDE.md`; avoid duplicating the same long
 repo rules in both files.
 
-Agent planning, generated evidence, history, and working notes belong in
-explicit agent/process surfaces such as GSD-owned `.planning/**`, flat
+Agent planning, generated evidence, history, and working notes belong in the
+repo's explicit agent/process surfaces. When the repo has no equivalent and
+adopts Intuitive defaults, use GSD-owned `.planning/**`, flat
 `docs/plans/<slug>.md` plan contracts, `docs/retrospectives/**`,
 `docs/status/active/**`, and `output/**` unless a human doc intentionally
 promotes a specific artifact into current truth.
 
-Keep the plan file surface fixed: one canonical plan file at
-`docs/plans/<slug>.md`, lifecycle in that plan's status fields, and compact
-current execution state in `docs/status/active/<task-slug>.md`. Do not introduce
-plan lifecycle subdirectories, `.continue-here.md`, or manual
-`.planning/HANDOFF.json` as recommended repo surfaces.
+Preserve an existing canonical plan and task-state convention. When adopting
+the defaults, use one `docs/plans/<slug>.md` plan with lifecycle in its status
+fields and compact current task state in
+`docs/status/active/<task-slug>.md`. Do not introduce plan lifecycle
+subdirectories, `.continue-here.md`, or manual `.planning/HANDOFF.json` as
+parallel surfaces.
 
 AI coding docs are agent/process-facing docs that help future coding agents but
 do not need to be human project truth. Prefer `docs/agents/**` for durable
@@ -137,16 +139,16 @@ The target shape is a small, layered startup path:
 
 1. `AGENTS.md` / `CLAUDE.md`: critical hazards, permission boundaries, command
    pointers, and when to read more.
-2. `STATUS.md`: newest current state, next action, blockers, and links to
-   active source-of-truth docs.
+2. Existing project-status surface, when present: newest current state, next
+   action, blockers, and links to active source-of-truth docs.
 3. `README.md`: project orientation and public commands.
 4. `ARCHITECTURE.md`: layer map, current contracts, and extension points.
 5. `docs/human/**`, `docs/agents/**`, plans, ADRs, and runbooks: read on demand.
 
 Rules:
 
-- Start with `STATUS.md` for current focus unless the task is pure setup,
-  architecture, or documentation.
+- Start with the existing project-status surface for current focus when the repo
+  has one and the task is not pure setup, architecture, or documentation.
 - Put the newest and most actionable status at the top. Move old shipped detail
   to plans, ADRs, retrospectives, or `docs/human/**` and leave links.
 - If `STATUS.md` needs a recent-changes section, keep it short and
@@ -212,8 +214,9 @@ Root `AGENTS.md` and `CLAUDE.md` should contain only:
 - critical local hazards and permissions
 - canonical install/test/verify commands or the pointer to them
 - source-of-truth boundaries
-- stable planning-surface pointers (`docs/plans/<slug>.md`,
-  `docs/status/active/<task-slug>.md`, and GSD-owned `.planning/*`)
+- stable repo-defined planning-surface pointers, or adopted Intuitive defaults
+  (`docs/plans/<slug>.md`, `docs/status/active/<task-slug>.md`, and GSD-owned
+  `.planning/*`)
 - short skill routing
 - host/orchestrator control-message hazards that can change stop/continue
   behavior, especially Paseo XML-like envelopes in Codex sessions
