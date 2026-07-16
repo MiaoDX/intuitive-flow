@@ -116,6 +116,15 @@ The planning owners are intentionally separate:
 - `$intuitive-flow` owns implementation, integration, proof, docs alignment, and
   closeout after a plan or preflight contract is accepted.
 
+Durable execution state is portable across target repos. Installed skills
+discover and preserve repo-defined project-status and task-resume surfaces
+before using Intuitive defaults. One task control plane writes each task's
+capsule and canonical state; bounded workers return evidence; only an explicit
+project integrator writes a shared project-status surface. A missing project
+status file is not created by Flow. Terminal task state leaves the active
+namespace after canonical evidence is reconciled, using an existing local
+history policy only when the target repo already requires one.
+
 The primary user-facing skills are `$intuitive-flow`, `$intuitive-refactor`,
 `$intuitive-reduce-entropy`, `$agent-planning-loop`, and
 `$intuitive-squash`. Specialist skills such as `$intuitive-preflight`,
@@ -220,7 +229,8 @@ root skill. Root skills may link to those files with relative `_shared`
 references when behavior is intentionally shared across skills. During local
 sync, the updater mirrors `skills/_shared/` beside installed root skill
 directories so sibling references such as `../_shared/references/*.md` remain
-valid.
+valid. The sync creates missing host skill roots on a fresh installation, but
+skill installation never migrates or rewrites project files in target repos.
 
 The scout-based planning skill is installed as `agent-planning-loop`. Retired
 repo-owned skill names stay in the prune ledger so updater-owned stale installs

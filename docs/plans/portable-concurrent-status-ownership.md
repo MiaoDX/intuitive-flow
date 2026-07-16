@@ -2,13 +2,13 @@
 
 ## Plan Ledger
 
-- Plan status: ACTIVE
+- Plan status: DONE
 - Session scope: portable-concurrent-status-ownership
 - Parent plan: none
 - Child plans: none
 - Last updated: 2026-07-17
-- Current slice: portable source contract and installation checks complete
-- Next action: run real Codex and Claude target-repository product scenarios
+- Current slice: complete
+- Next action: none
 - Blocked on: none
 - Do not touch from this session: unrelated workflow, installer, or documentation cleanup
 
@@ -94,16 +94,25 @@ layout, package manager, validation commands, or status artifacts.
 
 ## Shipped Evidence
 
+- Contract and installation changes landed in `fe57427`; the accepted plan is
+  `4661c69`. Claude stream-json execution discovered during product proof was
+  repaired in `d44ccdd` by adding the required `--verbose` flag.
 - Portable ownership, path selection, lifecycle, closeout, Refactor, Runner,
-  and conditional Init adoption contracts implemented in the repo-owned skill
-  sources.
-- Fresh-home skill sync now creates host skill roots before mirroring root and
-  `_shared` resources; it does not touch target repositories.
-- Focused portable-contract and sync tests: 13 passed.
-- `bun run check:skills`, `bun run check:shell`, and `bun run check` passed.
-- Read-only changed-code review found two P1 portability gaps; both were fixed:
-  Hot Resume now respects host/session persistence, and the plan now states the
-  cooperative ownership limit instead of claiming lock-level exclusion.
+  and conditional Init adoption contracts are aligned. Fresh-home sync creates
+  host skill roots and mirrors `_shared` without touching target repositories.
+- Read-only changed-code review found and closed the stale Hot Resume path,
+  lock-level overclaim, and dogfood role-name drift.
+- Installed-skill product proofs passed for: Codex with no project-status
+  surface; Claude with a repo-defined capsule path and material project-status
+  handoff; an artifact-forbidden repo using host/session persistence with
+  reduced durability disclosed; and a visible competing capsule owner causing
+  a cooperative zero-mutation stop.
+- Direct isolated CLI attempts were not used as product proof: the Codex relay
+  returned an upstream 503/stream disconnect and the Claude CLI lacked reusable
+  login state. Authenticated Paseo runs supplied the Codex and Claude product
+  evidence instead.
+- Final focused contract/sync/runner verification: 25 passed. Final
+  `bun run verify`: 190 passed, 0 failed. `git diff --check` passed.
 
 ## Stop Gates
 

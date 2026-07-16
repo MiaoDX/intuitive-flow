@@ -72,8 +72,8 @@ campaign-state commits only record that saturation evidence.
 ## Campaign Log
 
 - 2026-06-23: Campaign gate created from repo entropy saturation scan and
-  architecture cleanup prompt. Active capsule:
-  `docs/status/active/refactor-architecture-cleanup-campaign.md`.
+  architecture cleanup prompt. Task-owned resume state was maintained during
+  execution; this plan now preserves the final canonical status and evidence.
 - 2026-06-23: Split live install allowlist kind ownership from prune-ledger kind
   ownership in `scripts/lib/default-skill-allowlist.ts`; focused allowlist
   tests, `bun run check`, and `git diff --check` passed.

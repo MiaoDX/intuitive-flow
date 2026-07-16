@@ -1,6 +1,6 @@
 # Status
 
-Last reviewed: 2026-06-20
+Last reviewed: 2026-07-17
 
 ## Current State
 
@@ -13,6 +13,8 @@ currently provides:
 - reusable installed skills under `skills/`
 - compact runtime skill entrypoints backed by on-demand `references/`,
   `templates/`, and `scripts/`
+- portable durable-run ownership that preserves target-repo status conventions,
+  isolates task state, and keeps shared project status single-writer
 - a single default skill install allowlist at
   `scripts/default-skill-allowlist.txt`
 - a separate prune-only ledger for retired local artifacts at
@@ -91,6 +93,9 @@ The current maintenance focus is keeping the repo dogfoodable:
 - keep cross-skill runtime rules in `skills/_shared/` when Flow and Refactor
   intentionally share behavior; `_shared` is a bundled resource surface, not an
   allowlisted root skill
+- keep durable task state target-local: one task control plane owns each
+  capsule, workers return evidence, and only an explicit project integrator
+  writes an existing shared project-status surface
 - keep `SKILL.md` entrypoints compact and watch size drift through the
   non-failing `check:skills` size budget report; `check:skills` also rejects
   skill-style frontmatter in non-entrypoint Markdown so references and templates
@@ -104,12 +109,10 @@ The current maintenance focus is keeping the repo dogfoodable:
   under `scripts/dev/` or `scripts/support/`
 - verify changes with `bun run verify`
 
-Active execution state lives in `docs/status/active/**` only while a durable
-campaign is running. The architecture cleanup campaign is now closed; its final
-capsule remains at
-`docs/status/active/refactor-architecture-cleanup-campaign.md` for resume
-context. Historical `.planning/**` files remain locked summaries, not the
-active roadmap.
+Active execution state lives only in the task-owned surface selected for a
+running durable task. Completed capsules leave the active namespace after
+canonical evidence is reconciled. Historical `.planning/**` files remain
+locked summaries, not the active roadmap.
 
 ## Known Boundaries
 
@@ -129,6 +132,8 @@ active roadmap.
   prunes managed wrappers back to the default allowlist.
 - `skills/` is the canonical repo-owned skill source; `scripts/update.sh`
   mirrors allowlisted repo-owned skills into installed host surfaces.
+- Skill sync creates missing host skill roots and mirrors `_shared` resources,
+  but installation does not create or migrate status artifacts in target repos.
 - `.githooks/pre-commit` is opt-in per checkout through `bun run setup:hooks`
   because Git does not version local hook configuration.
 
