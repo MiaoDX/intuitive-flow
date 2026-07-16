@@ -42,6 +42,25 @@ ${body}
 }
 
 describe("skill-runner script", () => {
+  test("Claude prompt mode enables verbose stream-json output", () => {
+    const output = runPython(`
+import argparse
+
+args = argparse.Namespace(model=None, dangerous=False)
+print(json.dumps({"command": module.claude_prompt_command(args)}))
+`);
+
+    expect(output.command).toEqual([
+      "claude",
+      "-p",
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--permission-mode",
+      "auto",
+    ]);
+  });
+
   test("rewritten prompt includes an acceptance contract and context package", () => {
     const output = runPython(`
 from pathlib import Path

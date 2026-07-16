@@ -515,6 +515,7 @@ def claude_prompt_command(args: argparse.Namespace) -> list[str]:
         "-p",
         "--output-format",
         "stream-json",
+        "--verbose",
         "--permission-mode",
         "auto",
     ]
