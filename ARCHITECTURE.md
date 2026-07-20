@@ -86,16 +86,14 @@ The skill layer has two execution boundaries:
   execution. `$intuitive-flow` is the final executor, not a hidden planning
   substitute.
 
-The recommended complex planning-to-execution workflow is staged:
+The recommended complex planning-to-execution workflow is risk-routed:
 
 ```text
 idea or draft plan
-  -> reduce plan entropy
-  -> plan
-  -> repeat plan entropy until material blind spots are saturated
-  -> optional gstack-autoplan unknown-unknown scout
-  -> grill-batch
   -> preflight
+     -> plan entropy when assumptions or proof are weak
+     -> planning-loop/autoplan when independent scouts add value
+     -> grill-batch when a human/domain decision remains
   -> intuitive-flow execution
 ```
 
@@ -125,17 +123,16 @@ status file is not created by Flow. Terminal task state leaves the active
 namespace after canonical evidence is reconciled, using an existing local
 history policy only when the target repo already requires one.
 
-The primary user-facing skills are `$intuitive-flow`, `$intuitive-refactor`,
-`$intuitive-reduce-entropy`, `$agent-planning-loop`, and
-`$intuitive-squash`. Specialist skills such as `$intuitive-preflight`,
-`$intuitive-doc`, `$intuitive-init`, `$intuitive-tests`,
-`$intuitive-port-worktree`, `$multica-goal-tracker`, `$plan-bakeoff`, and
-`$skill-runner` remain available for direct or routed use, but are not the
-default choice a user must make up front. Changed-code reuse/quality/efficiency
-review is a mode of
+The default public choices are `$intuitive-flow`, `$intuitive-refactor`, and
+`$intuitive-reduce-entropy`. `$agent-planning-loop`,
+`$grill-with-docs-batch`, `$intuitive-preflight`, `$intuitive-doc`,
+`$intuitive-init`, `$intuitive-tests`, and `$skill-runner` remain installed as
+routed specialists. `$intuitive-squash`, `$intuitive-port-worktree`,
+`$multica-goal-tracker`, and `$plan-bakeoff` are registered on-demand
+utilities. Changed-code reuse/quality/efficiency review is a mode of
 `$intuitive-refactor`, not a separate default skill. `scripts/default-skill-allowlist.txt`
-is the complete default install list across repo-owned, external, GStack, and
-GSD skills; its comments mark the role tier for each default-visible group.
+is the complete managed portfolio across repo-owned, external, GStack, and GSD
+skills; parsed tier and host fields determine the installed surface.
 `docs/human/skill-self-improvement-audit.md` records the human-facing role of
 the complete default surface, including external and managed wrappers.
 `$intuitive-preflight` owns approval-ready preflight contracts before a plan or
@@ -144,8 +141,8 @@ verification, route, worker strategy, and main-session `/goal` wording.
 `$intuitive-reduce-entropy` must choose repo entropy mode or plan entropy mode
 before auditing. Repo entropy mode owns maintenance candidate discovery; plan
 entropy mode owns idea/plan blind spots before grill-batch and preflight.
-`gstack-autoplan` is a planning-stage unknown-unknown scout for non-trivial
-plan-backed work, not a hidden Flow execution precheck.
+`gstack-autoplan` is a risk-triggered planning-stage unknown-unknown scout, not
+a mandatory Flow execution precheck.
 Open-ended architecture discovery runs the `$zoom-out` plus
 `$plan-eng-review` / `$gstack-plan-eng-review` sequence first, may use the
 allowlisted external `improve-codebase-architecture` skill for extra
@@ -185,13 +182,13 @@ change the repo source tree solely because a host discovers skills under
 
 The install surface is controlled by `scripts/default-skill-allowlist.txt`:
 
-- `root-skill` entries are repo-owned skills that should be installed or synced.
-- `external-skill` entries name the external source label, GitHub repo, and
-  exact skill to install.
-- `gstack-skill` entries name the managed GStack wrappers that remain visible
-  after upstream setup.
-- `gsd-skill` entries name the managed GSD wrappers that remain visible after
-  upstream setup.
+- Every entry declares `default`, `routed`, or `on-demand`. Default and routed
+  entries install normally. On-demand entries install only when named in
+  `INTUITIVE_FLOW_ON_DEMAND_SKILLS` for that update run.
+- `root-skill` entries register repo-owned skills.
+- `external-skill` entries also declare `all`, `claude-code`, or `codex`, then
+  name the source label, GitHub repo, and exact skill.
+- `gstack-skill` and `gsd-skill` entries register managed wrappers.
 - The allowlist check fails if a root skill exists but is not listed, or if the
   allowlist lists a missing root skill. It also fails if prune-only `legacy-*`
   entries are added back to this install list.
@@ -206,19 +203,16 @@ Retired local artifacts are controlled by
 - The skill checker rejects prune-ledger entries that collide with current
   root, external, GStack, or GSD install entries.
 
-The allowlist also carries lightweight role-tier comments. Those comments are
-human-facing governance, not parser input: primary choices, routed specialists,
-direct utilities, managed GStack tooling, and GSD status/resume helpers should
-stay visibly distinct even though the parser still reads the simple entry
-kinds above.
+Tier and host fields are parser-enforced governance. Comments explain the
+portfolio grouping but do not change install behavior.
 
 During `scripts/update.sh`, the local sync writes
 `~/.intuitive-flow/owned-root-skills.json` after a successful root-skill sync.
 On later runs, it removes only install artifacts that were previously recorded
-as Intuitive-owned but are no longer listed as `root-skill`: skill directories
-under the managed skill install roots. If the ownership state does not exist
-yet, the updater seeds it after sync and does not infer ownership from matching
-names. User-installed skills outside that owned state are preserved.
+as Intuitive-owned but are no longer selected for installation, including
+on-demand skills omitted from the next run. If the ownership state does not
+exist yet, the updater seeds it after sync and does not infer ownership from
+matching names. User-installed skills outside that owned state are preserved.
 
 For each allowlisted repo-owned root skill, the Codex install directory is a
 fresh mirror of `skills/<name>/` on every sync. The updater replaces the
@@ -242,12 +236,9 @@ default. `bun run audit:skill-upstreams` is the read-only discovery path for
 new upstream candidates: it reports skills outside the allowlist but does not
 install them or edit the allowlist.
 
-Trial community skills use the same explicit `external-skill` entries and are
-grouped by allowlist comments. Trial means default-installed for dogfooding, but
-not wired into `$intuitive-flow`, primary choices, or routing docs as a preferred
-path. After real use, promote the skill by updating the relevant route/docs,
-keep it as a direct utility, or remove the entries and let external-source state
-prune the managed install.
+Trial community skills use the same explicit `external-skill` entries. Proven
+review/audit routes may be routed; help, debt, and broad-mode wrappers remain
+on-demand until real use justifies promotion.
 
 External source cleanup uses the same ownership rule. After each successful
 external install, the updater writes
@@ -256,8 +247,8 @@ that were previously recorded for that label but are no longer desired, across
 the Claude Code, Codex, and shared agent skill install roots.
 
 GSD setup remains upstream-owned, but exposed GSD wrappers are pruned back to
-the `gsd-skill` entries in the default allowlist after each installer run. The
-default visible GSD surface is limited to status and continuation helpers. Full
+the currently selected `gsd-skill` entries after each installer run. GSD
+status and continuation helpers are registered on-demand. Full
 phase machinery such as project creation, import, planning, execution, and
 verification remains routed by `$intuitive-flow` or explicit GSD use instead of
 being default-visible. The wrapper still passes `--profile=standard` to the
@@ -353,7 +344,7 @@ checking, and runs Bun tests. GitHub Actions mirrors the same proof in
 references, required handoff markers, deprecated `skills-src/` files, or
 CI/local Bun version drift fail CI.
 
-At the moment, the test suite covers skill validation, default install allowlist
+At the moment, the test suite covers skill validation, managed portfolio
 and prune-ledger parsing, managed install-state pruning, hook helpers, workflow
 gates, skill-runner behavior, upstream skill audit output, and installer wrapper
 calls that enforce managed state.

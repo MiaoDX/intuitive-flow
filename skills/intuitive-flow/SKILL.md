@@ -99,10 +99,10 @@ boundary. Do not preload every reference.
   plan/conversation lacks context package, scope, non-goals, definition of done,
   verification, route, worker strategy, and root-goal wording, route to
   `$intuitive-preflight` instead of drafting a second Flow contract.
-- Plan-backed implementation must have an approved preflight contract plus an
-  explicit unknown-unknown scout result or skip reason in the canonical plan,
-  unless the task is tiny direct work that is not using a plan as source of
-  truth.
+- During planning or preflight, run an unknown-unknown scout only when the
+  change is broad, risky, cross-cutting, or has material DX/test/sequencing
+  uncertainty. A complete approved contract is sufficient for ordinary
+  plan-backed work; do not require ceremonial scout or skip metadata.
 - When the target repo has no explicit equivalent, canonical plan files use the
   flat `docs/plans/<slug>.md` default and compact task state uses the path
   selected by `../_shared/references/durable-run.md`, normally
@@ -139,10 +139,8 @@ Stop gate:
 Stop/continue point:
 ```
 
-For tiny direct work, one sentence is enough. Name plausible but skipped stages
-such as `$agent-planning-loop`, `grill-with-docs`, unknown-unknown scouting
-with `gstack-autoplan`, `to-issues`, GSD handoff, changed-code cleanup, or
-verification.
+For tiny direct work, one sentence is enough. Name a bypassed stage only when
+the route choice is material to scope, risk, or proof.
 
 ## Execution Surface
 

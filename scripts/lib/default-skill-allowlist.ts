@@ -19,11 +19,29 @@ export type ExternalSkillSource = {
   skills: string[];
 };
 
+export type SkillTier = "default" | "routed" | "on-demand";
+export type SkillHost = "all" | "claude-code" | "codex";
+
+export type SkillPolicy = {
+  skill: string;
+  tier: SkillTier;
+};
+
+export type ExternalSkillPolicy = SkillPolicy & {
+  label: string;
+  repo: string;
+  host: SkillHost;
+};
+
 export type DefaultSkillAllowlist = {
   rootSkills: string[];
+  rootSkillPolicies: SkillPolicy[];
   externalSources: ExternalSkillSource[];
+  externalSkillPolicies: ExternalSkillPolicy[];
   gstackSkills: string[];
+  gstackSkillPolicies: SkillPolicy[];
   gsdSkills: string[];
+  gsdSkillPolicies: SkillPolicy[];
 };
 
 type InstallAllowlistKind =
@@ -41,14 +59,20 @@ const labelPattern = /^[a-z][a-z0-9-]*$/;
 const repoSlugPattern = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const githubUrlPattern = /^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+(?:\.git)?$/;
 const commandNamePattern = /^[A-Za-z0-9_.-]+\.md$/;
+const skillTiers = ["default", "routed", "on-demand"] as const;
+const skillHosts = ["all", "claude-code", "codex"] as const;
 
 export const defaultSkillAllowlistPath = (cwd = process.cwd()) => join(cwd, "scripts", "default-skill-allowlist.txt");
 
 const emptyAllowlist = (): DefaultSkillAllowlist => ({
   rootSkills: [],
+  rootSkillPolicies: [],
   externalSources: [],
+  externalSkillPolicies: [],
   gstackSkills: [],
+  gstackSkillPolicies: [],
   gsdSkills: [],
+  gsdSkillPolicies: [],
 });
 
 const emptyPruneLedger = (): PruneLedger => ({
@@ -88,6 +112,20 @@ const pushUnique = (values: string[], value: string) => {
 
 const sourceKey = (label: string, repo: string) => `${label}\0${repo}`;
 
+const assertSkillTier = (value: string, lineNumber: number): SkillTier => {
+  if (!skillTiers.includes(value as SkillTier)) {
+    throw new Error(`invalid skill tier on line ${lineNumber}: ${value}`);
+  }
+  return value as SkillTier;
+};
+
+const assertSkillHost = (value: string, lineNumber: number): SkillHost => {
+  if (!skillHosts.includes(value as SkillHost)) {
+    throw new Error(`invalid skill host on line ${lineNumber}: ${value}`);
+  }
+  return value as SkillHost;
+};
+
 export const normalizeSource = (source: string) => source
   .replace(/^https:\/\/github\.com\//, "")
   .replace(/\.git$/, "");
@@ -125,20 +163,24 @@ export const parseDefaultSkillAllowlistText = (text: string): DefaultSkillAllowl
     seen.add(dedupeKey);
 
     if (kind === "root-skill") {
-      if (parts.length !== 2) {
+      if (parts.length !== 3) {
         throw new Error(`invalid root-skill line ${lineNumber}: ${rawLine}`);
       }
-      const [, skillName] = parts;
+      const [, tierValue, skillName] = parts;
+      const tier = assertSkillTier(tierValue, lineNumber);
       assertSafeSkillName(skillName, lineNumber);
       pushUnique(allowlist.rootSkills, skillName);
+      allowlist.rootSkillPolicies.push({ skill: skillName, tier });
       return;
     }
 
     if (kind === "external-skill") {
-      if (parts.length !== 4) {
+      if (parts.length !== 6) {
         throw new Error(`invalid external-skill line ${lineNumber}: ${rawLine}`);
       }
-      const [, label, repo, skillName] = parts;
+      const [, tierValue, hostValue, label, repo, skillName] = parts;
+      const tier = assertSkillTier(tierValue, lineNumber);
+      const host = assertSkillHost(hostValue, lineNumber);
       assertSafeLabel(label, lineNumber);
       assertSafeRepo(repo, lineNumber);
       assertSafeSkillName(skillName, lineNumber);
@@ -153,26 +195,31 @@ export const parseDefaultSkillAllowlistText = (text: string): DefaultSkillAllowl
       const source = externalSourcesByKey.get(key) ?? { label, repo, skills: [] };
       pushUnique(source.skills, skillName);
       externalSourcesByKey.set(key, source);
+      allowlist.externalSkillPolicies.push({ label, repo, skill: skillName, tier, host });
       return;
     }
 
     if (kind === "gstack-skill") {
-      if (parts.length !== 2) {
+      if (parts.length !== 3) {
         throw new Error(`invalid gstack-skill line ${lineNumber}: ${rawLine}`);
       }
-      const [, skillName] = parts;
+      const [, tierValue, skillName] = parts;
+      const tier = assertSkillTier(tierValue, lineNumber);
       assertSafeSkillName(skillName, lineNumber);
       pushUnique(allowlist.gstackSkills, skillName);
+      allowlist.gstackSkillPolicies.push({ skill: skillName, tier });
       return;
     }
 
     if (kind === "gsd-skill") {
-      if (parts.length !== 2) {
+      if (parts.length !== 3) {
         throw new Error(`invalid gsd-skill line ${lineNumber}: ${rawLine}`);
       }
-      const [, skillName] = parts;
+      const [, tierValue, skillName] = parts;
+      const tier = assertSkillTier(tierValue, lineNumber);
       assertSafeSkillName(skillName, lineNumber);
       pushUnique(allowlist.gsdSkills, skillName);
+      allowlist.gsdSkillPolicies.push({ skill: skillName, tier });
       return;
     }
 
@@ -185,15 +232,103 @@ export const parseDefaultSkillAllowlistText = (text: string): DefaultSkillAllowl
     }
   });
 
+  const portfolioOwners = new Map<string, string>();
+  const registerOwner = (skill: string, owner: string) => {
+    const previous = portfolioOwners.get(skill);
+    if (previous && previous !== owner) {
+      throw new Error(`managed skill name collision: ${skill} (${previous}, ${owner})`);
+    }
+    portfolioOwners.set(skill, owner);
+  };
+  for (const policy of allowlist.rootSkillPolicies) registerOwner(policy.skill, `root:${policy.tier}`);
+  for (const policy of allowlist.externalSkillPolicies) {
+    registerOwner(policy.skill, `external:${policy.label}:${policy.tier}:${policy.host}`);
+  }
+  for (const policy of allowlist.gstackSkillPolicies) registerOwner(policy.skill, `gstack:${policy.tier}`);
+  for (const policy of allowlist.gsdSkillPolicies) registerOwner(policy.skill, `gsd:${policy.tier}`);
+
   allowlist.externalSources = [...externalSourcesByKey.values()].map((source) => ({
     ...source,
     skills: source.skills.sort(),
   })).sort((left, right) => left.label.localeCompare(right.label));
   allowlist.rootSkills.sort();
+  allowlist.rootSkillPolicies.sort((left, right) => left.skill.localeCompare(right.skill));
+  allowlist.externalSkillPolicies.sort((left, right) => left.skill.localeCompare(right.skill));
   allowlist.gstackSkills.sort();
+  allowlist.gstackSkillPolicies.sort((left, right) => left.skill.localeCompare(right.skill));
   allowlist.gsdSkills.sort();
+  allowlist.gsdSkillPolicies.sort((left, right) => left.skill.localeCompare(right.skill));
 
   return allowlist;
+};
+
+const selectedOnDemandSkills = (allowlist: DefaultSkillAllowlist): Set<string> => {
+  const selected = new Set((process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean));
+  const known = new Set([
+    ...allowlist.rootSkills,
+    ...allowlist.externalSources.flatMap((source) => source.skills),
+    ...allowlist.gstackSkills,
+    ...allowlist.gsdSkills,
+  ]);
+  for (const skill of selected) {
+    if (!known.has(skill)) {
+      throw new Error(`unknown on-demand skill: ${skill}`);
+    }
+  }
+  return selected;
+};
+
+const policyIsInstalled = (policy: SkillPolicy, selected: Set<string>) => (
+  policy.tier !== "on-demand" || selected.has(policy.skill)
+);
+
+export const rootSkillsForInstall = (allowlist: DefaultSkillAllowlist): string[] => (
+  allowlist.rootSkillPolicies.filter((policy) => policyIsInstalled(policy, selectedOnDemandSkills(allowlist)))
+    .map((policy) => policy.skill)
+);
+
+export const gstackSkillsForInstall = (allowlist: DefaultSkillAllowlist): string[] => (
+  allowlist.gstackSkillPolicies.filter((policy) => policyIsInstalled(policy, selectedOnDemandSkills(allowlist)))
+    .map((policy) => policy.skill)
+);
+
+export const gsdSkillsForInstall = (allowlist: DefaultSkillAllowlist): string[] => (
+  allowlist.gsdSkillPolicies.filter((policy) => policyIsInstalled(policy, selectedOnDemandSkills(allowlist)))
+    .map((policy) => policy.skill)
+);
+
+export const externalSourcesForInstall = (
+  allowlist: DefaultSkillAllowlist,
+  host?: SkillHost,
+): ExternalSkillSource[] => {
+  const selected = selectedOnDemandSkills(allowlist);
+  const sources = new Map<string, ExternalSkillSource>();
+  for (const policy of allowlist.externalSkillPolicies) {
+    if (!policyIsInstalled(policy, selected) || (host && policy.host !== "all" && policy.host !== host)) {
+      continue;
+    }
+    const key = sourceKey(policy.label, policy.repo);
+    const source = sources.get(key) ?? { label: policy.label, repo: policy.repo, skills: [] };
+    pushUnique(source.skills, policy.skill);
+    sources.set(key, source);
+  }
+  return [...sources.values()].map((source) => ({ ...source, skills: source.skills.sort() }))
+    .sort((left, right) => left.label.localeCompare(right.label));
+};
+
+export const hostScopedExternalSkillsForInstall = (
+  allowlist: DefaultSkillAllowlist,
+  label: string,
+  host: SkillHost,
+): string[] => {
+  const selected = selectedOnDemandSkills(allowlist);
+  return allowlist.externalSkillPolicies
+    .filter((policy) => policy.label === label && policy.host === host && policyIsInstalled(policy, selected))
+    .map((policy) => policy.skill)
+    .sort();
 };
 
 export const parsePruneLedgerText = (text: string): PruneLedger => {
@@ -257,8 +392,13 @@ export const readPruneLedger = (path: string): PruneLedger => {
   return parsePruneLedgerText(readFileSync(path, "utf8"));
 };
 
-export const externalSkillSourceByLabel = (allowlist: DefaultSkillAllowlist, label: string): ExternalSkillSource => {
-  const source = allowlist.externalSources.find((candidate) => candidate.label === label);
+export const externalSkillSourceByLabel = (
+  allowlist: DefaultSkillAllowlist,
+  label: string,
+  host?: SkillHost,
+): ExternalSkillSource => {
+  const sources = host ? externalSourcesForInstall(allowlist, host) : allowlist.externalSources;
+  const source = sources.find((candidate) => candidate.label === label);
   if (!source) {
     throw new Error(`unknown external skill source: ${label}`);
   }
@@ -288,11 +428,11 @@ export const checkRootSkills = (allowlist: DefaultSkillAllowlist, rootSkillsDir:
 };
 
 const usage = () => {
-  console.error("Usage: default-skill-allowlist.ts <validate|root-skills|check-root-skills|external-labels|external-repo|external-skill-args|gstack-skills|gsd-skills> <allowlist> [arg]");
+  console.error("Usage: default-skill-allowlist.ts <validate|root-skills|check-root-skills|external-labels|external-repo|external-skill-args|external-host-scoped-skills|gstack-skills|gsd-skills> <allowlist> [label|host] [host]");
 };
 
 const main = () => {
-  const [command, allowlistPath, label] = process.argv.slice(2);
+  const [command, allowlistPath, label, hostValue] = process.argv.slice(2);
   if (!command || !allowlistPath) {
     usage();
     process.exit(2);
@@ -308,7 +448,7 @@ const main = () => {
     const allowlist = readDefaultSkillAllowlist(allowlistPath);
 
     if (command === "root-skills") {
-      console.log(allowlist.rootSkills.join("\n"));
+      console.log(rootSkillsForInstall(allowlist).join("\n"));
       return;
     }
 
@@ -325,17 +465,18 @@ const main = () => {
     }
 
     if (command === "external-labels") {
-      console.log(allowlist.externalSources.map((source) => source.label).join("\n"));
+      const host = label ? assertSkillHost(label, 0) : undefined;
+      console.log(externalSourcesForInstall(allowlist, host).map((source) => source.label).join("\n"));
       return;
     }
 
     if (command === "gstack-skills") {
-      console.log(allowlist.gstackSkills.join("\n"));
+      console.log(gstackSkillsForInstall(allowlist).join("\n"));
       return;
     }
 
     if (command === "gsd-skills") {
-      console.log(allowlist.gsdSkills.join("\n"));
+      console.log(gsdSkillsForInstall(allowlist).join("\n"));
       return;
     }
 
@@ -344,7 +485,16 @@ const main = () => {
       process.exit(2);
     }
 
-    const source = externalSkillSourceByLabel(allowlist, label);
+    const host = hostValue ? assertSkillHost(hostValue, 0) : undefined;
+    if (command === "external-host-scoped-skills") {
+      if (!host) {
+        usage();
+        process.exit(2);
+      }
+      console.log(hostScopedExternalSkillsForInstall(allowlist, label, host).join("\n"));
+      return;
+    }
+    const source = externalSkillSourceByLabel(allowlist, label, host);
 
     if (command === "external-repo") {
       console.log(source.repo);

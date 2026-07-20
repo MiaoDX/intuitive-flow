@@ -131,17 +131,16 @@ record parent/child relationships, name the no-touch boundary, and update
 `docs/plans/README.md` when the plan set or next action changes. If multiple
 plans exist, do not update unrelated plan ledgers while shaping this one.
 
-## Unknown-Unknown Scout Before Preflight
+## Risk-Triggered Unknown-Unknown Scout
 
-For non-trivial plan-backed work, run or explicitly skip an unknown-unknown
-scout during planning, before grill-batch and `$intuitive-preflight`.
-`gstack-autoplan` is one scout option. It is not an implementation tool and
-must not become a hidden execution gate.
+Use an unknown-unknown scout during planning only when the plan is broad,
+risky, cross-cutting, or likely to hide material DX, test, sequencing, or
+execution concerns. `gstack-autoplan` is one option. It is not an
+implementation tool or a mandatory execution gate.
 
-Run the scout when the plan is broad, risky, cross-cutting, or likely to hide
-DX, test, sequencing, or execution concerns. Skip it when the task is a tiny
-direct edit, explicitly trivial plan edit, or the canonical plan already records
-a fresh scout result or skip reason.
+Do not run or record skip metadata for ordinary work when the accepted plan and
+preflight already cover the relevant risks. Reuse a fresh reconciled scout
+result when one exists.
 
 If the scout runs, use:
 
@@ -153,15 +152,13 @@ For whole-flow, review-heavy, or long-running scout runs, prefer launching
 `gstack-autoplan` through `skill-runner` so the main session can supervise and
 inspect artifacts before reconciliation.
 
-Treat as `autoplan` evidence:
+When a scout is required, treat as `autoplan` evidence:
 
 - the canonical plan contains accepted review decisions for scope, risks, tests,
   DX, and execution, or links a review summary while keeping decisions in the
   plan body
 - recent conversation or repo history explicitly shows `autoplan` ran and the
   plan was updated in place afterward
-- the canonical plan explicitly records an unknown-unknown scout skip reason
-  for a tiny or intentionally trivial task
 
 Do not treat as evidence:
 
@@ -170,11 +167,11 @@ Do not treat as evidence:
 - raw `~/.gstack` review logs, restore files, or final-gate summaries that were
   not reconciled into the canonical plan
 
-Report the scout result in the planning stage:
+When a scout runs, report its result in the planning stage:
 
 ```text
-Unknown-unknown scout: <run | skipped>
-Reason: <why it ran/skipped>
+Unknown-unknown scout: run
+Reason: <material risk that triggered it>
 Findings:
 - accepted into plan: <items or none>
 - requires grill decision: <items or none>
@@ -231,9 +228,9 @@ Plan-backed Flow execution may start only when the canonical plan records:
   gates;
 - an approved `$intuitive-preflight` contract or an equivalent approved
   execution contract reconciled into the plan;
-- an unknown-unknown scout result or explicit skip reason for non-trivial
-  plan-backed work;
-- no unresolved hard-stop grill/scout decisions.
+- a reconciled scout result when preflight identified a material
+  unknown-unknown risk;
+- no unresolved hard-stop grill or required-scout decisions.
 
 If this evidence is missing, classify the state as `Draft Plan Exists` or
 `Needs Preflight` and route upstream. Do not run `gstack-autoplan` as a hidden

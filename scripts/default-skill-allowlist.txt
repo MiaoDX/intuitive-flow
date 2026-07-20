@@ -1,70 +1,74 @@
-# Canonical default skill install allowlist.
+# Canonical managed skill portfolio.
 #
-# This is the only source of truth for skills installed by scripts/update.sh.
+# This is the only source of truth for skills managed by scripts/update.sh.
 # External sources must list explicit skills; do not use broad `all` installs.
 #
 # Format:
-# root-skill <skill>
-# external-skill <label> <repo> <skill>
-# gstack-skill <gstack-skill>
-# gsd-skill <gsd-skill>
+# root-skill <default|routed|on-demand> <skill>
+# external-skill <default|routed|on-demand> <all|claude-code|codex> <label> <repo> <skill>
+# gstack-skill <default|routed|on-demand> <gstack-skill>
+# gsd-skill <default|routed|on-demand> <gsd-skill>
+#
+# Default and routed skills are installed by scripts/update.sh. On-demand
+# skills remain registered but install only when named in the comma-separated
+# INTUITIVE_FLOW_ON_DEMAND_SKILLS environment variable.
 
 # Repo-owned root skills installed from ./skills.
 #
 # Primary public choices:
-root-skill agent-planning-loop
-root-skill intuitive-flow
-root-skill intuitive-reduce-entropy
-root-skill intuitive-refactor
-root-skill intuitive-squash
+root-skill default intuitive-flow
+root-skill default intuitive-reduce-entropy
+root-skill default intuitive-refactor
 
 # Routed specialists:
-root-skill grill-with-docs-batch
-root-skill intuitive-preflight
-root-skill intuitive-doc
-root-skill intuitive-init
-root-skill intuitive-tests
+root-skill routed agent-planning-loop
+root-skill routed grill-with-docs-batch
+root-skill routed intuitive-preflight
+root-skill routed intuitive-doc
+root-skill routed intuitive-init
+root-skill routed intuitive-tests
+root-skill routed skill-runner
 
 # Direct utilities:
-root-skill intuitive-port-worktree
-root-skill multica-goal-tracker
-root-skill plan-bakeoff
-root-skill skill-runner
+root-skill on-demand intuitive-port-worktree
+root-skill on-demand intuitive-squash
+root-skill on-demand multica-goal-tracker
+root-skill on-demand plan-bakeoff
 
 # External skills installed through the skills CLI.
 #
 # Authoring and Codex utility skills:
-external-skill anthropics anthropics/skills skill-creator
-external-skill codex skills-directory/skill-codex codex
+external-skill on-demand claude-code anthropics anthropics/skills skill-creator
+external-skill on-demand claude-code codex skills-directory/skill-codex codex
 
 # Planning, architecture, test, and handoff specialists:
-external-skill mattpocock https://github.com/mattpocock/skills grill-with-docs
-external-skill mattpocock https://github.com/mattpocock/skills handoff
-external-skill mattpocock https://github.com/mattpocock/skills improve-codebase-architecture
-external-skill mattpocock https://github.com/mattpocock/skills tdd
-external-skill mattpocock https://github.com/mattpocock/skills zoom-out
+external-skill on-demand all mattpocock https://github.com/mattpocock/skills grill-with-docs
+external-skill on-demand all mattpocock https://github.com/mattpocock/skills handoff
+external-skill on-demand all mattpocock https://github.com/mattpocock/skills improve-codebase-architecture
+external-skill on-demand all mattpocock https://github.com/mattpocock/skills tdd
+external-skill on-demand all mattpocock https://github.com/mattpocock/skills zoom-out
 
 # Trial community skills installed for dogfooding before promotion into flow.
 # Keep these explicit; do not broad-install whole community repos by default.
-external-skill ponytail https://github.com/DietrichGebert/ponytail ponytail
-external-skill ponytail https://github.com/DietrichGebert/ponytail ponytail-audit
-external-skill ponytail https://github.com/DietrichGebert/ponytail ponytail-debt
-external-skill ponytail https://github.com/DietrichGebert/ponytail ponytail-help
-external-skill ponytail https://github.com/DietrichGebert/ponytail ponytail-review
+external-skill on-demand all ponytail https://github.com/DietrichGebert/ponytail ponytail
+external-skill routed all ponytail https://github.com/DietrichGebert/ponytail ponytail-audit
+external-skill on-demand all ponytail https://github.com/DietrichGebert/ponytail ponytail-debt
+external-skill on-demand all ponytail https://github.com/DietrichGebert/ponytail ponytail-help
+external-skill routed all ponytail https://github.com/DietrichGebert/ponytail ponytail-review
 
 # Managed GStack wrappers kept after setup.
 # Unknown-unknown planning, browser, QA, review, and root-cause tooling:
-gstack-skill gstack-autoplan
-gstack-skill gstack-browse
-gstack-skill gstack-open-gstack-browser
-gstack-skill gstack-plan-eng-review
-gstack-skill gstack-review
-gstack-skill gstack-qa
-gstack-skill gstack-investigate
+gstack-skill routed gstack-autoplan
+gstack-skill default gstack-browse
+gstack-skill on-demand gstack-open-gstack-browser
+gstack-skill routed gstack-plan-eng-review
+gstack-skill routed gstack-review
+gstack-skill on-demand gstack-qa
+gstack-skill default gstack-investigate
 
 # Managed GSD wrappers kept after setup.
-# Keep status/resume helpers visible by default; phase machinery is routed
-# through $intuitive-flow/GSD docs and can be installed explicitly when needed.
-gsd-skill gsd-progress
-gsd-skill gsd-resume-work
-gsd-skill gsd-pause-work
+# Status/resume helpers remain registered on-demand; phase machinery is routed
+# through $intuitive-flow/GSD docs.
+gsd-skill on-demand gsd-progress
+gsd-skill on-demand gsd-resume-work
+gsd-skill on-demand gsd-pause-work

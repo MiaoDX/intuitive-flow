@@ -37,10 +37,10 @@ _allowlist_tool() {
 
 _run_external_skills() {
     local agent="$1" label="$2"
-    local allowlist repo skill_args_output
+    local allowlist repo skill_args_output host_scoped_output
     allowlist=$(_default_skill_allowlist)
-    repo=$(_allowlist_tool external-repo "$allowlist" "$label") || return 1
-    skill_args_output=$(_allowlist_tool external-skill-args "$allowlist" "$label") || return 1
+    repo=$(_allowlist_tool external-repo "$allowlist" "$label" "$agent") || return 1
+    skill_args_output=$(_allowlist_tool external-skill-args "$allowlist" "$label" "$agent") || return 1
 
     local skill_args=()
     if [ -n "$skill_args_output" ]; then
@@ -55,6 +55,27 @@ _run_external_skills() {
         _run_skills "$agent" "$repo" "$label" || return 1
     fi
 
+    host_scoped_output=$(_allowlist_tool external-host-scoped-skills "$allowlist" "$label" "$agent") || return 1
+    if [ -n "$host_scoped_output" ]; then
+        local skill_name source_path target_path
+        while IFS= read -r skill_name; do
+            [ -n "$skill_name" ] || continue
+            source_path="$HOME/.agents/skills/$skill_name"
+            if [ "$agent" = "claude-code" ]; then
+                target_path="$HOME/.claude/skills/$skill_name"
+            else
+                target_path="$HOME/.codex/skills/$skill_name"
+            fi
+            if [ ! -e "$target_path" ] && [ -d "$source_path" ]; then
+                mkdir -p "$(dirname "$target_path")"
+                cp -R "$source_path" "$target_path"
+            fi
+            # The skills CLI may also write a shared copy. Remove only the
+            # copy created by this install; preserve unrelated host installs.
+            rm -rf "$source_path"
+        done <<< "$host_scoped_output"
+    fi
+
     bun "$SCRIPT_DIR/lib/external-skill-state.ts" sync "$allowlist" "$label"
 }
 
@@ -63,9 +84,10 @@ run_external_skill_label() {
 }
 
 list_external_skill_labels() {
+    local agent="$1"
     local allowlist
     allowlist=$(_default_skill_allowlist)
-    _allowlist_tool external-labels "$allowlist"
+    _allowlist_tool external-labels "$allowlist" "$agent"
 }
 
 prune_removed_external_skill_labels() {

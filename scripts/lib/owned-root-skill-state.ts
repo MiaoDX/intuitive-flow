@@ -2,7 +2,7 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { readDefaultSkillAllowlist, readPruneLedger } from "./default-skill-allowlist";
+import { readDefaultSkillAllowlist, readPruneLedger, rootSkillsForInstall } from "./default-skill-allowlist";
 import { isSafeName, removeIfExists, skillInstallRoots, stateDir } from "./managed-skill-state-common";
 
 type OwnedRootSkillState = {
@@ -54,7 +54,7 @@ export const pruneRemovedOwnedRootSkills = (
     return 0;
   }
 
-  const desired = new Set(readDefaultSkillAllowlist(allowlistPath).rootSkills);
+  const desired = new Set(rootSkillsForInstall(readDefaultSkillAllowlist(allowlistPath)));
   let removed = 0;
 
   for (const skillName of previous.rootSkills) {
@@ -78,7 +78,7 @@ export const recordOwnedRootSkills = (
     throw new Error("HOME is required for local owned skill state");
   }
 
-  writeOwnedRootSkillState(home, readDefaultSkillAllowlist(allowlistPath).rootSkills);
+  writeOwnedRootSkillState(home, rootSkillsForInstall(readDefaultSkillAllowlist(allowlistPath)));
 };
 
 export const pruneLegacyArtifacts = (

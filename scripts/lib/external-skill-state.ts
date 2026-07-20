@@ -8,7 +8,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
-import { externalSkillSourceByLabel, normalizeSource, readDefaultSkillAllowlist } from "./default-skill-allowlist";
+import { externalSourcesForInstall, normalizeSource, readDefaultSkillAllowlist } from "./default-skill-allowlist";
 import { isSafeName, readState, removeIfExists, skillInstallRoots, stateDir, writeState } from "./managed-skill-state-common";
 
 type SkillLock = {
@@ -85,7 +85,10 @@ export const syncExternalSkillState = (
   }
 
   const allowlist = readDefaultSkillAllowlist(allowlistPath);
-  const source = externalSkillSourceByLabel(allowlist, label);
+  const source = externalSourcesForInstall(allowlist).find((candidate) => candidate.label === label);
+  if (!source) {
+    throw new Error(`external skill source is not selected for installation: ${label}`);
+  }
   const normalizedSource = normalizeSource(source.repo);
   const desiredSkills = source.skills.filter(isSafeName).sort();
   const desired = new Set(desiredSkills);
@@ -122,7 +125,7 @@ export const pruneRemovedExternalSkillStates = (
   }
 
   const allowlist = readDefaultSkillAllowlist(allowlistPath);
-  const desiredLabels = new Set(allowlist.externalSources.map((source) => source.label));
+  const desiredLabels = new Set(externalSourcesForInstall(allowlist).map((source) => source.label));
   const dir = stateDir(home);
   if (!existsSync(dir)) {
     return 0;

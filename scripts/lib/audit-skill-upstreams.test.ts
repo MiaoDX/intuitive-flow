@@ -55,7 +55,7 @@ describe("skill upstream audit", () => {
     try {
       writeSkill(source, "keep", "Keep this.");
       writeSkill(source, "candidate", "Consider this.");
-      const allowlist = parseDefaultSkillAllowlistText("external-skill demo owner/demo keep\n");
+      const allowlist = parseDefaultSkillAllowlistText("external-skill default all demo owner/demo keep\n");
 
       const audit = auditSkillUpstreams(allowlist, {
         includeGstack: false,
@@ -80,7 +80,7 @@ describe("skill upstream audit", () => {
       writeSkill(source, "keep", "Keep this.");
       writeSkill(source, "candidate-a", "A".repeat(220));
       writeSkill(source, "candidate-b", "B candidate.");
-      const allowlist = parseDefaultSkillAllowlistText("external-skill demo owner/demo keep\n");
+      const allowlist = parseDefaultSkillAllowlistText("external-skill default all demo owner/demo keep\n");
 
       const audit = auditSkillUpstreams(allowlist, {
         includeGstack: false,
@@ -100,7 +100,7 @@ describe("skill upstream audit", () => {
   });
 
   test("marks source unavailable when cloning is disabled and no source dir is provided", () => {
-    const allowlist = parseDefaultSkillAllowlistText("external-skill demo owner/demo keep\n");
+    const allowlist = parseDefaultSkillAllowlistText("external-skill default all demo owner/demo keep\n");
 
     const audit = auditSkillUpstreams(allowlist, {
       includeGstack: false,

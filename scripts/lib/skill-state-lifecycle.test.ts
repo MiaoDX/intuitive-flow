@@ -73,7 +73,7 @@ describe("skill state lifecycle", () => {
     const home = mkdtempSync(join(tmpdir(), "skill-home-"));
     const root = mkdtempSync(join(tmpdir(), "skill-allowlist-"));
     try {
-      const allowlistPath = writeAllowlist(root, "root-skill current\n");
+      const allowlistPath = writeAllowlist(root, "root-skill default current\n");
       mkdirSync(join(home, ".intuitive-flow"), { recursive: true });
       writeFileSync(
         join(home, ".intuitive-flow", "owned-root-skills.json"),
@@ -106,7 +106,7 @@ describe("skill state lifecycle", () => {
     const home = mkdtempSync(join(tmpdir(), "skill-home-"));
     const root = mkdtempSync(join(tmpdir(), "skill-allowlist-"));
     try {
-      const allowlistPath = writeAllowlist(root, "root-skill intuitive-flow\nroot-skill intuitive-doc\n");
+      const allowlistPath = writeAllowlist(root, "root-skill default intuitive-flow\nroot-skill default intuitive-doc\n");
 
       recordOwnedRootSkills(allowlistPath, home);
 
@@ -129,7 +129,7 @@ describe("skill state lifecycle", () => {
       writeFileSync(join(repo, ".agents", "skills", "gstack-review", "SKILL.md"), "# Review\n");
       mkdirSync(join(home, ".codex", "skills", "gstack-stale"), { recursive: true });
       writeFileSync(join(home, ".codex", "skills", "gstack-stale", "SKILL.md"), "# User stale-looking skill\n");
-      const allowlistPath = writeAllowlist(repo, "gstack-skill gstack-review\n");
+      const allowlistPath = writeAllowlist(repo, "gstack-skill default gstack-review\n");
 
       const removed = syncGstackSkillState(repo, allowlistPath, home);
 
@@ -157,7 +157,7 @@ describe("skill state lifecycle", () => {
       mkdirSync(join(home, ".codex", "skills"), { recursive: true });
       symlinkSync(join(repo, ".agents", "skills", "gstack-review"), join(home, ".codex", "skills", "gstack-review"));
       symlinkSync(join(repo, ".agents", "skills", "gstack-old"), join(home, ".codex", "skills", "gstack-old"));
-      const allowlistPath = writeAllowlist(repo, "gstack-skill gstack-review\ngstack-skill gstack-old\n");
+      const allowlistPath = writeAllowlist(repo, "gstack-skill default gstack-review\ngstack-skill default gstack-old\n");
 
       expect(syncGstackSkillState(repo, allowlistPath, home, join(home, ".codex"))).toBe(0);
       rmSync(join(repo, ".agents", "skills", "gstack-old"), { recursive: true, force: true });
@@ -213,7 +213,7 @@ describe("skill state lifecycle", () => {
       symlinkSync(join(repo, "qa", "SKILL.md"), join(home, ".claude", "skills", "qa", "SKILL.md"));
       const allowlistPath = writeAllowlist(
         repo,
-        "gstack-skill gstack-review\ngstack-skill gstack-plan-eng-review\ngstack-skill gstack-qa\n",
+        "gstack-skill default gstack-review\ngstack-skill default gstack-plan-eng-review\ngstack-skill default gstack-qa\n",
       );
 
       const removed = syncGstackSkillState(repo, allowlistPath, home);
@@ -249,7 +249,7 @@ describe("skill state lifecycle", () => {
     const home = mkdtempSync(join(tmpdir(), "managed-skills-home-"));
     const root = mkdtempSync(join(tmpdir(), "managed-skills-allowlist-"));
     try {
-      const allowlistPath = writeAllowlist(root, "external-skill demo owner/demo keep\n");
+      const allowlistPath = writeAllowlist(root, "external-skill default all demo owner/demo keep\n");
       mkdirSync(join(home, ".intuitive-flow"), { recursive: true });
       writeFileSync(
         join(home, ".intuitive-flow", "external-skills-demo.json"),
@@ -290,7 +290,7 @@ describe("skill state lifecycle", () => {
     const home = mkdtempSync(join(tmpdir(), "managed-skills-home-"));
     const root = mkdtempSync(join(tmpdir(), "managed-skills-allowlist-"));
     try {
-      const allowlistPath = writeAllowlist(root, "external-skill demo owner/demo keep\n");
+      const allowlistPath = writeAllowlist(root, "external-skill default all demo owner/demo keep\n");
       mkdirSync(join(home, ".intuitive-flow"), { recursive: true });
       writeFileSync(
         join(home, ".intuitive-flow", "external-skills-demo.json"),
@@ -326,7 +326,7 @@ describe("skill state lifecycle", () => {
     const home = mkdtempSync(join(tmpdir(), "managed-skills-home-"));
     const root = mkdtempSync(join(tmpdir(), "managed-skills-allowlist-"));
     try {
-      const allowlistPath = writeAllowlist(root, "external-skill keep owner/keep alpha\n");
+      const allowlistPath = writeAllowlist(root, "external-skill default all keep owner/keep alpha\n");
       mkdirSync(join(home, ".intuitive-flow"), { recursive: true });
       writeFileSync(
         join(home, ".intuitive-flow", "external-skills-removed.json"),
@@ -373,7 +373,7 @@ describe("skill state lifecycle", () => {
     const home = mkdtempSync(join(tmpdir(), "managed-skills-home-"));
     const root = mkdtempSync(join(tmpdir(), "managed-skills-allowlist-"));
     try {
-      const allowlistPath = writeAllowlist(root, "gsd-skill gsd-plan-phase\n");
+      const allowlistPath = writeAllowlist(root, "gsd-skill default gsd-plan-phase\n");
       mkdirSync(join(home, ".intuitive-flow"), { recursive: true });
       writeFileSync(
         join(home, ".intuitive-flow", "gsd-skills.json"),
@@ -412,9 +412,42 @@ describe("skill state lifecycle", () => {
     expectBunToolCommand(updateGstack, "gstack-skill-state.ts", "sync");
     expectBunToolCommand(updateSkills, "external-skill-state.ts", "sync");
     expectBunToolCommand(updateSkills, "external-skill-state.ts", "prune-removed");
+    expect(updateSkills).toContain("external-host-scoped-skills");
     expectBunToolCommand(updateGsdWorkflow, "gsd-skill-state.ts", "sync");
     expectOwnedRootStateToolCall(syncLocal, "prune-legacy-artifacts", "$default_skill_prune_ledger");
     expectOwnedRootStateToolCall(syncLocal, "prune-owned-root-skills", "$default_skill_allowlist");
     expectOwnedRootStateToolCall(syncLocal, "record-owned-root-skills", "$default_skill_allowlist");
+  });
+
+  test("host-scoped external installs do not remain in the shared skill root", () => {
+    const home = mkdtempSync(join(tmpdir(), "host-scoped-skills-home-"));
+    try {
+      const script = `
+        set -euo pipefail
+        SCRIPT_DIR=${JSON.stringify(join(repoRoot, "scripts"))}
+        source ${JSON.stringify(join(repoRoot, "scripts", "tasks", "update-skills.sh"))}
+        _run_skills() {
+          mkdir -p "$HOME/.agents/skills/skill-creator" "$HOME/.claude/skills/skill-creator"
+          printf '%s\\n' test > "$HOME/.agents/skills/skill-creator/SKILL.md"
+          printf '%s\\n' test > "$HOME/.claude/skills/skill-creator/SKILL.md"
+        }
+        run_external_skill_label claude-code anthropics
+      `;
+      const result = Bun.spawnSync(["bash", "-c", script], {
+        cwd: repoRoot,
+        env: {
+          ...process.env,
+          HOME: home,
+          INTUITIVE_FLOW_ON_DEMAND_SKILLS: "skill-creator",
+        },
+      });
+
+      expect(result.exitCode).toBe(0);
+      expect(existsSync(join(home, ".agents", "skills", "skill-creator"))).toBe(false);
+      expect(existsSync(join(home, ".claude", "skills", "skill-creator", "SKILL.md"))).toBe(true);
+      expect(existsSync(join(home, ".codex", "skills", "skill-creator"))).toBe(false);
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+    }
   });
 });

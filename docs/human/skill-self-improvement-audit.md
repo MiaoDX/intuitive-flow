@@ -1,10 +1,10 @@
 # Skill Self-Improvement Audit
 
-Last reviewed: 2026-06-16
+Last reviewed: 2026-07-20
 
 This audit applies the self-improvement lens from
-[`agent-harness-references.md`](agent-harness-references.md) to the default
-installed skill surface listed in `scripts/default-skill-allowlist.txt`. The
+[`agent-harness-references.md`](agent-harness-references.md) to the managed
+skill portfolio listed in `scripts/default-skill-allowlist.txt`. The
 goal is not to paste a maintenance prompt into every skill. The goal is to find
 which visible skills should be primary, routed, direct utilities, external
 fallbacks, or pruned from defaults.
@@ -28,10 +28,9 @@ Completed baseline correction:
 
 Current default-surface correction:
 
-- `scripts/default-skill-allowlist.txt` now names tiers with comments:
-  primary public choices, routed specialists, direct utilities, external
-  specialists, trial community skills, managed GStack tooling, and GSD
-  status/resume helpers.
+- `scripts/default-skill-allowlist.txt` now parses default, routed, and
+  on-demand tiers plus external host scope. Comments describe groups but no
+  longer carry install semantics.
 - Retired local artifacts are kept out of the install allowlist and listed in
   `scripts/default-skill-prune-ledger.txt` for updater-owned cleanup.
 - `$diagnose` is no longer installed by default. `$gstack-investigate` is the
@@ -41,16 +40,17 @@ Current default-surface correction:
   `gsd-execute-phase`, and `gsd-verify-work`) is no longer default-visible.
   `$intuitive-flow` remains the route that names those commands when a committed
   GSD phase is actually needed.
-- Keep `$grill-with-docs` default-visible as the one-question interactive
-  fallback for domain-language and ADR conversations. `$grill-with-docs-batch`
-  remains the preferred routed convergence path, but the upstream single-question
-  skill is not a stale duplicate.
-- Keep `$improve-codebase-architecture` default-visible as the optional
-  report-only deepening scanner after the architecture review route. It is not
-  a removal candidate unless a future audit shows the route no longer needs a
-  visual/deepening architecture report.
-- Keep `$gstack-autoplan` default-visible because the staged workflow names it
-  as the optional unknown-unknown scout before grill-batch/preflight/execution.
+- Keep `$grill-with-docs-batch` routed for convergence; the external
+  single-question `$grill-with-docs` remains registered on-demand.
+- Keep `$improve-codebase-architecture` registered on-demand as an optional
+  report-only deepening scanner.
+- Keep `$gstack-autoplan` routed as a risk-triggered planning scout, not a
+  mandatory plan-backed execution gate.
+- Keep Anthropic `skill-creator` and the Claude-oriented external `codex`
+  wrapper on-demand and Claude-only so they do not collide with Codex built-ins
+  or appear inside Codex by default.
+- Keep only `ponytail-audit` and `ponytail-review` routed. The broad mode, help,
+  and debt ledger remain on-demand.
 - Multi-mode skills should expose a compact `Modes` table and state selected
   mode only when it affects execution. Use `Mode note` sparingly for manual
   invocation, ambiguity, or better-route discovery; do not add mode menus to
@@ -69,28 +69,25 @@ Current default-surface correction:
 | `intuitive-preflight` | Strong: make vague execution intent approval-ready before implementation. | Strong: owns context package, scope, non-goals, acceptance, verification, route, and goal wording. | Strong: draft contract and approval boundary are explicit. | Specialist skill; route from flow or direct use before vague execution. |
 | `intuitive-reduce-entropy` | Strong: explicit repo entropy mode for maintenance and plan entropy mode for idea/plan blind spots. | Strong: owns entropy diagnosis and routes to doc/init/tests/refactor or grill-batch/preflight instead of forcing the user to choose first. | Strong: mode declaration, candidate list, gate, route, verify, and park. | Primary entropy entrypoint. |
 | `intuitive-refactor` | Strong: bound aggressive cleanup plus changed-code review. | Strong: owns scope gates, severities, evidence, parked ideas, ratchet mode, and diff-scoped reuse/quality/efficiency review. | Strong: persistent gate, ladder, and changed-code review scope are clear. | Absorbed the former `simplify` workflow; keep as the cleanup/refactor owner. |
-| `intuitive-squash` | Strong: rewrite noisy agent history safely. | Strong: owns commit grouping and safety protocol only. | Strong: explicit confirmation and verify commands. | No immediate change. |
+| `intuitive-squash` | Strong: rewrite noisy agent history safely. | Strong: owns commit grouping and safety protocol only. | Strong: explicit confirmation and verify commands. | Keep registered on-demand. |
 | `intuitive-tests` | Strong: improve test suite signal. | Strong: owns test taxonomy, pruning, fixture/layout cleanup. | Strong but long: many examples are useful runtime guidance. | Specialist skill; route from reduce-entropy when tests are the issue. |
 | `multica-goal-tracker` | Strong: keeps goal-driven Multica issues tied to execution proof. | Strong: owns issue goal summaries, tracked start/finish comments, and text completion evidence only. | Strong after tracker harness: defaults fail fast without real session history, and parsing/comment behavior is covered by skill-local tests. | Specialist issue-workflow utility; not part of the small public planning/build surface. |
-| `plan-bakeoff` | Strong: compares candidate implementations for an approved plan. | Strong: owns best-of-N plan execution, scorecards, and final ranking, not ordinary flow execution. | Strong: manifest gates, skill-runner ownership, secret redaction, and fake/real harness proof are explicit. | Direct utility for approved-plan bakeoffs; keep out of the primary choice set. |
-| `skill-runner` | Strong: supervise real skill-driven development runs. | Strong: owns runner orchestration and reusable-skill defect detection. | Strong: verdicts, policy, and stop conditions are explicit. | Already has skill-change policy. Do not add another meta block. |
+| `plan-bakeoff` | Strong: compares candidate implementations for an approved plan. | Strong: owns best-of-N plan execution, scorecards, and final ranking, not ordinary flow execution. | Strong: manifest gates, skill-runner ownership, secret redaction, and fake/real harness proof are explicit. | On-demand utility; compact entrypoint delegates options/schema to CLI help. |
+| `skill-runner` | Strong: supervise real skill-driven development runs. | Strong: owns runner orchestration and reusable-skill defect detection. | Strong: verdicts, policy, and stop conditions are explicit. | Routed execution backend; compact entrypoint delegates options to CLI help. |
 
-## External And Managed Defaults
+## External And Managed Portfolio
 
 | Surface | Default role | Recommendation |
 | --- | --- | --- |
-| `skill-creator` | External authoring utility from Anthropic's skills source. | Keep default-visible for skill creation and maintenance tasks. |
-| `codex` | External utility for Codex CLI workflows. | Keep default-visible because this repo supports Codex as a first-class host. |
-| `grill-with-docs` | External one-question-at-a-time discussion specialist. | Keep default-visible as the interactive fallback for domain-language and ADR sharpening; do not re-suggest removal merely because batch is preferred for grouped convergence. |
-| `handoff` | External context handoff utility. | Keep as direct utility for compacting long agent sessions. |
-| `improve-codebase-architecture` | External report-only architecture discovery. | Keep default-visible behind reduce-entropy or architecture review for visual/deepening candidate reports; do not re-suggest removal without evidence that this report-only scanner is no longer used. |
-| `tdd` | External test-first workflow. | Keep as direct specialist when the user explicitly wants TDD. |
-| `zoom-out` | External architecture/context map. | Keep routed as the first architecture review pass before plan-eng-review. |
-| `ponytail`, `ponytail-review`, `ponytail-audit`, `ponytail-debt`, `ponytail-help` | Trial community simplicity and over-engineering skill set. | Install for dogfooding, but do not route from core flow until real use shows whether it should remain a direct utility, replace a local cleanup path, or be removed. |
-| `gstack-browse`, `gstack-open-gstack-browser` | Browser launch and browser QA helpers. | Keep for visual/runtime dogfooding that text checks miss. |
-| `gstack-autoplan`, `gstack-plan-eng-review`, `gstack-review`, `gstack-qa` | Managed review and QA wrappers. | Keep default-visible for unknown-unknown plan scouting, plan review, PR review, and app QA gates. |
+| `skill-creator` | External authoring utility from Anthropic's skills source. | Claude-only and on-demand; Codex keeps its built-in owner. |
+| `codex` | Claude-oriented external utility for Codex CLI workflows. | Claude-only and on-demand; never install into Codex by default. |
+| `grill-with-docs`, `handoff`, `improve-codebase-architecture`, `tdd`, `zoom-out` | Narrow external specialists. | Registered on-demand; local/routed owners remain the normal workflow surface. |
+| `ponytail-audit`, `ponytail-review` | Simplicity and over-engineering review inputs used by local routes. | Keep routed. |
+| `ponytail`, `ponytail-debt`, `ponytail-help` | Broad/trial/help utilities. | Keep on-demand; do not occupy default discovery. |
+| `gstack-browse`, `gstack-open-gstack-browser` | Browser launch and browser QA helpers. | Keep browse default; open-browser is on-demand. |
+| `gstack-autoplan`, `gstack-plan-eng-review`, `gstack-review`, `gstack-qa` | Managed review and QA wrappers. | Keep planning/review routes installed; QA is on-demand until usage justifies promotion. |
 | `gstack-investigate` | Managed root-cause investigation workflow. | Keep as the default debugging/investigation route; do not also default-install `$diagnose`. |
-| `gsd-progress`, `gsd-resume-work`, `gsd-pause-work` | GSD status and continuation helpers. | Keep as low-risk recovery/status commands. |
+| `gsd-progress`, `gsd-resume-work`, `gsd-pause-work` | GSD status and continuation helpers. | Registered on-demand; Flow can name them when a GSD run exists. |
 
 Removed from the default surface:
 

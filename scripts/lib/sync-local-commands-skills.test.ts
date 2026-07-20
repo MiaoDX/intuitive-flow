@@ -12,7 +12,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, join } from "node:path";
-import { parseDefaultSkillAllowlistText, parsePruneLedgerText } from "./default-skill-allowlist";
+import { parseDefaultSkillAllowlistText, parsePruneLedgerText, rootSkillsForInstall } from "./default-skill-allowlist";
 
 const repoRoot = process.cwd();
 
@@ -103,7 +103,7 @@ describe("local command and skill sync task", () => {
       const npmCalls = await Bun.file(npmLog).text();
       expect(npmCalls).toContain("view skills version");
       const npxCalls = await Bun.file(npxLog).text();
-      for (const skillName of allowlist.rootSkills) {
+      for (const skillName of rootSkillsForInstall(allowlist)) {
         expect(existsSync(join(home, ".codex", "skills", skillName, "SKILL.md"))).toBe(true);
         expect(existsSync(join(home, ".codex", "skills", skillName, skillName, "SKILL.md"))).toBe(false);
         expect(npxCalls).toContain(join(repoRoot, "skills", skillName));
@@ -124,7 +124,7 @@ describe("local command and skill sync task", () => {
       prepareSyncTaskFixture(fixture);
       mkdirSync(join(home, ".codex", "skills"), { recursive: true });
       mkdirSync(join(fixture, "skills", "alpha"), { recursive: true });
-      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill alpha\n");
+      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill default alpha\n");
       writeFileSync(join(fixture, "skills", "alpha", "SKILL.md"), "---\nname: alpha\ndescription: Alpha skill.\n---\n");
       copySyncTaskHelpers(fixture);
 
@@ -164,7 +164,7 @@ describe("local command and skill sync task", () => {
       mkdirSync(join(home, ".codex", "skills", "alpha", "alpha"), { recursive: true });
       writeFileSync(join(home, ".codex", "skills", "alpha", "alpha", "SKILL.md"), "# stale nested copy\n");
       mkdirSync(join(fixture, "skills", "alpha"), { recursive: true });
-      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill alpha\n");
+      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill default alpha\n");
       writeFileSync(join(fixture, "skills", "alpha", "SKILL.md"), "---\nname: alpha\ndescription: Alpha skill.\n---\n");
       copySyncTaskHelpers(fixture);
 
@@ -203,7 +203,7 @@ describe("local command and skill sync task", () => {
       prepareSyncTaskFixture(fixture);
       mkdirSync(join(home, ".codex", "skills"), { recursive: true });
       mkdirSync(join(fixture, "skills", "alpha", "references"), { recursive: true });
-      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill alpha\n");
+      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill default alpha\n");
       writeFileSync(join(fixture, "skills", "alpha", "SKILL.md"), "---\nname: alpha\ndescription: Alpha skill.\n---\n");
       writeFileSync(join(fixture, "skills", "alpha", "references", "old.md"), "# Old reference\n");
       copySyncTaskHelpers(fixture);
@@ -253,7 +253,7 @@ describe("local command and skill sync task", () => {
       prepareSyncTaskFixture(fixture);
       mkdirSync(join(fixture, "skills", "alpha"), { recursive: true });
       mkdirSync(join(fixture, "skills", "_shared", "references"), { recursive: true });
-      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill alpha\n");
+      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill default alpha\n");
       writeFileSync(
         join(fixture, "skills", "alpha", "SKILL.md"),
         "---\nname: alpha\ndescription: Alpha skill.\n---\n\nRead `../_shared/references/durable-run.md`.\n",
@@ -306,7 +306,7 @@ describe("local command and skill sync task", () => {
       prepareSyncTaskFixture(fixture);
       mkdirSync(join(fixture, "skills", "listed"), { recursive: true });
       mkdirSync(join(fixture, "skills", "unlisted"), { recursive: true });
-      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill listed\n");
+      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill default listed\n");
       writeFileSync(join(fixture, "skills", "listed", "SKILL.md"), "# Listed\n");
       writeFileSync(join(fixture, "skills", "unlisted", "SKILL.md"), "# Unlisted\n");
       copySyncTaskHelpers(fixture);
@@ -343,7 +343,7 @@ describe("local command and skill sync task", () => {
       mkdirSync(join(home, ".codex", "skills"), { recursive: true });
       mkdirSync(join(fixture, "skills", "alpha"), { recursive: true });
       mkdirSync(join(fixture, ".claude", "skills", "legacy-local"), { recursive: true });
-      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill alpha\n");
+      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill default alpha\n");
       writeFileSync(join(fixture, "skills", "alpha", "SKILL.md"), "---\nname: alpha\ndescription: Alpha skill.\n---\n");
       writeFileSync(join(fixture, ".claude", "skills", "legacy-local", "SKILL.md"), "---\nname: legacy-local\ndescription: Legacy local skill.\n---\n");
       copySyncTaskHelpers(fixture);
@@ -388,7 +388,7 @@ describe("local command and skill sync task", () => {
       mkdirSync(join(home, ".config", "legacy-agent", "command"), { recursive: true });
       writeFileSync(join(home, ".config", "legacy-agent", "command", "old-skill.md"), "");
       mkdirSync(join(fixture, "skills", "alpha"), { recursive: true });
-      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill alpha\n");
+      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill default alpha\n");
       writeFileSync(join(fixture, "scripts", "default-skill-prune-ledger.txt"), "legacy-skill old-skill\n");
       writeFileSync(join(fixture, "skills", "alpha", "SKILL.md"), "---\nname: alpha\ndescription: Alpha skill.\n---\n");
       copySyncTaskHelpers(fixture);
@@ -430,7 +430,7 @@ describe("local command and skill sync task", () => {
       mkdirSync(join(home, ".codex", "skills"), { recursive: true });
       mkdirSync(join(fixture, "skills", "alpha"), { recursive: true });
       mkdirSync(join(fixture, "skills", "beta"), { recursive: true });
-      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill alpha\nroot-skill beta\n");
+      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill default alpha\nroot-skill default beta\n");
       writeFileSync(join(fixture, "skills", "alpha", "SKILL.md"), "---\nname: alpha\ndescription: Alpha skill.\n---\n");
       writeFileSync(join(fixture, "skills", "beta", "SKILL.md"), "---\nname: beta\ndescription: Beta skill.\n---\n");
       copySyncTaskHelpers(fixture);
@@ -462,7 +462,7 @@ describe("local command and skill sync task", () => {
         rootSkills: ["alpha", "beta"],
       });
 
-      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill alpha\n");
+      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill default alpha\n");
       rmSync(join(fixture, "skills", "beta"), { recursive: true, force: true });
       mkdirSync(join(home, ".config", "legacy-agent", "command"), { recursive: true });
       writeFileSync(join(home, ".config", "legacy-agent", "command", "beta.md"), "");

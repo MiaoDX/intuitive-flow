@@ -6,7 +6,7 @@ import {
   readdirSync,
 } from "node:fs";
 import { join } from "node:path";
-import { readDefaultSkillAllowlist } from "./default-skill-allowlist";
+import { gsdSkillsForInstall, readDefaultSkillAllowlist } from "./default-skill-allowlist";
 import { isSafeName, readState, removeIfExists, stateDir, writeState } from "./managed-skill-state-common";
 
 const gsdStatePath = (home: string) => join(stateDir(home), "gsd-skills.json");
@@ -38,7 +38,7 @@ export const syncGsdSkillState = (
     throw new Error("HOME is required for GSD skill state");
   }
 
-  const desiredSkills = readDefaultSkillAllowlist(allowlistPath).gsdSkills.filter(isSafeName).sort();
+  const desiredSkills = gsdSkillsForInstall(readDefaultSkillAllowlist(allowlistPath)).filter(isSafeName).sort();
   const desired = new Set(desiredSkills);
   const statePath = gsdStatePath(home);
   const previous = readState(statePath);

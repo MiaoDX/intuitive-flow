@@ -57,8 +57,8 @@ Start by choosing the kind of work:
 | Work | Route |
 | --- | --- |
 | Maintain or simplify a repo | `$intuitive-reduce-entropy` in repo entropy mode, then route selected cleanup to the owning skill and verify it |
-| Build a feature with the thorough path | `$intuitive-reduce-entropy` in plan mode -> plan -> repeat until blind spots are gone -> `$grill-with-docs-batch` -> `$intuitive-preflight` -> `$intuitive-flow` |
-| Build a feature with the faster path | `$agent-planning-loop` -> plan or review packet -> `$intuitive-preflight` -> `$intuitive-flow` |
+| Build a feature with unresolved scope or risk | `$intuitive-preflight`, using plan entropy, planning scouts, or grill-batch only when the contract needs them, then `$intuitive-flow` |
+| Align multiple planning perspectives | `$agent-planning-loop` -> `$intuitive-preflight` -> `$intuitive-flow` |
 | Do a tiny bounded task | `$intuitive-flow` directly, when the change is local and easy to verify |
 
 The rule of thumb is simple: reduce repo entropy when the codebase itself is
@@ -71,10 +71,12 @@ unclear; use direct flow only when the task is already bounded.
 
 ## Selected Skill Sources
 
-The default install surface is explicit, not a broad import. This repo selects
-individual skills in
+The managed portfolio is explicit, not a broad import. This repo assigns
+default, routed, on-demand, and host-specific policy to individual skills in
 [`scripts/default-skill-allowlist.txt`](scripts/default-skill-allowlist.txt)
-and leaves the rest upstream until real use justifies promotion.
+and leaves the rest upstream until real use justifies promotion. Default and
+routed entries install normally; on-demand entries remain registered without
+occupying the normal discovery surface.
 
 | Source | Stars | Selected | Skills used |
 | --- | --- | --- | --- |
@@ -95,6 +97,16 @@ Clone Intuitive Flow when you want the update scripts and local skill sync:
 git clone --depth=1 <repo-url> ~/intuitive-flow
 ~/intuitive-flow/scripts/update.sh
 ```
+
+Install a registered on-demand skill for one update run by naming it explicitly:
+
+```bash
+INTUITIVE_FLOW_ON_DEMAND_SKILLS=plan-bakeoff ~/intuitive-flow/scripts/update.sh
+```
+
+A later default update removes Intuitive-owned on-demand installs that are no
+longer selected. Host-specific external entries install only for their declared
+agent host.
 
 For local development in this checkout:
 

@@ -205,8 +205,8 @@ fi
 # GSD scans ~/.codex/skills, and GStack rewrites the gstack skill links there.
 # Keep those phases ahead of the remaining skill installers so home-level skill
 # updates do not overlap.
-external_skill_labels=$(list_external_skill_labels)
 for agent in claude-code codex; do
+    external_skill_labels=$(list_external_skill_labels "$agent")
     while IFS= read -r label; do
         [ -n "$label" ] || continue
         n="External skills: $label -> $agent"; task_run "$n" run_external_skill_label "$agent" "$label"; task_await "$n"

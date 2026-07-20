@@ -9,7 +9,7 @@ import {
   readdirSync,
 } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
-import { normalizeSource, readDefaultSkillAllowlist } from "./default-skill-allowlist";
+import { gstackSkillsForInstall, normalizeSource, readDefaultSkillAllowlist } from "./default-skill-allowlist";
 import { isSafeName, readState, removeIfExists, stateDir, writeState } from "./managed-skill-state-common";
 
 const gstackCodexStatePath = (home: string) => join(stateDir(home), "gstack-codex-skills.json");
@@ -57,7 +57,7 @@ const listGstackCodexSkillNames = (repoDir: string): string[] => {
 
 const listGstackCodexDesiredSkillNames = (repoDir: string, allowlistPath: string): string[] => {
   const available = listGstackCodexSkillNames(repoDir);
-  const desired = readDefaultSkillAllowlist(allowlistPath).gstackSkills;
+  const desired = gstackSkillsForInstall(readDefaultSkillAllowlist(allowlistPath));
   const availableSet = new Set(available);
   return desired.filter((skillName) => availableSet.has(skillName));
 };
@@ -91,7 +91,7 @@ const listGstackClaudeSourceStems = (repoDir: string): string[] => {
 
 const listGstackClaudeDesiredSkillNames = (repoDir: string, allowlistPath: string): string[] => {
   const availableStems = listGstackClaudeSourceStems(repoDir);
-  const stems = readDefaultSkillAllowlist(allowlistPath).gstackSkills
+  const stems = gstackSkillsForInstall(readDefaultSkillAllowlist(allowlistPath))
     .map((skillName) => skillName.replace(/^gstack-/, ""))
     .filter((stem) => availableStems.includes(stem));
   const desired = new Set<string>(["gstack", "_gstack-command"]);

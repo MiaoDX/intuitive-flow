@@ -1,6 +1,6 @@
 # Status
 
-Last reviewed: 2026-07-17
+Last reviewed: 2026-07-20
 
 ## Current State
 
@@ -59,28 +59,22 @@ The current maintenance focus is keeping the repo dogfoodable:
   external Claude Code, Codex, AGENTS.md, and field-practice lessons before
   turning those lessons into skill rules
 - keep the recommended workflow split by task shape: tiny bounded tasks may go
-  directly to `intuitive-flow`; complex or plan-backed work should iterate
-  plan entropy into a plan, optionally scout unknown unknowns with
-  `gstack-autoplan`, run grill-batch, run preflight, then execute through
-  `intuitive-flow`
-- keep the user-facing skill surface small: flow, refactor, reduce-entropy,
-  agent-planning-loop, and squash; route or directly invoke specialists from
-  the allowlist as needed, with docs/init/tests/preflight/
+  directly to `intuitive-flow`; complex or ambiguous work should use preflight,
+  invoking plan entropy, planning scouts, or grill-batch only for material
+  risks or unresolved decisions, then execute through `intuitive-flow`
+- keep the default user-facing surface small: flow, refactor, and
+  reduce-entropy; route installed specialists as needed, with docs/init/tests/preflight/
   architecture-scanner/worktree-porting/issue tracking/plan-bakeoff/
   skill-runner utilities kept out of the primary choice set, and changed-code
   cleanup owned by `intuitive-refactor`
-- keep default skill installs listed in `scripts/default-skill-allowlist.txt`
-  with role-tier comments that distinguish primary choices, routed specialists,
-  direct utilities, trial community skills, managed GStack tooling, and GSD
-  status/resume helpers
+- keep the managed skill portfolio in `scripts/default-skill-allowlist.txt`
+  with parsed default/routed/on-demand tiers and external host scope
 - keep retired local artifact cleanup in
   `scripts/default-skill-prune-ledger.txt`, not in the install allowlist
 - use the trial community section for promising external skill sets that should
   be dogfooded before they are promoted into flow routes or removed
-- keep the optional `gstack-autoplan` planning scout default-visible because the
-  staged workflow names it as an unknown-unknown route
-- keep `agent-planning-loop` as the canonical scout-planning root skill; retired
-  repo-owned skill names belong in the prune ledger only
+- keep `gstack-autoplan` and `agent-planning-loop` as risk-triggered routed
+  planning tools, not mandatory stages
 - use `bun run audit:skill-upstreams` to review upstream skill candidates
   outside the allowlist before adding anything new
 - keep installed global skill surfaces pruned by owner state: Intuitive root
@@ -88,7 +82,7 @@ The current maintenance focus is keeping the repo dogfoodable:
 - keep `$gstack-investigate` as the default root-cause/debugging route instead
   of adding another overlapping default debugging skill
 - keep GSD phase machinery routed by `$intuitive-flow` or explicit GSD use;
-  only GSD status/resume/pause helpers are default-visible
+  GSD status/resume/pause helpers remain registered on-demand
 - edit repo-owned skills directly under `skills/`
 - keep cross-skill runtime rules in `skills/_shared/` when Flow and Refactor
   intentionally share behavior; `_shared` is a bundled resource surface, not an
@@ -123,11 +117,10 @@ locked summaries, not the active roadmap.
 - `scripts/update.sh` is not a harmless test command; it mutates installed tools
   and user config. By default it warns rather than blocks when Codex is already
   running.
-- Default skill visibility is controlled by
-  `scripts/default-skill-allowlist.txt`; external sources are never installed in
-  broad `all` mode by default, trial community skills are visible for dogfooding
-  rather than core routing, and prune-only `legacy-*` entries belong in
-  `scripts/default-skill-prune-ledger.txt`.
+- Skill visibility is controlled by `scripts/default-skill-allowlist.txt`;
+  default and routed entries install normally, on-demand entries require
+  explicit selection, external entries are host-scoped, and prune-only
+  `legacy-*` entries belong in `scripts/default-skill-prune-ledger.txt`.
 - GSD and GStack setup may create upstream wrappers temporarily, but the updater
   prunes managed wrappers back to the default allowlist.
 - `skills/` is the canonical repo-owned skill source; `scripts/update.sh`
