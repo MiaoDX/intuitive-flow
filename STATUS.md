@@ -64,7 +64,7 @@ The current maintenance focus is keeping the repo dogfoodable:
   risks or unresolved decisions, then execute through `intuitive-flow`
 - keep the default user-facing surface small: flow, refactor, and
   reduce-entropy; route installed specialists as needed, with docs/init/tests/preflight/
-  architecture-scanner/worktree-porting/issue tracking/plan-bakeoff/
+  architecture-scanner/worktree-porting/issue tracking/plan-bakeoff/research/
   skill-runner utilities kept out of the primary choice set, and changed-code
   cleanup owned by `intuitive-refactor`
 - keep the managed skill portfolio in `scripts/default-skill-allowlist.txt`

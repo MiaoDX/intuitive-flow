@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research"
+  short_description: "Run evidence-led deep research with existing tools"
+  default_prompt: "Use $research to investigate this question deeply and produce a traceable evidence-backed report."

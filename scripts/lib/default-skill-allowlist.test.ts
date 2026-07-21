@@ -76,6 +76,23 @@ describe("default skill allowlist", () => {
       .toEqual(["ponytail-audit", "ponytail-review"]);
   });
 
+  test("keeps repo-owned research available without default installation", () => {
+    const previous = process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS;
+    try {
+      delete process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS;
+      const allowlist = readDefaultSkillAllowlist(join(process.cwd(), "scripts", "default-skill-allowlist.txt"));
+
+      expect(allowlist.rootSkillPolicies).toContainEqual({ skill: "research", tier: "on-demand" });
+      expect(rootSkillsForInstall(allowlist)).not.toContain("research");
+
+      process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS = "research";
+      expect(rootSkillsForInstall(allowlist)).toContain("research");
+    } finally {
+      if (previous === undefined) delete process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS;
+      else process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS = previous;
+    }
+  });
+
   test("selects registered on-demand skills and filters external skills by host", () => {
     const previous = process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS;
     try {

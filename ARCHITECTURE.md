@@ -128,11 +128,14 @@ The default public choices are `$intuitive-flow`, `$intuitive-refactor`, and
 `$grill-with-docs-batch`, `$intuitive-preflight`, `$intuitive-doc`,
 `$intuitive-init`, `$intuitive-tests`, and `$skill-runner` remain installed as
 routed specialists. `$intuitive-squash`, `$intuitive-port-worktree`,
-`$multica-goal-tracker`, and `$plan-bakeoff` are registered on-demand
-utilities. Changed-code reuse/quality/efficiency review is a mode of
-`$intuitive-refactor`, not a separate default skill. `scripts/default-skill-allowlist.txt`
-is the complete managed portfolio across repo-owned, external, GStack, and GSD
-skills; parsed tier and host fields determine the installed surface.
+`$multica-goal-tracker`, `$plan-bakeoff`, and `$research` are registered
+on-demand utilities. `$research` owns evidence-led multi-source investigation
+using existing retrieval and delegation surfaces; it does not add a search
+engine or research runtime dependency. Changed-code
+reuse/quality/efficiency review is a mode of `$intuitive-refactor`, not a
+separate default skill. `scripts/default-skill-allowlist.txt` is the complete
+managed portfolio across repo-owned, external, GStack, and GSD skills; parsed
+tier and host fields determine the installed surface.
 `docs/human/skill-self-improvement-audit.md` records the human-facing role of
 the complete default surface, including external and managed wrappers.
 `$intuitive-preflight` owns approval-ready preflight contracts before a plan or
