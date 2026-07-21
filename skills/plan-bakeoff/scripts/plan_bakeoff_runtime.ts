@@ -122,6 +122,7 @@ export const skillRunnerArgsForCandidate = (
     const provider = candidate.provider_profile ?? "codex-router-responses";
     args.push("--agent", "codex");
     args.push("--launch-mode", candidate.launch_mode ?? "prompt-exec");
+    args.push("--codex-config-mode", "isolated");
     if (candidate.model) {
       args.push("--model", candidate.model);
     }

@@ -33,6 +33,12 @@ Use the runner's own help as the option source of truth:
 uv run python skills/skill-runner/scripts/run_skill_runner.py --help
 ```
 
+Codex prompt workers inherit the current Codex provider configuration and auth
+by default. This keeps ordinary supervised runs on the same working route as
+the parent session. Provider bakeoffs must pass `--codex-config-mode isolated`;
+that mode ignores user config and uses the explicit provider, base URL, env-key,
+and wire-API arguments supplied by the bakeoff runtime.
+
 Launch from the target repo and pass the worker prompt after `--`. Use
 `--dry-run` first when validating a new agent, model, launch mode, or ownership
 split. Use `--dangerous` only with explicit authorization. Do not infer missing

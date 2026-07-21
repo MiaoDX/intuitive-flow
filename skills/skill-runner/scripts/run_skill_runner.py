@@ -22,6 +22,7 @@ DEFAULT_RUN_ROOT = DEFAULT_CACHE_ROOT / "runs"
 DEFAULT_TIMEOUT_MINUTES = 600.0
 DEFAULT_IDLE_TIMEOUT_MINUTES = 20.0
 LAUNCH_MODES = ("prompt-exec", "interactive-tmux")
+CODEX_CONFIG_MODES = ("inherit", "isolated")
 RESULT_STATUS_PATTERN = re.compile(
     r"^\s*RESULT_STATUS:\s*(SUCCESS|PARTIAL|BLOCKED_NEEDS_DECISION|FAILED)\b",
     re.I | re.M,
@@ -85,6 +86,9 @@ def main() -> int:
         run_dir / "run.json",
         {
             "agent": args.agent,
+            "codex_config_mode": (
+                args.codex_config_mode if args.agent == "codex" and not args.agent_command else None
+            ),
             "cwd": str(cwd),
             "dangerous": bool(args.dangerous),
             "execution_mode": launch_mode,
@@ -168,6 +172,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--codex-provider-base-url", default="", help=argparse.SUPPRESS)
     parser.add_argument("--codex-provider-env-key", default="CODEX_API_KEY", help=argparse.SUPPRESS)
     parser.add_argument("--codex-wire-api", default="responses", help=argparse.SUPPRESS)
+    parser.add_argument(
+        "--codex-config-mode",
+        choices=CODEX_CONFIG_MODES,
+        default="inherit",
+        help=(
+            "Codex provider configuration. inherit uses the current Codex config and auth; "
+            "isolated ignores user config and uses explicit provider arguments."
+        ),
+    )
     parser.add_argument("--timeout-min", type=float, default=DEFAULT_TIMEOUT_MINUTES)
     parser.add_argument("--idle-timeout-min", type=float, default=DEFAULT_IDLE_TIMEOUT_MINUTES)
     parser.add_argument("--dry-run", action="store_true")
@@ -481,30 +494,36 @@ def interactive_agent_command(args: argparse.Namespace) -> list[str]:
 
 
 def codex_exec_command(args: argparse.Namespace, cwd: Path, run_dir: Path) -> list[str]:
-    provider = args.codex_provider
     command = [
         "codex",
         "exec",
         "--cd",
         str(cwd),
-        "--ignore-user-config",
-        "--ignore-rules",
-        "--json",
-        "--output-last-message",
-        str(run_dir / "last-message.md"),
     ]
+    if args.codex_config_mode == "isolated":
+        command.append("--ignore-user-config")
+    command.extend(
+        [
+            "--ignore-rules",
+            "--json",
+            "--output-last-message",
+            str(run_dir / "last-message.md"),
+        ]
+    )
     if args.dangerous:
         command.append("--dangerously-bypass-approvals-and-sandbox")
     else:
         command.extend(["--sandbox", "workspace-write"])
     if args.model:
         command.extend(["-c", f"model={json.dumps(args.model)}"])
-    command.extend(["-c", f"model_provider={json.dumps(provider)}"])
-    command.extend(["-c", f"model_providers.{provider}.name={json.dumps(provider)}"])
-    if args.codex_provider_base_url:
-        command.extend(["-c", f"model_providers.{provider}.base_url={json.dumps(args.codex_provider_base_url)}"])
-    command.extend(["-c", f"model_providers.{provider}.env_key={json.dumps(args.codex_provider_env_key)}"])
-    command.extend(["-c", f"model_providers.{provider}.wire_api={json.dumps(args.codex_wire_api)}"])
+    if args.codex_config_mode == "isolated":
+        provider = args.codex_provider
+        command.extend(["-c", f"model_provider={json.dumps(provider)}"])
+        command.extend(["-c", f"model_providers.{provider}.name={json.dumps(provider)}"])
+        if args.codex_provider_base_url:
+            command.extend(["-c", f"model_providers.{provider}.base_url={json.dumps(args.codex_provider_base_url)}"])
+        command.extend(["-c", f"model_providers.{provider}.env_key={json.dumps(args.codex_provider_env_key)}"])
+        command.extend(["-c", f"model_providers.{provider}.wire_api={json.dumps(args.codex_wire_api)}"])
     command.append("-")
     return command
 

@@ -239,6 +239,8 @@ describe("plan-bakeoff runner", () => {
 
     expect(codex).toContain("--agent");
     expect(codex).toContain("codex");
+    expect(codex).toContain("--codex-config-mode");
+    expect(codex).toContain("isolated");
     expect(codex).toContain("--codex-provider");
     expect(codex).toContain("minimax-responses");
     expect(codex).toContain("--materialize-skills");

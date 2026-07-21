@@ -42,6 +42,53 @@ ${body}
 }
 
 describe("skill-runner script", () => {
+  test("Codex prompt mode inherits the current config and auth by default", () => {
+    const output = runPython(`
+import argparse
+from pathlib import Path
+
+args = argparse.Namespace(
+    codex_config_mode="inherit",
+    codex_provider="codex-router-responses",
+    codex_provider_base_url="",
+    codex_provider_env_key="CODEX_API_KEY",
+    codex_wire_api="responses",
+    dangerous=False,
+    model=None,
+)
+print(json.dumps({"command": module.codex_exec_command(args, Path("/tmp/worktree"), Path("/tmp/run"))}))
+`);
+
+    expect(output.command).toContain("--ignore-rules");
+    expect(output.command).not.toContain("--ignore-user-config");
+    expect(output.command.join(" ")).not.toContain("model_provider=");
+    expect(output.command.join(" ")).not.toContain("CODEX_API_KEY");
+  });
+
+  test("Codex isolated mode uses only the explicit provider route", () => {
+    const output = runPython(`
+import argparse
+from pathlib import Path
+
+args = argparse.Namespace(
+    codex_config_mode="isolated",
+    codex_provider="codex-router-responses",
+    codex_provider_base_url="https://router.example.test/v1",
+    codex_provider_env_key="CODEX_API_KEY",
+    codex_wire_api="responses",
+    dangerous=False,
+    model="gpt-test",
+)
+print(json.dumps({"command": module.codex_exec_command(args, Path("/tmp/worktree"), Path("/tmp/run"))}))
+`);
+
+    expect(output.command).toContain("--ignore-user-config");
+    expect(output.command).toContain('model_provider="codex-router-responses"');
+    expect(output.command).toContain('model_providers.codex-router-responses.base_url="https://router.example.test/v1"');
+    expect(output.command).toContain('model_providers.codex-router-responses.env_key="CODEX_API_KEY"');
+    expect(output.command).toContain('model="gpt-test"');
+  });
+
   test("Claude prompt mode enables verbose stream-json output", () => {
     const output = runPython(`
 import argparse
@@ -147,6 +194,7 @@ print(json.dumps({
       expect(existsSync(join(runDir, "result.md"))).toBe(true);
       expect(readFileSync(join(runDir, "result.md"), "utf8")).toContain("Status: DRY_RUN");
       expect(readFileSync(join(runDir, "rewritten-prompt.md"), "utf8")).toContain("Acceptance contract:");
+      expect(readFileSync(join(runDir, "run.json"), "utf8")).toContain('"codex_config_mode": "inherit"');
     } finally {
       rmSync(runRoot, { recursive: true, force: true });
     }
