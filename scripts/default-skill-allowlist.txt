@@ -45,9 +45,9 @@ external-skill on-demand claude-code codex skills-directory/skill-codex codex
 # Planning, architecture, test, and handoff specialists:
 external-skill on-demand all mattpocock https://github.com/mattpocock/skills grill-with-docs
 external-skill on-demand all mattpocock https://github.com/mattpocock/skills handoff
-external-skill on-demand all mattpocock https://github.com/mattpocock/skills improve-codebase-architecture
+external-skill routed all mattpocock https://github.com/mattpocock/skills improve-codebase-architecture
 external-skill on-demand all mattpocock https://github.com/mattpocock/skills tdd
-external-skill on-demand all mattpocock https://github.com/mattpocock/skills zoom-out
+external-skill routed all mattpocock https://github.com/mattpocock/skills zoom-out
 
 # Trial community skills installed for dogfooding before promotion into flow.
 # Keep these explicit; do not broad-install whole community repos by default.

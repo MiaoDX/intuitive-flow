@@ -42,8 +42,9 @@ Current default-surface correction:
   GSD phase is actually needed.
 - Keep `$grill-with-docs-batch` routed for convergence; the external
   single-question `$grill-with-docs` remains registered on-demand.
-- Keep `$improve-codebase-architecture` registered on-demand as an optional
-  report-only deepening scanner.
+- Keep `$zoom-out` routed as the first architecture mapping pass and
+  `$improve-codebase-architecture` routed as an optional report-only deepening
+  scanner when that pass still leaves no accepted target seam.
 - Keep `$gstack-autoplan` routed as a risk-triggered planning scout, not a
   mandatory plan-backed execution gate.
 - Keep Anthropic `skill-creator` and the Claude-oriented external `codex`
@@ -82,7 +83,8 @@ Current default-surface correction:
 | --- | --- | --- |
 | `skill-creator` | External authoring utility from Anthropic's skills source. | Claude-only and on-demand; Codex keeps its built-in owner. |
 | `codex` | Claude-oriented external utility for Codex CLI workflows. | Claude-only and on-demand; never install into Codex by default. |
-| `grill-with-docs`, `handoff`, `improve-codebase-architecture`, `tdd`, `zoom-out` | Narrow external specialists. | Registered on-demand; local/routed owners remain the normal workflow surface. |
+| `grill-with-docs`, `handoff`, `tdd` | Narrow external specialists. | Registered on-demand; local/routed owners remain the normal workflow surface. |
+| `zoom-out`, `improve-codebase-architecture` | Architecture mapping and optional report-only deepening. | Keep routed so Reduce Entropy, Refactor, and Flow can run the architecture review sequence without a separate install step. |
 | `ponytail-audit`, `ponytail-review` | Simplicity and over-engineering review inputs used by local routes. | Keep routed. |
 | `ponytail`, `ponytail-debt`, `ponytail-help` | Broad/trial/help utilities. | Keep on-demand; do not occupy default discovery. |
 | `gstack-browse`, `gstack-open-gstack-browser` | Browser launch and browser QA helpers. | Keep browse default; open-browser is on-demand. |

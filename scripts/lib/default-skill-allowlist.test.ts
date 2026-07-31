@@ -54,13 +54,23 @@ describe("default skill allowlist", () => {
     expect(ledger.legacyCommands).toEqual(["old.md"]);
   });
 
-  test("current default surface keeps debugging and GSD visibility narrow", () => {
-    const allowlist = readDefaultSkillAllowlist(join(process.cwd(), "scripts", "default-skill-allowlist.txt"));
-    const externalSkills = allowlist.externalSources.flatMap((source) => source.skills);
+  test("current default surface keeps routed architecture tools available and GSD visibility narrow", () => {
+    const previous = process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS;
+    try {
+      delete process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS;
+      const allowlist = readDefaultSkillAllowlist(join(process.cwd(), "scripts", "default-skill-allowlist.txt"));
+      const externalSkills = allowlist.externalSources.flatMap((source) => source.skills);
+      const installedMattpocockSkills = externalSourcesForInstall(allowlist)
+        .find((source) => source.label === "mattpocock")?.skills;
 
-    expect(externalSkills).not.toContain("diagnose");
-    expect(allowlist.gstackSkills).toContain("gstack-investigate");
-    expect(gsdSkillsForInstall(allowlist)).toEqual([]);
+      expect(externalSkills).not.toContain("diagnose");
+      expect(installedMattpocockSkills).toEqual(["improve-codebase-architecture", "zoom-out"]);
+      expect(allowlist.gstackSkills).toContain("gstack-investigate");
+      expect(gsdSkillsForInstall(allowlist)).toEqual([]);
+    } finally {
+      if (previous === undefined) delete process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS;
+      else process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS = previous;
+    }
   });
 
   test("current portfolio routes only the useful ponytail review skills by default", () => {

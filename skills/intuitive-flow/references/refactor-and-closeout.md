@@ -15,13 +15,20 @@ Default path:
 
 ```text
 create or read refactor scope gate through $intuitive-refactor
-zoom-out + plan-eng-review      # architecture packet before edits
-improve-codebase-architecture   # optional report-only scanner when no seam is accepted
+$zoom-out + $plan-eng-review    # architecture packet before edits
+$improve-codebase-architecture  # optional report-only scanner when no seam is accepted
 TDD or diagnosis                 # only when accepted checklist needs proof first
 execute only the $intuitive-refactor accepted slice
 run one final $intuitive-doc doc-alignment sub-phase
 record P2/Parked ideas instead of implementing them
 ```
+
+Run `$zoom-out` for architecture-shaped work only when the current plan, ADR,
+or refactor gate does not already contain an equivalent module, caller,
+contract, data-flow, and invariant map. Route to
+`$improve-codebase-architecture` only when that first architecture review still
+leaves no accepted target seam; keep its output report-only and return accepted
+candidates to `$intuitive-refactor` before any production edit.
 
 The refactor scope gate comes from `$intuitive-refactor` or an equivalent
 approved refactor contract. It is the source of truth for the pass and must name:
