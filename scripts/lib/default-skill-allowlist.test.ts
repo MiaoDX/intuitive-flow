@@ -64,7 +64,13 @@ describe("default skill allowlist", () => {
         .find((source) => source.label === "mattpocock")?.skills;
 
       expect(externalSkills).not.toContain("diagnose");
-      expect(installedMattpocockSkills).toEqual(["improve-codebase-architecture", "zoom-out"]);
+      expect(installedMattpocockSkills).toEqual([
+        "codebase-design",
+        "domain-modeling",
+        "grilling",
+        "improve-codebase-architecture",
+      ]);
+      expect(externalSkills).not.toContain("zoom-out");
       expect(allowlist.gstackSkills).toContain("gstack-investigate");
       expect(gsdSkillsForInstall(allowlist)).toEqual([]);
     } finally {

@@ -146,7 +146,7 @@ before auditing. Repo entropy mode owns maintenance candidate discovery; plan
 entropy mode owns idea/plan blind spots before grill-batch and preflight.
 `gstack-autoplan` is a risk-triggered planning-stage unknown-unknown scout, not
 a mandatory Flow execution precheck.
-Open-ended architecture discovery runs the `$zoom-out` plus
+Open-ended architecture discovery runs the `$codebase-design` plus
 `$plan-eng-review` / `$gstack-plan-eng-review` sequence first, may use the
 allowlisted external `improve-codebase-architecture` skill for extra
 report-only candidate discovery, and returns accepted cleanup to

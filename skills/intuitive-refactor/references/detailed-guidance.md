@@ -61,12 +61,12 @@ task/skill/profile boundaries, MCP/tool surfaces, lifecycle gates, data flow, or
 runtime behavior, require an architecture packet before production edits. The
 packet must come from either:
 
-- the current turn's `$zoom-out` map plus `$plan-eng-review` /
+- the current turn's `$codebase-design` map plus `$plan-eng-review` /
   `$gstack-plan-eng-review` findings; or
 - an existing plan, ADR, or refactor gate that already contains equivalent
   evidence and can be cited.
 
-If the packet is missing, run `$zoom-out` first and then `$plan-eng-review`
+If the packet is missing, run `$codebase-design` first and then `$plan-eng-review`
 before producing the refactor scope gate. If the interactive gstack review gate
 is unavailable, apply the same engineering-review frame in prose and record the
 tool limitation.
@@ -74,7 +74,7 @@ tool limitation.
 Minimum architecture packet shape:
 
 ```text
-Zoom-out map:
+Codebase-design map:
 Eng-review recommendation:
 Public contract / boundary:
 Data flow:
@@ -285,7 +285,7 @@ discovery-loop mode instead of turning this refactor skill into a broad audit.
 
 If the target is architecture/public-contract shaped, look for an existing
 architecture packet in the user prompt, plan, ADR, or gate. If none exists, run
-`$zoom-out` and `$plan-eng-review` before producing the scope gate. If that
+`$codebase-design` and `$plan-eng-review` before producing the scope gate. If that
 review sequence still leaves no accepted target seam, use
 `$improve-codebase-architecture` as extra report-only candidate discovery.
 
@@ -315,7 +315,7 @@ the slice can regress.
 
 Use another workflow when it materially improves the current pass:
 
-- unclear architecture or seam quality -> run `$zoom-out` plus
+- unclear architecture or seam quality -> run `$codebase-design` plus
   `$plan-eng-review`; use `$improve-codebase-architecture` only as extra
   report-only candidate discovery
 - missing behavior coverage -> use TDD to add one public-interface proof

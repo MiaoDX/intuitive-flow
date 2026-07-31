@@ -69,9 +69,10 @@ boundary questions, MCP/tool surface changes, lifecycle gates, data-flow
 cleanup, or code seams where the module map is unclear, run an explicit review
 sequence before presenting the direction as decision-ready:
 
-1. `$zoom-out`: build a domain-language map of the relevant modules, callers,
-   public contracts, data flow, and invariants. Use repo docs and code, not just
-   intuition.
+1. `$codebase-design`: apply the shared module, interface, depth, seam, adapter,
+   leverage, and locality vocabulary while building a domain-language map of
+   the relevant modules, callers, public contracts, data flow, and invariants.
+   Use repo docs and code, not just intuition.
 2. `$plan-eng-review` / `$gstack-plan-eng-review`: stress-test the proposed
    slice for architecture fit, data flow, edge cases, acceptance gates,
    verification level, performance/cost risk, and rollout risk. If the
@@ -89,7 +90,7 @@ discussion.
 Architecture sequence output should be compact and reusable:
 
 ```text
-Zoom-out map:
+Codebase-design map:
 Eng-review recommendation:
 Public contract / boundary:
 Data flow:
@@ -268,8 +269,9 @@ the repo has been diagnosed:
 - `$intuitive-preflight` owns pre-execution contracts: context package, scope,
   non-goals, definition of done, verification, route, worker strategy, and
   main-session `/goal` wording.
-- `$zoom-out` plus `$plan-eng-review` own the first architecture review pass:
-  map the module/caller context, then stress-test the slice before execution.
+- `$codebase-design` plus `$plan-eng-review` own the first architecture review
+  pass: map the module/caller context with consistent deep-module vocabulary,
+  then stress-test the slice before execution.
 - `$improve-codebase-architecture` owns optional extra report-only
   architecture/deepening candidate discovery when the review sequence still
   leaves no accepted target seam.

@@ -75,8 +75,9 @@ Discovery handoff trigger:
 ```
 
 If the target is architecture-shaped or the module map is unclear, run the
-architecture review sequence before execution: zoom out, engineering review,
-then accepted refactor gate. Use `$improve-codebase-architecture` only as
+architecture review sequence before execution: apply `$codebase-design`, run
+engineering review, then create the accepted refactor gate. Use
+`$improve-codebase-architecture` only as
 optional extra report-only candidate discovery if that review sequence still
 leaves no accepted target seam.
 

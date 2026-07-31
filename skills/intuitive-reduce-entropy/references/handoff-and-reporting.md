@@ -30,7 +30,7 @@ Use this route unless the user already names a specific entropy source.
 5. **Architecture sequence**: when any candidate direction is
    architecture/deepening,
    public-contract cleanup, MCP/tool boundary cleanup, lifecycle gates, or an
-   unclear target seam, run `$zoom-out` and `$plan-eng-review` before
+   unclear target seam, run `$codebase-design` and `$plan-eng-review` before
    presenting it as decision-ready.
    If no target seam has been accepted after that, optionally route to
    `$improve-codebase-architecture` in report-only mode. Treat all discovery
@@ -86,7 +86,7 @@ If the user names a likely area, route directly:
   opportunities", "public contract", "MCP", "tool surface", "lifecycle gate" ->
   run the Architecture Review Sequence first. Use
   `$improve-codebase-architecture` only when extra report-only candidate
-  discovery is still needed after `$zoom-out` and `$plan-eng-review`.
+  discovery is still needed after `$codebase-design` and `$plan-eng-review`.
 - "module", "API", "compatibility", "seam", "stale wrapper", "known
   architecture target" ->
   `$intuitive-refactor`.
