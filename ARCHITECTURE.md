@@ -90,10 +90,13 @@ The recommended complex planning-to-execution workflow is risk-routed:
 
 ```text
 idea or draft plan
-  -> preflight
+  -> plan shaping and review
      -> plan entropy when assumptions or proof are weak
      -> planning-loop/autoplan when independent scouts add value
      -> grill-batch when a human/domain decision remains
+  -> canonical plan reconciliation
+  -> plan prose gate (shadow form check)
+  -> preflight
   -> intuitive-flow execution
 ```
 
@@ -109,6 +112,9 @@ The planning owners are intentionally separate:
   and plan entropy mode for idea or plan hardening.
 - `$grill-with-docs-batch` owns decision quality against domain language,
   current docs, and durable boundaries.
+- Flow's internal plan prose gate checks writing form after decision
+  reconciliation. During the trial it always checks, reports outside the plan,
+  and never rewrites the canonical plan.
 - `$intuitive-preflight` owns the executable contract: scope, non-goals,
   acceptance, verification gates, route, worker strategy, and stop conditions.
 - `$intuitive-flow` owns implementation, integration, proof, docs alignment, and

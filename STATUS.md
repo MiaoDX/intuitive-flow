@@ -1,6 +1,6 @@
 # Status
 
-Last reviewed: 2026-07-20
+Last reviewed: 2026-08-01
 
 ## Current State
 
@@ -15,6 +15,8 @@ currently provides:
   `templates/`, and `scripts/`
 - portable durable-run ownership that preserves target-repo status conventions,
   isolates task state, and keeps shared project status single-writer
+- a Flow-owned plan prose gate that runs an STE-flavored shadow check after
+  decision reconciliation and before preflight or execution handoff
 - a single default skill install allowlist at
   `scripts/default-skill-allowlist.txt`
 - a separate prune-only ledger for retired local artifacts at
@@ -75,6 +77,9 @@ The current maintenance focus is keeping the repo dogfoodable:
   be dogfooded before they are promoted into flow routes or removed
 - keep `gstack-autoplan` and `agent-planning-loop` as risk-triggered routed
   planning tools, not mandatory stages
+- dogfood the plan prose gate in report-only shadow mode; keep automatic
+  rewriting disabled until fixture and live evidence prove readability gains
+  without protected-contract regressions
 - use `bun run audit:skill-upstreams` to review upstream skill candidates
   outside the allowlist before adding anything new
 - keep installed global skill surfaces pruned by owner state: Intuitive root

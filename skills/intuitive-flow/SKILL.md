@@ -72,6 +72,7 @@ Load only the reference needed for the selected route:
 | Flow-specific blocker experiment contract, self-modification guard, loop diagnostics | `references/context-budget-and-loop-guard.md` |
 | Source-of-truth, `STATUS.md`, `CONTEXT.md`, provenance, phase granularity | `references/source-of-truth.md` |
 | Fuzzy idea shaping, single plan-file intake, unknown-unknown scout/reconciliation | `references/plan-intake-and-autoplan.md` |
+| Final plan prose check after decision reconciliation and before preflight or handoff | `references/plan-prose-gate.md` |
 | GSD ingest vs plan-phase routing, committed phase execution, changed-code cleanup scope | `references/gsd-handoff.md` |
 | Whole-run preflight, goal ownership, soft continuation vs hard stop, checkpoint policy, tmux/goal/clear policy | `references/checkpoints-and-auto-run.md` |
 | Broad refactor route, semantic commits, final `$intuitive-doc` doc-alignment sub-phase, parked-todo closeout | `references/refactor-and-closeout.md` |

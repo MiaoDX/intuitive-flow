@@ -1,6 +1,6 @@
 # Skill Self-Improvement Audit
 
-Last reviewed: 2026-07-21
+Last reviewed: 2026-08-01
 
 This audit applies the self-improvement lens from
 [`agent-harness-references.md`](agent-harness-references.md) to the managed
@@ -57,6 +57,34 @@ Current default-surface correction:
   mode only when it affects execution. Use `Mode note` sparingly for manual
   invocation, ambiguity, or better-route discovery; do not add mode menus to
   single-purpose utility skills.
+- Keep the STE-flavored plan prose adapter internal to Flow during its shadow
+  trial. It is a form checker after plan reconciliation, not a new public skill
+  or a substitute for plan entropy, engineering review, or preflight.
+
+## Skill Adoption Ladder
+
+Use this sequence before a new skill becomes normal runtime behavior:
+
+1. **Source audit:** review license, provenance, side effects, host assumptions,
+   context size, update behavior, and overlap with current owners.
+2. **Interface contract:** name the single seam, input, output, mutation scope,
+   failure behavior, stop gate, and existing owner that invokes it. Prefer an
+   internal adapter when only one workflow needs the behavior.
+3. **Fixture A/B:** compare representative historical tasks. Treat semantic
+   correctness, literal preservation, and contract completeness as hard gates;
+   use style scores, preference, latency, and token cost as supporting evidence.
+4. **Routed shadow:** install or bundle the candidate so its owner cannot forget
+   it, but report without mutation. Keep evidence outside canonical artifacts.
+5. **Guarded rollout:** allow narrowly scoped mutation only after shadow data is
+   useful. Run structural checks and inspect the semantic diff before applying
+   a candidate.
+6. **Promotion or removal:** promote only with stable benefit, acceptable cost,
+   and a rollback path. Otherwise keep the behavior advisory, return it to
+   on-demand use, or remove it.
+
+`default`, `routed`, and `on-demand` control installation and discovery, not
+automatic execution. Prefer `routed` for a specialist that an existing owner
+must invoke. Reserve `default` for a small public entry surface.
 
 ## Repo-Owned Root Skills
 

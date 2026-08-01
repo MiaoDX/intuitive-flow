@@ -213,6 +213,9 @@ Artifact rules:
 - Discussion skills such as `grill-with-docs` shape decisions through
   questions; the current agent still writes the plan unless a writing skill is
   invoked.
+- The Flow plan prose gate checks form after decision reconciliation. Its
+  shadow result is checkpoint evidence, not canonical plan content. Do not
+  append lint scores, candidate rewrites, or trial logs to the plan.
 - ADRs are not default outputs of this skill. Create/update ADRs only when an
   ADR-capable skill is explicitly used or the user asks.
 - `.planning/*` files are GSD-owned. Do not approximate GSD by editing

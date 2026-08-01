@@ -211,6 +211,23 @@ requirements as hard stops. Treat clarified tests, implementation sequencing,
 DX cleanup, and risk notes that preserve original intent as accepted updates
 once reconciled into the plan.
 
+## Plan Prose Finalization
+
+After the last content-changing planning stage, read `plan-prose-gate.md` and
+run its shadow gate against the canonical `docs/plans/<slug>.md`. Do this before
+presenting a plan-only checkpoint, invoking `$intuitive-preflight`, or entering
+the plan-backed execution gate.
+
+The gate always checks but does not rewrite during the current trial. Report
+its compact result outside the plan. If later entropy, grill, scout, preflight,
+or user decisions materially change the plan body, rerun the gate before
+handoff. A missing optional deterministic helper reports `score=unavailable`;
+it does not block a target repo or justify adding Bun there.
+
+The prose gate owns form only. It must not approve the plan, change protected
+contract sections, or substitute a low lint score for scope, acceptance,
+verification, or execution-readiness review.
+
 ## Plan-Backed Execution Gate
 
 When the user asks to implement a specific plan, says "LGTM", says "impl" while
