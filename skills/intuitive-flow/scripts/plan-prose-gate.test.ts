@@ -1,7 +1,17 @@
 import { describe, expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { comparePlanInvariants, lintPlanProse } from "./plan-prose-gate";
+import {
+  buildTrialReport,
+  comparePlanInvariants,
+  defaultTrialStateFile,
+  lintPlanProse,
+  readTrialEvents,
+  recordShadowCheck,
+  recordTrialReview,
+} from "./plan-prose-gate";
 
 describe("plan prose gate", () => {
   test("reports STE-flavored prose findings without linting literals or tables", () => {
@@ -171,9 +181,166 @@ describe("plan prose gate workflow contract", () => {
     const sourceOfTruth = read("references/source-of-truth.md");
 
     expect(gate).toContain("Shadow mode is report-only");
-    expect(gate).toContain("Do not block planning or add Bun to the target repo");
+    expect(gate).toContain("Do not block planning or add Bun");
     expect(gate).toContain("rewrite=not-run");
+    expect(gate).toContain("plan-prose-gate.jsonl");
+    expect(gate).toContain("--report --since 7d");
     expect(skill).toContain("references/plan-prose-gate.md");
     expect(sourceOfTruth).toContain("shadow result is checkpoint evidence");
+  });
+});
+
+describe("plan prose trial memory", () => {
+  test("uses the XDG state directory without touching the target repo", () => {
+    expect(defaultTrialStateFile({ XDG_STATE_HOME: "/tmp/demo-state" }, "/tmp/demo-home"))
+      .toBe("/tmp/demo-state/intuitive-flow/plan-prose-gate.jsonl");
+    expect(defaultTrialStateFile({}, "/tmp/demo-home"))
+      .toBe("/tmp/demo-home/.local/state/intuitive-flow/plan-prose-gate.jsonl");
+  });
+
+  test("records summary-only events with private local permissions", () => {
+    const root = mkdtempSync(join(tmpdir(), "plan-prose-memory-"));
+    try {
+      mkdirSync(join(root, ".git"));
+      mkdirSync(join(root, "docs", "plans"), { recursive: true });
+      const plan = join(root, "docs", "plans", "demo.md");
+      const stateFile = join(root, "local-state", "events.jsonl");
+      const markdown = "# Plan\n\n## Rationale\n\nThis robust plan is intentionally long enough to create a useful local trial record without storing this sentence.\n";
+      writeFileSync(plan, markdown);
+      const event = recordShadowCheck(plan, markdown, lintPlanProse(markdown), stateFile, new Date("2026-08-01T00:00:00Z"));
+      const stateText = readFileSync(stateFile, "utf8");
+
+      expect(event.planPath).toBe("docs/plans/demo.md");
+      expect(stateText).toContain(event.eventId);
+      expect(stateText).not.toContain("This robust plan");
+      expect(statSync(stateFile).mode & 0o777).toBe(0o600);
+      expect(statSync(join(root, "local-state")).mode & 0o777).toBe(0o700);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("deduplicates repeated checks by plan snapshot and carries review labels", () => {
+    const root = mkdtempSync(join(tmpdir(), "plan-prose-report-"));
+    try {
+      mkdirSync(join(root, ".git"));
+      const plan = join(root, "plan.md");
+      const stateFile = join(root, "state", "events.jsonl");
+      const markdown = "# Plan\n\n## Rationale\n\nThis robust plan helps.\n";
+      writeFileSync(plan, markdown);
+      const result = lintPlanProse(markdown);
+      const first = recordShadowCheck(plan, markdown, result, stateFile, new Date("2026-08-01T00:00:00Z"));
+      recordShadowCheck(plan, markdown, result, stateFile, new Date("2026-08-02T00:00:00Z"));
+      recordTrialReview(first.eventId, "useful", "real wording issue", stateFile, new Date("2026-08-02T01:00:00Z"));
+
+      const parsed = readTrialEvents(stateFile);
+      const report = buildTrialReport(parsed.events, new Date("2026-07-31T00:00:00Z"), parsed.malformedLineCount);
+      expect(report.checkCount).toBe(2);
+      expect(report.uniquePlanCount).toBe(1);
+      expect(report.uniqueSnapshotCount).toBe(1);
+      expect(report.reviewedSnapshotCount).toBe(1);
+      expect(report.verdicts.useful).toBe(1);
+      expect(report.recommendation).toBe("COLLECT_MORE_SNAPSHOTS");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("recommends candidate shadow only after enough reviewed useful snapshots", () => {
+    const root = mkdtempSync(join(tmpdir(), "plan-prose-decision-"));
+    try {
+      mkdirSync(join(root, ".git"));
+      const plan = join(root, "plan.md");
+      const stateFile = join(root, "state", "events.jsonl");
+      for (let index = 0; index < 5; index += 1) {
+        const markdown = `# Plan\n\n## Rationale\n\nThis robust plan uses snapshot ${index}.\n`;
+        writeFileSync(plan, markdown);
+        const check = recordShadowCheck(
+          plan,
+          markdown,
+          lintPlanProse(markdown),
+          stateFile,
+          new Date(`2026-08-0${index + 1}T00:00:00Z`),
+        );
+        recordTrialReview(
+          check.eventId,
+          index < 3 ? "useful" : "mixed",
+          undefined,
+          stateFile,
+          new Date(`2026-08-0${index + 1}T01:00:00Z`),
+        );
+      }
+
+      const parsed = readTrialEvents(stateFile);
+      const report = buildTrialReport(parsed.events, new Date("2026-07-31T00:00:00Z"));
+      expect(report.uniqueSnapshotCount).toBe(5);
+      expect(report.reviewedSnapshotCount).toBe(5);
+      expect(report.verdicts).toEqual({ useful: 3, mixed: 2, noise: 0, unreviewed: 0 });
+      expect(report.recommendation).toBe("ADVANCE_TO_CANDIDATE_SHADOW");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("runs check, review, and weekly report through the CLI", () => {
+    const root = mkdtempSync(join(tmpdir(), "plan-prose-cli-"));
+    try {
+      mkdirSync(join(root, ".git"));
+      const plan = join(root, "plan.md");
+      const stateFile = join(root, "state", "events.jsonl");
+      const script = join(process.cwd(), "skills", "intuitive-flow", "scripts", "plan-prose-gate.ts");
+      writeFileSync(plan, "# Plan\n\n## Rationale\n\nThis robust plan helps.\n");
+
+      const check = spawnSync(process.execPath, [script, "--state-file", stateFile, plan], { encoding: "utf8" });
+      expect(check.status).toBe(0);
+      const event = readTrialEvents(stateFile).events.find((item) => item.type === "check");
+      expect(event?.type).toBe("check");
+
+      const review = spawnSync(
+        process.execPath,
+        [script, "--state-file", stateFile, "--review", event!.eventId, "useful", "clear signal"],
+        { encoding: "utf8" },
+      );
+      expect(review.status).toBe(0);
+      expect(review.stdout).toContain("verdict=useful");
+
+      const report = spawnSync(
+        process.execPath,
+        [script, "--state-file", stateFile, "--report", "--since", "7d"],
+        { encoding: "utf8" },
+      );
+      expect(report.status).toBe(0);
+      expect(report.stdout).toContain("unique_snapshots=1");
+      expect(report.stdout).toContain("useful=1");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("counts invalid state lines without breaking the report", () => {
+    const root = mkdtempSync(join(tmpdir(), "plan-prose-malformed-"));
+    try {
+      const stateFile = join(root, "events.jsonl");
+      const incompleteCheck = {
+        schemaVersion: 1,
+        type: "check",
+        eventId: "incomplete",
+        timestamp: "not-a-date",
+        adapter: "ste-flavored-v1",
+        mode: "shadow",
+        repoRoot: root,
+        repoName: "demo",
+        planPath: "plan.md",
+        contentHash: "abc",
+        result: {},
+      };
+      writeFileSync(stateFile, `not json\n${JSON.stringify(incompleteCheck)}\n`);
+      const parsed = readTrialEvents(stateFile);
+      expect(parsed.events).toEqual([]);
+      expect(parsed.malformedLineCount).toBe(2);
+      expect(buildTrialReport(parsed.events, new Date(0), parsed.malformedLineCount).malformedLineCount).toBe(2);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });

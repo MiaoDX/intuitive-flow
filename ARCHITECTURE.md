@@ -114,7 +114,9 @@ The planning owners are intentionally separate:
   current docs, and durable boundaries.
 - Flow's internal plan prose gate checks writing form after decision
   reconciliation. During the trial it always checks, reports outside the plan,
-  and never rewrites the canonical plan.
+  and never rewrites the canonical plan. Summary-only events persist in the
+  user-local XDG state directory so weekly analysis does not mutate target
+  repositories or canonical plans.
 - `$intuitive-preflight` owns the executable contract: scope, non-goals,
   acceptance, verification gates, route, worker strategy, and stop conditions.
 - `$intuitive-flow` owns implementation, integration, proof, docs alignment, and

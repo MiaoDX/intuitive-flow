@@ -16,7 +16,8 @@ currently provides:
 - portable durable-run ownership that preserves target-repo status conventions,
   isolates task state, and keeps shared project status single-writer
 - a Flow-owned plan prose gate that runs an STE-flavored shadow check after
-  decision reconciliation and before preflight or execution handoff
+  decision reconciliation and before preflight or execution handoff, with
+  summary-only local JSONL trial memory and a seven-day report
 - a single default skill install allowlist at
   `scripts/default-skill-allowlist.txt`
 - a separate prune-only ledger for retired local artifacts at
@@ -79,7 +80,8 @@ The current maintenance focus is keeping the repo dogfoodable:
   planning tools, not mandatory stages
 - dogfood the plan prose gate in report-only shadow mode; keep automatic
   rewriting disabled until fixture and live evidence prove readability gains
-  without protected-contract regressions
+  without protected-contract regressions; review weekly trial samples as
+  `useful`, `mixed`, or `noise` before promoting or dropping the adapter
 - use `bun run audit:skill-upstreams` to review upstream skill candidates
   outside the allowlist before adding anything new
 - keep installed global skill surfaces pruned by owner state: Intuitive root
@@ -132,6 +134,9 @@ locked summaries, not the active roadmap.
   mirrors allowlisted repo-owned skills into installed host surfaces.
 - Skill sync creates missing host skill roots and mirrors `_shared` resources,
   but installation does not create or migrate status artifacts in target repos.
+- Plan prose shadow checks store summary-only trial events under the user-local
+  XDG state directory. They do not store plan prose, mutate target repos, or
+  upload telemetry.
 - `.githooks/pre-commit` is opt-in per checkout through `bun run setup:hooks`
   because Git does not version local hook configuration.
 

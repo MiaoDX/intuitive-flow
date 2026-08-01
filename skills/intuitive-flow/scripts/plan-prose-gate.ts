@@ -1,6 +1,9 @@
 #!/usr/bin/env bun
 
-import { readFileSync } from "node:fs";
+import { createHash, randomUUID } from "node:crypto";
+import { appendFileSync, chmodSync, existsSync, mkdirSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { basename, dirname, join, relative, resolve } from "node:path";
 
 export type FindingKind =
   | "long_sentence"
@@ -31,6 +34,67 @@ export type ProseLintResult = {
 export type PlanInvariantResult = {
   ok: boolean;
   changed: string[];
+};
+
+export type TrialVerdict = "useful" | "mixed" | "noise";
+
+export type ShadowCheckEvent = {
+  schemaVersion: 1;
+  type: "check";
+  eventId: string;
+  timestamp: string;
+  adapter: "ste-flavored-v1";
+  mode: "shadow";
+  repoRoot: string;
+  repoName: string;
+  planPath: string;
+  contentHash: string;
+  result: Omit<ProseLintResult, "findings"> & {
+    findingsByKind: Record<FindingKind, number>;
+  };
+};
+
+export type TrialReviewEvent = {
+  schemaVersion: 1;
+  type: "review";
+  eventId: string;
+  timestamp: string;
+  targetEventId: string;
+  verdict: TrialVerdict;
+  note?: string;
+};
+
+export type TrialEvent = ShadowCheckEvent | TrialReviewEvent;
+
+export type TrialReport = {
+  since: string;
+  checkCount: number;
+  uniquePlanCount: number;
+  uniqueSnapshotCount: number;
+  reviewedSnapshotCount: number;
+  averageScore: number;
+  totalFindings: number;
+  eligibleFindings: number;
+  protectedFindings: number;
+  findingsByKind: Record<FindingKind, number>;
+  verdicts: Record<TrialVerdict | "unreviewed", number>;
+  recommendation:
+    | "COLLECT_MORE_SNAPSHOTS"
+    | "REVIEW_SAMPLES"
+    | "DROP_OR_RETUNE"
+    | "ADVANCE_TO_CANDIDATE_SHADOW"
+    | "KEEP_SHADOW";
+  samples: Array<{
+    eventId: string;
+    repoName: string;
+    planPath: string;
+    score: number;
+    findings: number;
+    eligible: number;
+    protected: number;
+    verdict: TrialVerdict | "unreviewed";
+  }>;
+  malformedLineCount: number;
 };
 
 const PROTECTED_SECTIONS = new Set([
@@ -78,6 +142,15 @@ const MARKETING_WORDS = [
   "seamless",
   "state-of-the-art",
   "world-class",
+];
+
+const FINDING_KINDS: FindingKind[] = [
+  "long_sentence",
+  "semicolon",
+  "contraction",
+  "passive_voice",
+  "formal_word",
+  "marketing_word",
 ];
 
 type FenceState = {
@@ -339,15 +412,333 @@ export const comparePlanInvariants = (before: string, candidate: string): PlanIn
   return { ok: changed.length === 0, changed };
 };
 
+const emptyFindingCounts = (): Record<FindingKind, number> => ({
+  long_sentence: 0,
+  semicolon: 0,
+  contraction: 0,
+  passive_voice: 0,
+  formal_word: 0,
+  marketing_word: 0,
+});
+
+const findingCounts = (findings: ProseFinding[]): Record<FindingKind, number> => {
+  const counts = emptyFindingCounts();
+  for (const finding of findings) counts[finding.kind] += 1;
+  return counts;
+};
+
+const findRepoRoot = (start: string): string => {
+  let current = resolve(start);
+  while (true) {
+    if (existsSync(join(current, ".git"))) return current;
+    const parent = dirname(current);
+    if (parent === current) return resolve(start);
+    current = parent;
+  }
+};
+
+export const defaultTrialStateFile = (
+  env: Record<string, string | undefined> = process.env,
+  home = homedir(),
+): string => {
+  const stateRoot = env.XDG_STATE_HOME?.trim() || join(home, ".local", "state");
+  return join(stateRoot, "intuitive-flow", "plan-prose-gate.jsonl");
+};
+
+const appendTrialEvent = (stateFile: string, event: TrialEvent) => {
+  const stateDir = dirname(stateFile);
+  mkdirSync(stateDir, { recursive: true, mode: 0o700 });
+  chmodSync(stateDir, 0o700);
+  appendFileSync(stateFile, `${JSON.stringify(event)}\n`, { encoding: "utf8", mode: 0o600 });
+  chmodSync(stateFile, 0o600);
+};
+
+export const recordShadowCheck = (
+  planFile: string,
+  markdown: string,
+  result: ProseLintResult,
+  stateFile = defaultTrialStateFile(),
+  now = new Date(),
+): ShadowCheckEvent => {
+  const absolutePlan = resolve(planFile);
+  const repoRoot = findRepoRoot(dirname(absolutePlan));
+  const event: ShadowCheckEvent = {
+    schemaVersion: 1,
+    type: "check",
+    eventId: randomUUID(),
+    timestamp: now.toISOString(),
+    adapter: "ste-flavored-v1",
+    mode: "shadow",
+    repoRoot,
+    repoName: basename(repoRoot),
+    planPath: relative(repoRoot, absolutePlan) || basename(absolutePlan),
+    contentHash: createHash("sha256").update(markdown).digest("hex"),
+    result: {
+      mode: result.mode,
+      words: result.words,
+      findingCount: result.findingCount,
+      rewriteEligibleFindingCount: result.rewriteEligibleFindingCount,
+      protectedFindingCount: result.protectedFindingCount,
+      scorePer100Words: result.scorePer100Words,
+      findingsByKind: findingCounts(result.findings),
+    },
+  };
+  appendTrialEvent(stateFile, event);
+  return event;
+};
+
+export const readTrialEvents = (stateFile = defaultTrialStateFile()): {
+  events: TrialEvent[];
+  malformedLineCount: number;
+} => {
+  if (!existsSync(stateFile)) return { events: [], malformedLineCount: 0 };
+  const events: TrialEvent[] = [];
+  let malformedLineCount = 0;
+  for (const line of readFileSync(stateFile, "utf8").split(/\r?\n/)) {
+    if (line.trim() === "") continue;
+    try {
+      const event = JSON.parse(line) as Partial<TrialEvent>;
+      const result = event.type === "check" ? event.result : undefined;
+      const findingKindCountsValid = result && typeof result.findingsByKind === "object" &&
+        FINDING_KINDS.every((kind) => {
+          const count = result.findingsByKind[kind];
+          return typeof count === "number" && Number.isInteger(count) && count >= 0;
+        });
+      const resultValid = result && result.mode === "shadow" &&
+        typeof result.words === "number" && Number.isInteger(result.words) && result.words >= 0 &&
+        typeof result.findingCount === "number" && Number.isInteger(result.findingCount) && result.findingCount >= 0 &&
+        typeof result.rewriteEligibleFindingCount === "number" && Number.isInteger(result.rewriteEligibleFindingCount) &&
+        result.rewriteEligibleFindingCount >= 0 &&
+        typeof result.protectedFindingCount === "number" && Number.isInteger(result.protectedFindingCount) &&
+        result.protectedFindingCount >= 0 &&
+        typeof result.scorePer100Words === "number" && Number.isFinite(result.scorePer100Words) &&
+        findingKindCountsValid;
+      const commonValid = event.schemaVersion === 1 && typeof event.eventId === "string" &&
+        typeof event.timestamp === "string" && Number.isFinite(Date.parse(event.timestamp));
+      const checkValid = event.type === "check" && typeof event.contentHash === "string" &&
+        typeof event.repoRoot === "string" && typeof event.planPath === "string" &&
+        typeof event.repoName === "string" && event.adapter === "ste-flavored-v1" &&
+        event.mode === "shadow" && resultValid;
+      const reviewValid = event.type === "review" && typeof event.targetEventId === "string" &&
+        (event.verdict === "useful" || event.verdict === "mixed" || event.verdict === "noise") &&
+        (event.note === undefined || typeof event.note === "string");
+      if (!commonValid || (!checkValid && !reviewValid)) {
+        malformedLineCount += 1;
+      } else {
+        events.push(event as TrialEvent);
+      }
+    } catch {
+      malformedLineCount += 1;
+    }
+  }
+  return { events, malformedLineCount };
+};
+
+export const recordTrialReview = (
+  targetEventId: string,
+  verdict: TrialVerdict,
+  note: string | undefined,
+  stateFile = defaultTrialStateFile(),
+  now = new Date(),
+): TrialReviewEvent => {
+  const { events } = readTrialEvents(stateFile);
+  if (!events.some((event) => event.type === "check" && event.eventId === targetEventId)) {
+    throw new Error(`unknown check event: ${targetEventId}`);
+  }
+  const cleanNote = note?.trim().replace(/\s+/g, " ").slice(0, 500);
+  const event: TrialReviewEvent = {
+    schemaVersion: 1,
+    type: "review",
+    eventId: randomUUID(),
+    timestamp: now.toISOString(),
+    targetEventId,
+    verdict,
+    ...(cleanNote ? { note: cleanNote } : {}),
+  };
+  appendTrialEvent(stateFile, event);
+  return event;
+};
+
+export const parseDurationMs = (value: string): number => {
+  const match = value.match(/^(\d+)([dhm])$/);
+  if (!match) throw new Error(`invalid duration: ${value}; use forms such as 7d, 12h, or 30m`);
+  const amount = Number(match[1]);
+  const unit = match[2];
+  const multiplier = unit === "d" ? 86_400_000 : unit === "h" ? 3_600_000 : 60_000;
+  return amount * multiplier;
+};
+
+const snapshotKey = (event: ShadowCheckEvent): string =>
+  `${event.repoRoot}\0${event.planPath}\0${event.contentHash}`;
+
+export const buildTrialReport = (
+  events: TrialEvent[],
+  since: Date,
+  malformedLineCount = 0,
+): TrialReport => {
+  const checks = events.filter(
+    (event): event is ShadowCheckEvent => event.type === "check" && new Date(event.timestamp) >= since,
+  );
+  const eventById = new Map(
+    events.filter((event): event is ShadowCheckEvent => event.type === "check").map((event) => [event.eventId, event]),
+  );
+  const latestSnapshot = new Map<string, ShadowCheckEvent>();
+  for (const check of checks) latestSnapshot.set(snapshotKey(check), check);
+  const snapshots = [...latestSnapshot.values()];
+  const snapshotVerdicts = new Map<string, TrialReviewEvent>();
+  for (const event of events) {
+    if (event.type !== "review") continue;
+    const target = eventById.get(event.targetEventId);
+    if (!target) continue;
+    const key = snapshotKey(target);
+    const previous = snapshotVerdicts.get(key);
+    if (!previous || previous.timestamp < event.timestamp) snapshotVerdicts.set(key, event);
+  }
+
+  const findingsByKind = emptyFindingCounts();
+  let totalFindings = 0;
+  let eligibleFindings = 0;
+  let protectedFindings = 0;
+  let totalScore = 0;
+  const verdicts: TrialReport["verdicts"] = { useful: 0, mixed: 0, noise: 0, unreviewed: 0 };
+  for (const snapshot of snapshots) {
+    totalFindings += snapshot.result.findingCount;
+    eligibleFindings += snapshot.result.rewriteEligibleFindingCount;
+    protectedFindings += snapshot.result.protectedFindingCount;
+    totalScore += snapshot.result.scorePer100Words;
+    for (const kind of FINDING_KINDS) findingsByKind[kind] += snapshot.result.findingsByKind[kind] ?? 0;
+    const review = snapshotVerdicts.get(snapshotKey(snapshot));
+    verdicts[review?.verdict ?? "unreviewed"] += 1;
+  }
+
+  const uniquePlanCount = new Set(snapshots.map((event) => `${event.repoRoot}\0${event.planPath}`)).size;
+  const reviewedSnapshotCount = snapshots.length - verdicts.unreviewed;
+  const requiredReviews = Math.min(5, snapshots.length);
+  let recommendation: TrialReport["recommendation"] = "KEEP_SHADOW";
+  if (snapshots.length < 5) {
+    recommendation = "COLLECT_MORE_SNAPSHOTS";
+  } else if (reviewedSnapshotCount < requiredReviews) {
+    recommendation = "REVIEW_SAMPLES";
+  } else if (verdicts.noise / reviewedSnapshotCount >= 0.5) {
+    recommendation = "DROP_OR_RETUNE";
+  } else if (verdicts.useful / reviewedSnapshotCount >= 0.6) {
+    recommendation = "ADVANCE_TO_CANDIDATE_SHADOW";
+  }
+
+  const samples = snapshots
+    .sort((left, right) => right.result.scorePer100Words - left.result.scorePer100Words)
+    .slice(0, 10)
+    .map((event) => {
+      const verdict: TrialVerdict | "unreviewed" =
+        snapshotVerdicts.get(snapshotKey(event))?.verdict ?? "unreviewed";
+      return {
+        eventId: event.eventId,
+        repoName: event.repoName,
+        planPath: event.planPath,
+        score: event.result.scorePer100Words,
+        findings: event.result.findingCount,
+        eligible: event.result.rewriteEligibleFindingCount,
+        protected: event.result.protectedFindingCount,
+        verdict,
+      };
+    });
+
+  return {
+    since: since.toISOString(),
+    checkCount: checks.length,
+    uniquePlanCount,
+    uniqueSnapshotCount: snapshots.length,
+    reviewedSnapshotCount,
+    averageScore: snapshots.length === 0 ? 0 : Number((totalScore / snapshots.length).toFixed(2)),
+    totalFindings,
+    eligibleFindings,
+    protectedFindings,
+    findingsByKind,
+    verdicts,
+    recommendation,
+    samples,
+    malformedLineCount,
+  };
+};
+
+const formatTrialReport = (report: TrialReport): string => {
+  const kinds = FINDING_KINDS.map((kind) => `${kind}=${report.findingsByKind[kind]}`).join(", ");
+  const samples = report.samples.length === 0
+    ? "- none"
+    : report.samples.map((sample) =>
+      `- ${sample.eventId} ${sample.repoName}/${sample.planPath} score=${sample.score} ` +
+      `findings=${sample.findings} eligible=${sample.eligible} protected=${sample.protected} verdict=${sample.verdict}`,
+    ).join("\n");
+  return [
+    `Plan prose trial report since ${report.since}`,
+    `checks=${report.checkCount}; unique_plans=${report.uniquePlanCount}; unique_snapshots=${report.uniqueSnapshotCount}; reviewed=${report.reviewedSnapshotCount}.`,
+    `average_score=${report.averageScore}; findings=${report.totalFindings}; eligible=${report.eligibleFindings}; protected=${report.protectedFindings}.`,
+    `verdicts: useful=${report.verdicts.useful}; mixed=${report.verdicts.mixed}; noise=${report.verdicts.noise}; unreviewed=${report.verdicts.unreviewed}.`,
+    `finding kinds: ${kinds}.`,
+    `recommendation=${report.recommendation}; malformed_lines=${report.malformedLineCount}.`,
+    "Review samples:",
+    samples,
+  ].join("\n");
+};
+
 const usage = () => {
-  console.error("Usage: plan-prose-gate.ts [--json] <plan.md>");
+  console.error("Usage: plan-prose-gate.ts [--json] [--no-record] [--state-file <path>] <plan.md>");
   console.error("       plan-prose-gate.ts [--json] --compare <before.md> <candidate.md>");
+  console.error("       plan-prose-gate.ts [--json] [--state-file <path>] --report [--since 7d]");
+  console.error("       plan-prose-gate.ts [--state-file <path>] --review <event-id> <useful|mixed|noise> [note]");
 };
 
 const main = () => {
   const args = process.argv.slice(2);
-  const json = args[0] === "--json";
-  const values = json ? args.slice(1) : args;
+  let json = false;
+  let noRecord = false;
+  let stateFile = defaultTrialStateFile();
+  let sinceValue = "7d";
+  const values: string[] = [];
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index]!;
+    if (arg === "--json") {
+      json = true;
+    } else if (arg === "--no-record") {
+      noRecord = true;
+    } else if (arg === "--state-file") {
+      const value = args[index + 1];
+      if (!value) throw new Error("--state-file requires a path");
+      stateFile = resolve(value);
+      index += 1;
+    } else if (arg === "--since") {
+      const value = args[index + 1];
+      if (!value) throw new Error("--since requires a duration");
+      sinceValue = value;
+      index += 1;
+    } else {
+      values.push(arg);
+    }
+  }
+
+  if (values[0] === "--report") {
+    if (values.length !== 1) {
+      usage();
+      process.exit(2);
+    }
+    const { events, malformedLineCount } = readTrialEvents(stateFile);
+    const since = new Date(Date.now() - parseDurationMs(sinceValue));
+    const report = buildTrialReport(events, since, malformedLineCount);
+    console.log(json ? JSON.stringify(report, null, 2) : formatTrialReport(report));
+    return;
+  }
+
+  if (values[0] === "--review") {
+    const targetEventId = values[1];
+    const verdict = values[2] as TrialVerdict | undefined;
+    if (!targetEventId || !verdict || !["useful", "mixed", "noise"].includes(verdict)) {
+      usage();
+      process.exit(2);
+    }
+    const review = recordTrialReview(targetEventId, verdict, values.slice(3).join(" ") || undefined, stateFile);
+    console.log(`Plan prose trial review: event=${review.targetEventId}; verdict=${review.verdict}; recorded=${stateFile}.`);
+    return;
+  }
 
   if (values[0] === "--compare") {
     if (values.length !== 3) {
@@ -375,18 +766,39 @@ const main = () => {
     process.exit(2);
   }
 
-  const result = lintPlanProse(readFileSync(values[0]!, "utf8"));
+  const planFile = values[0]!;
+  const markdown = readFileSync(planFile, "utf8");
+  const result = lintPlanProse(markdown);
+  let record: ShadowCheckEvent | undefined;
+  let recordError: string | undefined;
+  if (!noRecord) {
+    try {
+      record = recordShadowCheck(planFile, markdown, result, stateFile);
+    } catch (error) {
+      recordError = error instanceof Error ? error.message : String(error);
+    }
+  }
   if (json) {
-    console.log(JSON.stringify(result, null, 2));
+    console.log(JSON.stringify({ result, record, recordError, stateFile: noRecord ? undefined : stateFile }, null, 2));
   } else {
+    const recordStatus = noRecord
+      ? "disabled"
+      : record
+        ? `${record.eventId} -> ${stateFile}`
+        : `failed (${recordError})`;
     console.log(
       `Plan prose gate: checked (shadow); findings=${result.findingCount}; ` +
         `eligible=${result.rewriteEligibleFindingCount}; protected=${result.protectedFindingCount}; ` +
-        `score=${result.scorePer100Words}; rewrite=not-run.`,
+        `score=${result.scorePer100Words}; rewrite=not-run; record=${recordStatus}.`,
     );
   }
 };
 
 if (import.meta.main) {
-  main();
+  try {
+    main();
+  } catch (error) {
+    console.error(`plan-prose-gate: ${error instanceof Error ? error.message : String(error)}`);
+    process.exit(2);
+  }
 }

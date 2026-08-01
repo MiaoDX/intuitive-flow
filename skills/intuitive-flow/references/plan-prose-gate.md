@@ -35,15 +35,67 @@ Shadow mode is report-only:
    ```
 
 3. Do not rewrite the canonical plan.
-4. Report one compact result outside the plan:
+4. Let the helper append summary-only trial evidence to the local state file.
+5. Report one compact result outside the plan:
 
    ```text
-   Plan prose gate: checked (shadow); findings=<count>; score=<per-100-words | unavailable>; rewrite=not-run.
+   Plan prose gate: checked (shadow); findings=<count>; score=<score | unavailable>; rewrite=not-run; record=<event -> state-file | failed | unavailable>.
    ```
 
 The helper is evidence, not a portability requirement. If Bun or the helper is
 unavailable in a target repo, complete the inline inspection and report
-`score=unavailable`. Do not block planning or add Bun to the target repo.
+`score=unavailable; record=unavailable`. Do not block planning or add Bun to the
+target repo.
+
+## Local Trial Memory
+
+Successful helper runs append JSONL events to:
+
+```text
+${XDG_STATE_HOME:-~/.local/state}/intuitive-flow/plan-prose-gate.jsonl
+```
+
+The directory uses mode `0700`; the file uses `0600`. This is local trial state,
+not telemetry. It is not written to the target repo or uploaded by Intuitive
+Flow.
+
+Each check stores the timestamp, local repo root, repo-relative plan path,
+content hash, word and finding counts, protected/eligible counts, and counts by
+finding kind. It does not store plan prose or finding excerpts. Repeated checks
+remain visible as invocation counts, while reports deduplicate the same plan
+content as one snapshot.
+
+Use `--no-record` for a one-off diagnostic that must not enter trial memory.
+Use `--state-file <path>` to isolate an experiment or choose another local
+state surface.
+
+Review a sample after inspecting its plan and detailed `--json` output:
+
+```bash
+bun <intuitive-flow-skill-root>/scripts/plan-prose-gate.ts \
+  --review <event-id> <useful|mixed|noise> [short-note]
+```
+
+Do not put plan content or secrets in the optional note.
+
+After one week, run:
+
+```bash
+bun <intuitive-flow-skill-root>/scripts/plan-prose-gate.ts --report --since 7d
+```
+
+The report shows checks, unique plans, unique content snapshots, review
+coverage, scores, finding kinds, verdicts, and up to ten high-score samples to
+review. Its recommendation uses transparent conservative thresholds:
+
+- fewer than five snapshots: `COLLECT_MORE_SNAPSHOTS`;
+- fewer than five reviewed snapshots when five exist: `REVIEW_SAMPLES`;
+- at least 50% `noise`: `DROP_OR_RETUNE`;
+- at least 60% `useful`: `ADVANCE_TO_CANDIDATE_SHADOW`;
+- otherwise: `KEEP_SHADOW`.
+
+The recommendation never changes runtime behavior automatically. Candidate
+shadow is still required before any guarded rewrite.
 
 ## STE-Flavored Adapter
 
@@ -102,9 +154,9 @@ runs show:
 - a low false-positive rate across different plan shapes;
 - a clear rollback path to shadow mode.
 
-Record trial evidence outside the canonical plan. Promote, keep advisory, or
-remove the adapter based on that evidence instead of adding permanent runtime
-ceremony.
+Record trial evidence in the local trial-memory JSONL, not the canonical plan.
+Promote, keep advisory, or remove the adapter based on the weekly report and
+reviewed samples instead of adding permanent runtime ceremony.
 
 ## Provenance
 

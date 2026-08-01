@@ -219,10 +219,11 @@ presenting a plan-only checkpoint, invoking `$intuitive-preflight`, or entering
 the plan-backed execution gate.
 
 The gate always checks but does not rewrite during the current trial. Report
-its compact result outside the plan. If later entropy, grill, scout, preflight,
-or user decisions materially change the plan body, rerun the gate before
-handoff. A missing optional deterministic helper reports `score=unavailable`;
-it does not block a target repo or justify adding Bun there.
+its compact result and local trial-record status outside the plan. If later
+entropy, grill, scout, preflight, or user decisions materially change the plan
+body, rerun the gate before handoff. A missing optional deterministic helper
+reports `score=unavailable; record=unavailable`; it does not block a target repo
+or justify adding Bun there.
 
 The prose gate owns form only. It must not approve the plan, change protected
 contract sections, or substitute a low lint score for scope, acceptance,

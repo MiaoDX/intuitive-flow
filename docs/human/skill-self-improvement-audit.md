@@ -74,7 +74,9 @@ Use this sequence before a new skill becomes normal runtime behavior:
    correctness, literal preservation, and contract completeness as hard gates;
    use style scores, preference, latency, and token cost as supporting evidence.
 4. **Routed shadow:** install or bundle the candidate so its owner cannot forget
-   it, but report without mutation. Keep evidence outside canonical artifacts.
+   it, but report without mutation. Persist summary-only local trial events,
+   deduplicate repeated snapshots, and collect explicit useful/mixed/noise
+   reviews outside canonical artifacts.
 5. **Guarded rollout:** allow narrowly scoped mutation only after shadow data is
    useful. Run structural checks and inspect the semantic diff before applying
    a candidate.
@@ -85,6 +87,33 @@ Use this sequence before a new skill becomes normal runtime behavior:
 `default`, `routed`, and `on-demand` control installation and discovery, not
 automatic execution. Prefer `routed` for a specialist that an existing owner
 must invoke. Reserve `default` for a small public entry surface.
+
+### Plan Prose Weekly Review
+
+The Flow plan prose trial writes summary-only events to
+`${XDG_STATE_HOME:-~/.local/state}/intuitive-flow/plan-prose-gate.jsonl`. It
+stores local paths and metrics so maintainers can reopen samples, but no plan
+prose or finding excerpts. The state stays local and uses private permissions.
+
+Run the installed helper after seven days:
+
+```bash
+bun <intuitive-flow-skill-root>/scripts/plan-prose-gate.ts --report --since 7d
+```
+
+Use each sample event id to record an evidence label after inspecting the plan
+and detailed findings:
+
+```bash
+bun <intuitive-flow-skill-root>/scripts/plan-prose-gate.ts \
+  --review <event-id> <useful|mixed|noise> [short-note]
+```
+
+Five unique reviewed snapshots are the minimum decision packet. At least 50%
+`noise` recommends drop or retune. At least 60% `useful` recommends candidate
+shadow, not automatic rewrite. Other results stay in shadow until the signal is
+clear. The helper reports this recommendation but never changes the rollout
+mode itself.
 
 ## Repo-Owned Root Skills
 
