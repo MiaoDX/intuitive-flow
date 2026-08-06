@@ -35,6 +35,17 @@ describe("portable concurrent status contract", () => {
     expect(closeout).toContain("handed off to project integrator");
   });
 
+  test("bounds project status without bypassing writer ownership", () => {
+    const sourceOfTruth = read("skills/intuitive-flow/references/source-of-truth.md");
+
+    expect(sourceOfTruth).toContain("120 lines as a soft budget");
+    expect(sourceOfTruth).toContain("200 lines as a hard closeout limit");
+    expect(sourceOfTruth).toContain("compact the document before commit and closeout");
+    expect(sourceOfTruth).toContain("not permission for a worker or unassigned task");
+    expect(sourceOfTruth).toContain("parked cleanup signal");
+    expect(sourceOfTruth).toContain("invoke an AI from a commit hook");
+  });
+
   test("removes terminal state from active namespaces after reconciliation", () => {
     const durable = read("skills/_shared/references/durable-run.md");
     const ratchet = read("skills/intuitive-refactor/references/ratchet-campaign.md");

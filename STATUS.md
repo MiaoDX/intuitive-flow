@@ -1,6 +1,6 @@
 # Status
 
-Last reviewed: 2026-08-01
+Last reviewed: 2026-08-06
 
 ## Current State
 
@@ -57,58 +57,21 @@ sessions after update to pick up refreshed config, hooks, and skills.
 
 The current maintenance focus is keeping the repo dogfoodable:
 
-- keep the human docs small and accurate
-- keep `docs/human/agent-harness-references.md` as the source ledger for
-  external Claude Code, Codex, AGENTS.md, and field-practice lessons before
-  turning those lessons into skill rules
-- keep the recommended workflow split by task shape: tiny bounded tasks may go
-  directly to `intuitive-flow`; complex or ambiguous work should use preflight,
-  invoking plan entropy, planning scouts, or grill-batch only for material
-  risks or unresolved decisions, then execute through `intuitive-flow`
-- keep the default user-facing surface small: flow, refactor, and
-  reduce-entropy; route installed specialists as needed, with docs/init/tests/preflight/
-  architecture-scanner/worktree-porting/issue tracking/plan-bakeoff/research/
-  skill-runner utilities kept out of the primary choice set, and changed-code
-  cleanup owned by `intuitive-refactor`
-- keep the managed skill portfolio in `scripts/default-skill-allowlist.txt`
-  with parsed default/routed/on-demand tiers and external host scope
-- keep retired local artifact cleanup in
-  `scripts/default-skill-prune-ledger.txt`, not in the install allowlist
-- use the trial community section for promising external skill sets that should
-  be dogfooded before they are promoted into flow routes or removed
-- keep `gstack-autoplan` and `agent-planning-loop` as risk-triggered routed
-  planning tools, not mandatory stages
-- dogfood the plan prose gate in report-only shadow mode; keep automatic
-  rewriting disabled until fixture and live evidence prove readability gains
-  without protected-contract regressions; review weekly trial samples as
-  `useful`, `mixed`, or `noise` before promoting or dropping the adapter
-- use `bun run audit:skill-upstreams` to review upstream skill candidates
-  outside the allowlist before adding anything new
-- keep installed global skill surfaces pruned by owner state: Intuitive root
-  skills, managed external sources, GSD wrappers, and GStack wrappers
-- keep `$gstack-investigate` as the default root-cause/debugging route instead
-  of adding another overlapping default debugging skill
-- keep GSD phase machinery routed by `$intuitive-flow` or explicit GSD use;
-  GSD status/resume/pause helpers remain registered on-demand
-- edit repo-owned skills directly under `skills/`
-- keep cross-skill runtime rules in `skills/_shared/` when Flow and Refactor
-  intentionally share behavior; `_shared` is a bundled resource surface, not an
-  allowlisted root skill
-- keep durable task state target-local: one task control plane owns each
-  capsule, workers return evidence, and only an explicit project integrator
-  writes an existing shared project-status surface
-- keep `SKILL.md` entrypoints compact and watch size drift through the
-  non-failing `check:skills` size budget report; `check:skills` also rejects
-  skill-style frontmatter in non-entrypoint Markdown so references and templates
-  cannot drift as shadow skill manifests
-- keep local hooks enabled with `bun run setup:hooks` so skill structure,
-  allowlist coverage, and local resource references are checked before commit
-- keep CI and local `bun run verify` aligned
-- keep Bash as the ShellCheck-gated orchestration layer and Bun TypeScript as
-  the structured validation layer
-- keep stable updater entrypoints at `scripts/update.sh` and put local helpers
-  under `scripts/dev/` or `scripts/support/`
-- verify changes with `bun run verify`
+- keep the human surface small and accurate; Flow treats 120 lines as a status
+  cleanup budget and 200 lines as a hard closeout limit
+- keep `docs/human/agent-harness-references.md` as the source ledger before
+  field lessons become skill rules
+- route tiny work directly to Flow; use preflight and planning scouts only for
+  material ambiguity or risk, then execute through Flow
+- keep the primary user-facing routes to Flow, Refactor, and Reduce Entropy;
+  route specialist skills on demand
+- keep install and prune policy explicit in the two ledgers under `scripts/`
+- keep plan-prose checks in report-only shadow mode until fixture and live proof
+  show readability gains without protected-contract regressions
+- keep durable task state target-local: one task control plane per task, workers
+  return evidence, and only an explicit project integrator writes shared status
+- keep skill entrypoints compact, local hooks and CI aligned, and verify with
+  `bun run verify`
 
 Active execution state lives only in the task-owned surface selected for a
 running durable task. Completed capsules leave the active namespace after

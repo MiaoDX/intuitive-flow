@@ -67,6 +67,14 @@ act without chasing a long manual. When they name first-read human docs,
 `STATUS.md`, `README.md`, and `ARCHITECTURE.md` should stay bounded enough to
 serve as orientation instead of startup-time history dumps.
 
+Flow applies that boundary when an explicit project integrator updates an
+existing first-read project-status document: 120 lines is the soft cleanup
+budget and 200 lines is the hard closeout limit. The integrator compacts stale
+history before commit; workers and unassigned task sessions still leave shared
+status untouched. Repositories may duplicate the numeric check in deterministic
+hooks or CI, but installed skills do not add hooks or run AI inside commit
+hooks.
+
 Target repos should not inherit these files wholesale. `$intuitive-init`
 combines local repo evidence, any available `/init` output, and Intuitive Flow
 defaults into project-local startup harnesses: `AGENTS.md`, `CLAUDE.md`, long

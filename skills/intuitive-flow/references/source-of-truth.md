@@ -163,6 +163,23 @@ ledger, active capsule, or execution notes. If an explicit project integrator
 checks an existing status surface and no material delta exists, report that it
 was checked and left unchanged.
 
+When the explicit project integrator updates an existing `STATUS.md` or an
+equivalent first-read project-status document, treat 120 lines as a soft budget
+and 200 lines as a hard closeout limit. At 121-200 lines, remove stale shipped
+history and repeated task detail when that cleanup is in the owned status edit.
+Above 200 lines, compact the document before commit and closeout: preserve
+current state, supported commands, current focus, blockers, next maintenance,
+and links; move durable detail to an existing plan, retrospective, or
+human-doc surface rather than creating a new archive convention.
+
+This is an agent closeout gate, not permission for a worker or unassigned task
+control plane to rewrite shared status. A target repo may mirror the numeric
+limit in a deterministic hook or CI check, but Flow must not depend on a hook,
+invoke an AI from a commit hook, or mutate target repos during skill install.
+When no material project-status delta exists or project-integrator ownership is
+absent, report an oversized status document as a parked cleanup signal instead
+of expanding the task or violating writer ownership.
+
 ## Plan Freshness At Closeout
 
 When a flow implements work from `docs/plans/<slug>.md`, update that source plan
