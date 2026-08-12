@@ -269,6 +269,12 @@ unless it is already covered or concretely blocked. Stop and report instead of
 editing when setup would require paid services, local-only hardware, broad
 toolchain migration, heavy installs, global secrets, or uncertain global state.
 
+The first concrete language recipes are documented in
+`references/lsp-and-mcp.md`: Python uses the repo's `uv`/virtualenv and Pyright
+configuration; TypeScript uses the detected package manager, local TypeScript
+compiler and `tsconfig`/typecheck script; Rust uses Cargo workspace metadata,
+the pinned Rust toolchain, `rust-analyzer`, and `cargo check --workspace`.
+
 ## Core Rule
 
 Treat generated init output and Intuitive Flow defaults as reviewers, not

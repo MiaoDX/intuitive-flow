@@ -52,6 +52,48 @@ machine has. Good underlying language-server setup usually means one or more of:
 For Python repos, prefer `uv` and the project's `.venv` conventions. Do not add
 Python dependencies through the system interpreter.
 
+### TypeScript Recipe
+
+When `package.json` and TypeScript source/config are present, use this order:
+
+1. Detect the package manager from the lockfile (`bun.lockb`/`bun.lock`,
+   `pnpm-lock.yaml`, `yarn.lock`, or `package-lock.json`).
+2. Verify `typescript` is available from the repo's declared dev dependencies
+   or bootstrap toolchain. Keep `tsconfig*.json` as the source of truth for
+   `rootDir`, `baseUrl`, `paths`, project references, and generated type roots.
+3. For an agent-facing server, verify `typescript-language-server` is available
+   through the same repo/toolchain path (or that the existing team toolchain
+   provides it). Do not silently install a global copy. A repo may use the
+   TypeScript compiler's `tsserver` through its editor integration, but Serena
+   still needs a supported TypeScript language-server entry.
+4. Validate with the package manager's equivalent of `tsc --noEmit` (or the
+   repo's typecheck script), and record the exact script when one exists.
+
+Do not create a new `tsconfig.json` in a framework or monorepo project when an
+existing config or generated config is authoritative. If TypeScript is detected
+but no local compiler/config or approved bootstrap path exists, report the
+missing setup and proposed command instead of changing package metadata.
+
+### Rust Recipe
+
+When `Cargo.toml` or `Cargo.lock` is present, use this order:
+
+1. Verify the workspace members and target configuration from `Cargo.toml`,
+   `.cargo/config.toml`, and any `rust-toolchain.toml`/`rust-toolchain` file.
+2. Verify `rust-analyzer` is available from the repo's declared toolchain or
+   approved development environment. Prefer the toolchain manager's pinned
+   version; do not add a second global installation or rewrite toolchain files.
+3. Preserve existing workspace/source-root and generated-code settings. If a
+   checked-in `.vscode/settings.json` or rust-analyzer config already supplies
+   them, verify it rather than creating a competing config.
+4. Validate with `cargo check --workspace` (or the repo's documented narrower
+   check) and report failures before declaring the underlying LSP path ready.
+
+If Rust is detected but `rust-analyzer`, the Rust toolchain, or a workspace
+configuration cannot be resolved without a heavy or unapproved install, stop
+with the exact missing prerequisite and command. Once the underlying server is
+valid, pair it with Serena MCP for agent-facing symbol operations.
+
 If the project already gets underlying language-server setup through a team
 updater, plugin, devcontainer, Nix shell, or toolchain manager, verify that path
 and record it instead of adding a competing local setup. Still evaluate whether
