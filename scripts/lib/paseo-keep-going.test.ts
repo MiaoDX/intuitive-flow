@@ -37,6 +37,16 @@ describe("paseo keep-going monitor", () => {
     `);
 
     expect(match?.line).toBe("[System Error] Selected model is at capacity. Please try a different model.");
+    expect(match?.fingerprint).toBe("[System Error] Selected model is at capacity. Please try a different model.");
+  });
+
+  test("normalizes service-overload errors to the model-capacity category", () => {
+    const match = findCapacityError(
+      "[System Error] stream disconnected before completion: Our servers are currently overloaded. Please try again later.",
+    );
+
+    expect(match?.line).toContain("Our servers are currently overloaded");
+    expect(match?.fingerprint).toBe("[System Error] Selected model is at capacity. Please try a different model.");
   });
 
   test("matches model-capacity errors that are appended to a progress line", () => {

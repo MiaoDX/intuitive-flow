@@ -78,13 +78,16 @@ export type OrphanCodexCleanupAction =
     };
 
 export const DEFAULT_PATTERNS = [
-  /^.*\[System Error\]\s*Selected model is at capacity\. Please try a different model\.\s*$/i,
+  /^.*\[System Error\].*(?:Selected model is at capacity\. Please try a different model\.|Our servers are currently overloaded\. Please try again later\.).*$/i,
   /^.*\[System Error\]\s*stream disconnected before completion:\s*error sending request for url\s*\(.+\)\s*$/i,
   /^.*\[System Error\]\s*stream disconnected before completion:\s*Transport error:\s*timeout\s*$/i,
   /^.*\[System Error\]\s*stream disconnected before completion:\s*stream closed before response\.completed\s*$/i,
   /^.*\[System Error\]\s*stream disconnected before completion:\s*Concurrency limit exceeded for account,\s*please retry later\s*$/i,
   /^.*\[System Error\]\s*stream disconnected before completion:\s*Upstream request failed\s*$/i,
 ];
+
+const CAPACITY_ERROR_FINGERPRINT = "[System Error] Selected model is at capacity. Please try a different model.";
+const CAPACITY_ERROR_PATTERN = /\[System Error\].*(?:selected model is at capacity|servers are currently overloaded)/i;
 
 export const DEFAULT_PROMPT =
   "The previous turn appears to have been interrupted by a transient API error. Please continue from your last valid state and keep going. Do not restart from scratch.";
@@ -282,7 +285,7 @@ export function scanLogSignals(
       latestError = {
         index,
         line,
-        fingerprint: line,
+        fingerprint: normalizeErrorFingerprint(line),
       };
     }
 
@@ -316,6 +319,10 @@ export function parseCreatedAgeMs(value: string | undefined): number | undefined
 }
 
 export const normalizeFingerprint = (value: string): string => value.replace(/^\d+:/, "");
+
+function normalizeErrorFingerprint(line: string): string {
+  return CAPACITY_ERROR_PATTERN.test(line) ? CAPACITY_ERROR_FINGERPRINT : line;
+}
 
 const isKeepGoingPromptLine = (line: string, prompt: string): boolean => {
   const text = stripLogSpeaker(line);
