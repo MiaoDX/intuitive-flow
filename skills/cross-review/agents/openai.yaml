@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cross Review"
+  short_description: "Challenge proposals from independent perspectives"
+  default_prompt: "Use $cross-review to challenge this proposal for a simpler or stronger approach."

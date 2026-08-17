@@ -11,6 +11,8 @@ currently provides:
 - a human-facing agent harness reference ledger in
   `docs/human/agent-harness-references.md`
 - reusable installed skills under `skills/`
+- a routed `cross-review` skill for bounded second opinions on existing agent
+  proposals before heavier planning or preflight
 - compact runtime skill entrypoints backed by on-demand `references/`,
   `templates/`, and `scripts/`
 - portable durable-run ownership that preserves target-repo status conventions,
@@ -63,6 +65,8 @@ The current maintenance focus is keeping the repo dogfoodable:
   field lessons become skill rules
 - route tiny work directly to Flow; use preflight and planning scouts only for
   material ambiguity or risk, then execute through Flow
+- keep post-proposal second opinions in `cross-review` instead of expanding
+  them into a full planning loop
 - keep the primary user-facing routes to Flow, Refactor, and Reduce Entropy;
   route specialist skills on demand
 - keep install and prune policy explicit in the two ledgers under `scripts/`

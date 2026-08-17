@@ -99,6 +99,7 @@ The recommended complex planning-to-execution workflow is risk-routed:
 ```text
 idea or draft plan
   -> plan shaping and review
+     -> cross-review when an existing proposal needs a bounded second opinion
      -> plan entropy when assumptions or proof are weak
      -> planning-loop/autoplan when independent scouts add value
      -> grill-batch when a human/domain decision remains
@@ -116,6 +117,9 @@ preflight instead of hiding planning inside execution.
 
 The planning owners are intentionally separate:
 
+- `$cross-review` owns lightweight post-proposal challenge through two to four
+  independent reviewer skills, one main-session judgment, and at most two
+  rounds. It does not plan from scratch or implement its recommendation.
 - `$intuitive-reduce-entropy` owns repo entropy mode for maintenance discovery
   and plan entropy mode for idea or plan hardening.
 - `$grill-with-docs-batch` owns decision quality against domain language,
@@ -141,7 +145,7 @@ history policy only when the target repo already requires one.
 
 The default public choices are `$intuitive-flow`, `$intuitive-refactor`, and
 `$intuitive-reduce-entropy`. `$agent-planning-loop`,
-`$grill-with-docs-batch`, `$intuitive-preflight`, `$intuitive-doc`,
+`$cross-review`, `$grill-with-docs-batch`, `$intuitive-preflight`, `$intuitive-doc`,
 `$intuitive-init`, `$intuitive-tests`, and `$skill-runner` remain installed as
 routed specialists. `$intuitive-squash`, `$intuitive-port-worktree`,
 `$multica-goal-tracker`, `$plan-bakeoff`, and `$research` are registered

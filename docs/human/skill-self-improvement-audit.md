@@ -1,6 +1,6 @@
 # Skill Self-Improvement Audit
 
-Last reviewed: 2026-08-01
+Last reviewed: 2026-08-17
 
 This audit applies the self-improvement lens from
 [`agent-harness-references.md`](agent-harness-references.md) to the managed
@@ -53,6 +53,9 @@ Current default-surface correction:
   or appear inside Codex by default.
 - Keep only `ponytail-audit` and `ponytail-review` routed. The broad mode, help,
   and debt ledger remain on-demand.
+- Keep `cross-review` routed as the lightweight owner for challenging an
+  existing proposal. It composes reviewer skills but does not replace their
+  native scopes or expand into a planning loop.
 - Multi-mode skills should expose a compact `Modes` table and state selected
   mode only when it affects execution. Use `Mode note` sparingly for manual
   invocation, ambiguity, or better-route discovery; do not add mode menus to
@@ -119,6 +122,7 @@ mode itself.
 
 | Skill | WHY Clarity | WHAT Boundary | HOW / Stop Condition | Recommendation |
 | --- | --- | --- | --- | --- |
+| `cross-review` | Strong: gives frequent agent proposals a cheap second-opinion step before formal planning. | Strong: owns review of an existing proposal, not plan creation, implementation, or code review. | Strong: frozen input, two to four independent lenses, one judge, one round by default, and a two-round hard cap. | Keep routed between initial proposal and heavier planning/preflight routes. |
 | `grill-with-docs-batch` | Strong: improves decision quality before implementation. | Strong: owns batched plan/domain grilling and stops when docs already answer the durable questions. | Strong: decision-impact test and convergence rules are explicit. | Keep as a specialist discussion skill; no runtime self-improvement block. |
 | `intuitive-doc` | Strong: keep human docs current and small. | Strong: owns human-facing docs and boundary drift, skips agent files by default. | Strong: audit/update/guard modes and claim verification are clear. | No runtime self-improvement block. Later slim examples if the doc keeps growing. |
 | `agent-planning-loop` | Strong: moves contested planning critique into bounded agent scouts before user review. | Strong: owns read-only planning debate and synthesis, not implementation or self-approval. | Strong: charter, scout prompts, materiality filtering, stop gates, and review-packet output are explicit. | Primary planning entrypoint for "align yourselves" and planning-loop style requests; no runtime self-improvement block. |

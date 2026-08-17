@@ -22,6 +22,7 @@ root-skill default intuitive-refactor
 
 # Routed specialists:
 root-skill routed agent-planning-loop
+root-skill routed cross-review
 root-skill routed grill-with-docs-batch
 root-skill routed intuitive-preflight
 root-skill routed intuitive-doc

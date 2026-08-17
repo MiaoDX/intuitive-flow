@@ -58,6 +58,7 @@ Start by choosing the kind of work:
 | --- | --- |
 | Maintain or simplify a repo | `$intuitive-reduce-entropy` in repo entropy mode, then route selected cleanup to the owning skill and verify it |
 | Build a feature with unresolved scope or risk | `$intuitive-preflight`, using plan entropy, planning scouts, or grill-batch only when the contract needs them, then `$intuitive-flow` |
+| Challenge an existing agent proposal | `$cross-review` for a bounded second opinion, then stop or route only the accepted recommendation |
 | Align multiple planning perspectives | `$agent-planning-loop` -> `$intuitive-preflight` -> `$intuitive-flow` |
 | Do a tiny bounded task | `$intuitive-flow` directly, when the change is local and easy to verify |
 
