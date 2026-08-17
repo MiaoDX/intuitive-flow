@@ -19,6 +19,7 @@
 root-skill default intuitive-flow
 root-skill default intuitive-reduce-entropy
 root-skill default intuitive-refactor
+root-skill default research
 
 # Routed specialists:
 root-skill routed agent-planning-loop
@@ -35,7 +36,6 @@ root-skill on-demand intuitive-port-worktree
 root-skill on-demand intuitive-squash
 root-skill on-demand multica-goal-tracker
 root-skill on-demand plan-bakeoff
-root-skill on-demand research
 
 # External skills installed through the skills CLI.
 #

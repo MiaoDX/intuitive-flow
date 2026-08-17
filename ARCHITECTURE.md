@@ -143,15 +143,15 @@ status file is not created by Flow. Terminal task state leaves the active
 namespace after canonical evidence is reconciled, using an existing local
 history policy only when the target repo already requires one.
 
-The default public choices are `$intuitive-flow`, `$intuitive-refactor`, and
-`$intuitive-reduce-entropy`. `$agent-planning-loop`,
+The default public choices are `$intuitive-flow`, `$intuitive-refactor`,
+`$intuitive-reduce-entropy`, and `$research`. `$agent-planning-loop`,
 `$cross-review`, `$grill-with-docs-batch`, `$intuitive-preflight`, `$intuitive-doc`,
 `$intuitive-init`, `$intuitive-tests`, and `$skill-runner` remain installed as
 routed specialists. `$intuitive-squash`, `$intuitive-port-worktree`,
-`$multica-goal-tracker`, `$plan-bakeoff`, and `$research` are registered
-on-demand utilities. `$research` owns evidence-led multi-source investigation
-using existing retrieval and delegation surfaces; it does not add a search
-engine or research runtime dependency. Changed-code
+`$multica-goal-tracker`, and `$plan-bakeoff` are registered on-demand utilities.
+`$research` owns evidence-led multi-source investigation using existing
+retrieval and delegation surfaces; it does not add a search engine or research
+runtime dependency. Changed-code
 reuse/quality/efficiency review is a mode of `$intuitive-refactor`, not a
 separate default skill. `scripts/default-skill-allowlist.txt` is the complete
 managed portfolio across repo-owned, external, GStack, and GSD skills; parsed
