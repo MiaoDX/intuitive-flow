@@ -155,6 +155,52 @@ describe("local command and skill sync task", () => {
     }
   });
 
+  test("strips Claude-only invocation metadata from Codex skill mirrors", () => {
+    const home = mkdtempSync(join(tmpdir(), "sync-skills-codex-frontmatter-home-"));
+    const fixture = mkdtempSync(join(tmpdir(), "sync-skills-project-"));
+    try {
+      const { stubBin } = createCliStubs(home);
+      prepareSyncTaskFixture(fixture);
+      mkdirSync(join(fixture, "skills", "alpha", "agents"), { recursive: true });
+      writeFileSync(join(fixture, "scripts", "default-skill-allowlist.txt"), "root-skill default alpha\n");
+      const sourceSkill = "---\nname: alpha\ndescription: Alpha skill.\ndisable-model-invocation: true\n---\n";
+      writeFileSync(join(fixture, "skills", "alpha", "SKILL.md"), sourceSkill);
+      writeFileSync(
+        join(fixture, "skills", "alpha", "agents", "openai.yaml"),
+        "policy:\n  allow_implicit_invocation: false\n",
+      );
+      copySyncTaskHelpers(fixture);
+
+      const result = spawnSync(
+        "bash",
+        [
+          "-c",
+          'SCRIPT_DIR="$1"; source scripts/tasks/sync-local-commands-skills.sh; run_sync_local_commands_skills',
+          "bash",
+          join(fixture, "scripts"),
+        ],
+        {
+          cwd: repoRoot,
+          encoding: "utf8",
+          env: syncEnv(home, stubBin),
+        },
+      );
+
+      if (result.status !== 0) {
+        throw new Error(`sync failed\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`);
+      }
+
+      const installedSkill = readFileSync(join(home, ".codex", "skills", "alpha", "SKILL.md"), "utf8");
+      expect(installedSkill).not.toContain("disable-model-invocation");
+      expect(readFileSync(join(fixture, "skills", "alpha", "SKILL.md"), "utf8")).toBe(sourceSkill);
+      expect(readFileSync(join(home, ".codex", "skills", "alpha", "agents", "openai.yaml"), "utf8"))
+        .toContain("allow_implicit_invocation: false");
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+      rmSync(fixture, { recursive: true, force: true });
+    }
+  });
+
   test("prunes stale nested copies when resyncing owned root skills", () => {
     const home = mkdtempSync(join(tmpdir(), "sync-skills-nested-home-"));
     const fixture = mkdtempSync(join(tmpdir(), "sync-skills-project-"));

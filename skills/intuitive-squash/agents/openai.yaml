@@ -1,0 +1,6 @@
+interface:
+  display_name: "Intuitive Squash"
+  short_description: "Safely turn noisy local commits into reviewable history"
+  default_prompt: "Use $intuitive-squash to inspect this branch and propose a safe, reviewable squash plan."
+policy:
+  allow_implicit_invocation: false

@@ -172,8 +172,11 @@ allowlisted external `improve-codebase-architecture` skill for extra
 report-only candidate discovery, and returns accepted cleanup to
 `$intuitive-refactor` for the scope gate and execution.
 
-Repo-owned skills are authored directly under `skills/<name>/SKILL.md`. Large
-skills should use progressive disclosure instead of generated includes:
+Repo-owned skills are authored directly under `skills/<name>/SKILL.md`. The
+local sync preserves Claude-only `disable-model-invocation` metadata for Claude
+Code and removes that unsupported key from Codex mirrors; Codex invocation
+policy belongs in `agents/openai.yaml`. Large skills should use progressive
+disclosure instead of generated includes:
 
 ```text
 skills/<name>/

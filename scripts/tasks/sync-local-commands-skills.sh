@@ -22,6 +22,26 @@ _replace_dir_contents() {
     cp -R "$src_dir"/. "$dest_dir"/
 }
 
+_replace_codex_skill_contents() {
+    local src_dir="$1"
+    local dest_dir="$2"
+    local skill_file temp_file
+
+    _replace_dir_contents "$src_dir" "$dest_dir" || return 1
+    skill_file="$dest_dir/SKILL.md"
+    if [ ! -f "$skill_file" ] || ! grep -q '^disable-model-invocation:' "$skill_file"; then
+        return 0
+    fi
+
+    temp_file=$(mktemp "$dest_dir/.SKILL.md.XXXXXX") || return 1
+    if ! sed '/^disable-model-invocation:/d' "$skill_file" > "$temp_file"; then
+        rm -f "$temp_file"
+        return 1
+    fi
+    chmod 0644 "$temp_file"
+    mv "$temp_file" "$skill_file"
+}
+
 _manifest_tool() {
     if ! command -v bun >/dev/null 2>&1; then
         echo "  ! bun not found; run scripts/update.sh after fixing the environment pre-check"
@@ -99,7 +119,7 @@ run_sync_local_commands_skills() {
 
             # Replace contents so deleted or renamed skill resources do not
             # survive in the installed Codex mirror.
-            if ! _replace_dir_contents "$skill_dir" "$codex_dest/$skill_name"; then
+            if ! _replace_codex_skill_contents "$skill_dir" "$codex_dest/$skill_name"; then
                 return 1
             fi
             root_skills_codex_synced=$((root_skills_codex_synced + 1))
