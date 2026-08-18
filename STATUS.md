@@ -1,6 +1,6 @@
 # Status
 
-Last reviewed: 2026-08-06
+Last reviewed: 2026-08-18
 
 ## Current State
 
@@ -13,6 +13,8 @@ currently provides:
 - reusable installed skills under `skills/`
 - a routed `cross-review` skill for bounded second opinions on existing agent
   proposals before heavier planning or preflight
+- a default `research` skill for evidence-led investigation across multiple
+  sources without adding a dedicated search runtime
 - compact runtime skill entrypoints backed by on-demand `references/`,
   `templates/`, and `scripts/`
 - portable durable-run ownership that preserves target-repo status conventions,
@@ -67,8 +69,8 @@ The current maintenance focus is keeping the repo dogfoodable:
   material ambiguity or risk, then execute through Flow
 - keep post-proposal second opinions in `cross-review` instead of expanding
   them into a full planning loop
-- keep the primary user-facing routes to Flow, Refactor, and Reduce Entropy;
-  route specialist skills on demand
+- keep the primary user-facing routes to Flow, Refactor, Reduce Entropy, and
+  Research; route specialist skills on demand
 - keep install and prune policy explicit in the two ledgers under `scripts/`
 - keep plan-prose checks in report-only shadow mode until fixture and live proof
   show readability gains without protected-contract regressions

@@ -57,14 +57,16 @@ Start by choosing the kind of work:
 | Work | Route |
 | --- | --- |
 | Maintain or simplify a repo | `$intuitive-reduce-entropy` in repo entropy mode, then route selected cleanup to the owning skill and verify it |
+| Research a question that needs multiple sources or competing claims reconciled | `$research` for evidence-led investigation with traceable sources and explicit confidence |
 | Build a feature with unresolved scope or risk | `$intuitive-preflight`, using plan entropy, planning scouts, or grill-batch only when the contract needs them, then `$intuitive-flow` |
 | Challenge an existing agent proposal | `$cross-review` for a bounded second opinion, then stop or route only the accepted recommendation |
 | Align multiple planning perspectives | `$agent-planning-loop` -> `$intuitive-preflight` -> `$intuitive-flow` |
 | Do a tiny bounded task | `$intuitive-flow` directly, when the change is local and easy to verify |
 
 The rule of thumb is simple: reduce repo entropy when the codebase itself is
-getting harder to work in; use a planning path when the next feature is still
-unclear; use direct flow only when the task is already bounded.
+getting harder to work in; use research when a decision needs evidence from
+multiple sources; use a planning path when the next feature is still unclear;
+use direct flow only when the task is already bounded.
 
 <p align="center">
   <img src="docs/assets/workflow.svg" alt="Intuitive Flow routes repo entropy reduction and feature development through planning, preflight, execution, and verification" width="820">
@@ -81,21 +83,22 @@ occupying the normal discovery surface.
 
 | Source | Stars | Selected | Skills used |
 | --- | --- | --- | --- |
-| [`anthropics/skills`](https://github.com/anthropics/skills) | [![GitHub stars](https://img.shields.io/github/stars/anthropics/skills?style=social)](https://github.com/anthropics/skills) | 1/18 | `skill-creator` |
-| [`skills-directory/skill-codex`](https://github.com/skills-directory/skill-codex) | [![GitHub stars](https://img.shields.io/github/stars/skills-directory/skill-codex?style=social)](https://github.com/skills-directory/skill-codex) | 1/1 | `codex` |
-| [`mattpocock/skills`](https://github.com/mattpocock/skills) | [![GitHub stars](https://img.shields.io/github/stars/mattpocock/skills?style=social)](https://github.com/mattpocock/skills) | 7/41 | `codebase-design`, `domain-modeling`, `grill-with-docs`, `grilling`, `handoff`, `improve-codebase-architecture`, `tdd` |
-| [`DietrichGebert/ponytail`](https://github.com/DietrichGebert/ponytail) | [![GitHub stars](https://img.shields.io/github/stars/DietrichGebert/ponytail?style=social)](https://github.com/DietrichGebert/ponytail) | 5/6 | `ponytail`, `ponytail-audit`, `ponytail-debt`, `ponytail-help`, `ponytail-review` |
-| [`garrytan/gstack`](https://github.com/garrytan/gstack) | [![GitHub stars](https://img.shields.io/github/stars/garrytan/gstack?style=social)](https://github.com/garrytan/gstack) | 7/55 | `gstack-autoplan`, `gstack-browse`, `gstack-investigate`, `gstack-open-gstack-browser`, `gstack-plan-eng-review`, `gstack-qa`, `gstack-review` |
-| [`open-gsd/gsd-core`](https://github.com/open-gsd/gsd-core) | [![GitHub stars](https://img.shields.io/github/stars/open-gsd/gsd-core?style=social)](https://github.com/open-gsd/gsd-core) | 3/69 | `gsd-pause-work`, `gsd-progress`, `gsd-resume-work` |
+| [`anthropics/skills`](https://github.com/anthropics/skills) | [![GitHub stars](https://img.shields.io/github/stars/anthropics/skills?style=social)](https://github.com/anthropics/skills) | 1 | `skill-creator` |
+| [`skills-directory/skill-codex`](https://github.com/skills-directory/skill-codex) | [![GitHub stars](https://img.shields.io/github/stars/skills-directory/skill-codex?style=social)](https://github.com/skills-directory/skill-codex) | 1 | `codex` |
+| [`mattpocock/skills`](https://github.com/mattpocock/skills) | [![GitHub stars](https://img.shields.io/github/stars/mattpocock/skills?style=social)](https://github.com/mattpocock/skills) | 7 | `codebase-design`, `domain-modeling`, `grill-with-docs`, `grilling`, `handoff`, `improve-codebase-architecture`, `tdd` |
+| [`DietrichGebert/ponytail`](https://github.com/DietrichGebert/ponytail) | [![GitHub stars](https://img.shields.io/github/stars/DietrichGebert/ponytail?style=social)](https://github.com/DietrichGebert/ponytail) | 5 | `ponytail`, `ponytail-audit`, `ponytail-debt`, `ponytail-help`, `ponytail-review` |
+| [`garrytan/gstack`](https://github.com/garrytan/gstack) | [![GitHub stars](https://img.shields.io/github/stars/garrytan/gstack?style=social)](https://github.com/garrytan/gstack) | 7 | `gstack-autoplan`, `gstack-browse`, `gstack-investigate`, `gstack-open-gstack-browser`, `gstack-plan-eng-review`, `gstack-qa`, `gstack-review` |
+| [`open-gsd/gsd-core`](https://github.com/open-gsd/gsd-core) | [![GitHub stars](https://img.shields.io/github/stars/open-gsd/gsd-core?style=social)](https://github.com/open-gsd/gsd-core) | 3 | `gsd-pause-work`, `gsd-progress`, `gsd-resume-work` |
 
-Ratios are a current snapshot from the allowlist and upstream skill discovery.
+Selections come from the allowlist. Upstream totals change independently and are
+intentionally not duplicated here.
 
 ## Optional Tool Install
 
 Clone Intuitive Flow when you want the update scripts and local skill sync:
 
 ```bash
-git clone --depth=1 <repo-url> ~/intuitive-flow
+git clone --depth=1 https://github.com/MiaoDX/intuitive-flow.git ~/intuitive-flow
 ~/intuitive-flow/scripts/update.sh
 ```
 
