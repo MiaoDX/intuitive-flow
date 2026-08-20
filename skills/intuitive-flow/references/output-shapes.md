@@ -23,7 +23,7 @@ Execution surface: <read-only main session | main session direct with exception 
 Babysitter cadence: <none | every N min based on task risk/proof duration>
 Task control plane: <current main session | named owner | not applicable>
 Project status role: <project integrator | task control plane only | none>
-Commit rhythm: <semantic commits enabled | disabled because ...>
+Commit rhythm: <auto-commit verified owned slices | blocked by exact current source/file>
 Stop gate: <repo command/artifact deciding complete | blocked | continue, or "none">
 Stop/continue point: <what happens before the next checkpoint>
 ```

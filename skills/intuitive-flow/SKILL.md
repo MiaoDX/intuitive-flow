@@ -167,6 +167,15 @@ adjacent cleanup work.
 
 ## Commit And Closeout
 
+For durable implementation or refactor work that changes files, auto-commit
+each coherent verified owned slice by default. Do not wait for a separate user
+request to commit. A dirty worktree or unrelated changes outside the owned
+slice are not blockers; stage owned paths or hunks only. Skip a commit only for
+an explicit current user instruction, a repo/phase prohibition, a review-only
+stop condition, or an unsafe same-file overlap/unresolved blocker. Name that
+exact source in the route brief and closeout; inherited or unsourced
+"commits disabled" notes do not count.
+
 For significant implementation/refactor work, use
 `references/refactor-and-closeout.md` and `references/output-shapes.md` for
 semantic commits, final `$intuitive-doc` alignment, plan status updates, proof

@@ -56,6 +56,19 @@ describe("portable concurrent status contract", () => {
     expect(ratchet).toContain("then remove the capsule from the active namespace");
   });
 
+  test("auto-commits verified owned slices unless a traceable blocker applies", () => {
+    const flow = read("skills/intuitive-flow/SKILL.md");
+    const closeout = read("skills/intuitive-flow/references/refactor-and-closeout.md");
+    const routeBrief = read("skills/intuitive-flow/templates/route-brief.md");
+
+    expect(flow).toContain("auto-commit\neach coherent verified owned slice by default");
+    expect(flow).toContain("Do not wait for a separate user\nrequest to commit");
+    expect(closeout).toContain("request to execute the work authorizes commits of verified owned changes");
+    expect(closeout).toContain("Unrelated dirty files outside the slice");
+    expect(closeout).toContain("every verified owned file is\ncommitted");
+    expect(routeBrief).toContain("auto-commit verified owned slices");
+  });
+
   test("keeps initializer adoption conditional and local", () => {
     const initializer = read("skills/intuitive-init/SKILL.md");
 

@@ -134,6 +134,13 @@ The planning owners are intentionally separate:
 - `$intuitive-flow` owns implementation, integration, proof, docs alignment, and
   closeout after a plan or preflight contract is accepted.
 
+Durable Flow execution auto-commits each coherent verified owned slice. The
+execution request supplies that commit authority; it does not require a second
+commit prompt. Flow stages only owned paths or hunks and leaves unrelated dirty
+work untouched. It may finish with owned changes uncommitted only when a current
+user instruction, repo/phase policy, review-only boundary, unsafe same-file
+overlap, or unresolved blocker is named explicitly.
+
 Durable execution state is portable across target repos. Installed skills
 discover and preserve repo-defined project-status and task-resume surfaces
 before using Intuitive defaults. One task control plane writes each task's

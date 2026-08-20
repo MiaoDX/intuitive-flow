@@ -14,7 +14,7 @@ Intuitive-doc alignment:
 - <updated/moved/removed/checked-left-unchanged/skipped with reason; include doc paths>
 
 Commits:
-- <commit id or why commits were disabled>
+- <commit id(s) | allowed blocker with exact current instruction/policy/file overlap/unresolved blocker>
 
 Stop gate:
 - <checked command/artifact and result | not applicable>
