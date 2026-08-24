@@ -26,8 +26,8 @@ currently provides:
   `scripts/default-skill-allowlist.txt`
 - a separate prune-only ledger for retired local artifacts at
   `scripts/default-skill-prune-ledger.txt`
-- an on-demand experimental `intuitive-shape` skill with paired decision
-  evals and a shaped-bet handoff contract; it is not a default workflow entry
+- a default `intuitive-shape` skill with paired decision evals and a shaped-bet
+  handoff contract for choosing and bounding work before planning or execution
 - update and sync automation under `scripts/`
 - repo-owned Git hooks under `.githooks/`
 - Bun TypeScript helpers and tests under `scripts/lib/`
@@ -71,11 +71,10 @@ The current maintenance focus is keeping the repo dogfoodable:
   material ambiguity or risk, then execute through Flow
 - keep post-proposal second opinions in `cross-review` instead of expanding
   them into a full planning loop
-- keep `intuitive-shape` experimental until blinded A/B runs show material
-  decision improvement and preflight handoff preserves appetite, cuts, and
-  circuit breakers
-- keep the primary user-facing routes to Flow, Refactor, Reduce Entropy, and
-  Research; route specialist skills on demand
+- keep `intuitive-shape` default routing narrow: use it for unsettled bets and
+  scope decisions, not settled tiny fixes, diagnostics, or approved execution
+- keep the primary user-facing routes to Shape, Flow, Refactor, Reduce Entropy,
+  and Research; route specialist skills on demand
 - keep install and prune policy explicit in the two ledgers under `scripts/`
 - keep plan-prose checks in report-only shadow mode until fixture and live proof
   show readability gains without protected-contract regressions

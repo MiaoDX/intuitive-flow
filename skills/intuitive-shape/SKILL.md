@@ -6,7 +6,9 @@ description: |
   an appetite, comparing candidate bets under finite capacity, cutting scope,
   exposing rabbit holes and no-gos, or choosing BET, RESEARCH, RESHAPE, or PASS.
   This skill stops before execution and hands accepted bets to the repository's
-  existing planning or preflight route.
+  existing planning or preflight route. Do not use for a clearly bounded tiny
+  fix, active incident diagnosis, ordinary bug repair, or already approved
+  execution unless the user asks to revisit the bet or scope.
 ---
 
 # Intuitive Shape
@@ -23,6 +25,12 @@ a task breakdown, create a backlog, or silently turn every idea into a project.
 
 Route accepted work to the repository's canonical plan or preflight surface.
 Do not create a parallel source of truth when one already exists.
+
+Stay out of tasks whose product decision is already settled. A small concrete
+fix, root-cause investigation, incident containment, or approved execution
+belongs to its normal diagnostic or execution route. Shape only when the user
+is deciding whether the work should exist, how much it deserves, which candidate
+wins, or what scope must be cut before commitment.
 
 ## Shape The Decision
 

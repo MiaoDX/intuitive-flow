@@ -19,6 +19,7 @@
 root-skill default intuitive-flow
 root-skill default intuitive-reduce-entropy
 root-skill default intuitive-refactor
+root-skill default intuitive-shape
 root-skill default research
 
 # Routed specialists:
@@ -34,7 +35,6 @@ root-skill routed skill-runner
 # Direct utilities:
 root-skill on-demand intuitive-port-worktree
 root-skill on-demand intuitive-squash
-root-skill on-demand intuitive-shape
 root-skill on-demand multica-goal-tracker
 root-skill on-demand plan-bakeoff
 

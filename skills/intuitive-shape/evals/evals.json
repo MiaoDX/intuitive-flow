@@ -36,6 +36,30 @@
       "prompt": "We approved a two-week mobile search improvement: users can search titles and open a result. During kickoff, the team proposes filters, saved searches, recent history, typo tolerance, and offline indexing. Decide how the bet should proceed.",
       "expected_output": "Preserves the approved core outcome and appetite, classifies additions as no-gos or ordered cuts, identifies only decision-critical rabbit holes, and keeps the original bounded bet instead of expanding it.",
       "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "Our VP wants animated profile avatars because they would feel delightful. No customer requested them, there is no profile engagement problem, and the work takes three weeks. Should we schedule it?",
+      "expected_output": "Returns a terminal PASS with no backlog item because no problem or evidence justifies the appetite.",
+      "files": []
+    },
+    {
+      "id": 8,
+      "prompt": "A regulation takes effect in ten business days and requires account export and deletion. Product wants a full privacy center; one engineer is available. Decide what to commit to.",
+      "expected_output": "Bets on the smallest compliant export/deletion path, protects the deadline with explicit no-gos and a legal-confirmation circuit breaker, and excludes the broader privacy center.",
+      "files": []
+    },
+    {
+      "id": 9,
+      "prompt": "Payment completion dropped after one new 3-D Secure callback path, but a manager wants a one-week billing rewrite. Decide what the team should do.",
+      "expected_output": "Chooses a bounded remediation bet for the evidenced callback regression, explicitly rejects the rewrite, and preserves a short appetite and recovery circuit breaker.",
+      "files": []
+    },
+    {
+      "id": 10,
+      "prompt": "Fix the typo in the settings label and run the relevant test.",
+      "expected_output": "Does not invoke shaping ceremony; routes the settled tiny fix to the normal direct execution path.",
+      "files": []
     }
   ]
 }

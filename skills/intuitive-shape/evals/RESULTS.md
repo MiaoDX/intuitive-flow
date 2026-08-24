@@ -57,3 +57,31 @@ two unused eval cases, and use a second blinded judge on verbatim outputs.
   transcripts.
 - The prompts were synthetic and do not establish external adoption, naming,
   discoverability, or GitHub-star demand.
+
+## Replication And Promotion
+
+Date: 2026-08-24
+
+A second round used six harder prompts and `gpt-5.6-terra` for baseline and
+treatment responses. It covered enterprise-demand uncertainty, scope creep
+inside an approved bet, a terminal `PASS`, a fixed regulatory deadline,
+maintenance-versus-feature capacity, and rewrite pressure during a payment
+incident. Two fresh blinded judges evaluated verbatim responses with
+independently randomized per-case labels.
+
+| Judge | Skill | Baseline | Relative improvement |
+| --- | ---: | ---: | ---: |
+| `gpt-5.6-sol` | 98.6% | 70.6% | 39.6% |
+| `gpt-5.5` | 100.0% | 59.9% | 66.9% |
+
+Both judges found no terminal-decision regression in the skill responses. The
+material action change was the animated-avatar request: the baseline retained
+it as a low-priority backlog idea, while the skill returned a terminal `PASS`.
+In the other cases, direction often matched a strong baseline, but appetite,
+ordered cuts, circuit breakers, and handoff boundaries materially constrained
+what downstream work could expand into.
+
+Combined with the initial preflight handoff proof, the replication satisfies
+the promotion gate. Promote `intuitive-shape` to default installation while
+keeping its trigger narrow: it must not intercept settled tiny fixes, active
+incident diagnosis, ordinary bug repair, or already approved execution.

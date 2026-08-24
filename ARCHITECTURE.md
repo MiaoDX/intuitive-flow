@@ -151,16 +151,18 @@ namespace after canonical evidence is reconciled, using an existing local
 history policy only when the target repo already requires one.
 
 The default public choices are `$intuitive-flow`, `$intuitive-refactor`,
-`$intuitive-reduce-entropy`, and `$research`. `$agent-planning-loop`,
+`$intuitive-reduce-entropy`, `$intuitive-shape`, and `$research`. `$agent-planning-loop`,
 `$cross-review`, `$grill-with-docs-batch`, `$intuitive-preflight`, `$intuitive-doc`,
 `$intuitive-init`, `$intuitive-tests`, and `$skill-runner` remain installed as
 routed specialists. `$intuitive-squash`, `$intuitive-port-worktree`,
 `$multica-goal-tracker`, and `$plan-bakeoff` are registered on-demand utilities.
-`$intuitive-shape` is an on-demand experimental upstream decision skill: it
+`$intuitive-shape` is the default upstream decision skill: it
 turns raw ideas into bounded `BET`, `RESEARCH`, `RESHAPE`, or `PASS` decisions,
 then hands accepted work to the existing canonical plan/preflight route. It
-does not own implementation or a second project-state artifact, and promotion
-depends on paired behavioral evidence plus lossless handoff proof.
+does not own implementation or a second project-state artifact. It stays out of
+settled tiny fixes, incident diagnosis, ordinary bug repair, and approved
+execution; paired behavioral evidence and lossless handoff proof support its
+default installation.
 `$research` owns evidence-led multi-source investigation using existing
 retrieval and delegation surfaces; it does not add a search engine or research
 runtime dependency. Changed-code
