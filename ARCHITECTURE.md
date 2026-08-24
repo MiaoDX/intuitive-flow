@@ -156,6 +156,11 @@ The default public choices are `$intuitive-flow`, `$intuitive-refactor`,
 `$intuitive-init`, `$intuitive-tests`, and `$skill-runner` remain installed as
 routed specialists. `$intuitive-squash`, `$intuitive-port-worktree`,
 `$multica-goal-tracker`, and `$plan-bakeoff` are registered on-demand utilities.
+`$intuitive-shape` is an on-demand experimental upstream decision skill: it
+turns raw ideas into bounded `BET`, `RESEARCH`, `RESHAPE`, or `PASS` decisions,
+then hands accepted work to the existing canonical plan/preflight route. It
+does not own implementation or a second project-state artifact, and promotion
+depends on paired behavioral evidence plus lossless handoff proof.
 `$research` owns evidence-led multi-source investigation using existing
 retrieval and delegation surfaces; it does not add a search engine or research
 runtime dependency. Changed-code

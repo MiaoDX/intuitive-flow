@@ -1,0 +1,4 @@
+interface:
+  display_name: "Intuitive Shape"
+  short_description: "Shape ideas into bounded bets before building"
+  default_prompt: "Use $intuitive-shape to decide whether this idea deserves a bounded bet before implementation."

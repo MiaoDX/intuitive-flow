@@ -1,0 +1,41 @@
+{
+  "skill_name": "intuitive-shape",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Our team has two weeks and a customer asked for bulk import from CSV, XLSX, Google Sheets, and arbitrary REST APIs. Decide what we should commit to before anyone starts coding.",
+      "expected_output": "Sets a two-week appetite before solution expansion, identifies the underlying import problem, selects a narrow end-to-end core slice, explicitly cuts formats or integrations, and returns BET or RESHAPE without task planning.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "The CEO saw a competitor demo and wants us to rewrite our working authentication system around passkeys this month. We have no user complaints or security incident. What should the team do?",
+      "expected_output": "Separates competitor anxiety from verified user pain, refuses idea-to-code momentum, and returns PASS or a very small RESEARCH decision rather than approving a rewrite.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "We can fund only one project this cycle: dark mode requested by 12 users, fixing onboarding where analytics show 38% of users fail at workspace creation, or migrating internal telemetry before the vendor raises prices in four months. Help us choose.",
+      "expected_output": "Compares candidates under one capacity constraint, uses evidence, urgency, appetite, and opportunity cost, selects one current bet or names decision-critical missing evidence, and explicitly passes on the others for this cycle.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Add an AI assistant to our issue tracker. It should summarize issues, draft replies, find duplicates, prioritize the backlog, and automatically close stale tickets. We want something useful in five days.",
+      "expected_output": "Treats five days as the appetite, reshapes the grab bag into one observable core outcome and vertical slice, names safety and trust rabbit holes, orders cuts, and avoids an implementation plan.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "A sales lead says enterprise customers might pay for audit exports, but we have not spoken to any buyer and do not know required formats or retention rules. Should engineering build it next?",
+      "expected_output": "Returns a time-boxed RESEARCH decision with a cheap evidence probe and explicit decision-changing result, rather than fabricating scope or approving implementation.",
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "We approved a two-week mobile search improvement: users can search titles and open a result. During kickoff, the team proposes filters, saved searches, recent history, typo tolerance, and offline indexing. Decide how the bet should proceed.",
+      "expected_output": "Preserves the approved core outcome and appetite, classifies additions as no-gos or ordered cuts, identifies only decision-critical rabbit holes, and keeps the original bounded bet instead of expanding it.",
+      "files": []
+    }
+  ]
+}
