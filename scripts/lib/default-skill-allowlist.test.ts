@@ -99,6 +99,13 @@ describe("default skill allowlist", () => {
     expect(rootSkillsForInstall(allowlist)).toContain("research");
   });
 
+  test("installs intuitive-squash by default", () => {
+    const allowlist = readDefaultSkillAllowlist(join(process.cwd(), "scripts", "default-skill-allowlist.txt"));
+
+    expect(allowlist.rootSkillPolicies).toContainEqual({ skill: "intuitive-squash", tier: "default" });
+    expect(rootSkillsForInstall(allowlist)).toContain("intuitive-squash");
+  });
+
   test("selects registered on-demand skills and filters external skills by host", () => {
     const previous = process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS;
     try {
