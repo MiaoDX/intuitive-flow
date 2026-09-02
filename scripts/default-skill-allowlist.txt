@@ -72,8 +72,17 @@ gstack-skill on-demand gstack-qa
 gstack-skill default gstack-investigate
 
 # Managed GSD wrappers kept after setup.
-# Status/resume helpers remain registered on-demand; phase machinery is routed
-# through $intuitive-flow/GSD docs.
+# Keep the small core phase loop plus document ingestion available. The core
+# profile owns its internal dependency surface; ingest-docs is the one extra
+# entry required by Intuitive Flow handoff.
+gsd-skill default gsd-discuss-phase
+gsd-skill default gsd-execute-phase
+gsd-skill default gsd-ingest-docs
+gsd-skill default gsd-new-project
+gsd-skill default gsd-phase
+gsd-skill default gsd-plan-phase
+gsd-skill default gsd-surface
+gsd-skill default gsd-update
+gsd-skill on-demand gsd-pause-work
 gsd-skill on-demand gsd-progress
 gsd-skill on-demand gsd-resume-work
-gsd-skill on-demand gsd-pause-work

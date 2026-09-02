@@ -88,7 +88,7 @@ occupying the normal discovery surface.
 | [`mattpocock/skills`](https://github.com/mattpocock/skills) | [![GitHub stars](https://img.shields.io/github/stars/mattpocock/skills?style=social)](https://github.com/mattpocock/skills) | 7 | `codebase-design`, `domain-modeling`, `grill-with-docs`, `grilling`, `handoff`, `improve-codebase-architecture`, `tdd` |
 | [`DietrichGebert/ponytail`](https://github.com/DietrichGebert/ponytail) | [![GitHub stars](https://img.shields.io/github/stars/DietrichGebert/ponytail?style=social)](https://github.com/DietrichGebert/ponytail) | 5 | `ponytail`, `ponytail-audit`, `ponytail-debt`, `ponytail-help`, `ponytail-review` |
 | [`garrytan/gstack`](https://github.com/garrytan/gstack) | [![GitHub stars](https://img.shields.io/github/stars/garrytan/gstack?style=social)](https://github.com/garrytan/gstack) | 7 | `gstack-autoplan`, `gstack-browse`, `gstack-investigate`, `gstack-open-gstack-browser`, `gstack-plan-eng-review`, `gstack-qa`, `gstack-review` |
-| [`open-gsd/gsd-core`](https://github.com/open-gsd/gsd-core) | [![GitHub stars](https://img.shields.io/github/stars/open-gsd/gsd-core?style=social)](https://github.com/open-gsd/gsd-core) | 3 | `gsd-pause-work`, `gsd-progress`, `gsd-resume-work` |
+| [`open-gsd/gsd-core`](https://github.com/open-gsd/gsd-core) | [![GitHub stars](https://img.shields.io/github/stars/open-gsd/gsd-core?style=social)](https://github.com/open-gsd/gsd-core) | 11 | `gsd-discuss-phase`, `gsd-execute-phase`, `gsd-ingest-docs`, `gsd-new-project`, `gsd-phase`, `gsd-plan-phase`, `gsd-surface`, `gsd-update`, plus on-demand status/resume helpers |
 
 Selections come from the allowlist. Upstream totals change independently and are
 intentionally not duplicated here.

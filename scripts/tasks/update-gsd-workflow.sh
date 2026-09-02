@@ -52,7 +52,7 @@ gsd_current_for_target() {
     local latest="$3"
     local version_file="$config_dir/get-shit-done/VERSION"
     local profile_file="$config_dir/.gsd-profile"
-    local desired_profile="standard"
+    local desired_profile="core"
     local installed=""
     local active_profile=""
 
@@ -90,7 +90,10 @@ gsd_current_for_target() {
 run_gsd_installer() {
     local registry="$1"
     local target="$2"
-    local profile="standard"
+    # Upstream has no composable "core + ingest-docs" profile. Install the
+    # package's complete source set, then gsd-skill-state.ts prunes the
+    # managed runtime surface to the selected core entries plus ingest-docs.
+    local profile="full"
     local out
 
     if [ "$registry" = "$NPM_MIRROR_REGISTRY" ] && [ "$NPM_REGISTRY_MODE" = "mirror" ]; then
@@ -138,5 +141,7 @@ run_gsd_workflow() {
     local gsd_version
     gsd_version=$(cat ~/.claude/get-shit-done/VERSION 2>/dev/null || echo "?")
     bun "$SCRIPT_DIR/lib/gsd-skill-state.ts" sync "$SCRIPT_DIR/default-skill-allowlist.txt" || return 1
+    printf 'core\n' > "${CODEX_HOME:-$HOME/.codex}/.gsd-profile"
+    printf 'core\n' > "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/.gsd-profile"
     echo "  ✓ gsd v$gsd_version (claude + codex)"
 }

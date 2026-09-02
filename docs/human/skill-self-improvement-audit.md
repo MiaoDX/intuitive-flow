@@ -36,10 +36,9 @@ Current default-surface correction:
 - `$diagnose` is no longer installed by default. `$gstack-investigate` is the
   default root-cause/debugging entrypoint because the GStack skill set already
   owns browser-visible investigation and QA workflows.
-- GSD phase machinery (`gsd-new-project`, `gsd-import`, `gsd-plan-phase`,
-  `gsd-execute-phase`, and `gsd-verify-work`) is no longer default-visible.
-  `$intuitive-flow` remains the route that names those commands when a committed
-  GSD phase is actually needed.
+- GSD uses the upstream `core` profile plus `gsd-ingest-docs`; the managed
+  surface includes only the phase loop and document bootstrap needed by
+  `$intuitive-flow`.
 - Keep `$grill-with-docs-batch` routed for convergence; the external
   single-question `$grill-with-docs` remains registered on-demand.
 - Keep `$codebase-design` routed as the shared architecture vocabulary and
@@ -152,6 +151,7 @@ mode itself.
 | `gstack-browse`, `gstack-open-gstack-browser` | Browser launch and browser QA helpers. | Keep browse default; open-browser is on-demand. |
 | `gstack-autoplan`, `gstack-plan-eng-review`, `gstack-review`, `gstack-qa` | Managed review and QA wrappers. | Keep planning/review routes installed; QA is on-demand until usage justifies promotion. |
 | `gstack-investigate` | Managed root-cause investigation workflow. | Keep as the default debugging/investigation route; do not also default-install `$diagnose`. |
+| `gsd-discuss-phase`, `gsd-execute-phase`, `gsd-ingest-docs`, `gsd-new-project`, `gsd-phase`, `gsd-plan-phase`, `gsd-surface`, `gsd-update` | Small GSD core loop plus document ingestion required by Flow handoff. | Keep installed as the managed GSD phase surface; upstream `core` supplies the loop and Flow adds `ingest-docs`. |
 | `gsd-progress`, `gsd-resume-work`, `gsd-pause-work` | GSD status and continuation helpers. | Registered on-demand; Flow can name them when a GSD run exists. |
 
 Removed from the default surface:
@@ -162,10 +162,8 @@ Removed from the default surface:
 - `diagnose`: overlapped with `gstack-investigate` for bug/root-cause reports.
   Re-add only if a future audit shows the GStack route is unavailable or too
   heavy for common debugging tasks.
-- `gsd-new-project`, `gsd-import`, `gsd-plan-phase`, `gsd-execute-phase`, and
-  `gsd-verify-work`: useful phase machinery, but too broad for the default
-  visible surface. `$intuitive-flow` and GSD docs should name them only when a
-  committed phase exists or a plan explicitly enters GSD.
+- `gsd-import` and `gsd-verify-work`: outside the managed core + ingest-docs
+  surface. Add them only when a workflow explicitly needs those entry points.
 
 ## What The Lens Changes
 
@@ -173,8 +171,7 @@ Removed from the default surface:
   external lessons and skill-maintenance doctrine.
 - It argues against adding self-maintenance sections to runtime skill text.
 - It keeps the installed default surface tiered: primary choices stay small,
-  specialists remain routed, and phase machinery is hidden until the workflow
-  actually needs it.
+  specialists remain routed, and GSD exposes only its selected core phase loop.
 - It exposed `intuitive-layout` as a boundary-smell after user review; layout is
   now treated as a symptom routed by object instead of a root skill.
 - It moved `intuitive-flow` away from a parallel runtime manual: the entrypoint

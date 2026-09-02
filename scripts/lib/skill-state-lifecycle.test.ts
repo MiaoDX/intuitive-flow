@@ -414,6 +414,8 @@ describe("skill state lifecycle", () => {
     expectBunToolCommand(updateSkills, "external-skill-state.ts", "prune-removed");
     expect(updateSkills).toContain("external-host-scoped-skills");
     expectBunToolCommand(updateGsdWorkflow, "gsd-skill-state.ts", "sync");
+    expect(updateGsdWorkflow).toContain('local profile="full"');
+    expect(updateGsdWorkflow).toContain('local desired_profile="core"');
     expectOwnedRootStateToolCall(syncLocal, "prune-legacy-artifacts", "$default_skill_prune_ledger");
     expectOwnedRootStateToolCall(syncLocal, "prune-owned-root-skills", "$default_skill_allowlist");
     expectOwnedRootStateToolCall(syncLocal, "record-owned-root-skills", "$default_skill_allowlist");

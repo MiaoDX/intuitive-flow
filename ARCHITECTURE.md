@@ -286,14 +286,14 @@ external install, the updater writes
 that were previously recorded for that label but are no longer desired, across
 the Claude Code, Codex, and shared agent skill install roots.
 
-GSD setup remains upstream-owned, but exposed GSD wrappers are pruned back to
-the currently selected `gsd-skill` entries after each installer run. GSD
-status and continuation helpers are registered on-demand. Full
-phase machinery such as project creation, import, planning, execution, and
-verification remains routed by `$intuitive-flow` or explicit GSD use instead of
-being default-visible. The wrapper still passes `--profile=standard` to the
-upstream installer for install mechanics, but the visible default surface is the
-allowlist, not the upstream profile.
+GSD setup remains upstream-owned. Intuitive Flow installs the upstream `core`
+profile and keeps the additional `gsd-ingest-docs` entry required by its handoff
+route. After installation, exposed GSD wrappers are pruned back to this small
+managed surface; status and continuation helpers remain on-demand. The wrapper
+uses the full upstream source set during installation because the upstream
+installer cannot compose `core` with one additional command, then the state
+sync removes the unselected wrappers. The visible surface is the allowlist, not
+the upstream profile.
 
 GStack installation is upstream-owned but wrapped by this updater. After a
 successful GStack setup, the wrapper records generated Codex `gstack-*` skills in

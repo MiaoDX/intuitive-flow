@@ -72,7 +72,7 @@ describe("default skill allowlist", () => {
       ]);
       expect(externalSkills).not.toContain("zoom-out");
       expect(allowlist.gstackSkills).toContain("gstack-investigate");
-      expect(gsdSkillsForInstall(allowlist)).toEqual([]);
+      expect(gsdSkillsForInstall(allowlist)).toEqual(["gsd-discuss-phase", "gsd-execute-phase", "gsd-ingest-docs", "gsd-new-project", "gsd-phase", "gsd-plan-phase", "gsd-surface", "gsd-update"]);
     } finally {
       if (previous === undefined) delete process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS;
       else process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS = previous;
@@ -112,7 +112,17 @@ describe("default skill allowlist", () => {
       process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS = "skill-creator,gsd-progress";
       const allowlist = readDefaultSkillAllowlist(join(process.cwd(), "scripts", "default-skill-allowlist.txt"));
 
-      expect(gsdSkillsForInstall(allowlist)).toEqual(["gsd-progress"]);
+      expect(gsdSkillsForInstall(allowlist)).toEqual([
+        "gsd-discuss-phase",
+        "gsd-execute-phase",
+        "gsd-ingest-docs",
+        "gsd-new-project",
+        "gsd-phase",
+        "gsd-plan-phase",
+        "gsd-progress",
+        "gsd-surface",
+        "gsd-update",
+      ]);
       expect(externalSourcesForInstall(allowlist, "claude-code").flatMap((source) => source.skills))
         .toContain("skill-creator");
       expect(externalSourcesForInstall(allowlist, "codex").flatMap((source) => source.skills))
