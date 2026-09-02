@@ -79,6 +79,7 @@ export type OrphanCodexCleanupAction =
 
 export const DEFAULT_PATTERNS = [
   /^.*\[System Error\].*(?:Selected model is at capacity\. Please try a different model\.|Our servers are currently overloaded\. Please try again later\.).*$/i,
+  /^.*\[System Error\].*We(?:'|\u2019)re currently experiencing high demand, which may cause temporary errors\..*$/i,
   /^.*\[System Error\]\s*stream disconnected before completion:\s*error sending request for url\s*\(.+\)\s*$/i,
   /^.*\[System Error\]\s*stream disconnected before completion:\s*Transport error:\s*timeout\s*$/i,
   /^.*\[System Error\]\s*stream disconnected before completion:\s*stream closed before response\.completed\s*$/i,

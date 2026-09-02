@@ -49,6 +49,17 @@ describe("paseo keep-going monitor", () => {
     expect(match?.fingerprint).toBe("[System Error] Selected model is at capacity. Please try a different model.");
   });
 
+  test("matches high-demand temporary system errors", () => {
+    const match = findCapacityError(
+      "[System Error] We’re currently experiencing high demand, which may cause temporary errors.",
+    );
+
+    expect(match?.line).toContain("high demand");
+    expect(match?.fingerprint).toBe(
+      "[System Error] We’re currently experiencing high demand, which may cause temporary errors.",
+    );
+  });
+
   test("matches model-capacity errors that are appended to a progress line", () => {
     const match = findCapacityError(
       "I found the signature and I am starting it now.[System Error] Selected model is at capacity. Please try a different model.",
