@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { syncGsdSkillState } from "./gsd-skill-state";
@@ -448,6 +448,39 @@ describe("skill state lifecycle", () => {
       expect(existsSync(join(home, ".agents", "skills", "skill-creator"))).toBe(false);
       expect(existsSync(join(home, ".claude", "skills", "skill-creator", "SKILL.md"))).toBe(true);
       expect(existsSync(join(home, ".codex", "skills", "skill-creator"))).toBe(false);
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+    }
+  });
+
+  test("external skill updater does not consume the outer label loop stdin", () => {
+    const home = mkdtempSync(join(tmpdir(), "external-loop-home-"));
+    const bin = join(home, "bin");
+    try {
+      mkdirSync(bin, { recursive: true });
+      const fakeNpx = join(bin, "npx");
+      writeFileSync(fakeNpx, "#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"$HOME/npx-calls.txt\"\ncat >/dev/null\n");
+      chmodSync(fakeNpx, 0o755);
+      const script = `
+        set -euo pipefail
+        SCRIPT_DIR=${JSON.stringify(join(repoRoot, "scripts"))}
+        source ${JSON.stringify(join(repoRoot, "scripts", "tasks", "update-skills.sh"))}
+        for label in mattpocock ponytail; do
+          run_external_skill_label codex "$label"
+        done
+      `;
+      const result = Bun.spawnSync(["bash", "-c", script], {
+        cwd: repoRoot,
+        env: {
+          ...process.env,
+          HOME: home,
+          PATH: `${bin}:${process.env.PATH ?? ""}`,
+          NPM_REGISTRY_MODE: "direct",
+        },
+      });
+
+      expect(result.exitCode).toBe(0);
+      expect(readFileSync(join(home, "npx-calls.txt"), "utf8").trim().split("\n")).toHaveLength(2);
     } finally {
       rmSync(home, { recursive: true, force: true });
     }

@@ -17,7 +17,7 @@ _run_skills() {
     else
         task_notice "Skills: installing $label for $agent via $registry"
     fi
-    out=$(npx --registry="$registry" -y skills add "$repo" -a "$agent" -g -y "$@" 2>&1) || { echo "$out"; return 1; }
+    out=$(npx --registry="$registry" -y skills add "$repo" -a "$agent" -g -y "$@" </dev/null 2>&1) || { echo "$out"; return 1; }
     echo "$out" | grep -E '(warn|error|⚠|✗)' || true
     echo "  ✓ skills ($label) → $agent"
 }
