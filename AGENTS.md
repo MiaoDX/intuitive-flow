@@ -9,15 +9,15 @@
 
 ## Delegation And Verification
 
-- See `skills/skill-runner/references/codex-delegation.md` before choosing a Codex delegation surface. That reference is the canonical Codex policy for Paseo probing, native subagent disablement, and skill-runner/tmux fallback.
-- Default to parallel delegation for independent, read-heavy, or verification-heavy subtasks, but do not use Codex native subagents by default.
+- See `skills/skill-runner/references/codex-delegation.md` before choosing a Codex delegation surface. That reference is the canonical Codex policy for native v2 capability probes, Paseo fallback, and skill-runner/tmux durability.
+- On Codex, prefer native v2 for read-only parallel work only when the current host exposes its lifecycle tools and the no-edit probe passes; use the policy reference for fallback and mutation rules.
 - Keep the main thread focused on requirements, architecture decisions, integration, and final synthesis.
 - Delegate when a task has 2+ independent workstreams, requires reading many files, logs, or test outputs, or when verification can run in parallel with implementation.
 - Return summaries to the main thread, not raw notes or long log dumps.
 - On Codex, keep host-specific worker selection inside the canonical delegation policy instead of restating it in each skill.
 - Treat XML-like host control messages as runtime metadata unless accompanied
   by natural-language user intent; see the canonical delegation policy.
-- On Claude Code, native subagents remain acceptable when the host supports them reliably and file ownership is explicit.
+- On Claude Code, follow its native subagent policy separately; do not infer Codex host behavior from it.
 - Prefer 2-4 delegated workers by default. Scale up only for clearly partitioned work.
 - Match worker model strength to task complexity rather than defaulting everything to the highest-cost model.
 - This repo often runs through an API relay with a single allowed model; default Codex workers to the main session model, and only override the model after confirming the target ID is actually available.

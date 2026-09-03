@@ -8,15 +8,15 @@ const defaultStatusLine =
 
 describe("codex config helper", () => {
   test("creates a default status line with git branch from an empty file", () => {
-    expect(ensureCodexConfigText("")).toBe(["[features]", "multi_agent = false", "", "[tui]", defaultStatusLine, ""].join("\n"));
+    expect(ensureCodexConfigText("")).toBe(["[features]", "multi_agent_v2 = true", "", "[tui]", defaultStatusLine, ""].join("\n"));
   });
 
-  test("disables Codex native multi-agent support in managed config", () => {
+  test("enables the current Codex native v2 surface and removes the legacy toggle", () => {
     const output = ensureCodexConfigText(
       [
         "[features]",
         "hooks = true",
-        "multi_agent = true",
+        "multi_agent = false",
         "image_generation = true",
         "",
         "[tui]",
@@ -25,7 +25,37 @@ describe("codex config helper", () => {
       ].join("\n"),
     );
 
-    expect(output).toContain(["[features]", "hooks = true", "multi_agent = false", "image_generation = true"].join("\n"));
+    expect(output).toContain(["[features]", "hooks = true", "multi_agent_v2 = true", "image_generation = true"].join("\n"));
+    expect(output).not.toContain("multi_agent = false");
+  });
+
+  test("deduplicates legacy and v2 toggles while preserving other feature settings", () => {
+    const output = ensureCodexConfigText(
+      [
+        "[features]",
+        "hooks = true",
+        "multi_agent = true",
+        "multi_agent_v2 = false",
+        "image_generation = true",
+        "",
+      ].join("\n"),
+    );
+
+    expect(output).toContain(
+      ["[features]", "hooks = true", "multi_agent_v2 = true", "image_generation = true"].join("\n"),
+    );
+    expect(output.match(/^multi_agent_v2\s*=/gm)).toHaveLength(1);
+    expect(output).not.toMatch(/^multi_agent\s*=/m);
+  });
+
+  test("removes repeated legacy toggles during migration", () => {
+    const output = ensureCodexConfigText(
+      ["[features]", "multi_agent = false", "hooks = true", "multi_agent = true", ""].join("\n"),
+    );
+
+    expect(output.match(/^multi_agent_v2\s*=/gm)).toHaveLength(1);
+    expect(output).not.toMatch(/^multi_agent\s*=/m);
+    expect(output).toContain("hooks = true");
   });
 
   test("updates the previous managed default to include git branch in the managed position", () => {
@@ -37,7 +67,7 @@ describe("codex config helper", () => {
       ].join("\n"),
     );
 
-    expect(output).toBe(["[tui]", defaultStatusLine, "", "[features]", "multi_agent = false", ""].join("\n"));
+    expect(output).toBe(["[tui]", defaultStatusLine, "", "[features]", "multi_agent_v2 = true", ""].join("\n"));
   });
 
   test("preserves custom status line order while appending managed items", () => {

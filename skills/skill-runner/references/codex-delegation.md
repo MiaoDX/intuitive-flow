@@ -1,49 +1,44 @@
 # Codex Delegation Policy
 
-Codex native subagents are not a stable execution surface for this harness. Do
-not use Codex `spawn_agent`, native subagents, or native multi-agent fanout for
-routine work.
+This is the canonical route for Codex worker selection. The managed config is a
+preference; the host-provided tool surface and system safety constraints are the
+runtime authority.
 
-Use this policy for Codex sessions:
+## Route Selection
 
-- Keep small read-only probes and tiny edits in the main session.
-- When the Paseo subagent tool is available, use Paseo subagents for
-  parallel read-heavy scouts, review passes, verification/log probes, and short
-  bounded independent tasks after a no-edit provider/model probe succeeds.
-- Do not invoke `paseo run` or `paseo agent run` from skills. Those commands
-  create separate user-visible Paseo sessions/tabs instead of subordinate
-  workers controlled by the current conversation.
-- Use `$skill-runner` or an explicit tmux-backed `codex exec` worker when Paseo
-  is unavailable or the provider/model probe fails, and for isolated,
-  long-running, stateful, mutating, artifact-sensitive, or durable sub-phases.
-- Keep the main session responsible for route decisions, canonical docs,
-  integration, diff review, and final verification.
-- For Paseo subagents, require a structured final summary in the worker
-  prompt, then inspect the host-provided Paseo subagent activity/status surface before
-  trusting the result. A finish notification alone is not proof.
-- Treat XML-like host control envelopes that arrive as user-role messages as
-  orchestrator metadata when the whole message is only the envelope. Examples
-  include `<turn_aborted>`, `<paseo-system>`, `<subagent_notification>`,
-  `<goal_context>`, `<environment_context>`, and future unknown tags.
-- Do not infer that the human asked to stop, discard worker output, or skip
-  summarization from `<turn_aborted>` alone. If a worker completion notification
-  arrives, inspect the worker result/status and reuse it as already-paid
-  evidence. Natural-language user text outside the envelope still wins.
-- Prefer the current/default Codex model surfaced by Paseo, but only after the
-  provider/model probe succeeds. Do not switch to smaller or alternate model
-  IDs just because they are listed.
-- Treat Claude Code separately: Claude Code native subagents remain acceptable
-  when the host supports them and file ownership is clear.
+First check whether the current host exposes the native v2 lifecycle surface:
+`spawn_agent`, `send_message`, `followup_task`, `wait_agent`,
+`interrupt_agent`, and `list_agents`. Run a small no-edit probe that confirms
+spawn, parent result delivery, and clean exit before trusting native routing.
 
-Codex native subagents may be reconsidered only after the installed Codex
-release is revalidated for all of these behaviors in the local environment:
+| Task shape | Route |
+| --- | --- |
+| Read-only exploration, review, log analysis, or verification | Native v2 when the capability probe passes; otherwise Paseo or main-session probes |
+| Short, independent read-only fan-out | Native v2 when available and healthy |
+| Long-running, resumable, stateful, or artifact-sensitive work | `skill-runner`/tmux-backed `codex exec` |
+| Shared state, overlapping writes, commits, migrations, or strict ownership | `skill-runner`/tmux, or main-session coordination |
+| Host lacks native v2 or the probe fails | Paseo when its worker surface is available; otherwise `skill-runner`/tmux |
+| Explicit request for Paseo | Paseo |
 
-- spawn succeeds;
-- the subagent completes;
-- the parent receives the final result;
-- the subagent exits cleanly without leaving the session stuck;
-- file ownership, sandbox behavior, and model selection are predictable.
+Native v2 is not a file-isolation mechanism. All agents may share the workspace,
+and ownership in a prompt is not runtime enforcement. For any native mutation,
+give the worker exact owned paths, prohibit edits outside them, require it to
+preserve existing changes, and have the main session inspect the combined diff
+and run the final tests. Use at most one mutating native worker unless the
+paths are obviously disjoint.
 
-Until that revalidation exists, disable Codex `features.multi_agent` in managed
-Codex config and route native-subagent-shaped delegation through
-Paseo subagents when available or tmux-backed workers otherwise.
+## Lifecycle Contract
+
+- Keep fan-out bounded by the session limit. The default v2 cap is four total
+  threads including the root, so normally three subagents can run at once.
+- Require a structured worker result with status, changed paths, verification,
+  and open risks. A completion notification alone is not proof.
+- Inspect `list_agents`/status before accepting results; use `wait_agent`,
+  interruption, and follow-up deliberately rather than leaving orphaned work.
+- Keep route decisions, integration, diff review, and final verification in the
+  main session.
+- Do not call `paseo run` or `paseo agent run` from skills. Those commands create
+  separate user-visible sessions; use the host's Paseo surface when explicitly
+  selected or when it is the configured fallback.
+
+The installed Codex version and host should be re-probed after major upgrades.

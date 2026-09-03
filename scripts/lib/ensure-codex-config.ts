@@ -61,6 +61,45 @@ const ensureTableKey = (lines: string[], tableName: string, key: string, value: 
   lines.splice(bounds.start + 1, 0, `${key} = ${value}`);
 };
 
+const migrateTableKey = (
+  lines: string[],
+  tableName: string,
+  oldKey: string,
+  newKey: string,
+  value: string,
+) => {
+  const bounds = findTableBounds(lines, tableName);
+  if (!bounds) {
+    return;
+  }
+
+  const oldIndexes: number[] = [];
+  const newIndexes: number[] = [];
+  for (let i = bounds.start + 1; i < bounds.end; i += 1) {
+    if (new RegExp(`^\\s*${oldKey}\\s*=`).test(lines[i] ?? "")) {
+      oldIndexes.push(i);
+    }
+    if (new RegExp(`^\\s*${newKey}\\s*=`).test(lines[i] ?? "")) {
+      newIndexes.push(i);
+    }
+  }
+
+  if (oldIndexes.length === 0) {
+    return;
+  }
+
+  const replacementIndex = newIndexes[0] ?? oldIndexes[0]!;
+  lines[replacementIndex] = `${newKey} = ${value}`;
+
+  const indexesToRemove = [
+    ...oldIndexes.slice(newIndexes.length > 0 ? 0 : 1),
+    ...newIndexes.slice(1),
+  ].sort((a, b) => b - a);
+  for (const index of indexesToRemove) {
+    lines.splice(index, 1);
+  }
+};
+
 const findTableBounds = (lines: string[], tableName: string) => {
   const header = `[${tableName}]`;
   const start = lines.findIndex((line) => line.trim() === header);
@@ -82,7 +121,8 @@ const findTableBounds = (lines: string[], tableName: string) => {
 export const ensureCodexConfigText = (original: string) => {
   const lines = original === "" ? [] : original.split(/\r?\n/);
 
-  ensureTableKey(lines, "features", "multi_agent", "false");
+  migrateTableKey(lines, "features", "multi_agent", "multi_agent_v2", "true");
+  ensureTableKey(lines, "features", "multi_agent_v2", "true");
 
   const tuiBounds = findTableBounds(lines, "tui");
   if (!tuiBounds) {

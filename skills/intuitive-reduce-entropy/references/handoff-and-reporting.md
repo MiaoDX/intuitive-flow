@@ -7,8 +7,9 @@ Use this route unless the user already names a specific entropy source.
 1. **Orient**: launch parallel bounded probes for root guidance, human docs,
    package/test config, automation, top-level layout, and the current
    verification command when two or more surfaces need inspection. Use the
-   current host's approved delegation policy for those probes; do not imply
-   Codex native subagents are the default. For tiny repos or precise prompts,
+   current host's approved delegation policy for those probes. On Codex, this
+   means the capability-gated native-v2 route in
+   `skills/skill-runner/references/codex-delegation.md`. For tiny repos or precise prompts,
    inspect the relevant surface directly. For broad prompts, run the high-noise
    summary preflight before searching `.planning`, `docs/plans`, `.scratch`,
    generated/log/tmp surfaces, large tests, or profile registries. For

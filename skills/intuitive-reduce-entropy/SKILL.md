@@ -83,8 +83,10 @@ credentials, hardware, paid services, or unavailable proof.
 - `$intuitive-flow` starts only after that contract is approved.
 
 Use the host's approved delegation policy for independent read-only probes.
-Do not hardcode native subagents as the default. Keep the main session
-responsible for ranking, architecture decisions, and final synthesis.
+Do not hardcode a host-specific worker surface here; on Codex, follow
+`skills/skill-runner/references/codex-delegation.md` for the native-v2 probe and
+fallback. Keep the main session responsible for ranking, architecture decisions,
+and final synthesis.
 
 ## Stop And Handoff
 
