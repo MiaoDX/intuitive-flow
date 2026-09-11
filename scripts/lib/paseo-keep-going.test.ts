@@ -104,6 +104,18 @@ describe("paseo keep-going monitor", () => {
     expect(match?.line).toContain("Upstream request failed");
   });
 
+  test("matches retry-limit rate-limit errors", () => {
+    const match = findCapacityError("[System Error] exceeded retry limit, last status: 429 Too Many Requests");
+
+    expect(match?.line).toBe("[System Error] exceeded retry limit, last status: 429 Too Many Requests");
+    expect(match?.fingerprint).toBe("[System Error] exceeded retry limit, last status: 429 Too Many Requests");
+
+    const overload = findCapacityError("[System Error] exceeded retry limit, last status: 503 Service Unavailable");
+
+    expect(overload?.line).toBe("[System Error] exceeded retry limit, last status: 503 Service Unavailable");
+    expect(overload?.fingerprint).toBe("[System Error] exceeded retry limit, last status: 503 Service Unavailable");
+  });
+
   test("plans a send only for monitored active agents with matching logs", () => {
     const agents: PaseoAgent[] = [
       { id: "running-match", status: "running", name: "active" },

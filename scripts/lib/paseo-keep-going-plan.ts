@@ -85,6 +85,7 @@ export const DEFAULT_PATTERNS = [
   /^.*\[System Error\]\s*stream disconnected before completion:\s*stream closed before response\.completed\s*$/i,
   /^.*\[System Error\]\s*stream disconnected before completion:\s*Concurrency limit exceeded for account,\s*please retry later\s*$/i,
   /^.*\[System Error\]\s*stream disconnected before completion:\s*Upstream request failed\s*$/i,
+  /^.*\[System Error\]\s*exceeded retry limit,\s*last status:\s*(?:408|429|5\d{2})\b.*$/i,
 ];
 
 const CAPACITY_ERROR_FINGERPRINT = "[System Error] Selected model is at capacity. Please try a different model.";
