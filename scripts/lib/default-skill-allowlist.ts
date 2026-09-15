@@ -19,7 +19,8 @@ export type ExternalSkillSource = {
   skills: string[];
 };
 
-export type SkillTier = "default" | "routed" | "on-demand";
+/** Installation policy. `routed` is installed but selected by a router; optional-install is opt-in. */
+export type SkillTier = "default" | "routed" | "optional-install";
 export type SkillHost = "all" | "claude-code" | "codex";
 
 export type SkillPolicy = {
@@ -59,7 +60,8 @@ const labelPattern = /^[a-z][a-z0-9-]*$/;
 const repoSlugPattern = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const githubUrlPattern = /^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+(?:\.git)?$/;
 const commandNamePattern = /^[A-Za-z0-9_.-]+\.md$/;
-const skillTiers = ["default", "routed", "on-demand"] as const;
+const skillTiers = ["default", "routed", "optional-install"] as const;
+const legacyOptionalInstallTier = "on-demand";
 const skillHosts = ["all", "claude-code", "codex"] as const;
 
 export const defaultSkillAllowlistPath = (cwd = process.cwd()) => join(cwd, "scripts", "default-skill-allowlist.txt");
@@ -113,6 +115,10 @@ const pushUnique = (values: string[], value: string) => {
 const sourceKey = (label: string, repo: string) => `${label}\0${repo}`;
 
 const assertSkillTier = (value: string, lineNumber: number): SkillTier => {
+  // Keep old manifests readable while making the install-only meaning explicit.
+  if (value === legacyOptionalInstallTier) {
+    return "optional-install";
+  }
   if (!skillTiers.includes(value as SkillTier)) {
     throw new Error(`invalid skill tier on line ${lineNumber}: ${value}`);
   }
@@ -262,11 +268,12 @@ export const parseDefaultSkillAllowlistText = (text: string): DefaultSkillAllowl
   return allowlist;
 };
 
-const selectedOnDemandSkills = (allowlist: DefaultSkillAllowlist): Set<string> => {
-  const selected = new Set((process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS ?? "")
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean));
+const selectedOptionalInstallSkills = (allowlist: DefaultSkillAllowlist): Set<string> => {
+  const selected = new Set([
+    process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS ?? "",
+    // Backward-compatible alias for existing automation.
+    process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS ?? "",
+  ].join(",").split(",").map((value) => value.trim()).filter(Boolean));
   const known = new Set([
     ...allowlist.rootSkills,
     ...allowlist.externalSources.flatMap((source) => source.skills),
@@ -275,28 +282,28 @@ const selectedOnDemandSkills = (allowlist: DefaultSkillAllowlist): Set<string> =
   ]);
   for (const skill of selected) {
     if (!known.has(skill)) {
-      throw new Error(`unknown on-demand skill: ${skill}`);
+      throw new Error(`unknown optional-install skill: ${skill}`);
     }
   }
   return selected;
 };
 
 const policyIsInstalled = (policy: SkillPolicy, selected: Set<string>) => (
-  policy.tier !== "on-demand" || selected.has(policy.skill)
+  policy.tier !== "optional-install" || selected.has(policy.skill)
 );
 
 export const rootSkillsForInstall = (allowlist: DefaultSkillAllowlist): string[] => (
-  allowlist.rootSkillPolicies.filter((policy) => policyIsInstalled(policy, selectedOnDemandSkills(allowlist)))
+  allowlist.rootSkillPolicies.filter((policy) => policyIsInstalled(policy, selectedOptionalInstallSkills(allowlist)))
     .map((policy) => policy.skill)
 );
 
 export const gstackSkillsForInstall = (allowlist: DefaultSkillAllowlist): string[] => (
-  allowlist.gstackSkillPolicies.filter((policy) => policyIsInstalled(policy, selectedOnDemandSkills(allowlist)))
+  allowlist.gstackSkillPolicies.filter((policy) => policyIsInstalled(policy, selectedOptionalInstallSkills(allowlist)))
     .map((policy) => policy.skill)
 );
 
 export const gsdSkillsForInstall = (allowlist: DefaultSkillAllowlist): string[] => (
-  allowlist.gsdSkillPolicies.filter((policy) => policyIsInstalled(policy, selectedOnDemandSkills(allowlist)))
+  allowlist.gsdSkillPolicies.filter((policy) => policyIsInstalled(policy, selectedOptionalInstallSkills(allowlist)))
     .map((policy) => policy.skill)
 );
 
@@ -304,7 +311,7 @@ export const externalSourcesForInstall = (
   allowlist: DefaultSkillAllowlist,
   host?: SkillHost,
 ): ExternalSkillSource[] => {
-  const selected = selectedOnDemandSkills(allowlist);
+  const selected = selectedOptionalInstallSkills(allowlist);
   const sources = new Map<string, ExternalSkillSource>();
   for (const policy of allowlist.externalSkillPolicies) {
     if (!policyIsInstalled(policy, selected) || (host && policy.host !== "all" && policy.host !== host)) {
@@ -324,7 +331,7 @@ export const hostScopedExternalSkillsForInstall = (
   label: string,
   host: SkillHost,
 ): string[] => {
-  const selected = selectedOnDemandSkills(allowlist);
+  const selected = selectedOptionalInstallSkills(allowlist);
   return allowlist.externalSkillPolicies
     .filter((policy) => policy.label === label && policy.host === host && policyIsInstalled(policy, selected))
     .map((policy) => policy.skill)
