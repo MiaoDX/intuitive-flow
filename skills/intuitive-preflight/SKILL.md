@@ -1,13 +1,6 @@
 ---
 name: intuitive-preflight
-description: |
-  Turn a vague task, plan, issue, or "LGTM/go ahead" request into an
-  approval-ready preflight contract before implementation starts. Use when the
-  user wants prompt preflight, clearer scope, non-goals, context package,
-  acceptance criteria, definition of done, verification, stop gates,
-  the exact execution command, or skill-runner worker prompts for an
-  intuitive-flow run. This skill does not execute; it produces the contract
-  that $intuitive-flow or a main-session goal can execute after approval.
+description: Turn a vague task or plan into an approval-ready execution contract covering scope, non-goals, acceptance, verification, and route. Use before implementation when those decisions need agreement; do not execute the work.
 ---
 
 # Intuitive Preflight

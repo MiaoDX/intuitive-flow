@@ -1,18 +1,6 @@
 ---
 name: intuitive-refactor
-description: |
-  Refactor and cleanup router for known code/module/API seams, stale surfaces,
-  compatibility shims, architecture cleanup targets, changed-code quality
-  review, oversized modules, repeated cleanup campaigns, and recurring
-  whole-repo architecture maintenance goals. Use this when the user names a
-  concrete seam, wants code/package layout made smaller and truer, asks to keep
-  refactoring, or asks for a goal that periodically cleans architecture across
-  the whole repo until saturated. For whole-repo maintenance goals, run the
-  repo-wide maintenance loop: alternate intuitive-reduce-entropy discovery
-  handoffs with execution of every clear safe candidate, deduplicate parked and
-  low-value registries, and stop only when saturation finds no new clear P1/P2.
-  For unknown "what should we clean?" discovery-only prompts, start with
-  intuitive-reduce-entropy, then return here to execute selected candidates.
+description: Execute a selected code or architecture cleanup seam, including stale surfaces, ownership moves, or changed-code simplification. Use after the target and scope are known; use intuitive-reduce-entropy for discovery.
 ---
 
 # Intuitive Refactor

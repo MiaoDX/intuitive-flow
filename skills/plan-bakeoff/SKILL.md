@@ -1,9 +1,6 @@
 ---
 name: plan-bakeoff
-description: |
-  Run one approved implementation plan through multiple isolated candidate
-  worktrees, then compare artifacts and rank the results. Use for best-of-N
-  implementation or agent/model/harness bakeoffs against one shared baseline.
+description: Compare multiple isolated implementations of one approved plan and rank their artifacts. Use only for explicit best-of-N or agent/model bakeoffs; never auto-merge or port a winner.
 ---
 
 # Plan Bakeoff

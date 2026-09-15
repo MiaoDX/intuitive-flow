@@ -20,6 +20,21 @@ print_gstack_failure_hint() {
     fi
 }
 
+# Keep infrequent planning reviews installed for explicit `$skill` calls without
+# allowing them to compete with the everyday proactive routes.
+configure_gstack_invocation_policy() {
+    local repo_dir="$1" skill yaml
+    for skill in gstack-autoplan gstack-plan-eng-review; do
+        yaml="$repo_dir/.agents/skills/$skill/agents/openai.yaml"
+        [ -f "$yaml" ] || continue
+        if grep -q '^  allow_implicit_invocation:' "$yaml"; then
+            sed -i 's/^  allow_implicit_invocation:.*/  allow_implicit_invocation: false/' "$yaml"
+        else
+            printf '\npolicy:\n  allow_implicit_invocation: false\n' >> "$yaml"
+        fi
+    done
+}
+
 run_gstack() {
     local project_dir repo_dir repo_parent
 
@@ -64,6 +79,8 @@ run_gstack() {
         echo "  ! gstack setup failed"
         return 1
     }
+
+    configure_gstack_invocation_policy "$repo_dir"
 
     bun "$SCRIPT_DIR/lib/gstack-skill-state.ts" sync "$repo_dir" "$SCRIPT_DIR/default-skill-allowlist.txt" || return 1
 

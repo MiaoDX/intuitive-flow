@@ -75,11 +75,13 @@ use direct flow only when the task is already bounded.
 ## Selected Skill Sources
 
 The managed portfolio is explicit, not a broad import. This repo assigns
-default, routed, on-demand, and host-specific policy to individual skills in
+default, routed, optional-install, and host-specific policy to individual skills in
 [`scripts/default-skill-allowlist.txt`](scripts/default-skill-allowlist.txt)
 and leaves the rest upstream until real use justifies promotion. Default and
-routed entries install normally; on-demand entries remain registered without
-occupying the normal discovery surface.
+routed entries install normally; optional-install entries remain registered but
+are installed only when selected for an update run. Invocation policy is a
+separate per-skill setting: installed skills may still require explicit `$skill`
+invocation.
 
 | Source | Stars | Selected | Skills used |
 | --- | --- | --- | --- |
@@ -88,7 +90,7 @@ occupying the normal discovery surface.
 | [`mattpocock/skills`](https://github.com/mattpocock/skills) | [![GitHub stars](https://img.shields.io/github/stars/mattpocock/skills?style=social)](https://github.com/mattpocock/skills) | 7 | `codebase-design`, `domain-modeling`, `grill-with-docs`, `grilling`, `handoff`, `improve-codebase-architecture`, `tdd` |
 | [`DietrichGebert/ponytail`](https://github.com/DietrichGebert/ponytail) | [![GitHub stars](https://img.shields.io/github/stars/DietrichGebert/ponytail?style=social)](https://github.com/DietrichGebert/ponytail) | 5 | `ponytail`, `ponytail-audit`, `ponytail-debt`, `ponytail-help`, `ponytail-review` |
 | [`garrytan/gstack`](https://github.com/garrytan/gstack) | [![GitHub stars](https://img.shields.io/github/stars/garrytan/gstack?style=social)](https://github.com/garrytan/gstack) | 7 | `gstack-autoplan`, `gstack-browse`, `gstack-investigate`, `gstack-open-gstack-browser`, `gstack-plan-eng-review`, `gstack-qa`, `gstack-review` |
-| [`open-gsd/gsd-core`](https://github.com/open-gsd/gsd-core) | [![GitHub stars](https://img.shields.io/github/stars/open-gsd/gsd-core?style=social)](https://github.com/open-gsd/gsd-core) | 11 | `gsd-discuss-phase`, `gsd-execute-phase`, `gsd-ingest-docs`, `gsd-new-project`, `gsd-phase`, `gsd-plan-phase`, `gsd-surface`, `gsd-update`, plus on-demand status/resume helpers |
+| [`open-gsd/gsd-core`](https://github.com/open-gsd/gsd-core) | [![GitHub stars](https://img.shields.io/github/stars/open-gsd/gsd-core?style=social)](https://github.com/open-gsd/gsd-core) | 11 | `gsd-discuss-phase`, `gsd-execute-phase`, `gsd-ingest-docs`, `gsd-new-project`, `gsd-phase`, `gsd-plan-phase`, `gsd-surface`, `gsd-update`, plus optional-install status/resume helpers |
 
 Selections come from the allowlist. Upstream totals change independently and are
 intentionally not duplicated here.
@@ -102,14 +104,15 @@ git clone --depth=1 https://github.com/MiaoDX/intuitive-flow.git ~/intuitive-flo
 ~/intuitive-flow/scripts/update.sh
 ```
 
-Install a registered on-demand skill for one update run by naming it explicitly:
+Install a registered optional-install skill for one update run by naming it explicitly:
 
 ```bash
-INTUITIVE_FLOW_ON_DEMAND_SKILLS=plan-bakeoff ~/intuitive-flow/scripts/update.sh
+INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS=plan-bakeoff ~/intuitive-flow/scripts/update.sh
 ```
 
-A later default update removes Intuitive-owned on-demand installs that are no
-longer selected. Host-specific external entries install only for their declared
+A later default update removes Intuitive-owned optional-install skills that are
+no longer selected. The legacy `INTUITIVE_FLOW_ON_DEMAND_SKILLS` variable is
+still accepted. Host-specific external entries install only for their declared
 agent host.
 
 For local development in this checkout:

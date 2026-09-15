@@ -1,83 +1,39 @@
 # Codex Guide
 
-## Environment
+## Repository Rules
 
-- Use `fetch-mcp` instead of Fetch/WebFetch (network issues in China Mainland).
-- Use Bash for orchestration entrypoints and Bun-run TypeScript for structured script logic.
-- For Python work, use `uv` and `.venv` instead of the system interpreter.
-- Avoid adding Python project dependencies unless a workflow truly needs Python-specific libraries.
+- Use `fetch-mcp` for network retrieval in place of Fetch/WebFetch.
+- Use Bash for orchestration entrypoints and Bun-run TypeScript for structured scripts.
+- For Python, use `uv` and the repository `.venv`; avoid new dependencies unless needed.
+- Keep commits atomic, do not amend unless asked, and include `Co-authored-by: Codex <codex@users.noreply.github.com>`.
+- If a push is rejected because the remote moved, fetch and rebase; never force-push unless asked.
+- Prefer live-at-HEAD behavior and forward migrations. Remove obsolete in-repo APIs and shims; preserve a bridge only when explicitly required.
+- Fail fast with explicit errors. Do not use `hasattr()` or `getattr()` for known types.
 
-## Delegation And Verification
+## Workflow Routing
 
-- See `skills/skill-runner/references/codex-delegation.md` before choosing a Codex delegation surface. That reference is the canonical Codex policy for native v2 capability probes, Paseo fallback, and skill-runner/tmux durability.
-- On Codex, prefer native v2 for read-only parallel work only when the current host exposes its lifecycle tools and the no-edit probe passes; use the policy reference for fallback and mutation rules.
-- Keep the main thread focused on requirements, architecture decisions, integration, and final synthesis.
-- Delegate when a task has 2+ independent workstreams, requires reading many files, logs, or test outputs, or when verification can run in parallel with implementation.
-- Return summaries to the main thread, not raw notes or long log dumps.
-- On Codex, keep host-specific worker selection inside the canonical delegation policy instead of restating it in each skill.
-- Treat XML-like host control messages as runtime metadata unless accompanied
-  by natural-language user intent; see the canonical delegation policy.
-- On Claude Code, follow its native subagent policy separately; do not infer Codex host behavior from it.
-- Prefer 2-4 delegated workers by default. Scale up only for clearly partitioned work.
-- Match worker model strength to task complexity rather than defaulting everything to the highest-cost model.
-- This repo often runs through an API relay with a single allowed model; default Codex workers to the main session model, and only override the model after confirming the target ID is actually available.
-- For concurrent edits, assign disjoint ownership and avoid overlapping write scopes.
-- Do not wait idly for delegated workers if non-overlapping local work is available.
-- Do not mark work complete without verification. Run relevant tests, inspect logs, or otherwise demonstrate correctness.
+- `$intuitive-flow` is the default build/change entrypoint.
+- Use `$intuitive-reduce-entropy` when the cleanup target is unknown; use `$intuitive-refactor` for a named code or architecture seam.
+- Use `$intuitive-init` for project-local `AGENTS.md` / `CLAUDE.md`; treat generated init output as input, not an overwrite source.
+- Use `$intuitive-doc` for human-facing docs and `$intuitive-tests` for test-suite organization.
+- Use `$intuitive-preflight` when scope, non-goals, acceptance, verification, or execution route need an approval-ready contract.
+- Use `$intuitive-squash` before PR or branch handoff when local agent history needs cleanup.
+- Keep shared rules here. Keep `CLAUDE.md` limited to Claude-specific additions.
 
-## Development And Testing
+## Documentation Truth
 
-- Read files before editing. Keep commits atomic. Do not amend unless asked.
-- If a push is rejected because the origin branch moved, fetch and rebase onto
-  origin instead of creating a merge commit. Do not force-push unless asked.
-- After each significant change, run the related UTs to avoid regressions.
-- Prefer real dependencies and realistic data flows over excessive stubs or mocks. Stub only truly external or expensive boundaries.
-- Add visualization-oriented validation when the project supports it and numeric or log checks can miss geometry or rendering errors.
-- For bug reports and failing CI, start from the failing test or log signal and drive to a verified fix.
+- Keep `README.md` thin. Put current setup, runtime, and interface truth in `ARCHITECTURE.md`, `STATUS.md`, and `docs/human/**`.
+- Use `.planning/` for locked project summaries and execution state. Treat generated release notes, archives, and unpromoted specs as historical.
+- When runtime truth changes, update the owning human doc in the same slice; refresh live planning summaries when scope or decisions change.
+- Prefer curated document ingest over broad discovery when syncing planning context.
 
-## Preferred Skills And Workflow Routing
+## Delegation
 
-- Use `$intuitive-init` when creating or refreshing project-local `AGENTS.md` / `CLAUDE.md`. Treat `/init` output as suggestions to merge, not as an overwrite source.
-- Use `$intuitive-doc` for human-facing docs, especially `README.md`, `ARCHITECTURE.md`, `STATUS.md`, and `docs/human/**`.
-- For repo/folder organization, route by object: `$intuitive-doc` for human
-  docs, `$intuitive-tests` for tests, `$intuitive-refactor` for code/package
-  layout, and `$intuitive-reduce-entropy` when the owner is unclear.
-- Use `$intuitive-tests` for test suite organization, markers, pruning, fixtures, and behavior-focused unit tests.
-- Use `$intuitive-flow` as the default build/change entrypoint; it routes small direct edits directly, cleanup/refactor targets to `$intuitive-refactor`, and large staged work through plan/review/GSD execution.
-- Use `$intuitive-preflight` before executing a plan or vague task when context package, scope, non-goals, definition of done, verification, route, or main-session `/goal` wording need human approval first.
-- Use `$intuitive-refactor` before broad refactors or architecture cleanup so the target, accepted severities, evidence ladder, and stop condition are explicit.
-- Use `$intuitive-squash` before PRs or branch handoff when local agent commits need a clean reviewable story.
-- Keep `AGENTS.md` and `CLAUDE.md` project-local. Shared skills and commands can be synced or linked; root agent guidance should preserve each repo's own commands, constraints, and current source-of-truth rules.
+- Read `skills/skill-runner/references/codex-delegation.md` when delegation, native v2 probes, Paseo fallback, or durable tmux workers are involved.
+- Keep host-specific worker selection in that reference. Assign disjoint ownership for concurrent edits and return summaries rather than raw logs.
+- Keep the main session responsible for requirements, architecture, integration, and final verification.
 
-## Engineering Style
+## File Ownership
 
-- Fix root causes rather than papering over symptoms.
-- Prefer minimal, local changes over speculative abstraction.
-- Understand why existing code exists before changing it.
-- Prefer live-at-HEAD behavior and forward migration over backward compatibility.
-  For architecture design, do not preserve old APIs, commands, layouts, or
-  compatibility shims as design goals. Design the organized future shape first,
-  migrate known in-repo callers, and remove obsolete surfaces in the scoped
-  slice. Treat a temporary bridge only as an explicitly requested migration
-  tactic with a removal trigger, not as part of the target architecture.
-- Fail fast with explicit errors rather than silent fallbacks.
-- Do not use `hasattr()` or `getattr()` for known types. Use direct attribute access.
-
-## Collaboration
-
-- Treat instructions as intent. Flag contradictions, risky assumptions, or technical debt instead of blindly implementing around them.
-- Ask a brief clarifying question only when a high-risk ambiguity would materially change the implementation.
-
-## Docs And Planning
-
-- Keep `README.md` thin and put detailed current-state setup, runtime, and interface docs in `ARCHITECTURE.md`, `STATUS.md`, and `docs/human/**`.
-- Use root human docs and `docs/human/**` for human-facing truth at `HEAD`; use `.planning/` for locked project summaries and execution state, and treat generated release notes, archives, and spec areas as historical material unless promoted.
-- When a refactor changes runtime truth, update the relevant root human doc or `docs/human/**` page in the same slice; if decisions or scope change too, refresh the live `.planning/` summaries as well.
-- Prefer a curated ingest or merge step over broad repo-wide doc discovery when syncing planning from docs.
-
-## Agent Notes
-
-- This file is the source of truth for shared agent rules. `CLAUDE.md` consumes it via `@AGENTS.md` and only owns Claude-specific additions; keep all operative shared rules here because Codex does not transclude other files.
-- Move reusable workflows to skills, scripts, tmux workers, or Claude Code subagents instead of expanding this file.
-- If a workflow must be enforced deterministically, prefer hooks or scripts over prose in this file.
-- Codex commits: include `Co-authored-by: Codex <codex@users.noreply.github.com>` trailer.
+- This file is the shared source of truth. Move reusable workflows to skills, scripts, hooks, or worker references instead of expanding it.
+- If a rule must be deterministic, enforce it with a hook or script.

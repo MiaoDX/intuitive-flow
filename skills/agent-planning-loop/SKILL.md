@@ -1,15 +1,6 @@
 ---
 name: agent-planning-loop
-description: |
-  Run a bounded autonomous planning loop before implementation: use scout
-  workers to apply intuitive-reduce-entropy and grill-with-docs-batch, keep the
-  main session as judge, iterate until the scope is clear, then present one
-  recommended plan plus alternatives for a single user review. Follow the
-  skill-runner Codex delegation reference for host-specific worker selection.
-  Use this whenever the user asks to "align yourselves", "run reduce entropy
-  and grill batch", "use workers to refine the plan", "give me the plans after
-  judging them", mentions a "planning loop", or wants faster planning without
-  being pulled into every grill question.
+description: Run a bounded multi-agent planning review before implementation when the user explicitly asks agents to align, compare planning options, or refine a draft plan. Return one judged recommendation and do not implement.
 ---
 
 # Agent Planning Loop

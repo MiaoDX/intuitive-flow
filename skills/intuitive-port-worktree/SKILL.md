@@ -1,6 +1,6 @@
 ---
 name: intuitive-port-worktree
-description: Port changes from one git worktree or checkout into the default repository folder's current branch, then by default sync the result to the remote default branch when everything is clean. Use when the user asks to move, copy, transfer, transplant, cherry-pick, apply a patch, or port worktree changes into the main/default repo checkout without changing the target branch.
+description: Port commits or patches between git worktrees or checkouts while preserving the target branch. Use only when the user explicitly asks to transplant worktree changes; pushing or merging requires explicit authorization.
 disable-model-invocation: true
 ---
 
@@ -160,12 +160,11 @@ Do not auto-commit when:
 If the target has unrelated dirty changes on non-overlapping paths, commit only
 the ported paths and leave unrelated work untouched.
 
-## Auto-Sync Policy
+## Sync Policy
 
-After a successful auto-commit, sync the result to the remote by default. The
-user who ports into the default checkout almost always wants that work to land
-upstream, not sit as a local-only commit. Treat sync as the normal completion
-state of a clean port.
+After a successful auto-commit, stop with the local commit unless the user has
+explicitly authorized pushing or landing the result upstream in this request.
+Porting into the default checkout does not imply publication.
 
 "Sync" means two layers — do both when they apply:
 
@@ -175,15 +174,13 @@ state of a clean port.
 2. **Fast-forward local**: bring the target checkout's default branch up to the
    integrated remote state so local and remote match.
 
-Do NOT auto-sync — stop at the committed-but-unpushed state and report — when
-any of these hold (they mirror and extend the auto-commit gate):
+Stop at the committed-but-unpushed state and report when any of these hold:
 
 - the auto-commit gate did not pass, so there is no clean commit to sync;
 - verification failed, was skipped, or only partially ran;
 - the port required a semantically large decision;
-- the target branch is not the remote default branch, OR the user did not ask to
-  land on the default branch — pushing a feature/topic branch is fine, but
-  merging into the default branch is the outward-facing, hard-to-reverse step;
+- the target branch is not the remote default branch, or the user did not ask to
+  land on the default branch;
 - a backup or unrelated local branch would also be pushed by a broad push — push
   only the intended ref;
 - the remote integration would require force-push, history rewrite, or bypassing
@@ -214,9 +211,8 @@ A local post-merge hook may already fast-forward the checkout during the merge;
 verify the actual `origin/<default>` vs `HEAD` state rather than assuming either
 that it did or did not run.
 
-Even with auto-sync on, the outward-facing merge into a shared default branch is
-hard to reverse. Proceed without re-asking when the user has authorized landing
-upstream in this request; otherwise push the branch and ask before merging.
+The outward-facing merge into a shared default branch is hard to reverse. Only
+push or merge after the user authorizes that action in the current request.
 
 ## Final Report
 

@@ -1,12 +1,6 @@
 ---
 name: multica-goal-tracker
-description: |
-  Track goal-driven Multica issues. Use when a user creates or maintains
-  Multica issues by pasting a /goal prompt, wants Codex to summarize that goal
-  into a concise issue purpose, append a normalized goal-start comment, record
-  completion evidence from real Multica execution run messages or a supplied
-  session transcript, or add additional goal attempts and completion proof to
-  the same issue.
+description: Create or update Multica goal issues and attach normalized start, finish, or completion evidence for /goal-driven runs. Use only for explicit Multica issue tracking.
 ---
 
 # Multica Goal Tracker

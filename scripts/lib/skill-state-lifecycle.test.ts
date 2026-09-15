@@ -410,6 +410,8 @@ describe("skill state lifecycle", () => {
     const syncLocal = readFileSync(join(repoRoot, "scripts", "tasks", "sync-local-commands-skills.sh"), "utf8");
 
     expectBunToolCommand(updateGstack, "gstack-skill-state.ts", "sync");
+    expect(updateGstack).toContain("configure_gstack_invocation_policy");
+    expect(updateGstack).toContain("gstack-autoplan gstack-plan-eng-review");
     expectBunToolCommand(updateSkills, "external-skill-state.ts", "sync");
     expectBunToolCommand(updateSkills, "external-skill-state.ts", "prune-removed");
     expect(updateSkills).toContain("external-host-scoped-skills");

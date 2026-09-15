@@ -1,6 +1,6 @@
 ---
 name: intuitive-tests
-description: Use this skill whenever the user asks about unit test best practices, test organization, flat test suites, redundant tests, test refactors, pytest/JUnit/Jest/xUnit layout, test taxonomy, flaky tests, coverage quality, fixtures, mocks, parametrization, pruning existing UTs, or "which tests are worth keeping." It aggressively turns broad testing advice into a clean, behavior-first UT suite by preventing random test growth, pruning low-value tests, consolidating redundant checks, and requiring each retained test to prove a real behavior, failure mode, or public contract. For broad suite refactors, audit first, propose a recommended path across pruning, markers, folder layout, fixtures, and parameterization, then wait for user feedback before applying disruptive changes.
+description: Audit or improve test-suite structure and signal when the user asks about redundant tests, pruning, layout, fixtures, markers, or parameterization. Focus on behavior proof and use an audit-first proposal for broad suite changes.
 ---
 
 # Intuitive Tests

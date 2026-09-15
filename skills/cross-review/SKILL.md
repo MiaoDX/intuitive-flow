@@ -1,14 +1,6 @@
 ---
 name: cross-review
-description: |
-  Challenge an existing agent proposal through a small bounded set of
-  independent review perspectives, then judge the findings into one simpler or
-  more defensible recommendation. Use immediately after an agent proposes a
-  solution when the user asks whether there is a simpler approach, wants a
-  second opinion or other perspectives, asks for cross review or multiple
-  review rounds, or names reviewer skills such as ponytail-review and
-  intuitive-reduce-entropy. This is a lightweight post-proposal review, not a
-  planning loop, implementation workflow, or code/PR review.
+description: Challenge an existing agent proposal with independent perspectives and return one judged recommendation. Use when the user explicitly asks for a second opinion or simpler approach; do not create plans or implement changes.
 ---
 
 # Cross Review

@@ -1,9 +1,6 @@
 ---
 name: skill-runner
-description: |
-  Run a bounded development task through named skills in an isolated,
-  tmux-backed Codex or Claude session. Use for durable or artifact-sensitive
-  worker phases, supervised skill runs, and post-run skill evaluation.
+description: Run a durable or artifact-sensitive task in an isolated Codex or Claude worker session when logs, ownership, and supervision matter. Keep tiny probes and edits in the main session.
 ---
 
 # Skill Runner

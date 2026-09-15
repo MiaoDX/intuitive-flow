@@ -1,10 +1,6 @@
 ---
 name: intuitive-reduce-entropy
-description: |
-  Inspect a repository or plan and rank material simplification candidates.
-  Use repo entropy mode when the cleanup owner is unknown, and plan entropy
-  mode when an idea or plan needs blind spots found before approval. This skill
-  discovers and routes work; it does not implement refactors.
+description: Discover and rank material simplification candidates in a repository or plan when the cleanup target or plan risks are unclear. Use for diagnosis and routing; do not implement refactors.
 ---
 
 # Intuitive Reduce Entropy

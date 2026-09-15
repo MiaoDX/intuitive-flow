@@ -1,12 +1,6 @@
 ---
 name: research
-description: |
-  Run evidence-led deep research using the host and repository's existing
-  retrieval and delegation tools. Use when a question needs multiple sources,
-  literature or ecosystem review, current technology comparison, competing
-  claims reconciled, or a durable cited research report rather than a quick
-  lookup. Do not use for single-fact searches or codebase investigation that
-  belongs to a more specific planning, debugging, or review skill.
+description: Investigate a bounded question with multiple sources, competing claims, or a durable cited report. Use for evidence-led research; answer single facts and codebase questions directly.
 ---
 
 # Research

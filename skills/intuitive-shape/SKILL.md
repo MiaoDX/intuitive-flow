@@ -1,14 +1,6 @@
 ---
 name: intuitive-shape
-description: |
-  Shape a raw product or project idea into a bounded decision before planning
-  or implementation. Use when deciding whether an idea deserves a bet, setting
-  an appetite, comparing candidate bets under finite capacity, cutting scope,
-  exposing rabbit holes and no-gos, or choosing BET, RESEARCH, RESHAPE, or PASS.
-  This skill stops before execution and hands accepted bets to the repository's
-  existing planning or preflight route. Do not use for a clearly bounded tiny
-  fix, active incident diagnosis, ordinary bug repair, or already approved
-  execution unless the user asks to revisit the bet or scope.
+description: Decide whether a raw product or project idea merits a bounded bet before planning. Use for appetite, scope cuts, and BET/RESEARCH/RESHAPE/PASS decisions; not settled fixes or approved execution.
 ---
 
 # Intuitive Shape

@@ -155,7 +155,7 @@ The default public choices are `$intuitive-flow`, `$intuitive-refactor`,
 `$cross-review`, `$grill-with-docs-batch`, `$intuitive-preflight`, `$intuitive-doc`,
 `$intuitive-init`, `$intuitive-tests`, and `$skill-runner` remain installed as
 routed specialists. `$intuitive-squash`, `$intuitive-port-worktree`,
-`$multica-goal-tracker`, and `$plan-bakeoff` are registered on-demand utilities.
+`$multica-goal-tracker`, and `$plan-bakeoff` are registered optional-install utilities.
 `$intuitive-shape` is the default upstream decision skill: it
 turns raw ideas into bounded `BET`, `RESEARCH`, `RESHAPE`, or `PASS` decisions,
 then hands accepted work to the existing canonical plan/preflight route. It
@@ -222,9 +222,10 @@ change the repo source tree solely because a host discovers skills under
 
 The install surface is controlled by `scripts/default-skill-allowlist.txt`:
 
-- Every entry declares `default`, `routed`, or `on-demand`. Default and routed
-  entries install normally. On-demand entries install only when named in
-  `INTUITIVE_FLOW_ON_DEMAND_SKILLS` for that update run.
+- Every entry declares `default`, `routed`, or `optional-install`. Default and
+  routed entries install normally. Optional-install entries install only when
+  named in `INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS` for that update run. The
+  legacy `INTUITIVE_FLOW_ON_DEMAND_SKILLS` variable remains accepted.
 - `root-skill` entries register repo-owned skills.
 - `external-skill` entries also declare `all`, `claude-code`, or `codex`, then
   name the source label, GitHub repo, and exact skill.
@@ -250,7 +251,7 @@ During `scripts/update.sh`, the local sync writes
 `~/.intuitive-flow/owned-root-skills.json` after a successful root-skill sync.
 On later runs, it removes only install artifacts that were previously recorded
 as Intuitive-owned but are no longer selected for installation, including
-on-demand skills omitted from the next run. If the ownership state does not
+optional-install skills omitted from the next run. If the ownership state does not
 exist yet, the updater seeds it after sync and does not infer ownership from
 matching names. User-installed skills outside that owned state are preserved.
 
@@ -278,7 +279,7 @@ install them or edit the allowlist.
 
 Trial community skills use the same explicit `external-skill` entries. Proven
 review/audit routes may be routed; help, debt, and broad-mode wrappers remain
-on-demand until real use justifies promotion.
+optional-install until real use justifies promotion.
 
 External source cleanup uses the same ownership rule. After each successful
 external install, the updater writes
@@ -289,7 +290,7 @@ the Claude Code, Codex, and shared agent skill install roots.
 GSD setup remains upstream-owned. Intuitive Flow installs the upstream `core`
 profile and keeps the additional `gsd-ingest-docs` entry required by its handoff
 route. After installation, exposed GSD wrappers are pruned back to this small
-managed surface; status and continuation helpers remain on-demand. The wrapper
+managed surface; status and continuation helpers remain optional-install. The wrapper
 uses the full upstream source set during installation because the upstream
 installer cannot compose `core` with one additional command, then the state
 sync removes the unselected wrappers. The visible surface is the allowlist, not

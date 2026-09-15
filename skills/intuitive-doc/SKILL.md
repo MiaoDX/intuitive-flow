@@ -1,6 +1,6 @@
 ---
 name: intuitive-doc
-description: Create and maintain an intuitive human documentation surface for AI-agent-developed repos. Use when humans should only need README.md, ARCHITECTURE.md, STATUS.md, and docs/human/** while planning logs, generated docs, retrospectives, ADR detail, and implementation evidence stay in AI-agent-only folders.
+description: Maintain human-facing README.md, ARCHITECTURE.md, STATUS.md, and docs/human/** when docs drift, need updates, or require cleanup. Use intuitive-init for AGENTS.md, CLAUDE.md, or agent setup.
 ---
 
 # Intuitive Doc

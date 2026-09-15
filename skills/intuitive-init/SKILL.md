@@ -1,18 +1,6 @@
 ---
 name: intuitive-init
-description: |
-  Initialize, audit, aggressively slim, merge, and refresh project-local
-  AGENTS.md and CLAUDE.md files from existing repo guidance, agent /init
-  suggestions, stdin-bundled Codex init-style discovery, and intuitive workflow
-  defaults. Use when setting up a repo for Claude Code/Codex, replacing
-  symlinked agent files with local guidance, rerunning agent init after weeks
-  of drift, cleaning overgrown root agent files or first-read policies,
-  optimizing startup context across AGENTS/CLAUDE/README/ARCHITECTURE/STATUS,
-  adding worktree-friendly .venv/submodule hooks and hints when repos already
-  show Python environment or git-submodule signals, or configuring target-repo
-  LSP and agent-facing Serena MCP guidance. Route broad human docs, tests,
-  execution flow, refactor scope, and entropy discovery to their own skills
-  unless the change is the startup/orientation harness that points at them.
+description: Create, audit, or slim project-local AGENTS.md, CLAUDE.md, and agent-facing startup or LSP/MCP setup. Use when guidance or agent configuration needs change; use intuitive-doc for human-facing docs.
 ---
 
 # Intuitive Init

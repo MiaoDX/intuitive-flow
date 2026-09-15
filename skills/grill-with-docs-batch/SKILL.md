@@ -1,6 +1,6 @@
 ---
 name: grill-with-docs-batch
-description: Grouped grilling session that wraps grill-with-docs semantics while discussing related questions in batches, with explicit convergence checks so it stops when docs already contain enough decision quality. Use when the user wants to stress-test a plan against docs and domain language faster than one-question-at-a-time grilling, especially when asking whether remaining questions exist.
+description: Batch unresolved product or domain decisions against repository docs when the user asks to stress-test a plan or check whether questions remain. Stop when the docs settle the durable decisions.
 ---
 
 # Grill With Docs Batch

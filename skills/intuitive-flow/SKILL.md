@@ -1,13 +1,6 @@
 ---
 name: intuitive-flow
-description: |
-  Stable execution/change router after an approved plan, preflight contract, or
-  tiny concrete task. Refactor-shaped work delegates to intuitive-refactor, and
-  durable work runs through staged planning, review, GSD handoff,
-  implementation, cleanup, and verification while keeping plan ledgers and
-  active capsules compact by replacing stale state instead of appending history.
-  Also accept vague prompts as a compatibility route that names the upstream
-  planning stage instead of hiding planning inside execution.
+description: Route approved plans, preflight contracts, and tiny bounded changes through implementation and verification. Use for ordinary execution; route discovery, refactors, and missing preflight decisions to their specialists.
 ---
 
 # Intuitive Flow

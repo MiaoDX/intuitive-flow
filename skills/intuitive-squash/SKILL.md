@@ -1,6 +1,6 @@
 ---
 name: intuitive-squash
-description: Squash local GSD or agent-generated commit history into a clean, reviewable story while preserving important fixes. Use when the user asks to squash commits, clean git history, compress phase commits, prepare a branch before PR, compare aggressive vs moderate squash options, or preserve hotfix/security commits during squash in Claude Code or Codex.
+description: Plan and perform an approved rewrite of noisy local git history before handoff or a PR. Use only when the user explicitly asks to squash commits; preserve important fixes and verify the resulting tree.
 disable-model-invocation: true
 ---
 

@@ -15,7 +15,7 @@ currently provides:
   proposals before heavier planning or preflight
 - a default `research` skill for evidence-led investigation across multiple
   sources without adding a dedicated search runtime
-- compact runtime skill entrypoints backed by on-demand `references/`,
+- compact runtime skill entrypoints backed by deferred `references/`,
   `templates/`, and `scripts/`
 - portable durable-run ownership that preserves target-repo status conventions,
   isolates task state, and keeps shared project status single-writer
@@ -97,9 +97,10 @@ locked summaries, not the active roadmap.
 - `scripts/update.sh` is not a harmless test command; it mutates installed tools
   and user config. By default it warns rather than blocks when Codex is already
   running.
-- Skill visibility is controlled by `scripts/default-skill-allowlist.txt`;
-  default and routed entries install normally, on-demand entries require
-  explicit selection, external entries are host-scoped, and prune-only
+- Skill installation is controlled by `scripts/default-skill-allowlist.txt`;
+  default and routed entries install normally, optional-install entries require
+  explicit selection, and per-skill `agents/openai.yaml` can independently
+  require explicit invocation. External entries are host-scoped, and prune-only
   `legacy-*` entries belong in `scripts/default-skill-prune-ledger.txt`.
 - GSD and GStack setup may create upstream wrappers temporarily, but the updater
   prunes managed wrappers back to the default allowlist.
