@@ -382,7 +382,7 @@ describe("skill state lifecycle", () => {
       mkdirSync(join(home, ".codex", "skills", "gsd-plan-phase"), { recursive: true });
       writeFileSync(join(home, ".codex", "skills", "gsd-plan-phase", "SKILL.md"), "get-shit-done plan\n");
       mkdirSync(join(home, ".codex", "skills", "gsd-old"), { recursive: true });
-      writeFileSync(join(home, ".codex", "skills", "gsd-old", "SKILL.md"), "get-shit-done old\n");
+      writeFileSync(join(home, ".codex", "skills", "gsd-old", "SKILL.md"), "<codex_skill_adapter>\nold\n");
       mkdirSync(join(home, ".codex", "skills", "gsd-user"), { recursive: true });
       writeFileSync(join(home, ".codex", "skills", "gsd-user", "SKILL.md"), "# User skill\n");
 

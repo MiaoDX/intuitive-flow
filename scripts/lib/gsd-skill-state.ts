@@ -19,7 +19,9 @@ const removeGsdSkillIfManaged = (path: string): number => {
 
   try {
     const text = readFileSync(skillPath, "utf8");
-    if (!text.includes("get-shit-done")) {
+    const isGsdHostAdapter = /^name:\s*["']?gsd-[a-z0-9-]+["']?\s*$/m.test(text)
+      && text.includes("allowed-tools:");
+    if (!text.includes("get-shit-done") && !text.includes("<codex_skill_adapter>") && !isGsdHostAdapter) {
       return 0;
     }
   } catch {
