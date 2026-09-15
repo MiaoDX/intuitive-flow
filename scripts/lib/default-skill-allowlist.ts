@@ -61,7 +61,6 @@ const repoSlugPattern = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const githubUrlPattern = /^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+(?:\.git)?$/;
 const commandNamePattern = /^[A-Za-z0-9_.-]+\.md$/;
 const skillTiers = ["default", "routed", "optional-install"] as const;
-const legacyOptionalInstallTier = "on-demand";
 const skillHosts = ["all", "claude-code", "codex"] as const;
 
 export const defaultSkillAllowlistPath = (cwd = process.cwd()) => join(cwd, "scripts", "default-skill-allowlist.txt");
@@ -115,10 +114,6 @@ const pushUnique = (values: string[], value: string) => {
 const sourceKey = (label: string, repo: string) => `${label}\0${repo}`;
 
 const assertSkillTier = (value: string, lineNumber: number): SkillTier => {
-  // Keep old manifests readable while making the install-only meaning explicit.
-  if (value === legacyOptionalInstallTier) {
-    return "optional-install";
-  }
   if (!skillTiers.includes(value as SkillTier)) {
     throw new Error(`invalid skill tier on line ${lineNumber}: ${value}`);
   }
@@ -269,11 +264,8 @@ export const parseDefaultSkillAllowlistText = (text: string): DefaultSkillAllowl
 };
 
 const selectedOptionalInstallSkills = (allowlist: DefaultSkillAllowlist): Set<string> => {
-  const selected = new Set([
-    process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS ?? "",
-    // Backward-compatible alias for existing automation.
-    process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS ?? "",
-  ].join(",").split(",").map((value) => value.trim()).filter(Boolean));
+  const selected = new Set((process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS ?? "")
+    .split(",").map((value) => value.trim()).filter(Boolean));
   const known = new Set([
     ...allowlist.rootSkills,
     ...allowlist.externalSources.flatMap((source) => source.skills),

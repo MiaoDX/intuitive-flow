@@ -224,8 +224,7 @@ The install surface is controlled by `scripts/default-skill-allowlist.txt`:
 
 - Every entry declares `default`, `routed`, or `optional-install`. Default and
   routed entries install normally. Optional-install entries install only when
-  named in `INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS` for that update run. The
-  legacy `INTUITIVE_FLOW_ON_DEMAND_SKILLS` variable remains accepted.
+  named in `INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS` for that update run.
 - `root-skill` entries register repo-owned skills.
 - `external-skill` entries also declare `all`, `claude-code`, or `codex`, then
   name the source label, GitHub repo, and exact skill.

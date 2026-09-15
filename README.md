@@ -111,9 +111,8 @@ INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS=plan-bakeoff ~/intuitive-flow/scripts/upd
 ```
 
 A later default update removes Intuitive-owned optional-install skills that are
-no longer selected. The legacy `INTUITIVE_FLOW_ON_DEMAND_SKILLS` variable is
-still accepted. Host-specific external entries install only for their declared
-agent host.
+no longer selected. Host-specific external entries install only for their
+declared agent host.
 
 For local development in this checkout:
 

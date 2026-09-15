@@ -29,7 +29,7 @@ Completed baseline correction:
 Current default-surface correction:
 
 - `scripts/default-skill-allowlist.txt` now parses default, routed, and
-  on-demand tiers plus external host scope. Comments describe groups but no
+  optional-install tiers plus external host scope. Comments describe groups but no
   longer carry install semantics.
 - Retired local artifacts are kept out of the install allowlist and listed in
   `scripts/default-skill-prune-ledger.txt` for updater-owned cleanup.
@@ -40,7 +40,7 @@ Current default-surface correction:
   surface includes only the phase loop and document bootstrap needed by
   `$intuitive-flow`.
 - Keep `$grill-with-docs-batch` routed for convergence; the external
-  single-question `$grill-with-docs` remains registered on-demand.
+  single-question `$grill-with-docs` remains registered optional-install.
 - Keep `$codebase-design` routed as the shared architecture vocabulary and
   `$improve-codebase-architecture` routed as an optional report-only deepening
   scanner when the first review still leaves no accepted target seam. Keep its
@@ -48,10 +48,10 @@ Current default-surface correction:
 - Keep `$gstack-autoplan` routed as a risk-triggered planning scout, not a
   mandatory plan-backed execution gate.
 - Keep Anthropic `skill-creator` and the Claude-oriented external `codex`
-  wrapper on-demand and Claude-only so they do not collide with Codex built-ins
+  wrapper optional-install and Claude-only so they do not collide with Codex built-ins
   or appear inside Codex by default.
 - Keep only `ponytail-audit` and `ponytail-review` routed. The broad mode, help,
-  and debt ledger remain on-demand.
+  and debt ledger remain optional-install.
 - Keep `cross-review` routed as the lightweight owner for challenging an
   existing proposal. It composes reviewer skills but does not replace their
   native scopes or expand into a planning loop.
@@ -84,9 +84,9 @@ Use this sequence before a new skill becomes normal runtime behavior:
    a candidate.
 6. **Promotion or removal:** promote only with stable benefit, acceptable cost,
    and a rollback path. Otherwise keep the behavior advisory, return it to
-   on-demand use, or remove it.
+  optional-install use, or remove it.
 
-`default`, `routed`, and `on-demand` control installation and discovery, not
+`default`, `routed`, and `optional-install` control installation and discovery, not
 automatic execution. Prefer `routed` for a specialist that an existing owner
 must invoke. Reserve `default` for a small public entry surface.
 
@@ -131,7 +131,7 @@ mode itself.
 | `intuitive-preflight` | Strong: make vague execution intent approval-ready before implementation. | Strong: owns context package, scope, non-goals, acceptance, verification, route, and goal wording. | Strong: draft contract and approval boundary are explicit. | Specialist skill; route from flow or direct use before vague execution. |
 | `intuitive-reduce-entropy` | Strong: explicit repo entropy mode for maintenance and plan entropy mode for idea/plan blind spots. | Strong: owns entropy diagnosis and routes to doc/init/tests/refactor or grill-batch/preflight instead of forcing the user to choose first. | Strong: mode declaration, candidate list, gate, route, verify, and park. | Primary entropy entrypoint. |
 | `intuitive-refactor` | Strong: bound aggressive cleanup plus changed-code review. | Strong: owns scope gates, severities, evidence, parked ideas, ratchet mode, and diff-scoped reuse/quality/efficiency review. | Strong: persistent gate, ladder, and changed-code review scope are clear. | Absorbed the former `simplify` workflow; keep as the cleanup/refactor owner. |
-| `intuitive-squash` | Strong: rewrite noisy agent history safely. | Strong: owns commit grouping and safety protocol only. | Strong: explicit confirmation and verify commands. | Keep registered on-demand. |
+| `intuitive-squash` | Strong: rewrite noisy agent history safely. | Strong: owns commit grouping and safety protocol only. | Strong: explicit confirmation and verify commands. | Keep installed with explicit invocation. |
 | `intuitive-tests` | Strong: improve test suite signal. | Strong: owns test taxonomy, pruning, fixture/layout cleanup. | Strong but long: many examples are useful runtime guidance. | Specialist skill; route from reduce-entropy when tests are the issue. |
 | `multica-goal-tracker` | Strong: keeps goal-driven Multica issues tied to execution proof. | Strong: owns issue goal summaries, tracked start/finish comments, and text completion evidence only. | Strong after tracker harness: defaults fail fast without real session history, and parsing/comment behavior is covered by skill-local tests. | Specialist issue-workflow utility; not part of the small public planning/build surface. |
 | `plan-bakeoff` | Strong: compares candidate implementations for an approved plan. | Strong: owns best-of-N plan execution, scorecards, and final ranking, not ordinary flow execution. | Strong: manifest gates, skill-runner ownership, secret redaction, and fake/real harness proof are explicit. | On-demand utility; compact entrypoint delegates options/schema to CLI help. |
@@ -142,17 +142,17 @@ mode itself.
 
 | Surface | Default role | Recommendation |
 | --- | --- | --- |
-| `skill-creator` | External authoring utility from Anthropic's skills source. | Claude-only and on-demand; Codex keeps its built-in owner. |
-| `codex` | Claude-oriented external utility for Codex CLI workflows. | Claude-only and on-demand; never install into Codex by default. |
-| `grill-with-docs`, `handoff`, `tdd` | Narrow external specialists. | Registered on-demand; local/routed owners remain the normal workflow surface. |
+| `skill-creator` | External authoring utility from Anthropic's skills source. | Claude-only and optional-install; Codex keeps its built-in owner. |
+| `codex` | Claude-oriented external utility for Codex CLI workflows. | Claude-only and optional-install; never install into Codex by default. |
+| `grill-with-docs`, `handoff`, `tdd` | Narrow external specialists. | Registered optional-install; local/routed owners remain the normal workflow surface. |
 | `codebase-design`, `improve-codebase-architecture`, `grilling`, `domain-modeling` | Architecture vocabulary, optional report-only deepening, and its runtime dependencies. | Keep routed so Reduce Entropy, Refactor, and Flow can run the architecture review sequence without a separate install step. |
 | `ponytail-audit`, `ponytail-review` | Simplicity and over-engineering review inputs used by local routes. | Keep routed. |
-| `ponytail`, `ponytail-debt`, `ponytail-help` | Broad/trial/help utilities. | Keep on-demand; do not occupy default discovery. |
-| `gstack-browse`, `gstack-open-gstack-browser` | Browser launch and browser QA helpers. | Keep browse default; open-browser is on-demand. |
-| `gstack-autoplan`, `gstack-plan-eng-review`, `gstack-review`, `gstack-qa` | Managed review and QA wrappers. | Keep planning/review routes installed; QA is on-demand until usage justifies promotion. |
+| `ponytail`, `ponytail-debt`, `ponytail-help` | Broad/trial/help utilities. | Keep optional-install; do not occupy default discovery. |
+| `gstack-browse`, `gstack-open-gstack-browser` | Browser launch and browser QA helpers. | Keep browse default; open-browser is optional-install. |
+| `gstack-autoplan`, `gstack-plan-eng-review`, `gstack-review`, `gstack-qa` | Managed review and QA wrappers. | Keep planning/review routes installed; QA is optional-install until usage justifies promotion. |
 | `gstack-investigate` | Managed root-cause investigation workflow. | Keep as the default debugging/investigation route; do not also default-install `$diagnose`. |
 | `gsd-discuss-phase`, `gsd-execute-phase`, `gsd-ingest-docs`, `gsd-new-project`, `gsd-phase`, `gsd-plan-phase`, `gsd-surface`, `gsd-update` | Small GSD core loop plus document ingestion required by Flow handoff. | Keep installed as the managed GSD phase surface; upstream `core` supplies the loop and Flow adds `ingest-docs`. |
-| `gsd-progress`, `gsd-resume-work`, `gsd-pause-work` | GSD status and continuation helpers. | Registered on-demand; Flow can name them when a GSD run exists. |
+| `gsd-progress`, `gsd-resume-work`, `gsd-pause-work` | GSD status and continuation helpers. | Registered optional-install; Flow can name them when a GSD run exists. |
 
 Removed from the default surface:
 

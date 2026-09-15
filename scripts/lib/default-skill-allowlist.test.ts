@@ -20,10 +20,10 @@ describe("default skill allowlist", () => {
       root-skill default intuitive-flow
       root-skill default intuitive-flow
       root-skill routed agent-planning-loop
-      external-skill on-demand all mattpocock https://github.com/mattpocock/skills handoff
+      external-skill optional-install all mattpocock https://github.com/mattpocock/skills handoff
       external-skill routed all mattpocock https://github.com/mattpocock/skills tdd
       gstack-skill default gstack-review
-      gsd-skill on-demand gsd-plan-phase
+      gsd-skill optional-install gsd-plan-phase
     `);
 
     expect(allowlist.rootSkills).toEqual(["agent-planning-loop", "intuitive-flow"]);
@@ -63,9 +63,9 @@ describe("default skill allowlist", () => {
   });
 
   test("current default surface keeps routed architecture tools available and GSD visibility narrow", () => {
-    const previous = process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS;
+    const previous = process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS;
     try {
-      delete process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS;
+      delete process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS;
       const allowlist = readDefaultSkillAllowlist(join(process.cwd(), "scripts", "default-skill-allowlist.txt"));
       const externalSkills = allowlist.externalSources.flatMap((source) => source.skills);
       const installedMattpocockSkills = externalSourcesForInstall(allowlist)
@@ -82,8 +82,8 @@ describe("default skill allowlist", () => {
       expect(allowlist.gstackSkills).toContain("gstack-investigate");
       expect(gsdSkillsForInstall(allowlist)).toEqual(["gsd-discuss-phase", "gsd-execute-phase", "gsd-ingest-docs", "gsd-new-project", "gsd-phase", "gsd-plan-phase", "gsd-surface", "gsd-update"]);
     } finally {
-      if (previous === undefined) delete process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS;
-      else process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS = previous;
+      if (previous === undefined) delete process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS;
+      else process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS = previous;
     }
   });
 
@@ -123,10 +123,8 @@ describe("default skill allowlist", () => {
 
   test("selects registered optional-install skills and filters external skills by host", () => {
     const previous = process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS;
-    const previousLegacy = process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS;
     try {
       process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS = "skill-creator,gsd-progress";
-      delete process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS;
       const allowlist = readDefaultSkillAllowlist(join(process.cwd(), "scripts", "default-skill-allowlist.txt"));
 
       expect(gsdSkillsForInstall(allowlist)).toEqual([
@@ -149,37 +147,18 @@ describe("default skill allowlist", () => {
     } finally {
       if (previous === undefined) delete process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS;
       else process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS = previous;
-      if (previousLegacy === undefined) delete process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS;
-      else process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS = previousLegacy;
-    }
-  });
-
-  test("keeps the legacy on-demand environment variable as an alias", () => {
-    const previous = process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS;
-    const previousLegacy = process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS;
-    try {
-      delete process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS;
-      process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS = "gsd-progress";
-      const allowlist = readDefaultSkillAllowlist(join(process.cwd(), "scripts", "default-skill-allowlist.txt"));
-
-      expect(gsdSkillsForInstall(allowlist)).toContain("gsd-progress");
-    } finally {
-      if (previous === undefined) delete process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS;
-      else process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS = previous;
-      if (previousLegacy === undefined) delete process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS;
-      else process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS = previousLegacy;
     }
   });
 
   test("rejects unknown optional-install skill selections", () => {
-    const previous = process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS;
+    const previous = process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS;
     try {
-      process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS = "not-registered";
+      process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS = "not-registered";
       const allowlist = readDefaultSkillAllowlist(join(process.cwd(), "scripts", "default-skill-allowlist.txt"));
       expect(() => rootSkillsForInstall(allowlist)).toThrow("unknown optional-install skill");
     } finally {
-      if (previous === undefined) delete process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS;
-      else process.env.INTUITIVE_FLOW_ON_DEMAND_SKILLS = previous;
+      if (previous === undefined) delete process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS;
+      else process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS = previous;
     }
   });
 
@@ -220,7 +199,7 @@ describe("default skill allowlist", () => {
       mkdirSync(join(root, "unlisted"), { recursive: true });
       writeFileSync(join(root, "unlisted", "SKILL.md"), "");
 
-      const errors = checkRootSkills(parseDefaultSkillAllowlistText("root-skill default listed\nroot-skill on-demand missing\n"), root);
+      const errors = checkRootSkills(parseDefaultSkillAllowlistText("root-skill default listed\nroot-skill optional-install missing\n"), root);
 
       expect(errors).toContain("default allowlist lists missing root skill: missing");
       expect(errors).toContain("root skill missing from default allowlist: unlisted");

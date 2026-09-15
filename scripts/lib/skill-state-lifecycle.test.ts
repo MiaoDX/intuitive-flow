@@ -442,7 +442,7 @@ describe("skill state lifecycle", () => {
         env: {
           ...process.env,
           HOME: home,
-          INTUITIVE_FLOW_ON_DEMAND_SKILLS: "skill-creator",
+          INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS: "skill-creator",
         },
       });
 
