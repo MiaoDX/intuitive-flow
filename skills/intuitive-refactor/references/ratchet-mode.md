@@ -152,9 +152,11 @@ imports with aliases because tests use them."
 When the user asks for continuous cleanup, run repeated ratchet slices, not an
 open-ended refactor.
 
-For long-lived or resumed campaigns, read `references/ratchet-campaign.md` and
-`../../_shared/references/durable-run.md`. Those shared rules own the active
-capsule, checkpoint cadence, control-plane/worker shape, and proof selector.
+For long-lived or resumed campaigns, read
+[ratchet campaign](ratchet-campaign.md) and
+[durable run](../../_shared/references/durable-run.md). Those shared rules own
+the active capsule, checkpoint cadence, control-plane/worker shape, and proof
+selector.
 
 If the user asks for periodic architecture cleanup but no concrete seam,
 accepted gate, or selected entropy candidate exists, run

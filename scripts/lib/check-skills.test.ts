@@ -159,6 +159,77 @@ describe("skill checker", () => {
     });
   });
 
+  test("rejects reference files the entrypoint never links", async () => {
+    await withTempProject((root) => {
+      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill default alpha\n");
+      writeFixtureFile(
+        root,
+        "skills/alpha/SKILL.md",
+        "---\nname: alpha\ndescription: Alpha.\n---\n\nRead [guide](references/guide.md).\n",
+      );
+      writeFixtureFile(root, "skills/alpha/references/guide.md", "# Guide\n");
+      writeFixtureFile(root, "skills/alpha/references/orphan-index.md", "# Stale index hop\n");
+
+      expect(checkSkills(optionsFor(root))).toContain(
+        "unreachable skill reference in skills/alpha/references/orphan-index.md: link it from SKILL.md or remove it",
+      );
+    });
+  });
+
+  test("accepts reference files linked from the entrypoint by anchor", async () => {
+    await withTempProject((root) => {
+      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill default alpha\n");
+      writeFixtureFile(
+        root,
+        "skills/alpha/SKILL.md",
+        "---\nname: alpha\ndescription: Alpha.\n---\n\nRead [apply](references/guide.md#apply) and [audit](references/guide.md#audit).\n",
+      );
+      writeFixtureFile(root, "skills/alpha/references/guide.md", "# Guide\n");
+
+      expect(checkSkills(optionsFor(root))).toEqual([]);
+    });
+  });
+
+  test("rejects skill-root-relative paths cited from inside references", async () => {
+    await withTempProject((root) => {
+      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill default alpha\n");
+      writeFixtureFile(
+        root,
+        "skills/alpha/SKILL.md",
+        "---\nname: alpha\ndescription: Alpha.\n---\n\nRead [guide](references/guide.md).\n",
+      );
+      writeFixtureFile(
+        root,
+        "skills/alpha/references/guide.md",
+        "# Guide\n\nSee `references/sibling.md` for the next step.\n",
+      );
+      writeFixtureFile(root, "skills/alpha/references/sibling.md", "# Sibling\n");
+
+      expect(checkSkills(optionsFor(root))).toContain(
+        "missing referenced skill resource in skills/alpha/references/guide.md: references/sibling.md",
+      );
+    });
+  });
+
+  test("accepts sibling-relative paths cited from inside references", async () => {
+    await withTempProject((root) => {
+      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill default alpha\n");
+      writeFixtureFile(
+        root,
+        "skills/alpha/SKILL.md",
+        "---\nname: alpha\ndescription: Alpha.\n---\n\nRead [guide](references/guide.md) and [sibling](references/sibling.md).\n",
+      );
+      writeFixtureFile(
+        root,
+        "skills/alpha/references/guide.md",
+        "# Guide\n\nSee [sibling](sibling.md) for the next step.\n",
+      );
+      writeFixtureFile(root, "skills/alpha/references/sibling.md", "# Sibling\n");
+
+      expect(checkSkills(optionsFor(root))).toEqual([]);
+    });
+  });
+
   test("validates external skill entries in the default allowlist", async () => {
     await withTempProject((root) => {
       writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill default alpha\nexternal-skill default all demo https://example.com/demo alpha\n");

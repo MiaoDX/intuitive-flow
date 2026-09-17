@@ -32,11 +32,10 @@ Load only the reference needed for the active pass:
 
 | Need | Read |
 | --- | --- |
-| Mode selection, discovery-loop behavior, plan-ledger boundaries | `references/discovery-modes.md` |
-| High-noise summaries, materiality gate, no-change threshold | `references/high-noise-and-materiality.md` |
-| Ranking, architecture review, delegation, specialist routing | `references/ranking-and-routing.md` |
-| Candidate packet, user decision gates, handoff and final shapes | `references/handoff-and-reporting.md` |
-| Reference index | `references/detailed-guidance.md` |
+| Mode selection, discovery-loop behavior, plan-ledger boundaries | [Discovery modes](references/discovery-modes.md) |
+| High-noise summaries, materiality gate, no-change threshold | [High noise and materiality](references/high-noise-and-materiality.md) |
+| Ranking, architecture review, delegation, specialist routing | [Ranking and routing](references/ranking-and-routing.md) |
+| Candidate packet, user decision gates, handoff and final shapes | [Handoff and reporting](references/handoff-and-reporting.md) |
 
 For broad repo scans, read the repo's thin orientation surface and run the
 bundled high-noise summary before searching planning archives, logs, generated
@@ -80,9 +79,9 @@ credentials, hardware, paid services, or unavailable proof.
 
 Use the host's approved delegation policy for independent read-only probes.
 Do not hardcode a host-specific worker surface here; on Codex, follow
-`skills/skill-runner/references/codex-delegation.md` for the native-v2 probe and
-fallback. Keep the main session responsible for ranking, architecture decisions,
-and final synthesis.
+[Codex delegation](../skill-runner/references/codex-delegation.md) for the
+native-v2 probe and fallback. Keep the main session responsible for ranking,
+architecture decisions, and final synthesis.
 
 ## Stop And Handoff
 

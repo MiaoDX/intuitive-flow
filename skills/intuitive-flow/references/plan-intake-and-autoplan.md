@@ -123,7 +123,7 @@ Pre-plan contents:
 - GSD handoff trigger
 - source evidence links
 
-Use `templates/pre-plan.md` when drafting a new plan.
+Use `../templates/pre-plan.md` when drafting a new plan.
 
 When drafting or revising `docs/plans/<slug>.md`, follow
 `source-of-truth.md`'s Plan Ledger And Dashboard rules: set the session scope,

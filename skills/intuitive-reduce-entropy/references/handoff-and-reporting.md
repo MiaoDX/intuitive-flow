@@ -9,10 +9,11 @@ Use this route unless the user already names a specific entropy source.
    verification command when two or more surfaces need inspection. Use the
    current host's approved delegation policy for those probes. On Codex, this
    means the capability-gated native-v2 route in
-   `skills/skill-runner/references/codex-delegation.md`. For tiny repos or precise prompts,
-   inspect the relevant surface directly. For broad prompts, run the high-noise
-   summary preflight before searching `.planning`, `docs/plans`, `.scratch`,
-   generated/log/tmp surfaces, large tests, or profile registries. For
+   [Codex delegation](../../skill-runner/references/codex-delegation.md). For
+   tiny repos or precise prompts, inspect the relevant surface directly. For
+   broad prompts, run the high-noise summary preflight before searching
+   `.planning`, `docs/plans`, `.scratch`, generated/log/tmp surfaces, large
+   tests, or profile registries. For
    high-noise surfaces, orient with indexes and references rather than
    full-body reads.
 2. **Classify**: map observed friction to the entropy sources above.

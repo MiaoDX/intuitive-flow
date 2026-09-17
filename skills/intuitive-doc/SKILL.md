@@ -24,8 +24,9 @@ files. Treat `docs/plans/README.md`, when present, as the plan dashboard rather
 than a human-facing project manual.
 
 This compact entrypoint preserves full mode-specific guidance in
-`references/detailed-guidance.md`. Read it for detailed audit/update/cleanup
-criteria, perspective levels, documentation standards, or full output format.
+[detailed guidance](references/detailed-guidance.md). Read it for detailed
+audit/update/cleanup criteria, perspective levels, documentation standards, or
+full output format.
 
 ## When To Activate
 

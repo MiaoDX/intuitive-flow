@@ -24,8 +24,9 @@ Ask one concise question only when an unresolved choice would materially change
 the research. For a quick factual lookup, use the repository's normal retrieval
 path and answer directly instead of running this workflow.
 
-Read `references/evidence-and-output.md` before collecting sources. Use its
-research brief, evidence ledger, confidence rules, and report shape.
+Read [evidence and output](references/evidence-and-output.md) before collecting
+sources. Use its research brief, evidence ledger, confidence rules, and report
+shape.
 
 ## Plan The Evidence
 
@@ -57,11 +58,11 @@ make the process appear deep.
   repository-mandated tool with an unreliable or prohibited route.
 
 When two or more independent, read-heavy workstreams justify delegation, first
-read `../skill-runner/references/codex-delegation.md` and follow its current
-host policy. Keep the main session as research lead and final judge. Require
-workers to return compact findings with claim, source URL, source class,
-confidence, contradictions, and gaps rather than raw search logs. If delegation
-is unavailable, run the same workstreams sequentially.
+read [Codex delegation](../skill-runner/references/codex-delegation.md) and
+follow its current host policy. Keep the main session as research lead and final
+judge. Require workers to return compact findings with claim, source URL, source
+class, confidence, contradictions, and gaps rather than raw search logs. If
+delegation is unavailable, run the same workstreams sequentially.
 
 ## Maintain Evidence
 

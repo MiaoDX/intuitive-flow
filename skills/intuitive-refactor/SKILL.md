@@ -17,11 +17,11 @@ after the user names a target or selects a candidate packet.
 
 | Need | Read |
 | --- | --- |
-| Route selection, scope gate, severity guide, evidence ladder | `references/mode-router.md` |
-| Repeated cleanup, oversized modules, stale surfaces, deletion/owner-move ratchets | `references/ratchet-mode.md` |
-| Long-running ratchet overlay, active capsule, selected-slice loop, or repo-wide maintenance goal | `references/ratchet-campaign.md` and `../_shared/references/durable-run.md` |
-| Diff-scoped reuse/quality/efficiency review after implementation | `references/changed-code-review.md` |
-| Full legacy guidance, templates, confidence ladder, command naming, persistent-state examples | `references/detailed-guidance.md` |
+| Route selection, scope gate, severity guide, evidence ladder | [Mode router](references/mode-router.md) |
+| Repeated cleanup, oversized modules, stale surfaces, deletion/owner-move ratchets | [Ratchet mode](references/ratchet-mode.md) |
+| Long-running ratchet overlay, active capsule, selected-slice loop, or repo-wide maintenance goal | [Ratchet campaign](references/ratchet-campaign.md) and [durable run](../_shared/references/durable-run.md) |
+| Diff-scoped reuse/quality/efficiency review after implementation | [Changed code review](references/changed-code-review.md) |
+| Full legacy guidance, templates, confidence ladder, command naming, persistent-state examples | [Detailed guidance](references/detailed-guidance.md) |
 
 If multiple routes match, load the narrowest reference first and add the next
 one only when the work crosses that boundary.
@@ -78,9 +78,9 @@ Then run one vertical slice at a time:
 5. Verify with the smallest sufficient evidence ladder.
 6. Checkpoint what changed, what stayed parked, and what proof passed. With the
    campaign overlay, commit verified implementation slices by default; the
-   detailed skip rules live in `references/ratchet-campaign.md`.
+   detailed skip rules live in [ratchet campaign](references/ratchet-campaign.md).
 
 Stop when the accepted checklist is complete and remaining candidates are
 parked, polish, public-contract migrations, or design decisions. With the
 campaign overlay, stop only after the selected-slice or repo-wide maintenance
-saturation rule in `references/ratchet-campaign.md` is met.
+saturation rule in [ratchet campaign](references/ratchet-campaign.md) is met.

@@ -6,7 +6,7 @@ Date: 2026-08-24
 
 - Four representative prompts were run in fresh read-only agent sessions.
 - Baseline sessions were explicitly prevented from reading the skill.
-- Treatment sessions read `SKILL.md` and `references/shaped-bet-contract.md`,
+- Treatment sessions read `SKILL.md` and `../references/shaped-bet-contract.md`,
   but not eval cases, expected outputs, or the rubric.
 - One fresh judge read only `RUBRIC.md` and anonymized response pairs.
 - A/B labels were independently swapped across cases before judging.

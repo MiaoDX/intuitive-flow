@@ -260,8 +260,8 @@ local setup docs for credentials.
 Set up language server support as part of repo harness initialization when the
 task reaches Apply, Refresh, or Symlink Migration mode, or when the user asks
 for coding-agent LSP/MCP setup directly. Read
-`references/lsp-and-mcp.md` before editing LSP, Serena, MCP, language-server,
-or related dependency/config surfaces.
+[LSP and MCP](lsp-and-mcp.md) before editing LSP, Serena, MCP,
+language-server, or related dependency/config surfaces.
 
 The short rule: verify the repo-local language-server config first, then verify,
 configure, or propose an agent-facing MCP symbol surface, preferably Serena,
@@ -270,10 +270,11 @@ editing when setup would require paid services, local-only hardware, broad
 toolchain migration, heavy installs, global secrets, or uncertain global state.
 
 The first concrete language recipes are documented in
-`references/lsp-and-mcp.md`: Python uses the repo's `uv`/virtualenv and Pyright
-configuration; TypeScript uses the detected package manager, local TypeScript
-compiler and `tsconfig`/typecheck script; Rust uses Cargo workspace metadata,
-the pinned Rust toolchain, `rust-analyzer`, and `cargo check --workspace`.
+[LSP and MCP](lsp-and-mcp.md): Python uses the repo's `uv`/virtualenv and
+Pyright configuration; TypeScript uses the detected package manager, local
+TypeScript compiler and `tsconfig`/typecheck script; Rust uses Cargo workspace
+metadata, the pinned Rust toolchain, `rust-analyzer`, and
+`cargo check --workspace`.
 
 ## Core Rule
 

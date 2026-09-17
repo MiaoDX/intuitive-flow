@@ -108,12 +108,12 @@ const localResourceMentions = (text: string, sourceFile: string): ResourceMentio
     mentions.set(`${displayPath}:${resolvedPath}`, { displayPath, resolvedPath });
   };
 
-  const resolveMention = (mention: string): string => {
-    if (mention.startsWith("./") || mention.startsWith("../")) {
-      return skillRelativePath(join(dirname(sourceFile), mention));
-    }
-    return mention;
-  };
+  // Resolve every mention relative to the file that contains it, matching the
+  // markdown-link branch below. A bare `references/x.md` written inside
+  // `references/` now fails instead of silently resolving from the skill root,
+  // which is how location-wrong paths survived review.
+  const resolveMention = (mention: string): string =>
+    skillRelativePath(join(dirname(sourceFile), mention));
 
   const resourcePattern = /(?<![A-Za-z0-9_/-])((?:references|templates)\/[A-Za-z0-9._/-]+|(?:\.\.\/)+_shared\/[A-Za-z0-9._/-]+)\.[A-Za-z0-9]+/g;
   for (const match of text.matchAll(resourcePattern)) {
@@ -184,6 +184,22 @@ const checkSkill = (skillsRoot: string, skillName: string, projectRoot: string):
         }
       }
     }
+  }
+
+  // SKILL.md is the sole router for a one-level references/ layer, so every
+  // reference file must be linked from the entrypoint. This is the reverse of
+  // the existence check above: that one proves links resolve, this one proves
+  // files are reachable.
+  const entrypointMentions = new Set(
+    localResourceMentions(text, "SKILL.md").map((mention) => mention.resolvedPath),
+  );
+  for (const file of listFiles(join(skillDir, "references"), "references")) {
+    if (!isMarkdownFile(file) || entrypointMentions.has(skillRelativePath(file))) {
+      continue;
+    }
+    errors.push(
+      `unreachable skill reference in skills/${skillName}/${file}: link it from SKILL.md or remove it`,
+    );
   }
 
   const markers = requiredWorkflowMarkers[skillName] ?? [];

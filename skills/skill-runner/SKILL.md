@@ -9,8 +9,9 @@ Use `skill-runner` when an isolated worker needs durable logs, compact result
 artifacts, explicit path ownership, or supervision across a long task. Small
 read-only probes and tiny edits should stay on the host-approved lighter route.
 
-Read `references/codex-delegation.md` before choosing a Codex worker surface.
-That file owns native-worker capability checks and the durable tmux fallback.
+Read [Codex delegation](references/codex-delegation.md) before choosing a Codex
+worker surface. That file owns native-worker capability checks and the durable
+tmux fallback.
 
 ## Launch Contract
 

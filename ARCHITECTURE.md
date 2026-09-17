@@ -213,6 +213,11 @@ history rewriting loads restoration instructions after approval of the commit ma
 Critical permissions, ownership, and completion conditions stay in the entrypoint.
 Short single-purpose skills remain self-contained. Avoid copying an old entrypoint
 into another mandatory manual or adding an index hop before an existing reference.
+`bun run check:skills` enforces the reachability half of that rule: every
+`references/*.md` must be linked from its own `SKILL.md`. A redundant index hop
+that is still linked passes the check and needs human review. Cited resource
+paths resolve relative to the file that contains them, so a nested reference
+cites a sibling as `sibling.md` and the skill root as `../templates/`.
 
 Installation tiers and invocation policy are separate. This disclosure refactor
 preserves both, including external skills and their upstream-owned content.
@@ -366,9 +371,10 @@ bun run setup:hooks
 
 The pre-commit hook runs `bun run check:skills`. This catches missing manifest
 entries, stale generated include syntax, invalid frontmatter, broken local skill
-resource references, default allowlist drift, required workflow handoff marker
-drift, and GitHub Actions Bun pin drift before commit without making every
-commit run the full TypeScript and test proof.
+resource references, reference files the entrypoint never links, default
+allowlist drift, required workflow handoff marker drift, and GitHub Actions Bun
+pin drift before commit without making every commit run the full TypeScript and
+test proof.
 
 ## Proof Boundary
 
@@ -379,8 +385,8 @@ bun run verify
 ```
 
 That validates repo-owned skill structure, default allowlist coverage, local
-skill resource references, required workflow handoff markers, and Bun toolchain
-pin alignment, runs
+skill resource references and entrypoint reachability, required workflow handoff
+markers, and Bun toolchain pin alignment, runs
 ShellCheck error-level checks for Bash orchestration scripts, runs TypeScript
 checking, and runs Bun tests. GitHub Actions mirrors the same proof in
 `.github/workflows/verify.yml`, so broken skill allowlists, frontmatter, resource

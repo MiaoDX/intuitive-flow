@@ -44,7 +44,8 @@ wins, or what scope must be cut before commitment.
    - `RESHAPE`: the problem matters, but the current solution does not fit the appetite.
    - `PASS`: not worth capacity now; end without creating a permanent backlog item.
 
-Read `references/shaped-bet-contract.md` before producing the final contract.
+Read [shaped bet contract](references/shaped-bet-contract.md) before producing
+the final contract.
 
 ## Decision Discipline
 

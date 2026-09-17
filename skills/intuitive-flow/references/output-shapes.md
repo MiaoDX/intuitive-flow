@@ -1,11 +1,11 @@
 # Output Shapes
 
 Use these compact shapes for inline `intuitive-flow` responses. Use the files
-in `templates/` when creating durable artifacts:
+in `../templates/` when creating durable artifacts:
 
-- `templates/route-brief.md`
-- `templates/pre-plan.md`
-- `templates/closeout.md`
+- `../templates/route-brief.md`
+- `../templates/pre-plan.md`
+- `../templates/closeout.md`
 
 ## Upfront Route Brief
 
@@ -69,7 +69,7 @@ state says to stop. Emit a read-only status/decision summary instead.
 
 ## Pre-Plan
 
-Use `templates/pre-plan.md`.
+Use `../templates/pre-plan.md`.
 
 ## Workflow Recommendation
 
@@ -82,7 +82,7 @@ Stop condition: <what should be true before the next stage>
 
 ## Implementation Closeout
 
-Use `templates/closeout.md`.
+Use `../templates/closeout.md`.
 
 The final user-facing response after completed implementation/refactor work must
 visibly enumerate `What changed`, `Proof`, `Scope changes`, and `Parked todos`.
