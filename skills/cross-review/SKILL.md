@@ -1,38 +1,13 @@
 ---
 name: cross-review
-description: Challenge an existing agent proposal with independent perspectives and return one judged recommendation. Use when the user explicitly asks for a second opinion or simpler approach; do not create plans or implement changes.
+description: Give an existing proposal an independent second opinion when requested; return one judged recommendation.
 ---
 
 # Cross Review
 
-Review an existing proposal without turning the request into a full planning
-exercise. Preserve the original problem and constraints, let independent
-reviewers challenge the same proposal, and keep the main session as the only
-judge.
-
-## Boundary
-
-Own:
-
-- finding the proposal already present in the conversation or named artifact;
-- selecting two to four relevant reviewer skills;
-- keeping reviewer inputs independent;
-- deduplicating and judging findings;
-- returning one `keep`, `simplify`, `replace`, or `needs-decision` verdict;
-- running one review round by default and at most two when revision matters.
-
-Do not own:
-
-- inventing a plan when no proposal exists;
-- implementing or editing the proposal under review;
-- correctness-focused code, diff, or PR review;
-- user grilling, full planning alignment, or execution preflight;
-- persistent review state, reviewer registries, or unbounded iteration.
-
-Route missing or still-fuzzy proposals to `$agent-planning-loop` or the
-appropriate planning skill. Route an accepted but execution-incomplete proposal
-to `$intuitive-preflight`. Route code or PR findings to the relevant code-review
-skill.
+Challenge an existing proposal when the user requests a second opinion. Return
+one keep, simplify, replace, or needs-decision verdict; do not edit the proposal,
+implement changes, or invent a plan. Use the appropriate code-review skill for PRs.
 
 ## Freeze The Input
 
@@ -44,40 +19,8 @@ candidate proposals make the target materially ambiguous.
 Freeze that input for the review round. Do not revise it between reviewers or
 show one reviewer's findings to another reviewer in the same round.
 
-## Select Reviewers
-
-When the user names reviewer skills, use exactly those skills unless one cannot
-apply within its own boundary. Use two to four reviewers. Record an inapplicable
-reviewer instead of stretching its semantics, and ask only when fewer than two
-useful perspectives remain.
-
-When the user does not name reviewers, default to:
-
-- `$ponytail-review` for removable abstractions, dependencies, flexibility, and
-  implementation-shaped complexity;
-- `$intuitive-reduce-entropy` in plan entropy mode with quick-scan intensity for
-  duplicate ownership, scope leakage, weak assumptions, and proof gaps.
-
-Add one specialist perspective only when the proposal's central claim would
-otherwise go unreviewed, such as an architecture or test-design boundary. State
-why it was added. Do not add reviewers to fill a quota.
-
-Read every selected reviewer's instructions and preserve its native scope. The
-reviewer supplies findings; this skill owns comparison and judgment.
-
-## Run Independent Passes
-
-Use the host-approved delegation route when independent read-only reviewers are
-available. Give each reviewer only:
-
-- the frozen problem and proposal;
-- the minimum repository context needed to assess it;
-- its named skill and native output contract;
-- a read-only instruction with no expected verdict or prior reviewer findings.
-
-Reviewers must not edit files, expand the objective, ask the user questions, or
-decide another reviewer's concerns. If independent workers are unavailable, run
-the passes inline from the frozen input and label independence as limited.
+Read [reviewers](references/reviewers.md) when choosing and dispatching independent
+perspectives. Preserve the scope of each selected skill.
 
 ## Judge Findings
 

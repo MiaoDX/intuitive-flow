@@ -1,154 +1,23 @@
 ---
 name: agent-planning-loop
-description: Run a bounded multi-agent planning review before implementation when the user explicitly asks agents to align, compare planning options, or refine a draft plan. Return one judged recommendation and do not implement.
+description: Review unsettled plans with independent scouts when the user requests multi-agent planning or alignment.
 ---
 
 # Agent Planning Loop
 
-Use this skill when the user wants the agent system to do the planning debate
-before asking for a human decision. It is a bounded orchestration workflow, not
-an implementation workflow.
+Run a bounded planning debate when requested. Return one judged recommendation;
+do not implement, approve the plan, or let scouts ask the user questions.
+Preserve the full intended scope of a supplied plan unless the user selects a
+subset or a material decision blocks honest full-plan execution.
 
-The point is to capture the useful 80% of agent suggestions while preventing the
-remaining 20% from drifting into the wrong product direction. Scout workers
-generate and challenge options; the main session owns judgment, scope control,
-and the final recommendation.
+Set a brief charter: goal, non-goals, context, permitted worker actions, and stop
+condition. Use [scouts](references/scouts.md) when preparing worker prompts and
+judging their evidence. Main-session judgment owns the recommendation.
 
-## Boundary
-
-This skill owns:
-
-- deciding whether a planning loop is worth running;
-- dispatching bounded scouts for entropy discovery and document-grounded grill;
-- filtering candidates for materiality, product fit, and execution risk;
-- iterating once or twice when the first pass exposes a better question;
-- returning a compact recommendation set for one user review.
-
-It does not own:
-
-- implementation;
-- approving its own plan;
-- changing public contracts without user review;
-- letting workers ask the user directly;
-- running paid, slow, hardware, or credentialed probes unless the user already
-  authorized that cost class.
-
-After approval, route execution back through `$intuitive-flow`,
-`$intuitive-refactor`, or a concrete worker prompt.
-
-## When To Use
-
-Use this loop for fuzzy or contested work where a normal one-shot answer would
-likely miss important scope:
-
-- a promising idea needs a clearer plan;
-- previous conclusions may be overbroad or stale;
-- multiple good suggestions need triage;
-- docs, tests, metrics, or agent behavior may disagree;
-- the user wants workers to run reduce-entropy and grill-batch before
-  bringing them a synthesis.
-
-Do not use it for one-file fixes, simple status checks, obvious bug fixes, or a
-plan that already has accepted scope and verification.
-
-When the loop is run against an existing plan artifact, assume the plan is the
-intended execution unit unless the user asks for slice selection or the plan is
-plainly too broad for their goal. Scouts may recommend phase order, stop gates,
-or risk isolation, but the main-session recommendation should not quietly shrink
-the final action to "only implement slice 1." If only a subset is safe, say why
-full-plan execution is blocked and ask for that decision instead of presenting
-the subset as the normal next action.
-
-## Main-Session Control Model
-
-Keep the main session as the control plane.
-
-- The main session writes the charter and stop gates.
-- Scouts return structured summaries, not raw notes.
-- The main session decides which findings survive.
-- Scouts never expand scope or ask the user questions directly.
-- If a scout finds a product, contract, safety, cost, or user-explicit
-  temporary compatibility/migration-bridge decision, it marks
-  `needs_user_review`; it does not decide. Do not treat ordinary compatibility
-  removal as a user-review decision by itself.
-
-Follow the `$skill-runner` Codex delegation reference for worker selection. This
-skill chooses scout scope and acceptance; the delegation reference owns all
-host-specific worker mechanics. If no worker mechanism is available, run the
-same stages inline and state that delegation was unavailable.
-
-## Loop Shape
-
-Default to at most two rounds.
-
-Round 1 discovers and challenges. Round 2 is only for a narrowed target where
-the first round found a materially better question or split the work into
-competing plans. A third round is a smell: stop and ask the user, unless the
-user explicitly requested deeper autonomous planning.
-
-## Charter
-
-Start every loop with a compact charter: goal, non-goals, context to inspect,
-allowed worker actions, user-review gates, and stop condition.
-
-If the charter cannot be written without guessing the user's product intent,
-ask one concise question instead of running the loop.
-
-## Worker Prompts
-
-Use one scout per independent concern. Keep prompts short and bounded; invoke
-the named skill semantics instead of pasting full instructions.
-
-### Entropy Scout
-
-Use `$intuitive-reduce-entropy` without executing changes. Return only material
-candidates with severity, evidence, paths, owner, proof, execution risk, and
-whether user review is needed.
-
-### Grill Scout
-
-Use `$grill-with-docs-batch` in read-only critique mode against surviving
-candidates or a draft plan. Ask no user-facing questions; classify unresolved
-points as implementation defaults, maintainer preferences, user-review
-decisions, or stop gates.
-
-### Skeptic Scout
-
-Use this only for high-risk or broad plans:
-
-Review the current recommended plan as a skeptic. Look for over-design,
-scope drift, missing proof, hidden cost, user-preference assumptions, and
-alternatives that preserve more optionality. Return blockers first. If the
-recommendation is too broad for the user's stated goal, propose the smallest
-safer plan; if the user supplied a plan file as the target, prefer keeping the
-full plan and adding phase order plus stop gates unless full-plan execution is
-actually dishonest.
-
-## Main-Session Filter
-
-After each scout returns, classify every item:
-
-- `accept`: material and inside the charter;
-- `merge`: useful only as part of another candidate;
-- `park`: plausible but outside the current charter;
-- `reject`: polish, duplicated, weak evidence, or wrong direction;
-- `needs_user_review`: materially changes product, public contract, private
-  boundary, cost, hardware, user-explicit temporary compatibility/migration
-  bridge, or rollout risk.
-
-Reject quota filling. A loop with one strong plan is better than three weak
-ones.
-
-## Stop Gates
-
-Stop the loop and report when any of these is true:
-
-- one plan has clear scope, non-goals, acceptance criteria, and verification;
-- remaining questions are implementation defaults;
-- the best remaining candidates are only polish;
-- a user-review decision blocks honest planning;
-- two rounds produced the same recommendation;
-- scouts disagree because the charter is underspecified.
+Default to at most two rounds: discovery/challenge, then a narrowed follow-up only
+if it can change the recommendation. Stop sooner when a plan has clear acceptance
+and proof, the remaining items are implementation defaults, or a user decision
+blocks progress. A deeper autonomous loop requires the user's request.
 
 ## Output
 

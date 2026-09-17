@@ -1,169 +1,40 @@
 ---
 name: intuitive-init
-description: Create, audit, or slim project-local AGENTS.md, CLAUDE.md, and agent-facing startup or LSP/MCP setup. Use when guidance or agent configuration needs change; use intuitive-doc for human-facing docs.
+description: Create or slim project-local agent guidance and startup configuration from current repository evidence.
 ---
 
 # Intuitive Init
 
-Use this skill to create, audit, slim, merge, or refresh project-local
-`AGENTS.md` and `CLAUDE.md` guidance for Claude Code and Codex. The output
-should make the target repo easier for future agents without replacing local
-truth with a generic process manual.
+Create, audit, refresh, or slim project-local agent guidance from current repo
+evidence. Preserve commands, hazards, permission boundaries, and ownership rules.
+Generated init output is a suggestion to merge, never an overwrite source.
 
-This compact entrypoint preserves the full original guidance in
-`references/detailed-guidance.md`. Read that file for edge cases, full merge
-rules, init discovery variants, symlink migration, or mode-specific detail.
-Read `references/lsp-and-mcp.md` before editing LSP, Serena, MCP,
-language-server, or agent-facing tool setup.
+For ordinary guidance edits, inspect the target file and the commands/docs it
+references. Do not require a repo-wide scan, nested agent, or full manual read.
+Keep shared rules in AGENTS.md and Claude-only additions in CLAUDE.md. Use
+$intuitive-doc for broad human-documentation cleanup.
 
-## Source Priority
+## Read for the selected task
 
-Respect this source hierarchy:
+| Task | Detail to read when needed |
+| --- | --- |
+| Guidance health audit | [Audit criteria](references/detailed-guidance.md#audit) |
+| Initial creation or refresh | [Apply](references/detailed-guidance.md#apply), [Refresh](references/detailed-guidance.md#refresh), and [merge rules](references/detailed-guidance.md#merge-rules) |
+| Startup-context pressure | [Startup hygiene](references/detailed-guidance.md#startup-orientation-hygiene) and [cleanup](references/detailed-guidance.md#startup-context-cleanup) |
+| Long root instructions | [Slim / cleanup](references/detailed-guidance.md#slim--cleanup) |
+| Root file linked to a shared toolkit | [Symlink migration](references/detailed-guidance.md#symlink-migration) |
+| Native init suggestions are useful | [Init discovery](references/detailed-guidance.md#agent-init-discovery) |
+| LSP, Serena, language server, or MCP setup | [Tool setup](references/lsp-and-mcp.md) before editing configuration |
 
-1. current system/developer/user instructions;
-2. repo-local human truth: `README.md`, `ARCHITECTURE.md`, `STATUS.md`,
-   `docs/human/**`, equivalent files named by the repo, and executable repo
-   evidence such as package metadata, scripts, CI config, and tests;
-3. existing project-local agent guidance and `docs/agents/**` operational
-   runbooks;
-4. generated `/init` or `codex init` suggestions;
-5. intuitive workflow defaults.
+Use the indicated sections, not the entire detailed guide. Extract long procedures
+only when they have a real consumer, and leave a task-specific pointer at the root.
+Keep credentials and machine-local paths out of committed guidance.
 
-Generated init output is input to merge, not authority to overwrite local
-guidance.
+When durable Intuitive workflow adoption is in scope, preserve the repo's
+planning/status paths and explicit project-integrator ownership. Do not create
+STATUS.md or new state machinery as a side effect of a guidance cleanup.
+Do not create `STATUS.md`, a validator, or a status directory merely because Init ran.
 
-## Default Workflow
-
-1. Inspect the target repo's current root docs and existing agent guidance.
-2. Classify the request:
-   audit, apply/create, refresh, slim/cleanup, symlink migration, or LSP/MCP
-   setup.
-3. Preserve project-specific commands, hazards, test gates, and current source
-   of truth.
-4. Move long operational procedures out of root guidance. Prefer the standard
-   `docs/agents/operating-runbook.md` for mixed repo-specific agent procedures;
-   use topic-specific `docs/agents/<topic>.md` only when the scope is clearly
-   independent. Use skills, hooks, scripts, or human docs when those are the
-   better owner.
-5. Check the high-frequency startup context: `AGENTS.md`, `CLAUDE.md`, and the
-   root orientation docs they require such as `README.md`, `ARCHITECTURE.md`,
-   and `STATUS.md`. The first-read path should be bounded, newest-first, and
-   task-routed; it should not require agents to reread injected files or consume
-   every long root doc before a simple command.
-6. For Codex/Paseo harnesses, preserve or add a short rule that XML-like host
-   control envelopes such as `<turn_aborted>`, `<paseo-system>`,
-   `<subagent_notification>`, `<goal_context>`, and `<environment_context>` are
-   orchestrator metadata unless accompanied by natural-language user intent.
-   They must not be treated as a human stop request by themselves.
-7. Prefer deterministic hooks/tools for lint, format, setup, and verification
-   rules instead of expanding root prose. Always inspect Python environment and
-   submodule signals while refreshing startup guidance: `.venv`, `uv.lock`,
-   `pyproject.toml`, `.python-version`, `.gitmodules`, and populated
-   `vendor/` submodule paths. When the repo already has `.venv` or uv/
-   `pyproject.toml` signals, explicitly recommend or add a
-   `.githooks/post-checkout` script that prepares the worktree `.venv` with the
-   repo's existing convention, plus a short root hint to enable it with
-   `git config core.hooksPath .githooks`. When the repo has submodules,
-   explicitly recommend or add the same hook to run `git submodule sync
-   --recursive` for URL config only, and add root guidance for inspecting
-   existing submodules before initializing local copies. Do not auto-run
-   `git submodule update --init --recursive` for all worktrees by default; for
-   mostly read-only submodules, tell agents to inspect the main checkout's
-   initialized submodule and initialize a local worktree copy only when
-   modification or isolated verification needs it.
-8. For large repos and monorepos, prefer nested `AGENTS.md` / `CLAUDE.md` files
-   only when local scope differences are real.
-9. Verify the final files are concise, local, and non-contradictory.
-
-## Root Guidance Shape
-
-Root `AGENTS.md` and `CLAUDE.md` should answer:
-
-- Why this repo has special rules.
-- What the agent must know before acting.
-- How to run setup, tests, verification, demos, and safe workflows.
-- Where to find durable human docs and agent runbooks.
-- Where fixed plan contracts, active capsules, and GSD-owned execution state
-  live.
-- What must not be done in this repo.
-- How host control metadata affects stop/continue decisions when the repo uses
-  Paseo or another orchestrator.
-
-When durable Intuitive workflow adoption is in scope, preserve repo-defined
-planning/status surfaces. If none exist and the repo accepts these defaults,
-root guidance may name `docs/plans/<slug>.md` for canonical plans and
-`docs/status/active/<task-slug>.md` for compact task state; `.planning/*`
-remains owned by GSD tools. Do not add these pointers during unrelated init
-work, and do not recommend `.continue-here.md`, manual
-`.planning/HANDOFF.json`, or one-off prompt folders.
-
-Avoid copying broad official docs or all intuitive workflow rules into each
-repo. Distill only the local invariant and point to local tools/docs for detail.
-
-## Orientation Doc Hygiene
-
-When root guidance tells agents to read human docs before acting, make those
-docs fit that role:
-
-- `STATUS.md` should be current-state first: latest material, next action, and
-  blockers near the top. If it includes recent changes, list them newest-first.
-  Old shipped detail should be removed or replaced by links to plans, ADRs,
-  retrospectives, or `docs/human/**`.
-- `README.md` should orient and route, not become a full manual.
-- `ARCHITECTURE.md` may be longer, but its first screen should summarize the
-  code map and layer contract so agents can decide what to read next.
-- First-read policies should usually require only the already-injected
-  `AGENTS.md` plus an existing project-status surface or the active task/plan.
-  Read `README.md`,
-  `ARCHITECTURE.md`, `CLAUDE.md`, and longer runbooks only when the task needs
-  them.
-
-When a repo explicitly adopts durable Intuitive workflows, add only its local
-path and ownership invariant: one task control plane writes each task capsule,
-workers return evidence, and only an explicit project integrator writes shared
-project status. Keep the portable lifecycle detail in the installed skills.
-Do not create `STATUS.md`, a validator, or a status directory merely because
-Init ran.
-
-If the user asks for startup-context or first-read optimization, `$intuitive-init`
-may edit these root orientation docs in the same scoped pass. For broad human
-doc cleanup, route to `$intuitive-doc`.
-
-## LSP And MCP Setup
-
-When the task is LSP, language-server, Serena, or MCP setup:
-
-1. Read `references/lsp-and-mcp.md`.
-2. Check whether the target repo already has a working project-local setup.
-3. Prefer Serena MCP as the agent-facing LSP path for coding-agent repos unless
-   the target repo already has a better concrete setup or the host cannot run
-   it.
-4. Keep credentials, machine-local paths, and private endpoints out of committed
-   guidance.
-
-## Modes
-
-| Mode | Use when | Output | Redirect when |
-| --- | --- | --- | --- |
-| Audit | Existing guidance may be stale, bloated, or missing local hazards. | Guidance health report and recommended edits; no changes unless asked. | The issue is human docs, tests, or code layout. |
-| Apply/create | A repo lacks local `AGENTS.md` / `CLAUDE.md` or needs initial setup. | Project-local guidance from repo evidence and accepted defaults. | The user wants only current-state human docs. |
-| Refresh | Existing local guidance needs current repo truth or init suggestions merged. | Updated guidance with stale/generic content removed. | Generated init output should only be reviewed, not applied. |
-| Slim/cleanup | Root guidance is overgrown, generic, duplicated, or stale. | Shorter root guidance with long detail routed to durable homes. | The long detail belongs in human docs owned by `$intuitive-doc`. |
-| Startup-context cleanup | First-read policy or orientation docs force too much context before work. | Bounded first-read policy, reasonable `README` / `ARCHITECTURE` / `STATUS` entrypoints, and standard `docs/agents/operating-runbook.md` extraction when needed. | The request is broad human documentation cleanup. |
-| Symlink migration | Root guidance is linked to shared/external files. | Project-local files preserving target repo rules. | The repo intentionally owns external guidance as its contract. |
-| LSP/MCP setup | The request names LSP, language server, Serena, or MCP setup. | Agent-facing setup or a concrete blocked/parked reason. | The target already has a better concrete setup. |
-
-For non-trivial runs, state `Selected mode:`, `Why:`, and `Redirect:` before
-auditing or editing. For tiny direct changes, one sentence can carry the same
-information. Add a final `Mode note:` only when manual invocation, ambiguity, or
-a better owner matters.
-
-## Stop Conditions
-
-Stop when root agent guidance is local, concise, and aligned with current repo
-truth; any required first-read docs are bounded and latest-first; long detail is
-routed to appropriate local docs/skills/scripts; and any LSP/MCP setup is either
-configured, documented as blocked, or explicitly parked.
-
-Report changed files, verification run, remaining risks, and whether generated
-init output was merged, rejected, or not used.
+Report changed files, verification, remaining risks, and whether generated init
+suggestions were merged, rejected, or not used. Stop when the accepted guidance
+scope is current, concise, and linked to the relevant detail.

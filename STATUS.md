@@ -1,6 +1,6 @@
 # Status
 
-Last reviewed: 2026-08-18
+Last reviewed: 2026-09-17
 
 ## Current State
 
@@ -15,8 +15,9 @@ currently provides:
   proposals before heavier planning or preflight
 - a default `research` skill for evidence-led investigation across multiple
   sources without adding a dedicated search runtime
-- compact runtime skill entrypoints backed by deferred `references/`,
-  `templates/`, and `scripts/`
+- task-routed skill entrypoints with conditional references for test cleanup,
+  planning, worktree porting, squash, and issue tracking; short skills stay
+  self-contained, and external skills/install policies remain unchanged
 - portable durable-run ownership that preserves target-repo status conventions,
   isolates task state, and keeps shared project status single-writer
 - a Flow-owned plan prose gate that runs an STE-flavored shadow check after

@@ -1,6 +1,6 @@
 ---
 name: multica-goal-tracker
-description: Create or update Multica goal issues and attach normalized start, finish, or completion evidence for /goal-driven runs. Use only for explicit Multica issue tracking.
+description: Create or update Multica goal issues and attach execution evidence when the user explicitly requests tracking.
 ---
 
 # Multica Goal Tracker
@@ -35,142 +35,17 @@ must begin with the visible marker:
 Keep this marker as the first visible line on start, finish, and final-review
 comments.
 
-## Create From Preflight
+## Read for the requested operation
 
-Use this after an `$intuitive-preflight` contract is approved and before the
-goal is executed. The preflight must be `DRAFT`/approved, not
-`BLOCKED_NEEDS_DECISION`, and it must contain either `Main-session /goal prompt`
-or `To execute` with the executable `/goal`.
+- [Create from approved preflight](references/create.md): creates the issue and
+  start comment; does not execute the goal.
+- [Start an attempt](references/start.md): records an existing issue and goal.
+- [Finish or final review](references/finish.md): attaches source evidence and
+  distinguishes a completed goal attempt from a completed issue.
 
-```bash
-bun skills/multica-goal-tracker/scripts/track_goal.ts \
-  create-from-preflight \
-  --preflight-file /tmp/preflight.md \
-  --workspace-id product-workspace
-```
-
-Never rely on the Multica CLI default workspace when creating an issue from a
-preflight. The default workspace may point at another product. If the user gives
-a URL such as `https://multica.example.test/product-workspace/`, pass
-`--workspace-id product-workspace` or the full URL so the script can resolve and verify
-the real workspace id before writing.
-
-Keep `create-from-preflight` issue descriptions intentionally short. Do not
-paste the full `## Preflight Contract` into the issue body; the plan file is
-the source of truth for detailed scope, non-goals, context, and verification.
-Humans should be able to scan the issue quickly, then open the plan only when
-they need the full contract.
-
-Use `--dry-run` first when validating a new preflight shape. Run
-`bun skills/multica-goal-tracker/scripts/track_goal.ts --help` for the current
-option surface.
-
-Do not use `create-from-preflight` for conversation-only work unless the
-preflight body contains the full approved contract; otherwise context
-compression can erase the issue's source of truth. Do not treat the created
-issue or start comment as completion evidence. Finish evidence still must come
-from a real run/session as described below.
-
-## Start Tracking
-
-Use this after the issue exists and contains the goal, or when the user gives
-you the goal text directly. Run the command from the Intuitive Flow checkout
-root so the script path stays portable across clone locations.
-
-```bash
-bun skills/multica-goal-tracker/scripts/track_goal.ts \
-  start \
-  --issue MIA-40
-```
-
-If the goal is not already in the issue description, pass `--goal-file`.
-
-```bash
-bun skills/multica-goal-tracker/scripts/track_goal.ts \
-  start \
-  --issue MIA-40 \
-  --goal-file /tmp/goal.txt
-```
-
-Pass `--update-description` only when the user asks to normalize the issue
-description itself. The script inserts or replaces a marked summary block and
-preserves the existing description below it.
-
-Use `--dry-run` before writing to a real issue when testing a prompt or script
-change.
-
-## Finish Tracking
-
-Use this after the goal run is complete or after the user asks to preserve the
-  state of a goal attempt on an existing issue. Do not create a new issue for this
-flow unless the user explicitly asks. Finish evidence must come from real
-session output: Multica execution run messages by default, a Codex JSONL
-session, a skill-runner run directory, or an explicit transcript via
-`--session-file`.
-
-```bash
-bun skills/multica-goal-tracker/scripts/track_goal.ts \
-  finish \
-  --issue MIA-40
-```
-
-The script picks the active goal, extracts real run/session evidence, records
-attempt metadata, and posts one scannable comment with overview, timeline,
-details, and raw selected output. `complete` attempts are completion records;
-`partial`, `blocked`, and `failed` attempts are execution records.
-
-If the issue has no Multica run history, finish fails fast instead of creating a
-fake proof card. In that case pass a real Codex session JSONL for the finished
-attempt:
-
-```bash
-bun skills/multica-goal-tracker/scripts/track_goal.ts \
-  finish \
-  --issue MIA-40 \
-  --session-file ~/.codex/sessions/2026/06/04/rollout-....jsonl
-```
-
-Or pass a real skill-runner run directory. It uses compact artifacts and avoids
-noisy `terminal.log` output.
-
-```bash
-bun skills/multica-goal-tracker/scripts/track_goal.ts \
-  finish \
-  --issue MIA-40 \
-  --session-dir ~/.cache/skill-runner/runs/<run-dir>
-```
-
-Use `--allow-manual-summary --summary "..."` only when the user explicitly
-accepts a manual fallback. Manual fallback is not real session proof.
-
-If an attempt is incomplete, finish it with `--attempt-status partial|blocked|failed`,
-then run `start` again for the follow-up goal. The next finish becomes the next
-attempt and the card shows cumulative issue time.
-
-## Final Review
-
-Use this when the human wants one final review thread for an issue that already
-has multiple goal attempts, especially when an earlier attempt was partial and a
-follow-up goal completed the issue. Do not hand-compose the comment. Put the
-attempt data in JSON and let the script own the format.
-
-```bash
-bun skills/multica-goal-tracker/scripts/track_goal.ts \
-  final-review \
-  --issue MIA-40 \
-  --attempts-file /tmp/multica-goal-attempts.json
-```
-
-`final-review` posts one text comment with a short issue-level summary, compact
-attempt list, overview, timeline, details, and complete raw outputs for each
-attempt. The comment stores metadata for every attempt, so later tracker runs
-can recover cumulative duration even if older Agent comments are cleaned up.
-
-## Useful Options
-
-Use `--help` for full syntax. The high-value knobs are `--workspace-id`,
-`--goal-file`, `--session-file`, `--session-dir`, `--run-id`,
-`--attempt-status`, `--proof`, `--dry-run`, and `--allow-manual-summary`.
+Use the installed skill root's scripts/track_goal.ts --help for current flags.
+Command examples use repository-root paths; resolve them against the installed
+skill directory when running outside this repository.
 
 ## Style
 

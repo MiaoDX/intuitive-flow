@@ -1,6 +1,6 @@
 ---
 name: intuitive-doc
-description: Maintain human-facing README.md, ARCHITECTURE.md, STATUS.md, and docs/human/** when docs drift, need updates, or require cleanup. Use intuitive-init for AGENTS.md, CLAUDE.md, or agent setup.
+description: Maintain README.md, ARCHITECTURE.md, STATUS.md, and docs/human/** when they drift or need cleanup.
 ---
 
 # Intuitive Doc

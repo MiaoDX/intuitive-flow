@@ -1,6 +1,6 @@
 ---
 name: intuitive-shape
-description: Decide whether a raw product or project idea merits a bounded bet before planning. Use for appetite, scope cuts, and BET/RESEARCH/RESHAPE/PASS decisions; not settled fixes or approved execution.
+description: Shape unsettled product ideas into bounded bets before planning; excludes settled fixes and approved execution.
 ---
 
 # Intuitive Shape

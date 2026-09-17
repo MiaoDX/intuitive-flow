@@ -1,6 +1,6 @@
 ---
 name: plan-bakeoff
-description: Compare multiple isolated implementations of one approved plan and rank their artifacts. Use only for explicit best-of-N or agent/model bakeoffs; never auto-merge or port a winner.
+description: Compare isolated implementations of one approved plan when the user explicitly requests a best-of-N or model bakeoff.
 ---
 
 # Plan Bakeoff

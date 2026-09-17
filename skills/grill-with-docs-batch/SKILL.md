@@ -1,226 +1,28 @@
 ---
 name: grill-with-docs-batch
-description: Batch unresolved product or domain decisions against repository docs when the user asks to stress-test a plan or check whether questions remain. Stop when the docs settle the durable decisions.
+description: Resolve material plan or domain questions against repository docs in small batches, then stop when decisions are settled.
 ---
 
 # Grill With Docs Batch
 
-Challenge a plan against the repository's domain model and documentation like
-`grill-with-docs`, but move in small coherent batches instead of one question at
-a time.
+Challenge unresolved plan or domain decisions against the target docs and code.
+When asked whether questions remain, answer yes/no first. Do not manufacture
+questions for implementation defaults, tests, wording, or already-settled choices.
 
-## First Decide Whether To Stop
+A question earns attention only if its answer changes scope, a public/private
+boundary, acceptance or rollout, cost, safety, ownership, or domain meaning.
+Use repository evidence to resolve facts before asking the user.
 
-Before asking any batch, run a saturation audit:
+If material questions remain, read [question batches](references/question-batches.md).
+After answers, apply accepted updates to the named document, then reassess whether
+another question changes the decision. Read [document updates](references/document-updates.md)
+when recording answers or cleaning up plans/ADRs; do not load it for a critique
+that does not edit documents. Use the user's language.
 
-- Read the target plan/ADR/spec and the domain glossary or context file it
-  depends on.
-- Check recent git history for the same target docs when available, but use it
-  only as supporting evidence. Commit count is not a stop condition by itself;
-  it helps find decisions that were already made and areas that may be getting
-  re-litigated.
-- Separate durable decision questions from implementation defaults. Do not ask
-  the user to discuss things the implementation can decide locally without
-  changing public contracts, private-data boundaries, safety policy, cost/model
-  infrastructure, or irreversible file moves.
-- If an ADR is accepted, a plan names what changes, what is out of scope, the
-  important boundaries, the acceptance gates, and the next execution step, and
-  local docs/code do not contradict it, answer that no more discussion is needed.
-- Classify the documentation target before proposing updates: plans and ADRs
-  answer different questions, and some tasks legitimately need both.
+Stop when an implementer can identify the change, non-goals, boundaries, proof,
+and next step, or the user signals process fatigue. Report Plan state:,
+Recommended next action:, and Shortcut:. A settled target can need zero questions.
 
-When the user asks whether remaining questions exist, answer the yes/no first.
-Only ask a batch if at least one unresolved question would materially change the
-plan, contract, public/private boundary, or acceptance gate.
-
-## Convergence Loop
-
-This skill should remove the burden of asking "are we done yet?" from the user.
-After every accepted batch, do the loop yourself:
-
-1. Interpret the user's reply, including shorthand such as "LGTM", "all agree",
-   "others are fine", "2 no because...", or "do it".
-2. Apply the resolved updates to the plan, context doc, or ADR surface named in
-   the batch. If no document update is warranted, say why.
-3. Re-read the updated target and run a fresh saturation audit.
-4. Either ask the next material batch or stop with the no-more-discussion
-   response.
-
-Do not wait for the user to ask whether there are more questions. The user
-answers batches; the skill owns convergence.
-
-When the previous assistant message offered exactly one next action, treat a
-short approval reply such as "LGTM", "sounds good", "可以", or "do it" as
-permission to perform that action. Examples:
-
-- after a proposed batch, apply the accepted answers and continue the
-  convergence loop;
-- after a stop response that recommends preflight, run or prepare
-  `$intuitive-preflight` instead of asking the user to restate it;
-- after a stop response that recommends execution, hand off to
-  `$intuitive-flow` only when the plan/preflight contract is already approved.
-
-If the user's short reply is ambiguous because multiple next actions were
-listed, ask one concise clarification and then continue.
-
-## Plan vs ADR Routing
-
-Do not treat `docs/plans/*` and `docs/adr/*` as interchangeable planning
-surfaces.
-
-Use a plan file for execution scope, non-goals, order, files, tests, gates, and
-open implementation questions. Use an ADR only for durable decisions future
-agents should not relitigate: public contracts, command surfaces, private-data
-boundaries, safety policy, architecture layers, rejected alternatives, and
-accepted consequences.
-
-Some tasks need both. In that case, keep the ADR short and durable, then let the
-plan reference the ADR while owning execution details. Do not create an ADR for
-local implementation defaults, a checklist, progress notes, or a decision that
-the current plan can reverse cheaply. Do not put phase checklists, verification
-logs, or task sequencing into an ADR.
-
-Before asking "should this be an ADR?", first state whether the current issue is
-contract-shaped or execution-shaped. If it is execution-shaped, default to the
-plan file. If it is contract-shaped but the exact public shape is not selected
-yet, default to recording the current assumption in the plan and defer the ADR
-until the public contract is chosen.
-
-For new plan files, prefer the repo convention; otherwise use a date-prefixed
-slug. Do not bulk-rename old plans only to add dates. Prefer concise plan
-metadata over filename churn for active or recently reviewed plans.
-
-Keep ADR numbering for durable decisions, but make the creation threshold strict.
-Do not create ADRs for proof loops, reruns, local-dev evidence, benchmark runs,
-one-off gates, phase checklists, task status, report wording, local artifact
-regeneration, or reversible implementation details.
-
-## ADR And Plan Surface Cleanup
-
-When the user's concern is that the repo has too many plans or ADRs, treat that
-as a documentation-entropy problem before proposing another decision record.
-Classify the existing files into:
-
-- current execution plans;
-- stale or superseded plans;
-- durable ADRs future agents should obey;
-- ADR-shaped execution records, proof logs, rerun notes, or status snapshots.
-
-For plan or ADR overload, default to reversible organization: index/metadata
-updates, archive moves for misfiled execution/proof records, and no deletion,
-renumbering, gap filling, or broad filename churn unless explicitly accepted.
-
-If the cleanup policy itself is unsettled, ask one focused batch. Once accepted,
-implement the cleanup directly instead of repeatedly grilling the same
-classification question.
-
-## Decision-Impact Test
-
-Before asking a question, state why its answer matters. A question is worth
-asking only when a concrete answer could change at least one of:
-
-- the public API, MCP/tool contract, file layout, or command surface;
-- private-data, safety, security, credential, cost, or external-infrastructure
-  boundaries;
-- acceptance criteria, verification gates, rollout gates, or hard blockers;
-- phase ordering, ownership, or whether a feature belongs in the current slice;
-- glossary/ADR language whose meaning affects future implementation choices.
-
-If the answer would only choose a local implementation default, test detail,
-wording polish, or "nice to record" preference, do not ask. Pick the conservative
-default, or patch the plan directly if the user asked to record defaults.
-
-## Core Rule
-
-Keep the quality bar of `grill-with-docs`:
-
-- Challenge vague or overloaded terms against `CONTEXT.md` or `CONTEXT-MAP.md`.
-- Explore code and docs instead of asking questions that local context can answer.
-- Use concrete scenarios and edge cases to force precise boundaries.
-- Update `CONTEXT.md` inline as soon as glossary terms are resolved.
-- Offer ADRs only when a decision is hard to reverse, surprising without
-  context, and the result of a real trade-off.
-- Stop once the remaining items are implementation defaults, test details, or
-  local wording polish rather than unresolved product/domain decisions.
-
-The behavioral changes are pacing and convergence: ask grouped questions when
-the questions belong to the same decision layer, and stop when the remaining
-items no longer need user decision.
-
-## Stop Conditions
-
-Stop grilling and say so when any of these are true:
-
-- The target docs let an implementer answer: what changes, what does not change,
-  what boundary must be protected, how it will be verified, and what the next
-  execution step is.
-- Remaining candidate questions fail the Decision-Impact Test.
-- Git history or prior discussion shows repeated refinement of the same area and
-  the new pass would not change what gets built, verified, or protected.
-- The question would produce another planning-document edit but would not change
-  what gets built, verified, or protected.
-- The user shows process-fatigue signals such as "we have done this multiple
-  times", "is this just not stopping", or "can we move on".
-
-At a stop condition, answer directly that no more discussion is needed, name
-what is already decided, list remaining implementation defaults, then include
-`Plan state:`, `Recommended next action:`, and `Shortcut:`.
-
-Do not convert implementation defaults into another batch. If the user wants the
-defaults recorded, patch the plan directly with concise defaults instead of
-asking more questions.
-
-## Batch Shape
-
-Each batch should contain 3-6 tightly related questions. Use fewer when the
-decision is risky or highly dependent.
-
-For each batch, include theme, assumptions verified from docs/code, 3-6
-numbered decision questions with recommended answers, update targets, and a
-promise to apply accepted updates before rerunning the saturation audit.
-
-Wait for the user's response before applying docs or moving to the next batch.
-Accept shorthand answers such as "all agree", "1 yes, 2 no because...", or
-"change 3 to...".
-
-Do not impose a fixed batch limit on a first-pass grill of an unclear plan. After
-each batch, re-run the saturation audit and either stop or explain which
-Decision-Impact Test item justifies another batch. For a target that is already
-accepted, repeatedly refined, or close to execution, default to zero or one batch
-unless the user explicitly asks to keep exploring.
-
-## When To Fall Back To One Question
-
-Ask one question at a time when:
-
-- A term conflicts with the current glossary and affects every later question.
-- The user's answer could materially change the batch structure.
-- A decision touches public contracts, private data boundaries, safety policy,
-  security, irreversible file moves, or external paid/model infrastructure.
-- Local docs/code contradict the user's premise.
-
-## Documentation Discipline
-
-After each accepted batch:
-
-1. Apply only the resolved `CONTEXT.md` glossary/relationship updates.
-2. Keep `CONTEXT.md` free of implementation details, plans, and progress notes.
-3. If a plan update is warranted, keep it focused on scope, execution order,
-   acceptance gates, verification, and open implementation questions.
-4. If an ADR is warranted, create or update it separately with clear context,
-   decision, alternatives, and consequences. Link it from the plan when both
-   surfaces are needed.
-5. If ADR or plan cleanup is warranted, prefer archive moves plus README/index
-   updates over deletion, renumbering, or broad filename churn.
-6. Report exactly what changed, then run the saturation audit before asking any
-   next batch. If the audit finds no more decision-impact questions, stop and
-   recommend the next workflow step.
-
-For plan-backed work, prefer updating the existing plan over scattering
-resolved decisions through chat. Refresh any existing lifecycle header
-concisely; do not add one for tiny local changes.
-
-## Language
-
-Mirror the user's language for the discussion. Keep questions direct and include
-your recommended answer for each question.
+A short approval applies to the single action just proposed. Preserve accepted
+scope and execute that action without another approval loop. Ask only if multiple
+proposed actions make the reply materially ambiguous.

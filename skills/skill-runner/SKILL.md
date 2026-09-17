@@ -1,6 +1,6 @@
 ---
 name: skill-runner
-description: Run a durable or artifact-sensitive task in an isolated Codex or Claude worker session when logs, ownership, and supervision matter. Keep tiny probes and edits in the main session.
+description: Run durable or artifact-sensitive work in an isolated worker session when logs, ownership, or supervision matter.
 ---
 
 # Skill Runner
@@ -10,8 +10,7 @@ artifacts, explicit path ownership, or supervision across a long task. Small
 read-only probes and tiny edits should stay on the host-approved lighter route.
 
 Read `references/codex-delegation.md` before choosing a Codex worker surface.
-That file is the canonical policy for Paseo probing, native subagent
-disablement, and tmux fallback.
+That file owns native-worker capability checks and the durable tmux fallback.
 
 ## Launch Contract
 

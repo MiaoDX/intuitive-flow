@@ -1,6 +1,6 @@
 # Skill Self-Improvement Audit
 
-Last reviewed: 2026-08-17
+Last reviewed: 2026-09-17
 
 This audit applies the self-improvement lens from
 [`agent-harness-references.md`](agent-harness-references.md) to the managed
@@ -25,6 +25,13 @@ Completed baseline correction:
   skills.
 - Keep the WHY / WHAT / HOW lens in human docs.
 - Use this audit as the baseline for default-surface cleanup.
+
+Repo-owned skill descriptions now identify narrow capabilities. Long workflows
+route to task-specific references: scout dispatch, decision recording, test value
+versus structure, preflight proof versus contract output, port application versus
+publication, squash planning versus recovery, and tracker operations. Existing
+short skills remain self-contained. This changes disclosure, not the installed
+portfolio, invocation policies, or external skill contents.
 
 Current default-surface correction:
 

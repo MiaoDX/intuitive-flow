@@ -1,6 +1,6 @@
 ---
 name: intuitive-refactor
-description: Execute a selected code or architecture cleanup seam, including stale surfaces, ownership moves, or changed-code simplification. Use after the target and scope are known; use intuitive-reduce-entropy for discovery.
+description: Execute a selected cleanup seam after its target and scope are known; use reduce-entropy for discovery.
 ---
 
 # Intuitive Refactor

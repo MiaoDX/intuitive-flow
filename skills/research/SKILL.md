@@ -1,6 +1,6 @@
 ---
 name: research
-description: Investigate a bounded question with multiple sources, competing claims, or a durable cited report. Use for evidence-led research; answer single facts and codebase questions directly.
+description: Investigate a bounded question using multiple sources or a cited report; answer single facts and codebase questions directly.
 ---
 
 # Research

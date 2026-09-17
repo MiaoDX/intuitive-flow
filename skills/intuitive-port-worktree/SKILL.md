@@ -1,129 +1,23 @@
 ---
 name: intuitive-port-worktree
-description: Port commits or patches between git worktrees or checkouts while preserving the target branch. Use only when the user explicitly asks to transplant worktree changes; pushing or merging requires explicit authorization.
+description: Port commits or patches between worktrees when explicitly requested; preserve the target branch and unrelated edits.
 disable-model-invocation: true
 ---
 
 # Intuitive Port Worktree
 
-Use this skill to move a change set from a source worktree into the target
-default repo checkout while preserving the target checkout's current branch.
+Port selected commits or patches into the target checkout's current branch.
+Do not switch it to the source branch. Resolve source, target, and payload from
+the request; ask only if ambiguity risks moving the wrong work.
 
-The operation name depends on the method:
+Inspect target status before editing, preserve unrelated changes, and stop for
+unclear overlapping edits. Create a backup-before-port-<timestamp> branch before
+applying. Never use destructive cleanup or remove remote folders.
 
-- **cherry-pick**: replay one or more source commits directly.
-- **apply a patch**: apply a diff generated from the source.
-- **manual patch port** or **manual cherry-pick**: map the same intent into a
-  target branch whose files or APIs have diverged.
-- **port changes** or **transplant changes**: generic phrasing for this workflow.
-
-## Operating Rule
-
-Do not switch the target repo to the source branch unless the user explicitly
-asks. The target repo's current branch is the destination.
-
-If source and target paths are explicit, execute autonomously. Ask only when the
-source payload or target repo is ambiguous enough that the wrong choice would
-overwrite unrelated work.
-
-## Discovery
-
-Collect this before editing:
-
-- status, root path, branch, recent commits, and target worktree list;
-- whether source and target share `rev-parse --path-format=absolute --git-common-dir`.
-
-If they do not share a git common dir, the workflow can still use patches, but
-commit refs from the source may not resolve in the target.
-
-## Payload Selection
-
-Prefer the smallest faithful payload:
-
-1. If the user names commit hashes, use those commits.
-2. If the source branch has local commits not in target, inspect the range from
-   the merge base to source `HEAD`.
-3. If the source worktree is dirty, include staged and unstaged diffs only after
-   confirming they are intentional from `git status` and `git diff --stat`.
-4. If both commits and dirty changes exist, port commits first, then dirty diffs.
-
-Inspect commit ranges and dirty diffs with `git log --oneline --reverse` and
-`git diff --stat` before selecting the payload.
-
-## Safety Gate
-
-Before modifying the target:
-
-- Read the target status. Do not overwrite unrelated target changes.
-- If target is dirty, check whether changed paths overlap the port. If they do,
-  stop and ask; otherwise keep the edits separate.
-- Create a lightweight `backup-before-port-<timestamp>` branch in the target.
-
-Never run destructive cleanup commands. Do not remove remote folders.
-
-## Application Strategy
-
-Choose the least manual method that preserves intent.
-
-### Direct Cherry-Pick
-
-Use when the source commits are clean, relevant as commits, and likely to apply
-to the target branch. Use `git cherry-pick --no-commit <commit-or-range>` first
-so verification can happen before creating a new commit.
-
-If conflicts show the target code has materially diverged, abort and move to
-manual patch port.
-
-### Patch Apply
-
-Use when the source and target share history but a direct cherry-pick is too
-broad or the user wants tree changes rather than commit history. Generate a
-binary patch from source, run `git apply --check --3way`, then apply. For dirty
-source changes, handle staged and unstaged patches separately.
-
-### Manual Patch Port
-
-Use when paths, APIs, package layout, generated files, or ownership boundaries
-changed between source and target.
-
-1. Read the source diff and target canonical files.
-2. Map the behavior into the target's current modules and tests.
-3. Avoid copying obsolete wrappers or stale paths when the target already has a
-   newer canonical location.
-4. Do not recreate compatibility shims unless the target branch explicitly
-   treats them as current contracts.
-5. Preserve user-facing behavior and tests from the source change, not the old
-   file layout.
-
-## Semantic Conflict Policy
-
-Classify conflicts by whether they require a durable meaning decision, not by
-whether Git printed conflict markers.
-
-Treat these as **not semantically large** and continue autonomously:
-
-- clean cherry-picks or patch applies;
-- context-line drift, adjacent documentation edits, import/order churn, or
-  formatter-only changes where the source intent is unchanged;
-- manual ports where the target has a newer canonical location but the behavior,
-  public contract, private-data boundary, and verification gate stay equivalent.
-
-Treat these as **semantically large** and stop before committing:
-
-- public API, command surface, MCP/tool contract, file layout, or data-schema
-  changes that have diverged between source and target;
-- safety, security, credential, private-data, cost, or external-infrastructure
-  boundaries that are different on the target;
-- acceptance criteria, rollout gates, or verification gates that contradict the
-  source change;
-- source and target implementations that solve the same problem differently and
-  choosing one would discard meaningful behavior;
-- overlapping target-local edits where it is unclear whether the user wanted
-  those edits included in the port.
-
-When a conflict is not semantically large, resolve it, verify it, and proceed to
-the auto-commit policy below. When it is semantically large, leave the target in
-a clean or clearly paused state, report the decision needed, and do not commit.
+Read [application](references/application.md) to select the payload and choose
+cherry-pick, patch, or manual reconstruction. Resolve mechanical drift while
+preserving intent; ask when source/target differences require a new contract,
+private-data, safety, or scope decision.
 
 ## Verification
 
@@ -160,73 +54,7 @@ Do not auto-commit when:
 If the target has unrelated dirty changes on non-overlapping paths, commit only
 the ported paths and leave unrelated work untouched.
 
-## Sync Policy
-
-After a successful auto-commit, stop with the local commit unless the user has
-explicitly authorized pushing or landing the result upstream in this request.
-Porting into the default checkout does not imply publication.
-
-"Sync" means two layers — do both when they apply:
-
-1. **Land upstream**: get the ported commit(s) onto the remote default branch
-   (e.g. `origin/main`). Push the commit, and integrate it via the route the
-   remote actually allows.
-2. **Fast-forward local**: bring the target checkout's default branch up to the
-   integrated remote state so local and remote match.
-
-Stop at the committed-but-unpushed state and report when any of these hold:
-
-- the auto-commit gate did not pass, so there is no clean commit to sync;
-- verification failed, was skipped, or only partially ran;
-- the port required a semantically large decision;
-- the target branch is not the remote default branch, or the user did not ask to
-  land on the default branch;
-- a backup or unrelated local branch would also be pushed by a broad push — push
-  only the intended ref;
-- the remote integration would require force-push, history rewrite, or bypassing
-  a failing required check.
-
-### How to sync
-
-Discover the remote and default branch before acting; never assume `origin/main`.
-
-Pick the integration route by branch shape and remote policy:
-
-- **Target branch IS the remote default branch, fast-forward only** (the common
-  clean-port case where the port sits directly on top of the default branch):
-  push `HEAD:<default-branch>` directly.
-
-- **Target is a topic branch the user wants merged into the default branch**:
-  push the branch, open one PR, inspect checks, then merge via the route the
-  repo allows. Probe allowed merge methods rather than hardcoding one.
-
-  Use `--auto` so the merge waits on required checks. If required checks are
-  pending or a protection rule blocks the merge, leave auto-merge armed and
-  report that it will land when checks pass — do not bypass the gate.
-
-After integration, fast-forward the local default branch and confirm
-`origin/<default>` vs `HEAD` parity.
-
-A local post-merge hook may already fast-forward the checkout during the merge;
-verify the actual `origin/<default>` vs `HEAD` state rather than assuming either
-that it did or did not run.
-
-The outward-facing merge into a shared default branch is hard to reverse. Only
-push or merge after the user authorizes that action in the current request.
-
-## Final Report
-
-Report:
-
-- source path/ref and target path/branch
-- method used: cherry-pick, patch apply, or manual patch port
-- target commit hash if committed
-- main files changed
-- verification commands and outcomes
-- sync outcome: pushed ref, PR number + merge method if opened, the resulting
-  remote default-branch commit, and local-vs-remote parity — or, if auto-sync
-  was withheld, which gate stopped it and the safe state left behind
-- any residual risk, skipped checks, or source changes intentionally not ported
-
-If the user asks what the operation is called, answer with the precise method
-used and the generic name "porting changes between worktrees."
+A verified port finishes as a local commit. Pushing or merging requires explicit
+user authorization; read [upstream sync](references/upstream-sync.md) only then.
+Report source/target, method, commit, changed paths, verification, skipped source
+changes, and sync outcome or the local state left for handoff.

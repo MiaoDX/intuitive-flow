@@ -154,8 +154,9 @@ The default public choices are `$intuitive-flow`, `$intuitive-refactor`,
 `$intuitive-reduce-entropy`, `$intuitive-shape`, and `$research`. `$agent-planning-loop`,
 `$cross-review`, `$grill-with-docs-batch`, `$intuitive-preflight`, `$intuitive-doc`,
 `$intuitive-init`, `$intuitive-tests`, and `$skill-runner` remain installed as
-routed specialists. `$intuitive-squash`, `$intuitive-port-worktree`,
-`$multica-goal-tracker`, and `$plan-bakeoff` are registered optional-install utilities.
+routed specialists. `$intuitive-squash` is installed by default and
+`$intuitive-port-worktree` is routed; both retain explicit invocation policies.
+`$multica-goal-tracker` and `$plan-bakeoff` are optional-install utilities.
 `$intuitive-shape` is the default upstream decision skill: it
 turns raw ideas into bounded `BET`, `RESEARCH`, `RESHAPE`, or `PASS` decisions,
 then hands accepted work to the existing canonical plan/preflight route. It
@@ -205,14 +206,16 @@ which local reference to read next. Conditional detail belongs in one-level
 `references/` files, deterministic mechanics in `scripts/`, and reusable output
 shapes in `templates/`.
 
-Multi-mode skills should make their mode surface visible without turning every
-response into a help page. Use a compact `Modes` table in `SKILL.md` with
-`Mode`, `Use when`, `Output`, and `Redirect when`. For non-trivial runs, state
-`Selected mode`, `Why`, and `Redirect` before the first artifact or edit; tiny
-direct work may fold that into one sentence. Emit a final `Mode note` only when
-the user manually invoked the skill, the request was ambiguous, or another mode
-or skill would fit better. Single-purpose utility skills do not need a mode
-menu.
+Multi-mode skills expose task-specific reference links directly in SKILL.md.
+For example, test pruning reads the value guide without loading layout mechanics;
+worktree ports load upstream publication steps only when publication is authorized;
+history rewriting loads restoration instructions after approval of the commit map.
+Critical permissions, ownership, and completion conditions stay in the entrypoint.
+Short single-purpose skills remain self-contained. Avoid copying an old entrypoint
+into another mandatory manual or adding an index hop before an existing reference.
+
+Installation tiers and invocation policy are separate. This disclosure refactor
+preserves both, including external skills and their upstream-owned content.
 
 This source layout is intentionally separate from host install and discovery
 layouts. `skills/` is the repo-owned source of truth; the sync pipeline projects

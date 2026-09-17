@@ -1,6 +1,6 @@
 ---
 name: intuitive-reduce-entropy
-description: Discover and rank material simplification candidates in a repository or plan when the cleanup target or plan risks are unclear. Use for diagnosis and routing; do not implement refactors.
+description: Find and rank material simplification candidates when the cleanup target or plan risks are unclear.
 ---
 
 # Intuitive Reduce Entropy
