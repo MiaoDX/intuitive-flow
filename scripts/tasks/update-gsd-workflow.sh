@@ -113,7 +113,9 @@ run_gsd_workflow() {
     latest=$(npm_package_version @opengsd/get-shit-done-redux "$registry") || return 1
 
     task_notice "GSD workflow: checking Claude install"
-    # GSD #976: strip context-monitor hook from global settings.json (use auto-compact instead)
+    # Claude Code mirrors Codex: neither host keeps GSD runtime hooks. File
+    # pruning here is paired with the settings.json reference teardown below,
+    # so configs never point at deleted scripts (subsumes GSD #976).
     prune_gsd_hooks "${CLAUDE_CONFIG_DIR:-$HOME/.claude}" "Claude Code"
     if ! gsd_current_for_target "claude" "${CLAUDE_CONFIG_DIR:-$HOME/.claude}" "$latest"; then
         run_gsd_installer "$registry" --claude || return 1
@@ -126,15 +128,27 @@ run_gsd_workflow() {
         run_gsd_installer "$registry" --codex || return 1
     fi
 
-    local settings="$HOME/.claude/settings.json"
+    # Paired settings.json teardown: strip every hook command referencing a
+    # GSD hook file, drop emptied groups/events, and remove a GSD statusLine so
+    # Claude falls back to the default status line. Runs after the installers,
+    # so references re-added by a version bump are stripped in the same pass.
+    local settings="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"
     if [ -f "$settings" ] && command -v jq >/dev/null 2>&1; then
         local tmp
         tmp=$(jq '
-          if .hooks.PostToolUse then
-            .hooks.PostToolUse |= map(
-              select(.hooks | any(.command | test("gsd-context-monitor")) | not)
+          def gsd_ref: test("/hooks/gsd-");
+          if (.hooks | type) == "object" then
+            .hooks |= (
+              to_entries
+              | map(.value = ((.value // [])
+                  | map(.hooks = ((.hooks // []) | map(select((.command // "" | gsd_ref) | not))))
+                  | map(select((.hooks // []) | length > 0))))
+              | map(select((.value | length) > 0))
+              | from_entries
             )
           else . end
+          | if (.hooks == {}) then del(.hooks) else . end
+          | if ((.statusLine.command // "") | gsd_ref) then del(.statusLine) else . end
         ' "$settings") && printf '%s\n' "$tmp" > "$settings"
     fi
 
