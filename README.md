@@ -107,7 +107,7 @@ git clone --depth=1 https://github.com/MiaoDX/intuitive-flow.git ~/intuitive-flo
 Install a registered optional-install skill for one update run by naming it explicitly:
 
 ```bash
-INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS=plan-bakeoff ~/intuitive-flow/scripts/update.sh
+INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS=gstack-qa ~/intuitive-flow/scripts/update.sh
 ```
 
 A later default update removes Intuitive-owned optional-install skills that are

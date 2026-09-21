@@ -30,15 +30,12 @@ Acceptance:
 Verification: deterministic=<lint/type/unit/focused contract commands>; integration=<catalog/route/report/artifact commands>; product-run=<public command/flow/script/harness>; local-live-manual=<provider/Docker/simulator/GPU/hardware/browser/human checks, or unavailable reason>; optional=<non-blocking checks>
 Execution: main=<root supervisor role>; worker=<none | delegated scope>; worker-goal=<none | exact bounded goal>
 To execute: /goal execute <canonical source> with intuitive-flow
-Optional tracking: <none | run $multica-goal-tracker create-from-preflight with --preflight-file <file> --workspace-id <workspace> after approval and before executing>
 Approval: LGTM/approve/go ahead approves; edits request revision.
 ```
 
 Use a real durable artifact in `To execute:` when available. If the canonical
 source is conversation-only, add one `Plan-file recommendation:` line before
-`To execute:` so context compression cannot erase the approved contract. Keep
-`Optional tracking` optional unless the user asked for issue tracking; it records
-provenance but does not execute or prove completion.
+`To execute:` so context compression cannot erase the approved contract.
 
 If blocked, replace `Execution`, `To execute`, and `Approval` with:
 

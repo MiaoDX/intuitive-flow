@@ -493,7 +493,7 @@ print(json.dumps({"eval": (run_dir / "eval.md").read_text()}))
         env: {
           ...process.env,
           HOME: homeA,
-          PLAN_BAKEOFF_PROBE: "first",
+          SKILL_RUNNER_PROBE: "first",
           PYTHONDONTWRITEBYTECODE: "1",
         },
       },
@@ -537,7 +537,7 @@ print(json.dumps({"eval": (run_dir / "eval.md").read_text()}))
           env: {
             ...process.env,
             HOME: homeB,
-            PLAN_BAKEOFF_PROBE: "second",
+            SKILL_RUNNER_PROBE: "second",
             ANTHROPIC_API_KEY: "dummy-key",
             ANTHROPIC_BASE_URL: "http://127.0.0.1:9",
             PYTHONDONTWRITEBYTECODE: "1",
@@ -556,9 +556,9 @@ print(json.dumps({"eval": (run_dir / "eval.md").read_text()}))
       const firstText = readFileSync(firstEnv, "utf8");
       const secondText = readFileSync(secondEnv, "utf8");
       expect(firstText).toContain(`HOME=${homeA}`);
-      expect(firstText).toContain("PLAN_BAKEOFF_PROBE=first");
+      expect(firstText).toContain("SKILL_RUNNER_PROBE=first");
       expect(secondText).toContain(`HOME=${homeB}`);
-      expect(secondText).toContain("PLAN_BAKEOFF_PROBE=second");
+      expect(secondText).toContain("SKILL_RUNNER_PROBE=second");
       expect(secondText).toContain("ANTHROPIC_API_KEY=dummy-key");
       expect(secondText).toContain("ANTHROPIC_BASE_URL=http://127.0.0.1:9");
       const secondRunDir = second.stdout.trim().split("\n").at(-1) ?? "";

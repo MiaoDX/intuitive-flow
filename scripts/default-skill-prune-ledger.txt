@@ -21,6 +21,8 @@ legacy-skill intuitive-layout
 legacy-skill intuitive-migrate
 legacy-skill intuitive-planning-loop
 legacy-skill intuitive-ut
+legacy-skill multica-goal-tracker
+legacy-skill plan-bakeoff
 legacy-skill refactor-scope-gate
 legacy-skill simplify
 

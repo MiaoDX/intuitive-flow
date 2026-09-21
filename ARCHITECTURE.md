@@ -156,7 +156,6 @@ The default public choices are `$intuitive-flow`, `$intuitive-refactor`,
 `$intuitive-init`, `$intuitive-tests`, and `$skill-runner` remain installed as
 routed specialists. `$intuitive-squash` is installed by default and
 `$intuitive-port-worktree` is routed; both retain explicit invocation policies.
-`$multica-goal-tracker` and `$plan-bakeoff` are optional-install utilities.
 `$intuitive-shape` is the default upstream decision skill: it
 turns raw ideas into bounded `BET`, `RESEARCH`, `RESHAPE`, or `PASS` decisions,
 then hands accepted work to the existing canonical plan/preflight route. It

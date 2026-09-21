@@ -165,7 +165,7 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help=(
             "Copy selected repo-owned skills into this run's CODEX_HOME and HOME/.claude. "
-            "Use with isolated homes such as plan-bakeoff candidates."
+            "Use with isolated worker homes."
         ),
     )
     parser.add_argument("--codex-provider", default="codex-router-responses", help=argparse.SUPPRESS)

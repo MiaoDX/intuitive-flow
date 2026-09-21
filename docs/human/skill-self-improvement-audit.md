@@ -1,6 +1,6 @@
 # Skill Self-Improvement Audit
 
-Last reviewed: 2026-09-17
+Last reviewed: 2026-09-21
 
 This audit applies the self-improvement lens from
 [`agent-harness-references.md`](agent-harness-references.md) to the managed
@@ -29,7 +29,7 @@ Completed baseline correction:
 Repo-owned skill descriptions now identify narrow capabilities. Long workflows
 route to task-specific references: scout dispatch, decision recording, test value
 versus structure, preflight proof versus contract output, port application versus
-publication, squash planning versus recovery, and tracker operations. Existing
+publication, and squash planning versus recovery. Existing
 short skills remain self-contained. This changes disclosure, not the installed
 portfolio, invocation policies, or external skill contents.
 
@@ -140,8 +140,6 @@ mode itself.
 | `intuitive-refactor` | Strong: bound aggressive cleanup plus changed-code review. | Strong: owns scope gates, severities, evidence, parked ideas, ratchet mode, and diff-scoped reuse/quality/efficiency review. | Strong: persistent gate, ladder, and changed-code review scope are clear. | Absorbed the former `simplify` workflow; keep as the cleanup/refactor owner. |
 | `intuitive-squash` | Strong: rewrite noisy agent history safely. | Strong: owns commit grouping and safety protocol only. | Strong: explicit confirmation and verify commands. | Keep installed with explicit invocation. |
 | `intuitive-tests` | Strong: improve test suite signal. | Strong: owns test taxonomy, pruning, fixture/layout cleanup. | Strong but long: many examples are useful runtime guidance. | Specialist skill; route from reduce-entropy when tests are the issue. |
-| `multica-goal-tracker` | Strong: keeps goal-driven Multica issues tied to execution proof. | Strong: owns issue goal summaries, tracked start/finish comments, and text completion evidence only. | Strong after tracker harness: defaults fail fast without real session history, and parsing/comment behavior is covered by skill-local tests. | Specialist issue-workflow utility; not part of the small public planning/build surface. |
-| `plan-bakeoff` | Strong: compares candidate implementations for an approved plan. | Strong: owns best-of-N plan execution, scorecards, and final ranking, not ordinary flow execution. | Strong: manifest gates, skill-runner ownership, secret redaction, and fake/real harness proof are explicit. | On-demand utility; compact entrypoint delegates options/schema to CLI help. |
 | `research` | Strong: produces decision-useful answers from traceable evidence. | Strong: owns research framing, source acquisition, claim provenance, contradiction handling, and synthesis while reusing existing retrieval/delegation tools. | Strong: proportional depth, claim-level ledger, one gap pass, honest confidence, and explicit access/time/source stops. | Default research entrypoint; retain the host-neutral evidence contract without adding a search runtime dependency. |
 | `skill-runner` | Strong: supervise real skill-driven development runs. | Strong: owns runner orchestration and reusable-skill defect detection. | Strong: verdicts, policy, and stop conditions are explicit. | Routed execution backend; compact entrypoint delegates options to CLI help. |
 

@@ -25,7 +25,7 @@ worker strategy only when isolation or independent work adds value.
 Read [verification](references/verification.md) when choosing acceptance gates;
 read [contract](references/contract.md) when formatting the final contract. Include
 context, scope, non-goals, acceptance, proof, route, stop conditions, and these
-handoff fields: To execute:, Optional tracking:, Approval:. Tracking is optional.
+handoff fields: To execute:, Approval:.
 When blocked, replace executable handoff fields with the unresolved decisions.
 
 After approval, follow the agreed route without rerunning preflight. Revise only

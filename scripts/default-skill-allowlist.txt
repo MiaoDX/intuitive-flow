@@ -35,8 +35,6 @@ root-skill routed skill-runner
 
 # Direct utilities:
 root-skill routed intuitive-port-worktree
-root-skill optional-install multica-goal-tracker
-root-skill optional-install plan-bakeoff
 
 # External skills installed through the skills CLI.
 #

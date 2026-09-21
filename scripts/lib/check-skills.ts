@@ -94,7 +94,7 @@ const requiredWorkflowMarkers: Record<string, string[]> = {
   "agent-planning-loop": ["Plan artifact:", "Recommended next action:", "Shortcut:"],
   "grill-with-docs-batch": ["Plan state:", "Recommended next action:", "Shortcut:"],
   "intuitive-flow": ["Proof", "What changed", "Scope changes", "Parked todos"],
-  "intuitive-preflight": ["To execute:", "Optional tracking:", "Approval:"],
+  "intuitive-preflight": ["To execute:", "Approval:"],
   "intuitive-reduce-entropy": ["Recommended next action:", "Shortcut:"],
 };
 
