@@ -2,6 +2,9 @@
 
 Maintain a small human-facing documentation surface and keep it aligned with code.
 
+For plan paths, follow [plan selection](../../_shared/references/plan-paths.md).
+The paths below illustrate defaults; preserve existing repo conventions.
+
 ## Human/Agent Surface Rule
 
 The default human-facing source of truth is intentionally small:
@@ -21,8 +24,8 @@ explicit agent/process surfaces such as GSD-owned `.planning/**`, flat
 `docs/status/active/**`, and `output/**` unless a human doc intentionally
 promotes a specific artifact into current truth.
 
-`docs/plans/` is a flat plan-contract surface. Do not create lifecycle
-subdirectories under `docs/plans/` during cleanup or reorganization; record
+When adopting the default layout, `docs/plans/` is a flat plan-contract surface.
+Keep existing lifecycle directories unless their migration is in scope; record
 lifecycle in each plan's `## Plan Ledger`/status fields, keep
 `docs/plans/README.md` as the plan dashboard when present, and use
 `docs/status/active/` for compact active execution capsules.

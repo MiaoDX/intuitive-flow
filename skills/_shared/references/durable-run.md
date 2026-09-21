@@ -33,6 +33,9 @@ equivalent may be integrated under the ownership rules below. If none exists,
 do not create one merely because an Intuitive skill ran, and do not treat its
 absence as an error.
 
+For plan paths, use [plan selection](plan-paths.md); task resume state is
+selected separately below.
+
 ## Active Capsule
 
 For every non-trivial durable run or campaign, maintain compact task-owned
@@ -154,10 +157,19 @@ different owner, stop. Two fully independent processes that start
 simultaneously without shared coordination cannot be made mutually exclusive by
 this contract; do not claim otherwise.
 
-Use worker sessions for bounded execution phases when the work is long-running,
-parallel, stateful, or likely to consume large context. A worker owns one
-sub-phase, one artifact/proof target, and one handoff. It must not mark the
-main run complete merely because the sub-phase passed.
+### Execution Surface Selection
+
+Use the main session directly for bounded sequential work, including multi-step
+or durable tasks, when scope and context remain manageable. Keep the same
+canonical state, proof, and checkpoint obligations; no exception is required.
+
+Delegate only when independent parallel work, context isolation, durable worker
+logs, or recovery across sessions provides a concrete benefit and host policy
+permits it. Name that benefit and give each worker one bounded sub-phase,
+artifact/proof target, and handoff. A long task or a plan file alone does not
+require a worker. If delegation is unavailable, execute directly when feasible;
+otherwise report the actual capability needed. A worker must not mark the main
+run complete merely because its sub-phase passed.
 
 Choose a review cadence instead of a short hard timeout:
 

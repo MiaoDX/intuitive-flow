@@ -19,7 +19,7 @@ Goal ownership: <adopt existing root | create root | no root goal | worker sub-g
 Selected path: <stage/skill sequence>
 Why: <one sentence>
 Bypassed/left behind: <stage - reason; stage - reason>
-Execution surface: <read-only main session | main session direct with exception reason | Paseo subagent | skill-runner/tmux worker per sub-phase>
+Execution surface: <read-only main session | main session direct | host-approved worker | skill-runner/tmux worker per sub-phase>
 Babysitter cadence: <none | every N min based on task risk/proof duration>
 Task control plane: <current main session | named owner | not applicable>
 Project status role: <project integrator | task control plane only | none>
@@ -31,12 +31,9 @@ Stop/continue point: <what happens before the next checkpoint>
 For tiny direct work, one sentence is enough, but still name the selected path
 when heavier routing was plausible.
 
-When choosing main-session direct execution for durable work, include:
-
-```text
-Exception reason: <why this is tiny, bounded, and safe for main-session context>
-Fallback worker route: <worker scope if it expands, loops, or needs long proof>
-```
+When execution-surface choice matters, add one reason based on the shared
+selector: bounded sequential work, independent parallel work, context isolation,
+or recovery needs. Direct durable work does not require an exception.
 
 If the latest user intent is read-only, discuss-first, stop, or pause, use
 `Execution surface: read-only main session` and do not include implementation

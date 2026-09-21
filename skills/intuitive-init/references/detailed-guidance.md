@@ -106,12 +106,11 @@ adopts Intuitive defaults, use GSD-owned `.planning/**`, flat
 `docs/status/active/**`, and `output/**` unless a human doc intentionally
 promotes a specific artifact into current truth.
 
-Preserve an existing canonical plan and task-state convention. When adopting
-the defaults, use one `docs/plans/<slug>.md` plan with lifecycle in its status
-fields and compact current task state in
-`docs/status/active/<task-slug>.md`. Do not introduce plan lifecycle
-subdirectories, `.continue-here.md`, or manual `.planning/HANDOFF.json` as
-parallel surfaces.
+Use [plan selection](../../_shared/references/plan-paths.md) for canonical
+plans and filename recommendations. Preserve existing plan and task-state
+conventions. When adopting defaults, keep lifecycle in plan status fields and
+current task state in the selected active capsule; do not introduce parallel
+resume surfaces.
 
 AI coding docs are agent/process-facing docs that help future coding agents but
 do not need to be human project truth. Prefer `docs/agents/**` for durable

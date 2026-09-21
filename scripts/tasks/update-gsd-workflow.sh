@@ -55,6 +55,7 @@ gsd_current_for_target() {
     local desired_profile="core"
     local installed=""
     local active_profile=""
+    local desired_skills skill
 
     if [ -f "$version_file" ]; then
         installed=$(cat "$version_file")
@@ -66,6 +67,14 @@ gsd_current_for_target() {
 
     if [ "$installed" = "$latest" ]; then
         if [ "$active_profile" = "$desired_profile" ]; then
+            desired_skills=$(bun "$SCRIPT_DIR/lib/default-skill-allowlist.ts" gsd-skills "$SCRIPT_DIR/default-skill-allowlist.txt") || return 1
+            while IFS= read -r skill; do
+                [ -n "$skill" ] || continue
+                if [ ! -f "$config_dir/skills/$skill/SKILL.md" ]; then
+                    echo "  ! gsd $label missing selected skill $skill; reinstalling v$installed"
+                    return 1
+                fi
+            done <<< "$desired_skills"
             echo "  ✓ gsd $label already current: v$installed ($desired_profile profile)"
             return 0
         fi
@@ -90,9 +99,9 @@ gsd_current_for_target() {
 run_gsd_installer() {
     local registry="$1"
     local target="$2"
-    # Upstream has no composable "core + ingest-docs" profile. Install the
+    # Upstream has no composable "core + ingest-docs + verify-work" profile. Install the
     # package's complete source set, then gsd-skill-state.ts prunes the
-    # managed runtime surface to the selected core entries plus ingest-docs.
+    # managed runtime surface to the selected allowlist entries.
     local profile="full"
     local out
 

@@ -30,8 +30,8 @@ Repo-owned skill descriptions now identify narrow capabilities. Long workflows
 route to task-specific references: scout dispatch, decision recording, test value
 versus structure, preflight proof versus contract output, port application versus
 publication, and squash planning versus recovery. Existing
-short skills remain self-contained. This changes disclosure, not the installed
-portfolio, invocation policies, or external skill contents.
+short skills remain self-contained. That disclosure change preserved the portfolio; the subsequent handoff corrections
+below update Shape invocation and restore the GSD verification dependency.
 
 Current default-surface correction:
 
@@ -43,9 +43,17 @@ Current default-surface correction:
 - `$diagnose` is no longer installed by default. `$gstack-investigate` is the
   default root-cause/debugging entrypoint because the GStack skill set already
   owns browser-visible investigation and QA workflows.
-- GSD uses the upstream `core` profile plus `gsd-ingest-docs`; the managed
-  surface includes only the phase loop and document bootstrap needed by
-  `$intuitive-flow`.
+- GSD keeps the upstream `core` surface plus `gsd-ingest-docs` and
+  `gsd-verify-work` for the complete Flow intake/execution/verification chain.
+  Missing selected wrappers invalidate the updater's already-current check.
+- Shape owns unsettled product decisions, with a narrow implicit trigger and
+  explicit routing from Flow; Flow no longer shapes those ideas inline.
+- Shared plan selection preserves existing paths and recommends a creation-date
+  prefix under `docs/plans/` when conventions are absent.
+- Direct durable execution is supported; workers need a concrete isolation,
+  recovery, or parallelism benefit. Proof handoffs name commands and outcomes.
+- Runner commands resolve scripts from the loaded skill location while keeping
+  the target repo as the working directory.
 - Keep `$grill-with-docs-batch` routed for convergence; the external
   single-question `$grill-with-docs` remains registered optional-install.
 - Keep `$codebase-design` routed as the shared architecture vocabulary and
@@ -132,6 +140,7 @@ mode itself.
 | `grill-with-docs-batch` | Strong: improves decision quality before implementation. | Strong: owns batched plan/domain grilling and stops when docs already answer the durable questions. | Strong: decision-impact test and convergence rules are explicit. | Keep as a specialist discussion skill; no runtime self-improvement block. |
 | `intuitive-doc` | Strong: keep human docs current and small. | Strong: owns human-facing docs and boundary drift, skips agent files by default. | Strong: audit/update/guard modes and claim verification are clear. | No runtime self-improvement block. Later slim examples if the doc keeps growing. |
 | `agent-planning-loop` | Strong: moves contested planning critique into bounded agent scouts before user review. | Strong: owns read-only planning debate and synthesis, not implementation or self-approval. | Strong: charter, scout prompts, materiality filtering, stop gates, and review-packet output are explicit. | Primary planning entrypoint for "align yourselves" and planning-loop style requests; no runtime self-improvement block. |
+| `intuitive-shape` | Strong: bounds investment before planning. | Owns unsettled product bets; excludes settled execution and fixes. | Preserves appetite, no-gos, cuts, and circuit breakers into the selected canonical plan. | Default with narrow implicit invocation and explicit Flow routing. |
 | `intuitive-flow` | Strong: routes approved plans and execution contracts to verified work. | Strong: owns staging and handoffs through a compact entrypoint plus route-specific references. | Strong: checkpoints and routing are explicit without loading a parallel runtime manual. | Keep as the execution router. |
 | `intuitive-init` | Strong after harness refresh: builds repo-local agent harness and trims high-frequency startup context. | Strong: owns `AGENTS.md`, `CLAUDE.md`, `docs/agents/**`, first-read policy, orientation-doc hygiene, init discovery, hooks, skills, and MCP routing. | Strong: startup cleanup mode, modes, and stop conditions are explicit. | Specialist skill; route from reduce-entropy when agent guidance or first-read context is the issue. |
 | `intuitive-port-worktree` | Strong: move worktree changes without switching the target branch. | Strong: owns porting/cherry-pick/patch transfer only. | Strong: source/target discovery, payload selection, and safety gates are explicit. | Keep as a specialist handoff utility; no meta text needed. |
@@ -156,7 +165,7 @@ mode itself.
 | `gstack-browse`, `gstack-open-gstack-browser` | Browser launch and browser QA helpers. | Keep browse default; open-browser is optional-install. |
 | `gstack-autoplan`, `gstack-plan-eng-review`, `gstack-review`, `gstack-qa` | Managed review and QA wrappers. | Keep planning/review routes installed; QA is optional-install until usage justifies promotion. |
 | `gstack-investigate` | Managed root-cause investigation workflow. | Keep as the default debugging/investigation route; do not also default-install `$diagnose`. |
-| `gsd-discuss-phase`, `gsd-execute-phase`, `gsd-ingest-docs`, `gsd-new-project`, `gsd-phase`, `gsd-plan-phase`, `gsd-surface`, `gsd-update` | Small GSD core loop plus document ingestion required by Flow handoff. | Keep installed as the managed GSD phase surface; upstream `core` supplies the loop and Flow adds `ingest-docs`. |
+| `gsd-discuss-phase`, `gsd-execute-phase`, `gsd-ingest-docs`, `gsd-new-project`, `gsd-phase`, `gsd-plan-phase`, `gsd-surface`, `gsd-update`, `gsd-verify-work` | Small GSD core loop plus document ingestion and final verification. | Keep installed; upstream core supplies the phase loop and Flow retains ingestion and verification dependencies. |
 | `gsd-progress`, `gsd-resume-work`, `gsd-pause-work` | GSD status and continuation helpers. | Registered optional-install; Flow can name them when a GSD run exists. |
 
 Removed from the default surface:
@@ -167,8 +176,8 @@ Removed from the default surface:
 - `diagnose`: overlapped with `gstack-investigate` for bug/root-cause reports.
   Re-add only if a future audit shows the GStack route is unavailable or too
   heavy for common debugging tasks.
-- `gsd-import` and `gsd-verify-work`: outside the managed core + ingest-docs
-  surface. Add them only when a workflow explicitly needs those entry points.
+- `gsd-import`: outside the managed surface; `gsd-ingest-docs` owns the
+  supported document-ingestion handoff.
 
 ## What The Lens Changes
 

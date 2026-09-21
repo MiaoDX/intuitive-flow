@@ -140,12 +140,12 @@ the next action is a refactor gate or execution slice in `$intuitive-refactor`.
 
 ## Plan Entropy Mode
 
-Use plan entropy mode when the user points at an idea, draft plan, named
-`docs/plans/<slug>.md`, review packet, or preflight draft and asks to reduce
+Use plan entropy mode when the user points at an idea, draft plan, existing
+canonical plan, review packet, or preflight draft and asks to reduce
 ambiguity before execution. The output is a plan-review selection packet, not
 implementation and not approval.
 
-When the target is a `docs/plans/<slug>.md` file, read its `## Plan Ledger`
+When the target is a plan file, read its `## Plan Ledger`
 first if present and keep the review locked to that session scope. If the
 review updates the plan's status, current slice, next action, blocker,
 parent/child relation, or no-touch boundary, refresh the ledger and the plan's
@@ -234,9 +234,10 @@ Discovery and implementation have different boundaries:
   be entered through a budgeted probe first: list/index, find live references,
   sample the smallest evidence needed, and only deep-read when a candidate
   already has a materiality reason.
-- For large loops, create or update one discovery artifact under
-  `docs/plans/` when the target repo convention allows planning docs. Record
-  a top `## Plan Ledger`, audit rounds, selected candidates, parked items,
+- For large loops, create or update one discovery artifact on the selected
+  plan surface when the target repo convention allows planning docs. Use
+  [plan selection](../../_shared/references/plan-paths.md) for a new path.
+  Record a top `## Plan Ledger`, audit rounds, selected candidates, parked items,
   suggested proof, and the stop condition in that one artifact instead of
   scattering partial batches through chat. Update `docs/plans/README.md` when
   this creates or changes a plan-backed discovery artifact's dashboard row.

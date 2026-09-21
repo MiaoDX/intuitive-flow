@@ -14,6 +14,7 @@ Prefer reuse, deletion, and consolidation before introducing a new surface.
 | Task | Action |
 | --- | --- |
 | Tiny bounded edit or read-only check | Work directly; run focused proof. No plan artifact or worker is required. |
+| Unsettled product value, appetite, or competing bets | Use $intuitive-shape before planning. |
 | Unknown cleanup target | Use $intuitive-reduce-entropy. |
 | Selected cleanup seam | Use $intuitive-refactor. |
 | Material scope or acceptance decisions remain | Use $intuitive-preflight; reuse decisions already settled in the conversation. |
@@ -25,6 +26,7 @@ Prefer reuse, deletion, and consolidation before introducing a new surface.
 | --- | --- |
 | Starting or resuming durable execution | [Durable state and ownership](../_shared/references/durable-run.md) and [checkpoints](references/checkpoints-and-auto-run.md) |
 | A plan needs intake or reconciliation | [Plan intake](references/plan-intake-and-autoplan.md) |
+| Creating or selecting a canonical plan | [Plan selection](../_shared/references/plan-paths.md) |
 | Finalizing a reconciled plan for handoff | [Plan prose shadow check](references/plan-prose-gate.md) |
 | Selecting plan/status ownership or phase granularity | [Source of truth](references/source-of-truth.md) |
 | Using a GSD phase | [GSD handoff](references/gsd-handoff.md) |

@@ -24,10 +24,17 @@ Before launch, define:
 - stop conditions and final `RESULT_STATUS` contract;
 - review cadence for long-running work.
 
-Use the runner's own help as the option source of truth:
+Resolve the absolute directory containing this loaded `SKILL.md` as
+`<skill-runner-root>`; it may be an installed mirror or this source checkout.
+Keep the working directory at the target repo and use absolute script paths.
+Do not assume the target repo contains `skills/skill-runner/`.
+
+Use the runner's own help as the option source of truth. Replace the placeholder
+with that resolved directory and use the target repo's approved Python runtime
+(`uv run python` below; use its `.venv` when configured):
 
 ```bash
-uv run python skills/skill-runner/scripts/run_skill_runner.py --help
+uv run python "<skill-runner-root>/scripts/run_skill_runner.py" --help
 ```
 
 Codex prompt workers inherit the current Codex provider configuration and auth
@@ -53,7 +60,7 @@ For batch review, use the summarizer's help rather than duplicating its options
 here:
 
 ```bash
-uv run python skills/skill-runner/scripts/summarize_skill_runner_runs.py --help
+uv run python "<skill-runner-root>/scripts/summarize_skill_runner_runs.py" --help
 ```
 
 ## Supervision

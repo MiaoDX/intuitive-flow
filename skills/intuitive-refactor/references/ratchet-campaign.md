@@ -64,7 +64,9 @@ campaign needs resume state.
 
 Use two state surfaces:
 
-- Canonical gate: `docs/plans/refactor-<target>.md` or the existing plan/gate.
+- Canonical gate: the existing plan/gate, or the path selected by [plan
+  selection](../../_shared/references/plan-paths.md). When no convention exists,
+  recommend `docs/plans/MM-DD-refactor-<target>.md`.
   It owns scope, accepted severities, checklist, status, stop condition,
   verification inventory, clear queue, parked registry, rejected low-value
   items, final evidence, and the top `## Plan Ledger` when it lives under

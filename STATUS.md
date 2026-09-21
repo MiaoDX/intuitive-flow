@@ -1,14 +1,13 @@
 # Status
 
-Last reviewed: 2026-09-17
+Last reviewed: 2026-09-21
 
 ## Current State
 
 `intuitive-flow` is a portable workflow kit for Claude Code and Codex. The repo
 currently provides:
 
-- root human docs and starter agent guidance
-- a human-facing agent harness reference ledger in
+- root human docs, starter agent guidance, and the harness reference ledger in
   `docs/human/agent-harness-references.md`
 - reusable installed skills under `skills/`
 - a routed `cross-review` skill for bounded second opinions on existing agent
@@ -17,7 +16,7 @@ currently provides:
   sources without adding a dedicated search runtime
 - task-routed skill entrypoints with conditional references for test cleanup,
   planning, worktree porting, squash, and issue tracking; short skills stay
-  self-contained, and external skills/install policies remain unchanged
+  self-contained
 - portable durable-run ownership that preserves target-repo status conventions,
   isolates task state, and keeps shared project status single-writer
 - a Flow-owned plan prose gate that runs an STE-flavored shadow check after
@@ -27,8 +26,12 @@ currently provides:
   `scripts/default-skill-allowlist.txt`
 - a separate prune-only ledger for retired local artifacts at
   `scripts/default-skill-prune-ledger.txt`
-- a default `intuitive-shape` skill with paired decision evals and a shaped-bet
-  handoff contract for choosing and bounding work before planning or execution
+- a default `intuitive-shape` skill with paired decision evals, narrow implicit
+  invocation, and explicit Flow routing for unsettled product bets
+- shared plan selection that preserves repo conventions and recommends
+  `docs/plans/MM-DD-<slug>.md` when none exists
+- GSD final verification through normally installed `gsd-verify-work`; missing
+  selected wrappers trigger reinstall even at the current upstream version
 - update and sync automation under `scripts/`
 - repo-owned Git hooks under `.githooks/`
 - Bun TypeScript helpers and tests under `scripts/lib/`
@@ -79,6 +82,8 @@ The current maintenance focus is keeping the repo dogfoodable:
 - keep install and prune policy explicit in the two ledgers under `scripts/`
 - keep plan-prose checks in report-only shadow mode until fixture and live proof
   show readability gains without protected-contract regressions
+- choose direct or delegated execution by context, recovery, and parallelism
+  needs; hand off concrete proof commands and success conditions
 - keep durable task state target-local: one task control plane per task, workers
   return evidence, and only an explicit project integrator writes shared status
 - keep skill entrypoints compact, local hooks and CI aligned, and verify with
@@ -114,11 +119,3 @@ locked summaries, not the active roadmap.
   upload telemetry.
 - `.githooks/pre-commit` is opt-in per checkout through `bun run setup:hooks`
   because Git does not version local hook configuration.
-
-## Next Maintenance
-
-- Add focused tests when updater behavior changes.
-- Update this file when supported commands, install surfaces, or the active
-  project focus changes.
-- Update `ARCHITECTURE.md` when a new subsystem, public contract, proof boundary,
-  or extension point appears.

@@ -25,9 +25,9 @@ plan file. If it is contract-shaped but the exact public shape is not selected
 yet, default to recording the current assumption in the plan and defer the ADR
 until the public contract is chosen.
 
-For new plan files, prefer the repo convention; otherwise use a date-prefixed
-slug. Do not bulk-rename old plans only to add dates. Prefer concise plan
-metadata over filename churn for active or recently reviewed plans.
+Use [plan selection](../../_shared/references/plan-paths.md) for existing
+canonical sources and new plan filenames. Keep accepted decisions in that
+source rather than renaming plans or creating a parallel artifact.
 
 Keep ADR numbering for durable decisions, but make the creation threshold strict.
 Do not create ADRs for proof loops, reruns, local-dev evidence, benchmark runs,

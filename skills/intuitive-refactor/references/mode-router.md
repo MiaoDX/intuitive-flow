@@ -88,15 +88,11 @@ scripts, package targets, CI, and existing test/harness guidance. For
 long-running campaigns, record the inventory in the gate or active capsule so
 future slices do not rediscover it.
 
-Choose the smallest ladder that proves the accepted scope and change class:
-
-- L0 static/search proof for docs, references, and stale-path cleanup.
-- L1 unit/mock tests for local behavior.
-- L2 contract/integration tests for public APIs, commands, or file formats.
-- L3 product/demo/manual proof for UI, simulator, provider, hardware, or
-  external-service behavior.
-
-Use `../../_shared/references/durable-run.md` for the cross-skill proof selector.
+Use the [shared proof selector](../../_shared/references/durable-run.md#proof-selector)
+to choose proof by the behavior the slice can change. Record the command or
+manual procedure, observed behavior, success condition, and unavailable proof.
+Do not hand off a bare numbered confidence level; mock and real-runtime proof
+must remain distinguishable in the contract.
 Focused proof is preferred when it observes the changed behavior. Expensive
 full-suite, visual, simulator, product, or manual gates are required only when
 the accepted scope changes behavior those gates uniquely observe, focused proof

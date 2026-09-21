@@ -1,5 +1,5 @@
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
@@ -181,13 +181,25 @@ print(json.dumps({
     }
   });
 
-  test("dry run writes compact artifacts without starting a worker", () => {
+  test("installed runner works from a separate target repo and writes dry-run artifacts without a worker", () => {
     const runRoot = mkdtempSync(join(tmpdir(), "skill-runner-dry-"));
     try {
+      const targetRepo = join(runRoot, "target repo");
+      const installedScripts = join(runRoot, "installed skills", "skill-runner", "scripts");
+      mkdirSync(targetRepo, { recursive: true });
+      mkdirSync(installedScripts, { recursive: true });
+      expect(spawnSync("git", ["init", "--quiet", targetRepo]).status).toBe(0);
+      const installedRunner = join(installedScripts, "run_skill_runner.py");
+      const installedSummarizer = join(installedScripts, "summarize_skill_runner_runs.py");
+      copyFileSync(runnerScript, installedRunner);
+      copyFileSync(summarizerScript, installedSummarizer);
+      for (const script of [installedRunner, installedSummarizer]) {
+        expect(spawnSync("python3", [script, "--help"], { cwd: targetRepo }).status).toBe(0);
+      }
       const result = spawnSync(
         "python3",
-        [runnerScript, "--dry-run", "--run-root", runRoot, "--cwd", repoRoot, "--", "dry run with $intuitive-flow"],
-        { cwd: repoRoot, encoding: "utf8" },
+        [installedRunner, "--dry-run", "--run-root", runRoot, "--", "dry run with $intuitive-flow"],
+        { cwd: targetRepo, encoding: "utf8" },
       );
       expect(result.status).toBe(0);
       const runDir = result.stdout.trim().split("\n").at(-1) ?? "";
@@ -195,6 +207,8 @@ print(json.dumps({
       expect(readFileSync(join(runDir, "result.md"), "utf8")).toContain("Status: DRY_RUN");
       expect(readFileSync(join(runDir, "rewritten-prompt.md"), "utf8")).toContain("Acceptance contract:");
       expect(readFileSync(join(runDir, "run.json"), "utf8")).toContain('"codex_config_mode": "inherit"');
+      expect(JSON.parse(readFileSync(join(runDir, "run.json"), "utf8")).cwd).toBe(targetRepo);
+      expect(existsSync(join(targetRepo, "skills"))).toBe(false);
     } finally {
       rmSync(runRoot, { recursive: true, force: true });
     }

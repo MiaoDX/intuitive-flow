@@ -165,6 +165,6 @@ main session. Summaries should name the artifact path and the decision it
 supports.
 
 For durable implementation, follow the shared control-plane and active-capsule
-rules in `../../_shared/references/durable-run.md`. Main-session direct
-implementation is allowed only for tiny direct edits, read-only probes, or
-local repairs whose route brief explains why context continuity is not at risk.
+rules and execution-surface selector in `../../_shared/references/durable-run.md`.
+Bounded sequential work may stay in the main session; delegate when a concrete
+isolation, recovery, or parallelism benefit justifies the handoff.

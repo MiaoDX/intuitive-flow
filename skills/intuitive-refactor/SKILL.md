@@ -21,7 +21,7 @@ after the user names a target or selects a candidate packet.
 | Repeated cleanup, oversized modules, stale surfaces, deletion/owner-move ratchets | [Ratchet mode](references/ratchet-mode.md) |
 | Long-running ratchet overlay, active capsule, selected-slice loop, or repo-wide maintenance goal | [Ratchet campaign](references/ratchet-campaign.md) and [durable run](../_shared/references/durable-run.md) |
 | Diff-scoped reuse/quality/efficiency review after implementation | [Changed code review](references/changed-code-review.md) |
-| Full legacy guidance, templates, confidence ladder, command naming, persistent-state examples | [Detailed guidance](references/detailed-guidance.md) |
+| Detailed workflow, templates, command naming, persistent-state examples | [Detailed guidance](references/detailed-guidance.md) |
 
 If multiple routes match, load the narrowest reference first and add the next
 one only when the work crosses that boundary.

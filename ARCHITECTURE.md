@@ -98,7 +98,8 @@ The recommended complex planning-to-execution workflow is risk-routed:
 
 ```text
 idea or draft plan
-  -> plan shaping and review
+  -> intuitive-shape when product value, appetite, or bet selection is unsettled
+  -> plan review
      -> cross-review when an existing proposal needs a bounded second opinion
      -> plan entropy when assumptions or proof are weak
      -> planning-loop/autoplan when independent scouts add value
@@ -111,9 +112,8 @@ idea or draft plan
 
 `$intuitive-flow` remains the stable user-facing trigger and compatibility
 router, but the recommended path treats it as the execution orchestrator after
-an approved plan or `$intuitive-preflight` contract exists. Vague prompts should
-be routed upstream to plan entropy mode, `$agent-planning-loop`, grill-batch, or
-preflight instead of hiding planning inside execution.
+an approved plan or `$intuitive-preflight` contract exists. Unsettled product ideas route to `$intuitive-shape`; other vague prompts
+route to plan entropy mode, `$agent-planning-loop`, grill-batch, or preflight instead of hiding planning inside execution.
 
 The planning owners are intentionally separate:
 
@@ -141,6 +141,17 @@ work untouched. It may finish with owned changes uncommitted only when a current
 user instruction, repo/phase policy, review-only boundary, unsafe same-file
 overlap, or unresolved blocker is named explicitly.
 
+Plan selection is shared in `skills/_shared/references/plan-paths.md`. Reuse
+the selected canonical source and existing repository conventions. Without a
+convention, recommend `docs/plans/MM-DD-<slug>.md`; prefer a creation-date prefix
+when naming is unconstrained, and do not rename existing plans merely for style.
+
+Durable execution may run directly in the main session for bounded sequential
+work. Delegate when parallelism, context isolation, durable logs, or recovery
+adds value. Both surfaces retain the same ownership, proof, and checkpoint rules.
+Proof handoffs name commands, observed behavior, and success conditions rather
+than ambiguous numbered confidence levels.
+
 Durable execution state is portable across target repos. Installed skills
 discover and preserve repo-defined project-status and task-resume surfaces
 before using Intuitive defaults. One task control plane writes each task's
@@ -159,7 +170,7 @@ routed specialists. `$intuitive-squash` is installed by default and
 `$intuitive-shape` is the default upstream decision skill: it
 turns raw ideas into bounded `BET`, `RESEARCH`, `RESHAPE`, or `PASS` decisions,
 then hands accepted work to the existing canonical plan/preflight route. It
-does not own implementation or a second project-state artifact. It stays out of
+does not own implementation or a second project-state artifact. Its narrow trigger supports implicit invocation and explicit Flow routing. It stays out of
 settled tiny fixes, incident diagnosis, ordinary bug repair, and approved
 execution; paired behavioral evidence and lossless handoff proof support its
 default installation.
@@ -293,13 +304,14 @@ external install, the updater writes
 that were previously recorded for that label but are no longer desired, across
 the Claude Code, Codex, and shared agent skill install roots.
 
-GSD setup remains upstream-owned. Intuitive Flow installs the upstream `core`
-profile and keeps the additional `gsd-ingest-docs` entry required by its handoff
-route. After installation, exposed GSD wrappers are pruned back to this small
+GSD setup remains upstream-owned. Intuitive Flow keeps the upstream `core`
+surface plus `gsd-ingest-docs` and routed `gsd-verify-work` for plan intake and
+final verification. After installation, exposed GSD wrappers are pruned back to this small
 managed surface; status and continuation helpers remain optional-install. The wrapper
 uses the full upstream source set during installation because the upstream
-installer cannot compose `core` with one additional command, then the state
-sync removes the unselected wrappers. The visible surface is the allowlist, not
+installer cannot compose that selected set, then state sync removes unselected
+wrappers. Even at the current version, missing selected skills trigger a reinstall
+so allowlist additions take effect. The visible surface is the allowlist, not
 the upstream profile.
 
 GStack installation is upstream-owned but wrapped by this updater. After a

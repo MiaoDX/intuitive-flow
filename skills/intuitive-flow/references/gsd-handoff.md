@@ -43,10 +43,9 @@ more than one new phase, conflicting locked docs, or a local-dev/destructive
 gate.
 
 Use main-session read-only probes to find the route on Codex. Follow
-`$skill-runner`'s Codex delegation policy for any worker handoff. For durable
-multi-stage runs, run stateful GSD ingest or plan generation through
-`skill-runner`/tmux by default so the main session remains clean for
-supervision. The main session inspects created or updated `.planning/`
+`$skill-runner`'s Codex delegation policy for any worker handoff. Use the shared execution-surface selector for GSD ingest and plan generation.
+Run sequential work directly; use `skill-runner`/tmux when recovery or context
+isolation adds value. The main session inspects created or updated `.planning/`
 artifacts before continuing.
 
 This is a real handoff only if the named GSD skill is invoked and its workflow
@@ -82,8 +81,8 @@ $intuitive-refactor changed-code review <changed-scope>
 gsd-verify-work <phase>
 ```
 
-For committed phase execution, prefer `skill-runner`/tmux around each stateful
-GSD execution or verification sub-phase. Follow `$skill-runner`'s Codex
+For committed phase execution, choose direct or worker execution using the
+shared selector; a stateful phase does not by itself require tmux. Follow `$skill-runner`'s Codex
 delegation policy for Codex worker selection. The main session owns integration
 and must verify any worker output before continuing.
 

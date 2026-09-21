@@ -11,7 +11,7 @@ field would otherwise be unreadable.
 ```text
 Preflight status: <DRAFT | BLOCKED_NEEDS_DECISION | BLOCKED_NEEDS_LOCAL_VALIDATION>
 Task source: <user prompt | plan path | issue | mixed>
-Canonical source: <docs/plans/... | issue URL | conversation only>
+Canonical source: <selected plan path | issue URL | conversation only>
 Route: <main direct | $intuitive-refactor | durable $intuitive-flow | delegated worker>
 Goal: <one sentence>
 
@@ -29,12 +29,14 @@ Acceptance:
 
 Verification: deterministic=<lint/type/unit/focused contract commands>; integration=<catalog/route/report/artifact commands>; product-run=<public command/flow/script/harness>; local-live-manual=<provider/Docker/simulator/GPU/hardware/browser/human checks, or unavailable reason>; optional=<non-blocking checks>
 Execution: main=<root supervisor role>; worker=<none | delegated scope>; worker-goal=<none | exact bounded goal>
-To execute: /goal execute <canonical source> with intuitive-flow
+To execute: execute <canonical source> through <selected route>
 Approval: LGTM/approve/go ahead approves; edits request revision.
 ```
 
-Use a real durable artifact in `To execute:` when available. If the canonical
-source is conversation-only, add one `Plan-file recommendation:` line before
+Use [plan selection](../../_shared/references/plan-paths.md) when recommending
+a plan file. Preserve the selected canonical source and route in `To execute:`;
+use `/goal` only when requested. Use a real durable artifact when available.
+If the canonical source is conversation-only, add one `Plan-file recommendation:` line before
 `To execute:` so context compression cannot erase the approved contract.
 
 If blocked, replace `Execution`, `To execute`, and `Approval` with:

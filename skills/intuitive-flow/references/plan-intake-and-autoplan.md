@@ -3,117 +3,44 @@
 Use this reference for fuzzy ideas, plan-like markdown intake, and any request
 to implement from a plan.
 
-## Fuzzy Idea
+## Planning Route
 
-Use when the user is still deciding what to build, why it matters, or what the
-scope should be.
+Choose the owner from the unresolved decision; do not ask the user to choose a
+workflow menu or repeat settled decisions.
 
-`$intuitive-flow` is allowed to accept vague prompts as a compatibility router,
-but it should name the upstream stage instead of doing hidden idea shaping and
-execution in one pass. Choose the idea-shaping route before the first question
-unless the user already made the mode clear:
-
-```text
-Which planning route should we use?
-
-A. Direct route - plain, more detailed, and user-led. I ask the
-   important questions directly and wait for your answers.
-B. Plan entropy route - use `$intuitive-reduce-entropy` in plan entropy mode to
-   find missing decisions or weak assumptions before drafting/revising a plan.
-C. Agent planning route - use `$agent-planning-loop` when scout workers should
-   debate options before one human review packet.
-D. Auto-guided route (explicit only) - use Flow only to draft the plan: I
-   auto-accept obvious defaults, save those decisions into the plan, and ask
-   only for scope, premise, or hard-to-reason choices. Do not offer this route
-   unless the user asks for auto mode or asks the agent to make planning
-   decisions.
-```
-
-Mode rules:
-
-- Direct route when the user asks for direct/manual shaping, asks to discuss the
-  idea plainly, or names `$grill-with-docs` style questioning.
-- Plan entropy route when the prompt points at an idea, draft plan, or named
-  plan file and asks to reduce ambiguity, find blind spots, or improve the plan
-  before execution.
-- `$agent-planning-loop` when the user asks agents to align first, run
-  reduce-entropy plus grill-batch critique, compare plans, or return one judged
-  review packet. Natural-language mentions of "planning loop" route here.
-- Auto-guided route only when the user asks for auto mode, says to make the
-  decisions, or explicitly asks Flow to draft the plan with agent-chosen
-  defaults.
-- Direct route when no preference is stated.
-- Skip the prompt when a draft plan already exists and the next step is review.
-
-First-hop ownership:
-
-```text
-candidate discovery -> intuitive-reduce-entropy plan entropy mode
-agent scout debate -> agent-planning-loop
-domain/doc challenge -> grill-with-docs-batch
-execution contract -> intuitive-preflight
-implementation -> intuitive-flow after approval/preflight
-```
-
-Default paths:
-
-```text
-direct: inline intuitive-flow shaping -> docs/plans/<slug>.md
-plan entropy: intuitive-reduce-entropy plan entropy mode -> revise docs/plans/<slug>.md or draft one
-agent planning: agent-planning-loop -> review packet -> docs/plans/<slug>.md after approval
-auto-guided: explicit-only intuitive-flow shaping -> docs/plans/<slug>.md
-```
-
-If the question is product direction, wedge, audience, demand, or "is this worth
-building?", keep it in direct shaping unless an optional product-discovery skill
-is explicitly installed and invoked.
-
-Stop after the plan doc unless the user explicitly asks to continue.
-
-## Auto-Guided Shaping
-
-Use auto-guided shaping only before `docs/plans/<slug>.md` exists and only when
-the user chose or clearly requested it. It may borrow the question style of
-`grill-with-docs`, but label the work as inline `intuitive-flow` unless that
-workflow actually ran.
-
-Decision classes:
-
-| Class | Action |
+| Need | Owner |
 | --- | --- |
-| Mechanical | Auto-decide from repo, docs, conventions, or user's own words |
-| Assumption | Auto-decide when low-risk, reversible, and scope-preserving; mark as assumption |
-| Taste | Choose the strongest recommendation and surface it at plan checkpoint |
-| User-owned | Stop and ask |
+| Whether to build, target audience, demand, appetite, or competing bets | $intuitive-shape |
+| Blind spots or weak assumptions in an idea or draft plan | $intuitive-reduce-entropy in plan entropy mode |
+| Requested multi-agent debate or alignment | $agent-planning-loop |
+| Remaining domain or contract questions against docs | $grill-with-docs-batch |
+| Execution scope, acceptance, verification, or route | $intuitive-preflight |
+| Settled tiny change or approved execution contract | $intuitive-flow |
 
-User-owned choices include target user, demand premise, painful status quo,
-narrowest wedge, goal/non-goal boundary, public contract, security/privacy
-posture, external service, API key, paid infrastructure, phase split, or any
-override of stated intent.
+Shape owns product framing; Flow does not maintain a second inline shaping mode.
+Preserve Shape's appetite, no-gos, ordered cuts, and circuit breaker in the
+canonical plan or preflight. A BET can proceed to planning; RESEARCH routes only
+the bounded probe, RESHAPE returns to the unsettled decision, and PASS stops
+without creating a plan or backlog item. The terminal decision and user intent
+control whether there is any executable handoff.
 
-Record auto-guided decisions in the generated plan:
-
-```markdown
-## Idea Shaping Decisions
-
-| # | Question | Classification | Decision | Rationale | Revisit if |
-|---|----------|----------------|----------|-----------|------------|
-```
-
-At the plan checkpoint, show only open user-owned questions, taste decisions
-worth reviewing, assumptions that could change scope, and skipped unknowns that
-affect execution or validation.
+An explicit request to choose defaults changes decision handling, not ownership.
+Resolve reversible implementation details from repo evidence, and ask only for
+material user-owned decisions. A plan-only request ends at the plan checkpoint;
+continue into execution when the existing request authorizes it.
 
 ## Single Plan-File Intake
 
-Follow `source-of-truth.md` for accepted roots and refactoring rules. The
-canonical review/input artifact must be `docs/plans/<slug>.md`.
+Use [plan selection](../../_shared/references/plan-paths.md) to resolve the
+canonical source. Preserve a supplied execution-ready plan or issue at its
+existing location. Read `source-of-truth.md` for stage ownership and provenance.
+Every plan path below is an example of the selected source, not a migration gate.
 
 Pre-plan contents:
 
 - plan ledger near the top
 - problem / goal
-- shaping mode
+- shaped-bet constraints when Shape ran
 - decisions already made
 - non-goals
 - smallest demo and fuller demo
@@ -127,8 +54,8 @@ Use `../templates/pre-plan.md` when drafting a new plan.
 
 When drafting or revising `docs/plans/<slug>.md`, follow
 `source-of-truth.md`'s Plan Ledger And Dashboard rules: set the session scope,
-record parent/child relationships, name the no-touch boundary, and update
-`docs/plans/README.md` when the plan set or next action changes. If multiple
+record parent/child relationships, name the no-touch boundary, and update the
+existing plan dashboard when the plan set or next action changes. If multiple
 plans exist, do not update unrelated plan ledgers while shaping this one.
 
 ## Risk-Triggered Unknown-Unknown Scout
@@ -232,8 +159,8 @@ verification, or execution-readiness review.
 ## Plan-Backed Execution Gate
 
 When the user asks to implement a specific plan, says "LGTM", says "impl" while
-pointing at a plan, or approves a plan-backed run, first resolve the canonical
-`docs/plans/<slug>.md` path and read its `Plan Ledger` if present so the run is
+pointing at a plan, or approves a plan-backed run, first resolve the selected canonical
+plan or issue and read its `Plan Ledger` if present so the run is
 locked to one session scope. Before implementation edits, read the plan's
 referenced context files. If the repo has `CONTEXT-MAP.md`, use it to find the
 relevant `CONTEXT.md` section; otherwise read root `CONTEXT.md` when the plan

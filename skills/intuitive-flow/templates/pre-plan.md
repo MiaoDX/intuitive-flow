@@ -16,9 +16,10 @@
 
 <Concrete outcome.>
 
-## Idea Shaping Mode
+## Shaped Bet Constraints (when applicable)
 
-<direct | auto-guided | not applicable>
+<Decision, appetite, core outcome, no-gos, cut order, and circuit breaker from
+Shape; omit this section for settled work.>
 
 ## Source Evidence
 
@@ -28,10 +29,9 @@
 
 - <decision> - <rationale>
 
-## Idea Shaping Decisions
+## Open Decisions
 
-| # | Question | Classification | Decision | Rationale | Revisit if |
-|---|----------|----------------|----------|-----------|------------|
+<Only material unresolved decisions, or none.>
 
 ## Non-Goals
 
@@ -64,6 +64,6 @@
 ## GSD Handoff Trigger
 
 ```text
-existing phase: gsd-plan-phase <phase> --prd docs/plans/<slug>.md
+existing phase: gsd-plan-phase <phase> --prd <selected-plan-path>
 missing planning or phase: manifest + gsd-ingest-docs, then gsd-plan-phase --prd
 ```

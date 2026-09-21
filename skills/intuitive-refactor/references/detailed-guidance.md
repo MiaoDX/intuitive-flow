@@ -124,13 +124,10 @@ current slice, next action, blocker, or parent/child relation changed. Keep the
 refactor session locked to this gate; do not opportunistically rewrite other
 plan ledgers while working this seam.
 
-Use one source of truth:
-
-- If a relevant `docs/plans/<slug>.md` already exists, update that file.
-- Otherwise create `docs/plans/refactor-<target-slug>.md`.
-- Do not create a second active plan for the same seam.
-- Do not use `~/.gstack`, temporary logs, chat memory, or commit history as the
-  handoff source of truth. They can be evidence, not the gate.
+Use [plan selection](../../_shared/references/plan-paths.md) for one canonical
+gate. Reuse the existing plan for the seam; when no convention exists, recommend
+`docs/plans/MM-DD-refactor-<target-slug>.md`. Logs and commit history remain
+evidence, not a second gate.
 
 The gate file must mark its status explicitly. Use these exact status values:
 
@@ -227,19 +224,12 @@ the canonical new shape. Park cross-seam cleanup and unrelated taste changes.
 After a gate is `DONE`, P2-only polish stays parked unless the user explicitly
 reopens that exact slice.
 
-## Confidence ladder
+## Proof Requirements
 
-Use these levels when classifying a proposed change:
-
-| Level | Name | Evidence |
-| --- | --- | --- |
-| L0 | Static | formatting, lint, whitespace, importable tooling |
-| L1 | Unit/mock | fast unit and mock-backed behavior tests |
-| L2 | Contract | frozen schemas, fixtures, CLI/report output contracts |
-| L3 | Mock regression | baseline-vs-candidate behavior capture using mock providers |
-| L4 | Local simulator | real simulator / rendering / physics validation |
-| L5 | Local Gateway/provider | real OpenClaw/Gateway/VLM/API validation |
-| L6 | Navigator harness | coding-agent-in-the-loop task run with curated metrics |
+Use the [shared proof selector](../../_shared/references/durable-run.md#proof-selector).
+Record the exact command or manual procedure, behavior observed, success
+condition, and any missing runtime evidence. Use those requirements throughout
+the gate, worker handoff, and closeout; do not use numbered confidence levels.
 
 ## Workflow
 
@@ -254,7 +244,7 @@ Read the user's goal and identify:
 - user-visible behavior that must not regress
 - what "done" would prove from a caller's perspective
 - old APIs, paths, wrappers, or compatibility shims that should be removed
-- minimum required confidence level
+- minimum required proof
 - whether the target repo's LSP is configured and healthy for the affected
   language stack
 - whether any evidence is local-only, paid, slow, or environment-sensitive
@@ -296,8 +286,8 @@ reference, rename, diagnostics, and hover signals should work for the target
 language. If LSP setup is missing or stale and the fix is repo-local, route the
 setup through `$intuitive-init` or include the minimal setup change before
 production refactor edits. If setup is unsafe, global-only, or unclear, record
-it as missing evidence and either stop or proceed only at the lower confidence
-level the user accepted.
+it as missing evidence and either stop or proceed only at the narrower proof
+claim the user accepted.
 
 ### 2. Decide the evidence path
 
@@ -348,7 +338,7 @@ Before implementation, present this compact gate:
 - Parked issues:
 - Compatibility kept:
 - Compatibility removed:
-- Minimum confidence level:
+- Required proof and success conditions:
 - Existing evidence:
 - Missing evidence:
 - Architecture packet:
@@ -445,10 +435,10 @@ Start with a scope gate. For a named target, execute the accepted cleanup.
 Load any existing docs/plans/refactor-*.md or architecture plan first.
 Classify findings as P0/P1/P2/Parked.
 Implement accepted P0/P1/P2 cleanup inside the target.
-Write/update one persistent gate file in docs/plans/.
+Write/update the selected canonical gate using the shared plan-selection rule.
 Remove old APIs, wrappers, and compatibility shims unless explicitly protected.
 Record cross-seam/Parked items there instead of implementing them.
-Stop when the accepted cleanup checklist passes the required confidence ladder.
+Stop when the accepted cleanup checklist passes the required proof gates.
 Commit each coherent slice only when the user and repo policy authorize
 commits.
 ```
@@ -466,7 +456,7 @@ gate.
 If the user is still discussing strategy, do not edit files. Return:
 
 - recommended command namespace
-- proposed confidence ladder
+- proposed proof gates
 - current/persistent status, if a gate file exists
 - accepted severity threshold
 - concrete stop condition

@@ -3,9 +3,9 @@
 Use this reference whenever a route creates, promotes, or consumes planning
 artifacts.
 
-The paths below are Intuitive defaults. Preserve an equivalent source-of-truth
-or status surface explicitly selected by target-repo guidance; do not create a
-duplicate merely to normalize names.
+Use [plan selection](../../_shared/references/plan-paths.md) for canonical
+sources and new filenames. The paths below illustrate Intuitive defaults;
+preserve the selected repo convention throughout intake and closeout.
 
 ## Stage Source Of Truth
 
@@ -14,15 +14,15 @@ Keep one authoritative artifact family per stage:
 | Stage | Source of truth |
 | --- | --- |
 | Before committed execution | `docs/plans/<slug>.md` or GitHub issues |
-| During execution | `.planning/STATE.md` and `.planning/phases/*` |
+| During execution | Selected plan/issue plus task resume state; GSD-owned `.planning/*` when using GSD |
 | After shipping | verification reports, summaries, retrospectives, and release/closeout notes |
 
 When handing work from one stage to the next, update the canonical artifact in
 place. Treat generated review logs, restore files, chat history, and temporary
 notes as evidence only.
 
-`docs/plans/` is a stable flat plan-contract surface: one plan, one
-`docs/plans/<slug>.md` file. Do not create lifecycle subdirectories under
+When adopting the default layout, `docs/plans/` is a flat plan-contract surface:
+one plan, one `docs/plans/<slug>.md` file. Do not create lifecycle subdirectories under
 `docs/plans/` for active, proposed, or archived work. Lifecycle belongs in the
 plan's `Plan Ledger`, `Status`, `Last reviewed`, shipped evidence, remaining
 gates, and superseded-by links. Current execution progress belongs in
@@ -82,27 +82,18 @@ stale, mention it as a parked observation or ask for a session switch.
 
 ## Plan-Like Intake
 
-If the user points at exactly one markdown file that looks like a plan, accept:
+Accept the user-selected execution-ready plan at its existing path, or the
+issue/GSD artifact that already owns scope. Do not copy it into a new location.
 
-- `docs/plans/*.md`
-- `docs/adr/**/*.md`
-- `docs/adrs/**/*.md`
-- `docs/human/**/*.md`
+If an ADR or human reference document supplies decisions but is not an execution
+plan, use [plan selection](../../_shared/references/plan-paths.md) to reuse or
+create a plan containing goal, scope, non-goals, constraints, decisions,
+acceptance, verification, risks, and any GSD handoff trigger. Link the source
+as evidence; keep execution ledgers out of ADRs and human docs unless requested.
 
-Use a file directly only when it already lives under `docs/plans/`. For ADR or
-human docs, extract the execution-ready material into `docs/plans/<slug>.md`:
-goal, scope, non-goals, constraints, decisions, acceptance criteria,
-verification expectations, risks, and GSD handoff trigger. Link the original as
-source evidence. Do not append `autoplan` reports or execution ledgers to ADR or
-human-facing docs unless the user explicitly asked to update that document.
-
-If the supplied file is mostly reference material, create a draft
-`docs/plans/<slug>.md` with clear unknowns and stop before review unless the run
-contract explicitly says to continue.
-
-If a legacy repo already has plan lifecycle subdirectories, normalize new and
-touched plans back to the flat `docs/plans/<slug>.md` surface unless the user
-explicitly protects the old layout for this slice.
+If the source is mostly reference material, record the material unknowns and
+stay within the requested planning scope. Preserve existing lifecycle layouts;
+changing them is a separate explicitly scoped migration.
 
 ## Context Files
 

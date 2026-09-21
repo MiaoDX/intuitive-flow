@@ -1,6 +1,6 @@
 # Checkpoints And Auto-Run Policy
 
-Use this reference before whole-flow, durable, auto-guided, tmux-worker, or
+Use this reference before whole-flow, durable, tmux-worker, or
 `/goal` runs and before crossing review, GSD, execution, cleanup, or
 verification boundaries.
 
@@ -156,8 +156,8 @@ world proof, credentials, or other external-state boundaries.
 
 For durable runs that may cross multiple stages, follow the shared
 control-plane, worker, review-cadence, and active-capsule rules in
-`../../_shared/references/durable-run.md`. Main-session direct durable
-implementation is an exception, not the default.
+`../../_shared/references/durable-run.md`, including its execution-surface
+selector. Bounded sequential durable work may run directly in the main session.
 
 Main session responsibilities:
 
@@ -179,17 +179,9 @@ Worker session responsibilities:
 - clear, close, or block only the worker-local goal and exit or stop after the
   handoff
 
-Before choosing main-session direct implementation for anything durable, record
-the exception in the route brief:
-
-```text
-Execution surface: main session direct
-Exception reason: <tiny bounded edit/read-only probe/local repair>
-Context risk: <why this will not threaten supervision history>
-Fallback: <worker route if it expands or loops>
-```
-
-If that exception reason cannot be written plainly, use a worker.
+Record the selected execution surface and its concrete reason when delegation
+or context continuity matters. No exception brief is needed for direct work.
+Delegate later if independent work or context pressure makes it useful.
 
 Do not use `/goal clear` or `/clear` in the main session during an active
 durable flow. Those commands can remove the route memory and active goal the
@@ -288,10 +280,10 @@ Apply decision triage before crossing these boundaries:
 1. Execution contract: require an approved `$intuitive-preflight` contract or an
    equivalent approved execution contract. If missing, route to preflight instead
    of drafting a Flow-specific contract.
-2. Idea-shaping route: ask direct vs auto-guided for fuzzy ideas unless already
-   clear.
-3. Auto-guided user-owned decision: ask before target user, demand premise,
-   wedge, scope, public contract, services, cost, phase split, or overrides.
+2. Product shaping: route unsettled value, appetite, and competing bets to
+   `$intuitive-shape`; keep settled execution on its existing route.
+3. User-owned decision: ask only for unresolved material scope, contract,
+   service, cost, or intent changes; reuse prior authorization.
 4. Pre-plan -> Review: confirm the plan file is ready for review unless the run
    contract already says to continue.
 5. Review -> In-place update: update plan only after approval or soft-continuation
@@ -312,12 +304,10 @@ Apply decision triage before crossing these boundaries:
 13. Goal ownership: if a main-session root goal is active, adopt it; if none is
    active, create one only for explicit durable execution with a clear contract.
    Worker goals are child scopes and must not mutate the root goal.
-14. Main -> Worker: for durable multi-stage execution, launch a bounded
-   `skill-runner`/tmux worker instead of running host-local goal/clear mechanics
-   in the main session. For goal-driven workers, choose and record a
-   task-adjusted review cadence plus a long enough timeout for the expected
-   proof. Direct main-session execution is acceptable only when the route brief
-   records the tiny bounded exception and fallback worker route.
+14. Execution surface: use the shared selector. Run bounded sequential work in
+   the main session; delegate when isolation, recovery, or independent parallel
+   work adds value. For a worker, record ownership and a task-adjusted review
+   cadence.
 15. Worker -> Main: before trusting completion, inspect the worker handoff,
    changed files, logs, commits, and verification evidence. Continue only after
    durable state exists outside the worker context.

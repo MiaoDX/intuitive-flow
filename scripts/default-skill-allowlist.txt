@@ -70,9 +70,8 @@ gstack-skill optional-install gstack-qa
 gstack-skill default gstack-investigate
 
 # Managed GSD wrappers kept after setup.
-# Keep the small core phase loop plus document ingestion available. The core
-# profile owns its internal dependency surface; ingest-docs is the one extra
-# entry required by Intuitive Flow handoff.
+# Keep the small core phase loop plus document ingestion and final verification
+# available for the complete Intuitive Flow handoff.
 gsd-skill default gsd-discuss-phase
 gsd-skill default gsd-execute-phase
 gsd-skill default gsd-ingest-docs
@@ -81,6 +80,7 @@ gsd-skill default gsd-phase
 gsd-skill default gsd-plan-phase
 gsd-skill default gsd-surface
 gsd-skill default gsd-update
+gsd-skill routed gsd-verify-work
 gsd-skill optional-install gsd-pause-work
 gsd-skill optional-install gsd-progress
 gsd-skill optional-install gsd-resume-work

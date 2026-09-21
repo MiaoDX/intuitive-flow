@@ -1,8 +1,10 @@
 import { describe, expect, test } from "bun:test";
+import { spawnSync } from "node:child_process";
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { syncGsdSkillState } from "./gsd-skill-state";
+import { gsdSkillsForInstall, readDefaultSkillAllowlist } from "./default-skill-allowlist";
 import { syncGstackSkillState } from "./gstack-skill-state";
 import {
   pruneRemovedExternalSkillStates,
@@ -400,6 +402,45 @@ describe("skill state lifecycle", () => {
     } finally {
       rmSync(home, { recursive: true, force: true });
       rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("current-version GSD installs require every selected skill and retain verification after pruning", () => {
+    const home = mkdtempSync(join(tmpdir(), "gsd-current-surface-"));
+    const allowlistPath = join(repoRoot, "scripts", "default-skill-allowlist.txt");
+    const desired = gsdSkillsForInstall(readDefaultSkillAllowlist(allowlistPath));
+    try {
+      for (const label of ["codex", "claude"]) {
+        const configDir = join(home, `.${label}`);
+        mkdirSync(join(configDir, "get-shit-done"), { recursive: true });
+        writeFileSync(join(configDir, "get-shit-done", "VERSION"), "1.2.3\n");
+        writeFileSync(join(configDir, ".gsd-profile"), "core\n");
+        for (const name of desired.filter((name) => name !== "gsd-verify-work")) {
+          mkdirSync(join(configDir, "skills", name), { recursive: true });
+          writeFileSync(join(configDir, "skills", name, "SKILL.md"), "get-shit-done\n");
+        }
+        const check = () => spawnSync("bash", ["-c", [
+          'SCRIPT_DIR="$1"',
+          'source "$SCRIPT_DIR/tasks/update-gsd-workflow.sh"',
+          'gsd_current_for_target "$2" "$3" 1.2.3',
+        ].join("\n"), "gsd-current-test", join(repoRoot, "scripts"), label, configDir], {
+          cwd: repoRoot,
+          encoding: "utf8",
+        });
+        const missing = check();
+        expect(missing.status).toBe(1);
+        expect(missing.stdout).toContain("missing selected skill gsd-verify-work");
+
+        mkdirSync(join(configDir, "skills", "gsd-verify-work"), { recursive: true });
+        writeFileSync(join(configDir, "skills", "gsd-verify-work", "SKILL.md"), "get-shit-done verify\n");
+        expect(check().status).toBe(0);
+      }
+      expect(syncGsdSkillState(allowlistPath, home, join(home, ".codex"))).toBe(0);
+      for (const label of ["codex", "claude"]) {
+        expect(existsSync(join(home, `.${label}`, "skills", "gsd-verify-work", "SKILL.md"))).toBe(true);
+      }
+    } finally {
+      rmSync(home, { recursive: true, force: true });
     }
   });
 

@@ -17,11 +17,10 @@ Planning logs, generated evidence, retrospectives, ADR detail, execution
 artifacts, scratch notes, and agent-only runbooks should stay outside the human
 surface unless a human doc intentionally promotes them.
 
-Plan contracts use the fixed flat surface `docs/plans/<slug>.md`. Put lifecycle
-in the plan's `## Plan Ledger` and current execution state in
-`docs/status/active/`, not in plan lifecycle directories or one-off prompt
-files. Treat `docs/plans/README.md`, when present, as the plan dashboard rather
-than a human-facing project manual.
+For plan and task-state placement, follow [plan selection](../_shared/references/plan-paths.md).
+Preserve the repo's existing canonical plans and lifecycle layout. When adopting
+Intuitive defaults, use a flat plan directory and keep current execution state
+in the task-owned resume surface. A plan dashboard is an agent navigation aid.
 
 This compact entrypoint preserves full mode-specific guidance in
 [detailed guidance](references/detailed-guidance.md). Read it for detailed
