@@ -1,6 +1,7 @@
 ---
 name: grill-with-docs-batch
 description: Resolve material plan or domain questions against repository docs in small batches, then stop when decisions are settled.
+disable-model-invocation: true
 ---
 
 # Grill With Docs Batch
@@ -12,6 +13,15 @@ questions for implementation defaults, tests, wording, or already-settled choice
 A question earns attention only if its answer changes scope, a public/private
 boundary, acceptance or rollout, cost, safety, ownership, or domain meaning.
 Use repository evidence to resolve facts before asking the user.
+
+## Supporting Primitives
+
+Use the routed Matt Pocock `grilling` and `domain-modeling` skills as the
+supporting primitives for interview mechanics, glossary sharpening, and durable
+context/ADR discipline. This skill owns batch pacing, materiality filtering,
+convergence, and document handoff. It does not depend on the thin Matt
+`grill-with-docs` wrapper, so that optional wrapper is not part of this skill's
+runtime dependency closure.
 
 If material questions remain, read [question batches](references/question-batches.md).
 After answers, apply accepted updates to the named document, then reassess whether

@@ -150,7 +150,7 @@ mode itself.
 | `intuitive-squash` | Strong: rewrite noisy agent history safely. | Strong: owns commit grouping and safety protocol only. | Strong: explicit confirmation and verify commands. | Keep installed with explicit invocation. |
 | `intuitive-tests` | Strong: improve test suite signal. | Strong: owns test taxonomy, pruning, fixture/layout cleanup. | Strong but long: many examples are useful runtime guidance. | Specialist skill; route from reduce-entropy when tests are the issue. |
 | `research` | Strong: produces decision-useful answers from traceable evidence. | Strong: owns research framing, source acquisition, claim provenance, contradiction handling, and synthesis while reusing existing retrieval/delegation tools. | Strong: proportional depth, claim-level ledger, one gap pass, honest confidence, and explicit access/time/source stops. | Default research entrypoint; retain the host-neutral evidence contract without adding a search runtime dependency. |
-| `skill-runner` | Strong: supervise real skill-driven development runs. | Strong: owns runner orchestration and reusable-skill defect detection. | Strong: verdicts, policy, and stop conditions are explicit. | Routed execution backend; compact entrypoint delegates options to CLI help. |
+| shared Codex delegation policy | Strong: keeps worker selection and ownership rules consistent without another public skill. | Strong: owns host capability probing, worker routing, and structured results; it does not own a runner runtime. | Strong: main-session integration and proof ownership remain explicit. | Keep as a shared reference; no standalone `skill-runner` install. |
 
 ## External And Managed Portfolio
 

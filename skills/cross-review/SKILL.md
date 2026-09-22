@@ -1,6 +1,7 @@
 ---
 name: cross-review
 description: Give an existing proposal an independent second opinion when requested; return one judged recommendation.
+disable-model-invocation: true
 ---
 
 # Cross Review

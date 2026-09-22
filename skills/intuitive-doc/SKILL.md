@@ -1,6 +1,7 @@
 ---
 name: intuitive-doc
 description: Maintain README.md, ARCHITECTURE.md, STATUS.md, and docs/human/** when they drift or need cleanup.
+disable-model-invocation: true
 ---
 
 # Intuitive Doc

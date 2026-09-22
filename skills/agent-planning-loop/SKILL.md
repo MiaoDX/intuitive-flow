@@ -1,6 +1,7 @@
 ---
 name: agent-planning-loop
 description: Review unsettled plans with independent scouts when the user requests multi-agent planning or alignment.
+disable-model-invocation: true
 ---
 
 # Agent Planning Loop

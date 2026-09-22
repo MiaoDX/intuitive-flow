@@ -43,6 +43,48 @@ describe("skill checker", () => {
     });
   });
 
+  test("requires equivalent Claude and Codex invocation policies", async () => {
+    await withTempProject((root) => {
+      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill routed alpha\n");
+      writeFixtureFile(
+        root,
+        "skills/alpha/SKILL.md",
+        "---\nname: alpha\ndescription: Alpha.\n---\n",
+      );
+      writeFixtureFile(
+        root,
+        "skills/alpha/agents/openai.yaml",
+        "policy:\n  allow_implicit_invocation: false\n",
+      );
+
+      expect(checkSkills(optionsFor(root))).toContain(
+        "cross-host invocation policy mismatch in skills/alpha: Claude is implicit, Codex is explicit-only",
+      );
+
+      writeFixtureFile(
+        root,
+        "skills/alpha/SKILL.md",
+        "---\nname: alpha\ndescription: Alpha.\ndisable-model-invocation: true\n---\n",
+      );
+      expect(checkSkills(optionsFor(root))).toEqual([]);
+    });
+  });
+
+  test("rejects Claude-only explicit invocation policy", async () => {
+    await withTempProject((root) => {
+      writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill routed alpha\n");
+      writeFixtureFile(
+        root,
+        "skills/alpha/SKILL.md",
+        "---\nname: alpha\ndescription: Alpha.\ndisable-model-invocation: true\n---\n",
+      );
+
+      expect(checkSkills(optionsFor(root))).toContain(
+        "cross-host invocation policy mismatch in skills/alpha: Claude is explicit-only, Codex is implicit",
+      );
+    });
+  });
+
   test("accepts shared references outside individual skill directories", async () => {
     await withTempProject((root) => {
       writeFixtureFile(root, "scripts/default-skill-allowlist.txt", "root-skill default alpha\nroot-skill default beta\n");

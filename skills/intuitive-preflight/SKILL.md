@@ -1,6 +1,7 @@
 ---
 name: intuitive-preflight
 description: Turn a vague task or plan into an execution contract with scope, non-goals, acceptance, verification, and route.
+disable-model-invocation: true
 ---
 
 # Intuitive Preflight

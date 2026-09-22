@@ -42,10 +42,11 @@ rationale during a confirmed durable run. Stop only for competing phase matches,
 more than one new phase, conflicting locked docs, or a local-dev/destructive
 gate.
 
-Use main-session read-only probes to find the route on Codex. Follow
-`$skill-runner`'s Codex delegation policy for any worker handoff. Use the shared execution-surface selector for GSD ingest and plan generation.
-Run sequential work directly; use `skill-runner`/tmux when recovery or context
-isolation adds value. The main session inspects created or updated `.planning/`
+Use main-session read-only probes to find the route on Codex. Follow the shared
+Codex delegation policy for any worker handoff. Use the shared execution-surface
+selector for GSD ingest and plan generation. Run sequential work directly; use
+a host-approved worker when recovery or context isolation adds value. The main
+session inspects created or updated `.planning/`
 artifacts before continuing.
 
 This is a real handoff only if the named GSD skill is invoked and its workflow
@@ -82,8 +83,8 @@ gsd-verify-work <phase>
 ```
 
 For committed phase execution, choose direct or worker execution using the
-shared selector; a stateful phase does not by itself require tmux. Follow `$skill-runner`'s Codex
-delegation policy for Codex worker selection. The main session owns integration
+shared selector; a stateful phase does not by itself require tmux. Follow the
+shared Codex delegation policy for Codex worker selection. The main session owns integration
 and must verify any worker output before continuing.
 
 For phase execution that changes local code, carry the commit rhythm into the

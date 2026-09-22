@@ -1,6 +1,7 @@
 ---
 name: intuitive-tests
 description: Audit or improve test-suite structure and signal when the user asks about redundancy, pruning, layout, fixtures, or parameterization.
+disable-model-invocation: true
 ---
 
 # Intuitive Tests

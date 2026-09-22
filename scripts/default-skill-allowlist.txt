@@ -9,9 +9,11 @@
 # gstack-skill <default|routed|optional-install> <gstack-skill>
 # gsd-skill <default|routed|optional-install> <gsd-skill>
 #
-# Default and routed skills are installed by scripts/update.sh. Optional-install
-# skills remain registered but install only when named in the comma-separated
-# INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS environment variable.
+# Default and routed skills are installed by scripts/update.sh. `default` is a
+# primary user-facing entrypoint; `routed` is an installed specialist selected
+# by another owner. Optional-install skills remain registered but are not
+# available until named in the comma-separated INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS
+# environment variable.
 
 # Repo-owned root skills installed from ./skills.
 #
@@ -31,7 +33,6 @@ root-skill routed intuitive-preflight
 root-skill routed intuitive-doc
 root-skill routed intuitive-init
 root-skill routed intuitive-tests
-root-skill routed skill-runner
 
 # Direct utilities:
 root-skill routed intuitive-port-worktree

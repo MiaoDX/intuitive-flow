@@ -78,9 +78,9 @@ credentials, hardware, paid services, or unavailable proof.
 - `$intuitive-flow` starts only after that contract is approved.
 
 Use the host's approved delegation policy for independent read-only probes.
-Do not hardcode a host-specific worker surface here; on Codex, follow
-[Codex delegation](../skill-runner/references/codex-delegation.md) for the
-native-v2 probe and fallback. Keep the main session responsible for ranking,
+Do not hardcode a host-specific worker surface here; on Codex, follow the
+[shared Codex delegation policy](../_shared/references/codex-delegation.md) for
+the native-v2 probe and fallback. Keep the main session responsible for ranking,
 architecture decisions, and final synthesis.
 
 ## Stop And Handoff

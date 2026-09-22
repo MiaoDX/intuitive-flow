@@ -75,9 +75,9 @@ If the scout runs, use:
 gstack-autoplan docs/plans/<slug>.md
 ```
 
-For whole-flow, review-heavy, or long-running scout runs, prefer launching
-`gstack-autoplan` through `skill-runner` so the main session can supervise and
-inspect artifacts before reconciliation.
+For whole-flow, review-heavy, or long-running scout runs, use the host-approved
+worker route when isolation or recovery adds value so the main session can
+supervise and inspect artifacts before reconciliation.
 
 When a scout is required, treat as `autoplan` evidence:
 

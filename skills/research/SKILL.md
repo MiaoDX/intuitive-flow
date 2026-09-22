@@ -58,7 +58,7 @@ make the process appear deep.
   repository-mandated tool with an unreliable or prohibited route.
 
 When two or more independent, read-heavy workstreams justify delegation, first
-read [Codex delegation](../skill-runner/references/codex-delegation.md) and
+read the [shared Codex delegation policy](../_shared/references/codex-delegation.md) and
 follow its current host policy. Keep the main session as research lead and final
 judge. Require workers to return compact findings with claim, source URL, source
 class, confidence, contradictions, and gaps rather than raw search logs. If

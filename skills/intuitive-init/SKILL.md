@@ -1,6 +1,7 @@
 ---
 name: intuitive-init
 description: Create or slim project-local agent guidance and startup configuration from current repository evidence.
+disable-model-invocation: true
 ---
 
 # Intuitive Init

@@ -98,6 +98,16 @@ const requiredWorkflowMarkers: Record<string, string[]> = {
   "intuitive-reduce-entropy": ["Recommended next action:", "Shortcut:"],
 };
 
+const invocationPolicy = (skillDir: string, header: string | undefined) => {
+  const claudeExplicitOnly = skillFrontmatterValue(header ?? "", "disable-model-invocation") === "true";
+  const openAiPath = join(skillDir, "agents", "openai.yaml");
+  const openAiText = existsSync(openAiPath) ? readFileSync(openAiPath, "utf8") : "";
+  const allowImplicit = /^\s+allow_implicit_invocation:\s*(true|false)\s*$/m.exec(openAiText)?.[1];
+  const codexExplicitOnly = allowImplicit === "false";
+
+  return { claudeExplicitOnly, codexExplicitOnly };
+};
+
 const localResourceMentions = (text: string, sourceFile: string): ResourceMention[] => {
   const mentions = new Map<string, ResourceMention>();
   const addMention = (displayPath: string, resolvedPath = displayPath) => {
@@ -162,6 +172,15 @@ const checkSkill = (skillsRoot: string, skillName: string, projectRoot: string):
     } else if (description.length > 1024) {
       errors.push(`description too long in skills/${skillName}/SKILL.md: ${description.length} chars`);
     }
+  }
+
+  const policy = invocationPolicy(skillDir, header);
+  if (policy.claudeExplicitOnly !== policy.codexExplicitOnly) {
+    errors.push(
+      `cross-host invocation policy mismatch in skills/${skillName}: ` +
+      `Claude is ${policy.claudeExplicitOnly ? "explicit-only" : "implicit"}, ` +
+      `Codex is ${policy.codexExplicitOnly ? "explicit-only" : "implicit"}`,
+    );
   }
 
   for (const file of listFiles(skillDir)) {

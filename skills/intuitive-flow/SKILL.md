@@ -35,8 +35,9 @@ Prefer reuse, deletion, and consolidation before introducing a new surface.
 | A structured route brief or proof card is needed | [Output shapes](references/output-shapes.md) |
 
 Load only references needed by the current task. Keep the main session responsible
-for scope, integration, and final verification; worker mechanics belong to
-$skill-runner. The main session is not automatically the project-status integrator.
+for scope, integration, and final verification; worker mechanics follow the
+shared delegation policy. The main session is not automatically the
+project-status integrator.
 
 Respect pause/discuss-only requests. An active goal does not override them, and a
 complete or blocked goal is not permission to restart work. Ask only about unresolved

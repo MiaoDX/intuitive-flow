@@ -164,8 +164,9 @@ history policy only when the target repo already requires one.
 The default public choices are `$intuitive-flow`, `$intuitive-refactor`,
 `$intuitive-reduce-entropy`, `$intuitive-shape`, and `$research`. `$agent-planning-loop`,
 `$cross-review`, `$grill-with-docs-batch`, `$intuitive-preflight`, `$intuitive-doc`,
-`$intuitive-init`, `$intuitive-tests`, and `$skill-runner` remain installed as
-routed specialists. `$intuitive-squash` is installed by default and
+`$intuitive-init` and `$intuitive-tests` remain installed as routed specialists.
+Delegation mechanics live in the shared reference and are not exposed as a
+standalone skill. `$intuitive-squash` is installed by default and
 `$intuitive-port-worktree` is routed; both retain explicit invocation policies.
 `$intuitive-shape` is the default upstream decision skill: it
 turns raw ideas into bounded `BET`, `RESEARCH`, `RESHAPE`, or `PASS` decisions,
@@ -200,7 +201,10 @@ report-only candidate discovery, and returns accepted cleanup to
 Repo-owned skills are authored directly under `skills/<name>/SKILL.md`. The
 local sync preserves Claude-only `disable-model-invocation` metadata for Claude
 Code and removes that unsupported key from Codex mirrors; Codex invocation
-policy belongs in `agents/openai.yaml`. Large skills should use progressive
+policy belongs in `agents/openai.yaml`. Invocation policy remains separate from
+installation tier, but repo-owned skills must express equivalent implicit or
+explicit-only behavior for both hosts; `bun run check:skills` rejects drift.
+Large skills should use progressive
 disclosure instead of generated includes:
 
 ```text
@@ -406,7 +410,7 @@ CI/local Bun version drift fail CI.
 
 At the moment, the test suite covers skill validation, managed portfolio
 and prune-ledger parsing, managed install-state pruning, hook helpers, workflow
-gates, skill-runner behavior, upstream skill audit output, and installer wrapper
+gates, delegation contracts, upstream skill audit output, and installer wrapper
 calls that enforce managed state.
 
 The repo-owned pre-commit hook repeats the skill structure check locally when

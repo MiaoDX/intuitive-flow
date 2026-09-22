@@ -23,14 +23,15 @@ describe("portable concurrent status contract", () => {
 
   test("separates project, task, and worker write authority", () => {
     const durable = read("skills/_shared/references/durable-run.md");
-    const runner = read("skills/skill-runner/SKILL.md");
+    const delegation = read("skills/_shared/references/codex-delegation.md");
     const closeout = read("skills/intuitive-flow/templates/closeout.md");
 
     expect(durable).toContain("**Project integrator:**");
     expect(durable).toContain("**Task control plane:**");
     expect(durable).toContain("**Worker:**");
     expect(durable).toContain("This is cooperative ownership, not a filesystem lock");
-    expect(runner).toContain("They must not edit a\nproject-status surface");
+    expect(delegation).toContain("Keep route decisions, integration, diff review, and final verification in the\n  main session.");
+    expect(delegation).toContain("ownership in a prompt is not runtime enforcement");
     expect(closeout).toContain("Delta: <none | material:");
     expect(closeout).toContain("handed off to project integrator");
   });

@@ -15,9 +15,9 @@ spawn, parent result delivery, and clean exit before trusting native routing.
 | --- | --- |
 | Read-only exploration, review, log analysis, or verification | Native v2 when the capability probe passes; otherwise Paseo or main-session probes |
 | Short, independent read-only fan-out | Native v2 when available and healthy |
-| Long-running, resumable, stateful, or artifact-sensitive work | `skill-runner`/tmux-backed `codex exec` |
-| Shared state, overlapping writes, commits, migrations, or strict ownership | `skill-runner`/tmux, or main-session coordination |
-| Host lacks native v2 or the probe fails | Paseo when its worker surface is available; otherwise `skill-runner`/tmux |
+| Long-running, resumable, stateful, or artifact-sensitive work | Host-approved worker or tmux-backed `codex exec` |
+| Shared state, overlapping writes, commits, migrations, or strict ownership | Host-approved worker or main-session coordination |
+| Host lacks native v2 or the probe fails | Paseo when its worker surface is available; otherwise main-session execution |
 | Explicit request for Paseo | Paseo |
 
 Native v2 is not a file-isolation mechanism. All agents may share the workspace,

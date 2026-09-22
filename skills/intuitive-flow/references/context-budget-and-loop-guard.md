@@ -71,7 +71,7 @@ fresh route brief and a new stop gate.
 
 When the host goal is active and the user has asked Flow to run, adopt it as
 the main-session root goal. Do not create a second root goal. Create
-worker-local goals only inside tmux/`skill-runner` for one bounded sub-phase,
+worker-local goals only inside a host-approved worker for one bounded sub-phase,
 and close or block only that worker goal before returning a handoff to the main
 session.
 

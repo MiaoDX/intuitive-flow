@@ -19,7 +19,7 @@ Goal ownership: <adopt existing root | create root | no root goal | worker sub-g
 Selected path: <stage/skill sequence>
 Why: <one sentence>
 Bypassed/left behind: <stage - reason; stage - reason>
-Execution surface: <read-only main session | main session direct | host-approved worker | skill-runner/tmux worker per sub-phase>
+Execution surface: <read-only main session | main session direct | host-approved worker>
 Babysitter cadence: <none | every N min based on task risk/proof duration>
 Task control plane: <current main session | named owner | not applicable>
 Project status role: <project integrator | task control plane only | none>

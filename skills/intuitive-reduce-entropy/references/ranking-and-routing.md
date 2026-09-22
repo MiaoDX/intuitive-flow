@@ -185,16 +185,13 @@ Keep the main session as the coordinator, decision point, and canonical
 artifact editor. Use delegation to keep route evidence, worker logs, and
 implementation detail out of the main context when the work naturally separates.
 
-Follow the `$skill-runner` Codex delegation reference for worker selection. This
-skill decides which discovery probes are worth delegating; the delegation
-reference owns host-specific Paseo, native-subagent, model, and fallback rules.
-
-Use `skill-runner` only for discovery probes or later selected work that is
-stateful, interactive, long-running, artifact-sensitive, or better supervised
-in a standalone tmux session. Prefer one mutating worker at a time in a single
-worktree unless the write ownership is explicitly disjoint. Do not assume extra
-git worktrees; many repos are too large or dependency-heavy for that to be the
-default.
+Follow the [shared Codex delegation policy](../../_shared/references/codex-delegation.md)
+for worker selection. This skill decides which discovery probes are worth
+delegating; the delegation reference owns host-specific native-subagent,
+Paseo, model, and fallback rules. Prefer the main session for bounded work and
+use a host-approved worker only when isolation, recovery, or parallelism adds
+value. Prefer one mutating worker at a time in a single worktree unless write
+ownership is explicitly disjoint.
 
 Worker handoff shape:
 

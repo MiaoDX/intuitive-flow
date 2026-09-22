@@ -26,7 +26,7 @@ Acceptable contract sources:
 The contract must cover goal, scope/non-goals, acceptance, verification, route,
 worker strategy when relevant, and stop gate. If any material field is missing,
 route to `$intuitive-preflight` and stop before unknown-unknown scouting,
-`to-issues`, GSD ingest/plan, `skill-runner`, autonomous execution, or
+`to-issues`, GSD ingest/plan, autonomous execution, or
 auto-confirming downstream gates. Flow may summarize the missing fields, but it
 does not own the approval-ready contract template.
 
@@ -71,7 +71,7 @@ Main session root goal:
   Owns the Flow run contract, route, canonical state, stop gate, babysitting,
   and final complete/blocked decision.
 
-Tmux or skill-runner worker sub-goal:
+Host-approved worker sub-goal:
   Owns one bounded sub-phase, one artifact/proof target, and one handoff.
 ```
 

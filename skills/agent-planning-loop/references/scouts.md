@@ -15,7 +15,7 @@ Keep the main session as the control plane.
   `needs_user_review`; it does not decide. Do not treat ordinary compatibility
   removal as a user-review decision by itself.
 
-Follow the `$skill-runner` Codex delegation reference for worker selection. This
+Follow the shared Codex delegation policy for worker selection. This
 skill chooses scout scope and acceptance; the delegation reference owns all
 host-specific worker mechanics. If no worker mechanism is available, run the
 same stages inline and state that delegation was unavailable.
