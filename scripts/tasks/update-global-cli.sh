@@ -12,7 +12,6 @@ global_cli_repair_specs() {
     local registry="$1"
     local specs=(
         @anthropic-ai/claude-code
-        claude-fetch-setup
         @openai/codex
         pyright
     )
@@ -147,7 +146,6 @@ print_tool_version() {
 global_cli_package_binary() {
     case "$1" in
         @anthropic-ai/claude-code) printf '%s\n' "claude" ;;
-        claude-fetch-setup)        printf '%s\n' "claude-fetch-setup" ;;
         @openai/codex)             printf '%s\n' "codex" ;;
         pyright)                   printf '%s\n' "pyright" ;;
         *)                         return 1 ;;
@@ -287,7 +285,6 @@ collect_global_cli_install_packages() {
 run_global_cli_tools() {
     local packages=(
         @anthropic-ai/claude-code
-        claude-fetch-setup
         @openai/codex
         pyright
     )

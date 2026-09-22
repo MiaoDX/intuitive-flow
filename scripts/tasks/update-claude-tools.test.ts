@@ -14,9 +14,15 @@ describe("Claude update task wiring", () => {
     expect(updateScript).toContain('task_run "Claude plugins" run_claude_plugins');
     expect(task).toContain("run_mcp_fetch()");
     expect(task).toContain("run_claude_plugins()");
-    expect(task).toContain("claude-fetch-setup");
+    expect(task).toContain("claude mcp add fetch --scope user --");
+    expect(task).toContain("codex mcp add fetch --");
+    expect(task).toContain("npx -y mcp-fetch-server@latest");
+    expect(task).toContain("claude mcp get fetch");
+    expect(task).toContain("codex mcp get fetch");
+    expect(task).not.toContain("claude-fetch-setup");
     expect(task).toContain("claude plugin install");
     expect(globalCliTask).not.toContain("run_mcp_fetch()");
     expect(globalCliTask).not.toContain("run_claude_plugins()");
+    expect(globalCliTask).not.toContain("claude-fetch-setup");
   });
 });

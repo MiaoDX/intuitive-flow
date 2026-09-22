@@ -78,7 +78,7 @@
     <text y="156" class="section-header">══ MCP: fetch ══</text>
     <text y="175.5">
       <tspan class="checkmark">  &#x2713; </tspan>
-      <tspan class="tool-name">claude-fetch-setup</tspan>
+      <tspan class="tool-name">npx -y mcp-fetch-server@latest</tspan>
     </text>
 
     <!-- Section: GSD workflow -->

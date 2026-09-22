@@ -2,7 +2,7 @@
 
 - Repo-owned skill sources live in `skills/`; update installed copies through the sync script.
 - Use Bash for orchestration and Bun-run TypeScript for structured scripts. For Python, use `uv` and the repository `.venv`; avoid unnecessary dependencies.
-- Use `fetch-mcp` for network retrieval. Fail explicitly; avoid `hasattr()` / `getattr()` for known types.
+- Use the configured host-native `fetch-mcp` MCP server for network retrieval. Fail explicitly; avoid `hasattr()` / `getattr()` for known types.
 - Prefer live-at-HEAD behavior and forward migrations; remove obsolete in-repo APIs and shims unless a bridge is explicitly required.
 - Keep commits atomic with `Co-authored-by: Codex <codex@users.noreply.github.com>`. Do not amend or force-push unless asked; fetch and rebase if a push is rejected because the remote moved.
 - `bun run verify` checks the repo. `scripts/update.sh` mutates installed tools and user configuration; it is not a test command.

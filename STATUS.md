@@ -63,6 +63,11 @@ config, including Claude, Codex, skill installs, and vendored gstack setup. It
 warns but continues when Codex is already running; restart existing Codex
 sessions after update to pick up refreshed config, hooks, and skills.
 
+The updater registers the `fetch` MCP server for both Claude Code and Codex
+through `npx -y mcp-fetch-server@latest`; it does not clone or maintain a local
+fetch-mcp checkout. The server is host-native and must be health-checked in each
+client after an update.
+
 ## Active Focus
 
 The current maintenance focus is keeping the repo dogfoodable:

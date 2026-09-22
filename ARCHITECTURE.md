@@ -344,9 +344,9 @@ handling would be brittle.
 The updater currently handles these phases:
 
 - environment and running-Codex prechecks
-- global CLI installation for Claude Code, Codex, fetch setup, and Pyright
+- global CLI installation for Claude Code, Codex, and Pyright
 - GSD installation for Claude and Codex
-- MCP fetch setup
+- host-native MCP fetch registration for Claude Code and Codex via `npx -y mcp-fetch-server@latest`
 - Claude plugin installation
 - Codex feature, status-line config, and merged hook config
 - vendored gstack setup

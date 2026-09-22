@@ -39,10 +39,37 @@ run_claude_plugins() {
 }
 
 run_mcp_fetch() {
-    task_notice "MCP: fetch: running claude-fetch-setup"
-    claude-fetch-setup >/dev/null 2>&1 || {
-        echo "  ! claude-fetch-setup failed"
-        return 1
-    }
-    echo "  ✓ mcp-fetch"
+    local fetch_command=(npx -y mcp-fetch-server@latest)
+
+    if command -v claude >/dev/null 2>&1; then
+        task_notice "MCP: fetch: registering Claude server"
+        claude mcp remove fetch --scope user >/dev/null 2>&1 || true
+        claude mcp add fetch --scope user -- "${fetch_command[@]}" >/dev/null 2>&1 || {
+            echo "  ! failed to register fetch MCP with Claude"
+            return 1
+        }
+        claude mcp get fetch >/dev/null 2>&1 || {
+            echo "  ! Claude fetch MCP registration did not validate"
+            return 1
+        }
+        echo "  ✓ Claude fetch MCP: npx -y mcp-fetch-server@latest"
+    else
+        echo "  ! skipped Claude fetch MCP because claude is not installed"
+    fi
+
+    if command -v codex >/dev/null 2>&1; then
+        task_notice "MCP: fetch: registering Codex server"
+        codex mcp remove fetch >/dev/null 2>&1 || true
+        codex mcp add fetch -- "${fetch_command[@]}" >/dev/null 2>&1 || {
+            echo "  ! failed to register fetch MCP with Codex"
+            return 1
+        }
+        codex mcp get fetch >/dev/null 2>&1 || {
+            echo "  ! Codex fetch MCP registration did not validate"
+            return 1
+        }
+        echo "  ✓ Codex fetch MCP: npx -y mcp-fetch-server@latest"
+    else
+        echo "  ! skipped Codex fetch MCP because codex is not installed"
+    fi
 }
