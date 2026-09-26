@@ -1,6 +1,6 @@
 # Intuitive Flow Audit Prompt
 
-Last reviewed: 2026-05-22
+Last reviewed: 2026-09-26
 
 This is the copy/paste prompt for a human-triggered review of
 `skills/intuitive-flow` against current official agent tooling and community
@@ -39,6 +39,10 @@ Read local truth first:
 - relevant `skills/intuitive-flow/references/*.md` only if needed
 
 Then research current external practice:
+- the vendors' latest-model prompting guidance listed under "Latest-Model
+  Guidance" in `docs/human/agent-harness-references.md`; check whether newer
+  versions exist and whether repo-owned skills still follow the distilled
+  writing rules there
 - official Claude Code docs/release notes for skills, hooks, plugins, MCP,
   subagents, memory, and planning/execution workflows
 - official Codex docs/release notes for AGENTS.md, skills, MCP, subagents,

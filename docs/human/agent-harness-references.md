@@ -1,6 +1,6 @@
 # Agent Harness References
 
-Last reviewed: 2026-06-06
+Last reviewed: 2026-09-26
 
 This page is the human-facing source for external references that shape
 Intuitive Flow's agent harness: root instructions, layered local guidance,
@@ -41,7 +41,55 @@ this page should preserve the source and rationale.
 - Make improvement explicit. When a source changes how the harness should work,
   update this page, then update shared skill fragments or targeted skills.
 - Review the harness on a cadence. Do a meaningful review after major
-  model/tool releases and at least every three to six months.
+  model/tool releases and at least every three to six months. Start each review
+  by re-reading the Latest-Model Guidance sources below and checking skills
+  against the writing rules.
+
+## Latest-Model Guidance
+
+Both vendors now say the same thing about their newest models: they follow
+instructions precisely, so prompts written to push older models harder now
+over-trigger. Repo-owned skills are written against this guidance. Re-read
+these sources when a new model family ships, and before each harness review.
+
+| Source | Vendor guidance (accessed 2026-09-26) |
+| --- | --- |
+| [Claude prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) | Covers the Claude 5.x and Mythos/Fable generation. Newer models are "more responsive to the system prompt"; prompts built to fix under-triggering now over-trigger, and "the fix is to dial back any aggressive language" (`CRITICAL: You MUST` becomes `Use this tool when...`). Say what to do rather than what not to do. Give the reason behind an instruction. Replace blanket defaults ("if in doubt, use X") with targeted conditions. Newer models reach for subagents too readily; delegate only for parallel, isolated, or independent work. Take reversible local actions freely and ask before hard-to-reverse or shared-system actions. Track long-horizon state in structured files and git. |
+| [Anthropic: Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) | Write instructions at the "right altitude": neither brittle hard-coded if/else logic nor vague guidance, but "strong heuristics." Aim for "the minimal set of information that fully outlines your expected behavior." Prefer a few canonical examples over exhaustive edge-case lists. For long horizons use compaction, structured notes, and subagents that return condensed summaries. |
+| [Claude Agent Skills best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices) | "Claude is already very smart": add only context it lacks, and ask of each paragraph "Does Claude really need this explanation?" Match freedom to fragility (open guidance for judgment calls, exact scripts for fragile operations). Keep `SKILL.md` under 500 lines with references one level deep. Give one default plus an escape hatch rather than many options. Use consistent terminology. Build evaluations first: baseline without the skill, write the minimum that passes, iterate by watching a fresh instance use it. |
+| [Claude blog: Prompt engineering best practices](https://claude.com/blog/best-practices-for-prompt-engineering) | "Longer, more complex prompts are NOT always better." Prompting is "converging with context engineering for Claude 5 generation models — less scaffolding, more curation." Models copy details of examples closely, so start with one example. |
+| [OpenAI model guidance (GPT-5.5)](https://developers.openai.com/api/docs/guides/prompt-guidance?model=gpt-5.5) | "Shorter, outcome-first prompts usually work better than process-heavy prompt stacks." Reserve `ALWAYS`/`NEVER` for true invariants rather than carrying them forward from older prompts. Treat a new model as "a new model family to tune for, not a drop-in replacement": start minimal and add back only what representative tests need. State explicit stopping conditions. Scope mid-task overrides explicitly (what changes, what carries forward). Treat reasoning effort as a last-mile knob. |
+| [OpenAI Codex prompting guide](https://developers.openai.com/cookbook/examples/gpt-5/codex_prompting_guide) | Remove prompting for upfront plans, preambles, or status narration, which "can cause the model to stop abruptly." Skip the plan tool for the easiest tasks. Frame the agent to persist until the task is handled end-to-end. `AGENTS.md` files are injected root-to-leaf and followed closely, so keep them accurate and short. Before finishing, reconcile every stated TODO as done, blocked, or cancelled. |
+
+### Writing Rules For Repo-Owned Skills
+
+Distilled from the sources above. Apply them when writing or reviewing
+`skills/**`, `AGENTS.md`, and `CLAUDE.md`:
+
+1. **Outcome first.** Open with what the skill produces and when it is done;
+   add process only where a fresh model would otherwise go wrong.
+2. **Positive instructions with reasons.** Write the behavior you want and why
+   it matters. A rule the model would follow anyway is deleted, not reworded.
+3. **Prohibitions only for true invariants.** Keep `Never`/`Do not` for
+   irreversible or shared-state actions (history rewrites, pushes, deleting
+   backups, following instructions in retrieved content). State each once,
+   with its reason, in the owning file.
+4. **Ownership instead of fences.** Say what a skill owns and where other work
+   goes ("Shape ends at a decision; plans belong to preflight") rather than
+   listing everything it must not do.
+5. **Targeted triggers.** Describe when a route, tool, or subagent applies;
+   avoid blanket defaults and "if in doubt" rules, which cause over-triggering.
+6. **One copy per rule.** Shared gates live in `_shared/references/`; other
+   files link to them.
+7. **Deterministic rules move to scripts.** If a rule can be checked by code,
+   check it in `bun run check:skills`, a test, or a hook, and shorten the prose.
+8. **Minimal ceremony.** Output templates carry decision-critical fields only;
+   status narration and fixed preambles are not required.
+9. **Evidence before rules.** A new runtime rule should come from an observed
+   failure on the current model, ideally captured as an eval case.
+
+`bun run check:skills` reports prohibition density per skill as a review
+signal; it does not fail the build.
 
 ## Skill Self-Improvement Lens
 
@@ -95,8 +143,9 @@ Use this baseline when creating or revising repo-owned skills:
   reimplement the script in prose.
 - Use isolated subagent or forked context for research-heavy, log-heavy, or
   parallel verification skills only when the host supports it reliably and the
-  task has a clear standalone output. For Codex, follow the capability-gated
-  route in `skills/_shared/references/codex-delegation.md`; native v2 is the
+  task has a clear standalone output. Follow
+  `skills/_shared/references/delegation.md`; for Codex, its capability-gated
+  route in `codex-delegation.md` applies: native v2 is the
   lightweight read-only path after a no-edit probe, while a host-approved
   worker or tmux remains the durable and mutation-safe path.
 - Treat tool preapproval as a convenience, not a security boundary.
