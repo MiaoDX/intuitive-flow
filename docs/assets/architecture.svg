@@ -1,82 +1,97 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 340" width="800" height="340" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500" width="900" height="500" role="img" aria-labelledby="title desc">
   <title id="title">Intuitive Flow architecture</title>
-  <desc id="desc">Human docs define repo truth, agent guidance stays local, primary and specialist skills feed the update pipeline, and update scripts sync Claude Code, Codex, GSD, gstack, community skill sources, and repo-owned skills into user-level surfaces.</desc>
+  <desc id="desc">Human docs and local agent guidance feed repo-owned skills and an explicit allowlist. The update pipeline installs those workflows into Claude Code, Codex, GSD, GStack, and shared agent surfaces.</desc>
   <defs>
     <style>
       .font { font-family: Aptos, "IBM Plex Sans", "Segoe UI", sans-serif; }
       .mono { font-family: "JetBrains Mono", "IBM Plex Mono", "SF Mono", Consolas, monospace; }
-      .title { font-size: 22px; font-weight: 750; }
+      .title { font-size: 24px; font-weight: 750; }
       .subtitle { font-size: 12px; font-weight: 600; }
-      .section { font-size: 10px; font-weight: 800; letter-spacing: 1.1px; text-transform: uppercase; }
+      .section { font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
       .label { font-size: 12px; font-weight: 720; }
       .small { font-size: 10.5px; font-weight: 620; }
       .panel { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1; }
+      .source { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1; }
+      .pipeline { fill: #eff6ff; stroke: #93c5fd; stroke-width: 1; }
+      .surface { fill: #f0fdf4; stroke: #86efac; stroke-width: 1; }
     </style>
     <marker id="arrow" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="7" markerHeight="6" orient="auto">
       <path d="M 0 0 L 10 4 L 0 8 Z" fill="#64748b"/>
     </marker>
   </defs>
 
-  <rect x="0.5" y="0.5" width="799" height="339" rx="12" fill="#fbfcfe" stroke="#d8e0ea"/>
+  <rect x="0.5" y="0.5" width="899" height="499" rx="14" fill="#fbfcfe" stroke="#d8e0ea"/>
   <text x="34" y="38" class="font title" fill="#0f172a">Architecture</text>
-  <text x="34" y="59" class="font subtitle" fill="#64748b">Small human truth, local agent guidance, focused skill surface, real installer boundaries</text>
+  <text x="34" y="60" class="font subtitle" fill="#64748b">Human truth and local contracts feed a small, explicit install surface</text>
 
   <g>
-    <rect x="34" y="100" width="152" height="118" rx="8" class="panel"/>
-    <circle cx="58" cy="124" r="10" fill="#ccfbf1" stroke="#5eead4"/>
-    <text x="58" y="128" text-anchor="middle" class="font small" fill="#0f766e">1</text>
-    <text x="78" y="128" class="font section" fill="#0f766e">Human truth</text>
-    <text x="54" y="158" class="mono small" fill="#0f172a">README.md</text>
-    <text x="54" y="178" class="mono small" fill="#0f172a">ARCHITECTURE.md</text>
-    <text x="54" y="198" class="mono small" fill="#0f172a">STATUS.md</text>
+    <rect x="34" y="92" width="254" height="132" rx="10" class="source"/>
+    <circle cx="58" cy="118" r="10" fill="#ccfbf1" stroke="#5eead4"/>
+    <text x="58" y="122" text-anchor="middle" class="font small" fill="#0f766e">1</text>
+    <text x="78" y="122" class="font section" fill="#0f766e">Human truth</text>
+    <text x="56" y="153" class="mono small" fill="#0f172a">README.md</text>
+    <text x="56" y="174" class="mono small" fill="#0f172a">ARCHITECTURE.md</text>
+    <text x="56" y="195" class="mono small" fill="#0f172a">STATUS.md</text>
+    <text x="56" y="216" class="font small" fill="#64748b">docs/human/**</text>
   </g>
-
-  <path d="M 186 159 H 218" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
 
   <g>
-    <rect x="218" y="100" width="152" height="118" rx="8" class="panel"/>
-    <circle cx="242" cy="124" r="10" fill="#ffedd5" stroke="#fdba74"/>
-    <text x="242" y="128" text-anchor="middle" class="font small" fill="#c2410c">2</text>
-    <text x="262" y="128" class="font section" fill="#7c2d12">Local agents</text>
-    <text x="238" y="163" class="mono small" fill="#0f172a">AGENTS.md</text>
-    <text x="238" y="184" class="mono small" fill="#0f172a">CLAUDE.md</text>
-    <text x="238" y="204" class="font small" fill="#64748b">project constraints</text>
+    <rect x="323" y="92" width="254" height="132" rx="10" class="source"/>
+    <circle cx="347" cy="118" r="10" fill="#ffedd5" stroke="#fdba74"/>
+    <text x="347" y="122" text-anchor="middle" class="font small" fill="#c2410c">2</text>
+    <text x="367" y="122" class="font section" fill="#9a3412">Local contracts</text>
+    <text x="345" y="158" class="mono small" fill="#0f172a">AGENTS.md</text>
+    <text x="345" y="179" class="mono small" fill="#0f172a">CLAUDE.md</text>
+    <text x="345" y="204" class="font small" fill="#64748b">repo-local constraints</text>
   </g>
-
-  <path d="M 370 159 H 402" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
 
   <g>
-    <rect x="402" y="100" width="152" height="118" rx="8" class="panel"/>
-    <circle cx="426" cy="124" r="10" fill="#f3e8ff" stroke="#d8b4fe"/>
-    <text x="426" y="128" text-anchor="middle" class="font small" fill="#7e22ce">3</text>
-    <text x="446" y="128" class="font section" fill="#581c87">Workflows</text>
-    <text x="422" y="158" class="mono small" fill="#0f172a">primary skills</text>
-    <text x="422" y="178" class="mono small" fill="#0f172a">specialists</text>
-    <text x="422" y="198" class="mono small" fill="#0f172a">manifest.txt</text>
+    <rect x="612" y="92" width="254" height="132" rx="10" class="source"/>
+    <circle cx="636" cy="118" r="10" fill="#f3e8ff" stroke="#d8b4fe"/>
+    <text x="636" y="122" text-anchor="middle" class="font small" fill="#7e22ce">3</text>
+    <text x="656" y="122" class="font section" fill="#7e22ce">Skill portfolio</text>
+    <text x="634" y="153" class="mono small" fill="#0f172a">skills/*/SKILL.md</text>
+    <text x="634" y="174" class="mono small" fill="#0f172a">_shared references</text>
+    <text x="634" y="195" class="mono small" fill="#0f172a">default-skill-allowlist.txt</text>
+    <text x="634" y="216" class="font small" fill="#64748b">default · routed · optional</text>
   </g>
 
-  <path d="M 554 159 H 586" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M 161 224 V 252 H 450" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M 450 224 V 252" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M 739 224 V 252 H 450" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
 
   <g>
-    <rect x="586" y="100" width="180" height="118" rx="8" class="panel"/>
-    <circle cx="610" cy="124" r="10" fill="#dbeafe" stroke="#93c5fd"/>
-    <text x="610" y="128" text-anchor="middle" class="font small" fill="#1d4ed8">4</text>
-    <text x="630" y="128" class="font section" fill="#1e3a8a">Install pipeline</text>
-    <text x="606" y="154" class="mono small" fill="#0f172a">scripts/update.sh</text>
-    <text x="606" y="174" class="mono small" fill="#0f172a">Claude + Codex</text>
-    <text x="606" y="194" class="mono small" fill="#0f172a">GSD workflow</text>
-    <text x="606" y="212" class="mono small" fill="#0f172a">gstack + skills</text>
+    <rect x="180" y="252" width="540" height="92" rx="10" class="pipeline"/>
+    <text x="206" y="279" class="font section" fill="#1d4ed8">Install and verify</text>
+    <text x="206" y="306" class="mono label" fill="#0f172a">scripts/update.sh</text>
+    <text x="414" y="306" class="mono small" fill="#0f172a">scripts/tasks/*</text>
+    <text x="574" y="306" class="mono small" fill="#0f172a">scripts/lib/*</text>
+    <text x="206" y="327" class="font small" fill="#475569">sync selected workflows, then prove the checkout with</text>
+    <text x="574" y="327" class="mono small" fill="#0f172a">bun run verify</text>
   </g>
 
-  <path d="M 676 218 V 248" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M 450 344 V 376" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <rect x="90" y="248" width="620" height="52" rx="8" class="panel"/>
-  <text x="112" y="270" class="font section" fill="#334155">Installed surfaces outside the repo</text>
-  <text x="112" y="291" class="mono small" fill="#0f172a">~/.claude</text>
-  <text x="222" y="291" class="mono small" fill="#0f172a">~/.codex</text>
-  <text x="326" y="291" class="mono small" fill="#0f172a">~/.agents</text>
-  <text x="432" y="291" class="mono small" fill="#0f172a">vendor/gstack</text>
+  <g>
+    <rect x="34" y="376" width="254" height="84" rx="10" class="surface"/>
+    <text x="58" y="404" class="font section" fill="#15803d">Claude Code</text>
+    <text x="58" y="429" class="mono small" fill="#0f172a">~/.claude</text>
+    <text x="58" y="448" class="font small" fill="#475569">plugins and commands</text>
+  </g>
 
-  <rect x="90" y="310" width="620" height="18" rx="6" fill="#f1f5f9" stroke="#d8e0ea"/>
-  <text x="400" y="323" text-anchor="middle" class="font small" fill="#475569">Primary: flow, refactor, reduce-entropy, squash. Proof: bun run verify.</text>
+  <g>
+    <rect x="323" y="376" width="254" height="84" rx="10" class="surface"/>
+    <text x="347" y="404" class="font section" fill="#15803d">Codex and shared skills</text>
+    <text x="347" y="429" class="mono small" fill="#0f172a">~/.codex · ~/.agents</text>
+    <text x="347" y="448" class="font small" fill="#475569">host-local skill surfaces</text>
+  </g>
+
+  <g>
+    <rect x="612" y="376" width="254" height="84" rx="10" class="surface"/>
+    <text x="636" y="404" class="font section" fill="#15803d">Managed tooling</text>
+    <text x="636" y="429" class="mono small" fill="#0f172a">GSD · GStack · MCP</text>
+    <text x="636" y="448" class="font small" fill="#475569">vendor and external integrations</text>
+  </g>
+
+  <text x="450" y="486" text-anchor="middle" class="font small" fill="#64748b">The repository owns the contracts; installed tools are derived surfaces.</text>
 </svg>

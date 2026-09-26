@@ -15,6 +15,11 @@ local `CLAUDE.md` / `AGENTS.md` guidance instead of a copied process manual.
   <img src="docs/assets/hero.png" alt="Human-readable docs guiding AI coding workflows" width="900">
 </p>
 
+<p align="center">
+  <a href="https://miaodx.com/LIP/share/ultrathink-to-goal/"><strong>From Ultrathink to Goal - A Year of AI Coding Engineering</strong></a><br>
+  <sub><i>The interactive slide deck behind this kit · 中文</i></sub>
+</p>
+
 ## Why This Exists
 
 AI agents write all my code, so the repo needs two surfaces.
@@ -56,12 +61,15 @@ Start by choosing the kind of work:
 
 | Work | Route |
 | --- | --- |
+| Shape an unsettled product bet | `$intuitive-shape`, then choose a planning or execution route |
 | Maintain or simplify a repo | `$intuitive-reduce-entropy` in repo entropy mode, then route selected cleanup to the owning skill and verify it |
+| Clean a known target | `$intuitive-refactor` for a selected module, seam, stale API, or architecture target |
 | Research a question that needs multiple sources or competing claims reconciled | `$research` for evidence-led investigation with traceable sources and explicit confidence |
 | Build a feature with unresolved scope or risk | `$intuitive-preflight`, using plan entropy, planning scouts, or grill-batch only when the contract needs them, then `$intuitive-flow` |
 | Challenge an existing agent proposal | `$cross-review` for a bounded second opinion, then stop or route only the accepted recommendation |
 | Align multiple planning perspectives | `$agent-planning-loop` -> `$intuitive-preflight` -> `$intuitive-flow` |
 | Do a tiny bounded task | `$intuitive-flow` directly, when the change is local and easy to verify |
+| Clean up noisy local history before handoff | `$intuitive-squash`, after its preflight checks pass |
 
 The rule of thumb is simple: reduce repo entropy when the codebase itself is
 getting harder to work in; use research when a decision needs evidence from
@@ -69,13 +77,14 @@ multiple sources; use a planning path when the next feature is still unclear;
 use direct flow only when the task is already bounded.
 
 <p align="center">
-  <img src="docs/assets/workflow.svg" alt="Intuitive Flow routes repo entropy reduction and feature development through planning, preflight, execution, and verification" width="820">
+  <img src="docs/assets/workflow.svg" alt="Intuitive Flow routes work by uncertainty through shaping, maintenance, research, preflight, execution, and verification" width="820">
 </p>
 
-## Selected Skill Sources
+## External Skill Sources
 
-The managed portfolio is explicit, not a broad import. This repo assigns
-default, routed, optional-install, and host-specific policy to individual skills in
+The managed portfolio is explicit, not a broad import. Repo-owned skills live in
+`skills/`; this table covers external sources. The repo assigns default, routed,
+optional-install, and host-specific policy to individual skills in
 [`scripts/default-skill-allowlist.txt`](scripts/default-skill-allowlist.txt)
 and leaves the rest upstream until real use justifies promotion. Default and
 routed entries install normally; optional-install entries remain registered but
@@ -83,7 +92,7 @@ are installed only when selected for an update run. Invocation policy is a
 separate per-skill setting: installed skills may still require explicit `$skill`
 invocation.
 
-| Source | Stars | Selected | Skills used |
+| Source | Stars | Managed entries | Skills used |
 | --- | --- | --- | --- |
 | [`anthropics/skills`](https://github.com/anthropics/skills) | [![GitHub stars](https://img.shields.io/github/stars/anthropics/skills?style=social)](https://github.com/anthropics/skills) | 1 | `skill-creator` |
 | [`skills-directory/skill-codex`](https://github.com/skills-directory/skill-codex) | [![GitHub stars](https://img.shields.io/github/stars/skills-directory/skill-codex?style=social)](https://github.com/skills-directory/skill-codex) | 1 | `codex` |
@@ -103,6 +112,10 @@ Clone Intuitive Flow when you want the update scripts and local skill sync:
 git clone --depth=1 https://github.com/MiaoDX/intuitive-flow.git ~/intuitive-flow
 ~/intuitive-flow/scripts/update.sh
 ```
+
+`scripts/update.sh` changes user-level Claude Code, Codex, skill, GStack, and
+MCP configuration outside this checkout. Run it only when you intend to update
+those installed surfaces; use `bun run verify` for a repo-only check.
 
 Install a registered optional-install skill for one update run by naming it explicitly:
 

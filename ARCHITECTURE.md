@@ -32,6 +32,10 @@ local git hooks
   .githooks/pre-commit
 ```
 
+<p align="center">
+  <img src="docs/assets/architecture.svg" alt="Intuitive Flow architecture from human docs through local guidance and skills to installed agent surfaces" width="900">
+</p>
+
 The root docs define what the project is. Agent guidance files define how
 Claude Code and Codex should operate inside a repo. `skills/` is the canonical
 repo-owned skill source and install surface, and scripts install and sync those
