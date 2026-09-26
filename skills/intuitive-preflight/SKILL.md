@@ -12,7 +12,7 @@ conversation. This skill does not implement, launch workers, create/clear a goal
 or approve its own output.
 
 Preserve a supplied plan's full intended scope. Express risk as ordering or stop
-gates; do not silently shrink approval to the first phase. Prefer existing surfaces
+gates, so approval covers the whole plan rather than only its first phase. Prefer existing surfaces
 and record why any new durable entity is necessary.
 
 Ask only when missing information changes intent, scope, contracts, safety, cost,
@@ -30,5 +30,5 @@ handoff fields: To execute:, Approval:.
 When blocked, replace executable handoff fields with the unresolved decisions.
 
 After approval, follow the agreed route without rerunning preflight. Revise only
-sections affected by new instructions; do not request permission again for work
-already authorized.
+sections affected by new instructions; existing authorization carries
+forward.

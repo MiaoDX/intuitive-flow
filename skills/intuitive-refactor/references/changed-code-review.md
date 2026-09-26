@@ -2,7 +2,8 @@
 
 Use this mode for diff-scoped cleanup after implementation or when the user asks
 to review changed code for reuse, quality, or efficiency. This is the migrated
-`simplify` workflow; do not treat it as broad architecture discovery.
+`simplify` workflow and stays diff-scoped; broad architecture discovery
+belongs to reduce-entropy.
 
 ## Scope Selection
 

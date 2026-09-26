@@ -29,7 +29,7 @@ An accepted downstream plan or preflight must preserve, in its own vocabulary:
 | Cut order | Scope-reduction policy during execution |
 | Circuit breaker | Hard stop or reshape condition |
 
-If those invariants disappear during handoff, do not call the workflow
+If those invariants disappear during handoff, the workflow is no longer
 appetite-driven. Repair the canonical downstream artifact before implementation.
 
 ## Comparative Betting

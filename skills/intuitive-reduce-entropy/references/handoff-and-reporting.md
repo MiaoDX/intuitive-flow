@@ -88,7 +88,7 @@ If the user names a likely area, route directly:
 - "layout", "folders", "scripts", "examples", "repo structure" -> inspect the
   object first, then route through Layout Routing.
 
-If the user gives no area, do not guess silently. Return a ranked packet:
+If the user gives no area, return a ranked packet rather than a silent guess:
 
 ```text
 Recommended packet:
@@ -137,7 +137,7 @@ Stop when all of these are true:
   reason when verification was part of the discovery task
 - the agent can state the next safe task without starting another broad cleanup
   sweep
-- no-change runs explicitly say `Selected candidates: none` and do not create a
+- no-change runs explicitly say `Selected candidates: none` and stop without a
   gate, commit, or follow-up refactor proposal
 
 ## Report Format

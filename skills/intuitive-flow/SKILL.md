@@ -36,8 +36,8 @@ Prefer reuse, deletion, and consolidation before introducing a new surface.
 
 Plan ownership rule: keep an ordinary plan in the target repository's existing
 canonical plan surface (normally `docs/plans/<slug>.md`). Planning and review
-loops reconcile that file in place; they do not create `.planning/*` or other
-GSD artifacts. Use the GSD handoff reference only after an approved execution
+loops reconcile that file in place and leave `.planning/*` and other GSD
+artifacts to GSD. Use the GSD handoff reference only after an approved execution
 contract and an explicit implementation/handoff route.
 
 Load only references needed by the current task. Keep the main session responsible

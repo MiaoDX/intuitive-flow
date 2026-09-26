@@ -6,8 +6,9 @@ disable-model-invocation: true
 
 # Agent Planning Loop
 
-Run a bounded planning debate when requested. Return one judged recommendation;
-do not implement, approve the plan, or let scouts ask the user questions.
+Run a bounded planning debate when requested and return one judged
+recommendation. Implementation and approval happen after the loop, and
+questions for the user go through the main session, not the scouts.
 Preserve the full intended scope of a supplied plan unless the user selects a
 subset or a material decision blocks honest full-plan execution.
 
@@ -60,8 +61,8 @@ no useful next step.
 
 ## Approval Handling
 
-If the user approves the review packet, do not rerun the planning loop unless
-their approval changes scope. Route to the single `Recommended next action`.
+If the user approves the review packet, the loop is done unless their approval
+changes scope. Route to the single `Recommended next action`.
 Treat short replies such as `LGTM`, `approve`, `sounds good`, or `do it` as
 approval for that action and preserve the packet's plan artifact, scope,
 verification, user decisions, parked items, and stop condition.

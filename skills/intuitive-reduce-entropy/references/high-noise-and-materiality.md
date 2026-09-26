@@ -44,8 +44,8 @@ small `sed` windows. Bound both the command and the printed result:
   and generated surfaces plus large `tests`/`test` and `profiles` surfaces when
   present. Use `--surface <path>` for a narrowed probe and `--examples N` when
   fewer examples are enough. If the script is not available, produce the same
-  summary shape manually; do not substitute a long custom `find`,
-  `git ls-files`, or `rg --files` listing.
+  summary shape manually rather than a long custom `find`, `git ls-files`, or
+  `rg --files` listing.
 - Keep high-noise roots out of broad path listings (`rg --files ... .planning
   .scratch specs`, `find .planning docs/plans ...`); they flood the context.
   Use the summary script for those roots,
