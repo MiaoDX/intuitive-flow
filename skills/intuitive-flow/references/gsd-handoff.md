@@ -59,10 +59,9 @@ artifacts before continuing.
 This is a real handoff only if the named GSD skill is invoked and its workflow
 is followed. If you only recommend the step, say no GSD artifact was generated.
 
-Do not manually turn `docs/plans/<slug>.md` into phase `CONTEXT.md`.
-`gsd-plan-phase --prd` generates phase context from the approved plan.
-Do not create or edit `.planning/HANDOFF.json`, `.planning/STATE.md`, or phase
-files by hand as a shortcut around GSD tools.
+`gsd-plan-phase --prd` generates phase `CONTEXT.md` from the approved plan.
+`.planning/` files (`HANDOFF.json`, `STATE.md`, phase files) change only through
+GSD tools, because hand edits desynchronize GSD's own state.
 
 ## Optional Issues
 
@@ -74,8 +73,8 @@ to-issues docs/plans/<slug>.md
 
 only when work should be split across multiple agents, tracked in GitHub
 Issues, or made independently grabbable. Skip it when one GSD phase can hold
-the work cleanly. Do not add issues after GSD execution has started unless the
-user explicitly asks for GitHub tracking midstream.
+the work cleanly. Once GSD execution has started, add issues only if the user
+asks for GitHub tracking midstream.
 
 ## Committed GSD Phase
 

@@ -73,9 +73,8 @@ risky, cross-cutting, or likely to hide material DX, test, sequencing, or
 execution concerns. `gstack-autoplan` is one option. It is not an
 implementation tool or a mandatory execution gate.
 
-Do not run or record skip metadata for ordinary work when the accepted plan and
-preflight already cover the relevant risks. Reuse a fresh reconciled scout
-result when one exists.
+Ordinary work whose plan and preflight already cover the risks needs no scout
+and no skip record. Reuse a fresh reconciled scout result when one exists.
 
 If the scout runs, use:
 
@@ -95,12 +94,10 @@ When a scout is required, treat as `autoplan` evidence:
 - recent conversation or repo history explicitly shows `autoplan` ran and the
   plan was updated in place afterward
 
-Do not treat as evidence:
-
-- the user saying "LGTM", "approved", "go implement", or "keep this plan"
-- a commit containing the plan without visible review/update
-- raw `~/.gstack` review logs, restore files, or final-gate summaries that were
-  not reconciled into the canonical plan
+Approval phrases ("LGTM", "go implement"), a commit that contains the plan
+without a visible review update, and raw `~/.gstack` logs, restore files, or
+gate summaries that were never reconciled into the plan are not scout evidence;
+the evidence is the reconciled plan body.
 
 When a scout runs, report its result in the planning stage:
 
@@ -117,8 +114,8 @@ Canonical plan updated: <yes/no>
 
 ## Autoplan Reconciliation
 
-`gstack-autoplan` is a review pipeline, not an implementation tool. It may
-refine scope, risks, tests, DX, and sequencing, but must not start coding.
+`gstack-autoplan` is a review pipeline: it refines scope, risks, tests, DX, and
+sequencing, and coding starts only after the reconciled plan is approved.
 
 When review is approved or classified as a soft continuation:
 
@@ -127,15 +124,15 @@ When review is approved or classified as a soft continuation:
 3. Verify the plan body contains accepted acceptance criteria and GSD handoff.
 4. Surface scope changes before execution.
 
-The loop remains a plan review step. It is not a GSD handoff and must not
-manufacture GSD-owned artifacts. Route to GSD only after the canonical plan has
+The loop is a plan review step, not a GSD handoff, so it leaves GSD-owned
+artifacts to GSD. Route to GSD only after the canonical plan has
 an approved execution contract and the user requests implementation/handoff (or
 an existing GSD phase already owns execution); then follow
 `gsd-handoff.md` and invoke the named GSD skill.
 
-If the only repo change after review is a restore comment or appended review
-report, do not hand off yet. First edit the plan body so the next stage ingests
-the approved plan, not the review artifact.
+If the only change after review is a restore comment or appended review
+report, edit the plan body before handing off, so the next stage ingests the
+approved plan rather than the review artifact.
 
 Unknown-unknown scout scope-change hint before implementation:
 
@@ -162,9 +159,9 @@ changes materially before handoff. A missing optional deterministic helper
 reports `score=unavailable; record=unavailable`; it does not block a target repo
 or justify adding Bun there.
 
-The prose gate owns form only. It must not approve the plan, change protected
-contract sections, or substitute a low lint score for scope, acceptance,
-verification, or execution-readiness review.
+The prose gate owns form only; approval, protected contract sections, and
+readiness review stay with their owners, and a good lint score says nothing
+about scope or acceptance.
 
 ## Plan-Backed Execution Gate
 
@@ -188,7 +185,6 @@ Plan-backed Flow execution may start only when the canonical plan records:
 - no unresolved hard-stop grill or required-scout decisions.
 
 If this evidence is missing, classify the state as `Draft Plan Exists` or
-`Needs Preflight` and route upstream. Do not run `gstack-autoplan` as a hidden
-execution precheck merely because the user approved implementation. Say which
-planning-stage evidence is missing and what artifact must be updated before
-Flow execution.
+`Needs Preflight` and route upstream, naming the missing planning evidence and
+the artifact to update. Approval of implementation is not a reason to run
+`gstack-autoplan` as a hidden precheck; scouting belongs to planning.

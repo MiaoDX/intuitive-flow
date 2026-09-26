@@ -6,8 +6,8 @@ Read for admission decisions, redundant tests, or pruning/consolidation.
 
 Prefer tests that verify observable behavior through public interfaces.
 
-Do not add or keep a UT just because code exists, a branch changed, or coverage
-is desired. A UT earns its place only when it can answer all five admission
+Existing code, a changed branch, or a coverage target is not a reason to add or
+keep a UT. A UT earns its place only when it can answer all five admission
 questions:
 
 - What behavior or failure mode does this test protect?

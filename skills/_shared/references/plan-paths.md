@@ -13,9 +13,9 @@ Use this rule whenever a skill creates, consumes, or moves an execution plan.
    unconstrained. Use `YYYY-MM-DD` if the repo does so or the year is needed to
    distinguish plans. Extend the descriptive slug to avoid a name collision.
 
-State the selected path and proceed within existing authorization. Do not ask
-the user to approve routine naming, create a second plan for the same work, or
-bulk-rename old plans to add dates. Keep the creation date stable on updates.
+State the selected path and proceed within existing authorization. Routine
+naming needs no approval; one piece of work has one plan; old plans keep their
+names. Keep the creation date stable on updates.
 
 When adopting the default layout, keep plans flat and lifecycle in the existing
 status/ledger fields. Preserve an existing dashboard; create one only when a

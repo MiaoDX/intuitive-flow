@@ -12,11 +12,12 @@ chosen.
 ## Boundary
 
 Own problem framing, appetite, rough solution elements, risk, explicit cuts,
-comparative bet selection, and the terminal decision. Do not implement, produce
-a task breakdown, create a backlog, or silently turn every idea into a project.
+comparative bet selection, and the terminal decision. Shape ends at that
+decision: implementation, task breakdowns, and backlogs belong downstream, and
+many ideas should end as `PASS` rather than become projects.
 
-Route accepted work to the repository's canonical plan or preflight surface.
-Do not create a parallel source of truth when one already exists.
+Route accepted work to the repository's canonical plan or preflight surface,
+reusing it when one already exists so there is one source of truth.
 
 Stay out of tasks whose product decision is already settled. A small concrete
 fix, root-cause investigation, incident containment, or approved execution
@@ -36,8 +37,8 @@ wins, or what scope must be cut before commitment.
    that can consume the appetite.
 5. Define the smallest end-to-end core slice and an ordered cut list. A cut must
    reduce work while preserving the core outcome.
-6. When several candidates compete for capacity, compare them directly. Do not
-   evaluate each in isolation and declare all of them worthy.
+6. When several candidates compete for capacity, compare them against each
+   other; judged in isolation, every candidate tends to look worthy.
 7. Return exactly one decision:
    - `BET`: bounded, valuable, sufficiently understood, and worth doing now.
    - `RESEARCH`: a cheap, time-boxed probe can resolve a decision-critical fact.
@@ -49,13 +50,19 @@ the final contract.
 
 ## Decision Discipline
 
-- Do not infer demand from stakeholder enthusiasm or implementation ease.
-- Do not use estimates to justify an already expanded feature list.
-- Do not label ordinary implementation uncertainty as a research bet.
-- Do not make `PASS` sound like deferred approval.
-- Do not preserve nice-to-haves inside the core slice.
-- Do not claim appetite-driven delivery unless appetite, no-gos, cut order, and
-  the circuit breaker are carried into the downstream plan or preflight.
+These are the ways shaping usually goes wrong:
+
+- Demand comes from evidence about the problem, not from stakeholder enthusiasm
+  or how easy the build looks.
+- Appetite comes before scope; an estimate of an already expanded feature list
+  is not an appetite.
+- `RESEARCH` is for a decision-critical unknown; ordinary implementation
+  uncertainty belongs to the builder.
+- `PASS` is a real no for now, worded so it does not read as deferred approval.
+- The core slice holds only what the core outcome needs; nice-to-haves go on
+  the cut list.
+- Appetite-driven delivery holds only when appetite, no-gos, cut order, and the
+  circuit breaker are carried into the downstream plan or preflight.
 
 ## Output
 

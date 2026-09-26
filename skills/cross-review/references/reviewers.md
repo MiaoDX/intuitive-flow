@@ -18,7 +18,7 @@ When the user does not name reviewers, default to:
 
 Add one specialist perspective only when the proposal's central claim would
 otherwise go unreviewed, such as an architecture or test-design boundary. State
-why it was added. Do not add reviewers to fill a quota.
+why it was added; the reviewer count follows the proposal, not a quota.
 
 Read every selected reviewer's instructions and preserve its native scope. The
 reviewer supplies findings; this skill owns comparison and judgment.
@@ -33,6 +33,7 @@ available. Give each reviewer only:
 - its named skill and native output contract;
 - a read-only instruction with no expected verdict or prior reviewer findings.
 
-Reviewers must not edit files, expand the objective, ask the user questions, or
-decide another reviewer's concerns. If independent workers are unavailable, run
+Reviewers are read-only: they report findings on the frozen objective, leave
+questions for the user to the main session, and stay within their own
+concerns. If independent workers are unavailable, run
 the passes inline from the frozen input and label independence as limited.

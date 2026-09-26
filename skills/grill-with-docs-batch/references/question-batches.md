@@ -15,7 +15,7 @@ Wait for the user's response before applying docs or moving to the next batch.
 Accept shorthand answers such as "all agree", "1 yes, 2 no because...", or
 "change 3 to...".
 
-Do not impose a fixed batch limit on a first-pass grill of an unclear plan. After
+A first-pass grill of an unclear plan has no fixed batch limit. After
 each batch, re-run the saturation audit and either stop or explain which
 Decision-Impact Test item justifies another batch. For a target that is already
 accepted, repeatedly refined, or close to execution, default to zero or one batch

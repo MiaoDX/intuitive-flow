@@ -83,4 +83,4 @@ run, and any docs intentionally left unchanged.
 
 Stop when the small human surface lets a human answer what the project is, how
 to run or verify it, what is current, what changed, and where deeper detail
-lives. Do not keep polishing wording once routing, truth, and links are correct.
+lives. Once routing, truth, and links are correct, stop; wording polish is not the goal.

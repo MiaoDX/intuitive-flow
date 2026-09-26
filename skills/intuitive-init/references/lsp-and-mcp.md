@@ -20,8 +20,8 @@ automatically when the setup is recognized, repo-local, and safe to apply:
 2. An agent-facing MCP LSP surface, preferably Serena, so Claude/Codex can use
    symbol search, references, rename, outline, hover, and diagnostics directly.
 
-Do not treat a working Pyright, TypeScript, Rust, Go, or other repo-local
-language-server config as complete agent-facing LSP setup by itself. It is the
+A working Pyright, TypeScript, Rust, Go, or other repo-local language-server
+config is not complete agent-facing LSP setup by itself. It is the
 foundation that makes Serena accurate, not a substitute for MCP symbol tools.
 
 Use repo evidence before choosing an LSP path:
@@ -49,8 +49,8 @@ machine has. Good underlying language-server setup usually means one or more of:
 - the setup command is included in the repo's install/bootstrap path
 - agent guidance points to the setup only as a short command, not a long manual
 
-For Python repos, prefer `uv` and the project's `.venv` conventions. Do not add
-Python dependencies through the system interpreter.
+For Python repos, add dependencies through `uv` and the project's `.venv`,
+not the system interpreter.
 
 ### TypeScript Recipe
 
@@ -63,14 +63,14 @@ When `package.json` and TypeScript source/config are present, use this order:
    `rootDir`, `baseUrl`, `paths`, project references, and generated type roots.
 3. For an agent-facing server, verify `typescript-language-server` is available
    through the same repo/toolchain path (or that the existing team toolchain
-   provides it). Do not silently install a global copy. A repo may use the
+   provides it) rather than a silently installed global copy. A repo may use the
    TypeScript compiler's `tsserver` through its editor integration, but Serena
    still needs a supported TypeScript language-server entry.
 4. Validate with the package manager's equivalent of `tsc --noEmit` (or the
    repo's typecheck script), and record the exact script when one exists.
 
-Do not create a new `tsconfig.json` in a framework or monorepo project when an
-existing config or generated config is authoritative. If TypeScript is detected
+In a framework or monorepo project, an existing or generated `tsconfig.json`
+stays authoritative; add a new one only when none owns the code. If TypeScript is detected
 but no local compiler/config or approved bootstrap path exists, report the
 missing setup and proposed command instead of changing package metadata.
 
@@ -150,8 +150,8 @@ Operational guidance for the MCP path, intentionally minimal so the agent
 checks current upstream docs before editing config:
 
 - Treat the upstream README and recent release notes as the source of truth for
-  install, transport, and per-host context flags. Do not paste old commands from
-  memory.
+  install, transport, and per-host context flags, since remembered commands
+  drift between releases.
 - Add the MCP server through the host CLI's native command when one exists, such
   as `claude mcp add` or `codex mcp add`, or through a checked-in `.mcp.json` /
   `~/.codex/config.toml` block. Pin the install method the upstream README

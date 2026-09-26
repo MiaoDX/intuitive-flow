@@ -58,8 +58,7 @@ Confidence labels:
 - **Tentative:** only indirect, incomplete, stale, or conflicting evidence is
   available.
 
-Do not upgrade confidence merely because several secondary pages repeat the
-same upstream claim.
+Several secondary pages repeating one upstream claim count as one source.
 
 ## Contradiction Record
 

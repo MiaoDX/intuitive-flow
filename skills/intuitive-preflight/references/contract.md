@@ -54,8 +54,8 @@ session owns route decisions, babysitting, worker inspection, and final
 complete/blocked judgment.
 
 Workers may use a worker-local goal only for their assigned bounded scope. A
-worker-local goal must not replace, clear, complete, or block the main root
-goal.
+worker-local goal covers only that scope; the main root goal stays with the
+main session.
 
 ## Approval Handling
 

@@ -63,8 +63,8 @@ old alias indefinitely, couple tests to private wrappers, or make the plan
 ledger longer than the code change is valuable.
 
 Test-only ratchet cleanup is useful when it removes stale source-text checks,
-private absence guards, or duplicate fixtures that block current owner moves.
-Do not let it become the campaign's default path. After two or three
+private absence guards, or duplicate fixtures that block current owner moves,
+and stays the exception rather than the campaign's default path. After two or three
 consecutive test-only cleanup slices, run a fresh value check or discovery
 handoff and prefer the next production owner move, duplicate-owner merge,
 stale runtime surface deletion, or bounded module deepening if one can be
@@ -75,8 +75,8 @@ are directly blocking that candidate.
 ## Selected Deletion Candidate Intake
 
 When `$intuitive-reduce-entropy` hands off deletion or merge candidates, accept
-only candidates that make the architecture truer and smaller. Do not turn the
-handoff into another repo-wide audit inside this skill.
+only candidates that make the architecture truer and smaller; discovery stays
+with reduce-entropy.
 
 The selected packet should already identify stale surfaces, compatibility
 shims, duplicate owners, pass-through modules, or tests/docs that preserve old
@@ -105,7 +105,7 @@ entrypoints.
 
 ## Behavior-Change Policy
 
-Do not default to preserving all behavior perfectly. Classify the change:
+Preserving all behavior perfectly is not the default. Classify the change:
 
 - Public contract: CLI, API, artifact schema, report shape, user-facing docs,
   persisted data. Preserve unless the approved slice includes migration or

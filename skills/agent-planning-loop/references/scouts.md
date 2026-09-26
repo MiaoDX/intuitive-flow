@@ -9,11 +9,10 @@ Keep the main session as the control plane.
 - The main session writes the charter and stop gates.
 - Scouts return structured summaries, not raw notes.
 - The main session decides which findings survive.
-- Scouts never expand scope or ask the user questions directly.
-- If a scout finds a product, contract, safety, cost, or user-explicit
-  temporary compatibility/migration-bridge decision, it marks
-  `needs_user_review`; it does not decide. Do not treat ordinary compatibility
-  removal as a user-review decision by itself.
+- Scouts stay inside the charter and route questions through the main session.
+- A product, contract, safety, cost, or user-requested migration-bridge
+  decision is marked `needs_user_review` for the main session; ordinary
+  compatibility removal is not by itself such a decision.
 
 Follow the [shared delegation policy](../../_shared/references/delegation.md)
 for worker selection. This skill chooses scout scope and acceptance; the policy

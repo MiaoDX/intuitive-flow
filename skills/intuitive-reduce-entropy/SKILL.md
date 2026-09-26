@@ -79,9 +79,9 @@ architecture decisions, and final synthesis.
 ## Stop And Handoff
 
 Stop when a decision-complete ranked packet is ready, or when a saturation pass
-finds no new material candidate. Do not silently select a subset or begin
-implementation. If nothing passes, say `Selected candidates: none` and do not
-create a gate, commit, or follow-up refactor proposal.
+finds no new material candidate. The user selects the subset and approves
+implementation. If nothing passes, say `Selected candidates: none` and stop
+there, with no gate, commit, or follow-up proposal.
 
 End with a packet the next owner can act on without repeating the audit.
 Always include selected candidates (with evidence, specialist owner, and proof

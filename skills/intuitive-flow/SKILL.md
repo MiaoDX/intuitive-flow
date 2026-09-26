@@ -56,5 +56,6 @@ each coherent verified owned slice by default. Do not wait for a separate user
 request to commit. Stage only owned changes. Skip only for an explicit instruction,
 repo prohibition, review-only scope, unsafe overlap, or unresolved blocker; name it.
 
-Closeout reports What changed, Proof, Scope changes, and Parked todos. Do not claim
-completion while required product-run, live, or manual proof is missing.
+Closeout reports What changed, Proof, Scope changes, and Parked todos. Completion
+requires the required product-run, live, or manual proof; without it the claim
+is partial or blocked.

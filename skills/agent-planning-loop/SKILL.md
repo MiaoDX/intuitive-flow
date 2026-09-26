@@ -54,7 +54,7 @@ plan path (normally `docs/plans/<slug>.md`), not a review log or a newly-created
 GSD phase file.
 
 If no material plan remains, say so directly and explain what evidence caused
-the stop. Do not fill the packet with weak alternatives. Still include
+the stop; a short packet beats weak alternatives. Still include
 `Recommended next action` and `Shortcut`; use `park/none` when there is genuinely
 no useful next step.
 

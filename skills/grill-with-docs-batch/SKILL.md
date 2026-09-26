@@ -7,8 +7,9 @@ disable-model-invocation: true
 # Grill With Docs Batch
 
 Challenge unresolved plan or domain decisions against the target docs and code.
-When asked whether questions remain, answer yes/no first. Do not manufacture
-questions for implementation defaults, tests, wording, or already-settled choices.
+When asked whether questions remain, answer yes/no first. Implementation
+defaults, tests, wording, and settled choices are resolved from evidence, not
+asked.
 
 A question earns attention only if its answer changes scope, a public/private
 boundary, acceptance or rollout, cost, safety, ownership, or domain meaning.

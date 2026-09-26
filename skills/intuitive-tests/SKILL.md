@@ -8,8 +8,8 @@ disable-model-invocation: true
 
 Improve test-suite signal and maintainability. Keep proof of observable behavior,
 real failure modes, and supported contracts; consolidate duplicates and remove
-assertions that merely restate implementation shape. Do not delete the last
-meaningful proof of a behavior. Runtime discovery and packaging checks can be
+assertions that merely restate implementation shape. Keep at least one
+meaningful proof of every behavior. Runtime discovery and packaging checks can be
 valuable contracts even when they look structural.
 
 For broad or ambiguous cleanup, audit then propose a decision-complete slice.
