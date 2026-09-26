@@ -41,8 +41,8 @@ Use this route unless the user already names a specific entropy source.
    preserve the selected candidates, suggested review order, likely specialist owners,
    proof commands, execution risks, parked items, and stop condition. Do not
    silently narrow the selected set to one small slice.
-7. **Handoff**: end with `Recommended next action:` (and a ready-to-paste
-   `Shortcut:` command when one exists). If a plan
+7. **Handoff**: end with `Recommended next action:` and `Shortcut:` (a
+   ready-to-paste command, or `park`/`none` when none exists). If a plan
    document exists, state whether it was updated or should be updated by the
    next action. Do not list many equally weighted next options unless the user
    explicitly asked to compare routes.

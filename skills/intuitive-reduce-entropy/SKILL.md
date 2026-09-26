@@ -85,5 +85,6 @@ create a gate, commit, or follow-up refactor proposal.
 
 End with a packet the next owner can act on without repeating the audit.
 Always include selected candidates (with evidence, specialist owner, and proof
-command) and `Recommended next action:`. Add parked items, saturation status,
-or a ready-to-paste `Shortcut:` command only when they carry information.
+command), `Recommended next action:`, and `Shortcut:` (a ready-to-paste
+command, or `park`/`none` when there is no useful next step). Add parked items
+or saturation status only when they carry information.
