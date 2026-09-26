@@ -61,15 +61,8 @@ aliases indefinitely, or lack focused proof.
 
 ## Slice Loop
 
-For non-trivial work, state:
-
-```text
-Selected route:
-Why:
-Redirect:
-```
-
-Then run one vertical slice at a time:
+For non-trivial work, name the selected route in one sentence (plus a
+redirect only when another owner fits better), then run one vertical slice at a time:
 
 1. Orient from the smallest context that can prove the target and owner.
 2. Classify findings as P0, P1, P2, or Parked.

@@ -79,6 +79,9 @@ Evidence needed: <decision-critical proof or none>
 Handoff: <canonical plan/preflight route | terminal PASS>
 ```
 
+Omit `Candidates considered` and `Evidence needed` when there is nothing to
+report. For `PASS`, the fields after `Decision rationale` can be dropped.
+
 For `RESEARCH`, name the smallest probe, its time box, and the result that would
 change the decision. For `BET`, ensure downstream owners can preserve the
 appetite and cuts without copying a second artifact. For `PASS`, stop.

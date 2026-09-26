@@ -49,9 +49,9 @@ rationale during a confirmed durable run. Stop only for competing phase matches,
 more than one new phase, conflicting locked docs, or a local-dev/destructive
 gate.
 
-Use main-session read-only probes to find the route on Codex. Follow the shared
-Codex delegation policy for any worker handoff. Use the shared execution-surface
-selector for GSD ingest and plan generation. Run sequential work directly; use
+Use main-session read-only probes to find the route. Follow the
+[shared delegation policy](../../_shared/references/delegation.md) for any
+worker handoff, including GSD ingest and plan generation. Run sequential work directly; use
 a host-approved worker when recovery or context isolation adds value. The main
 session inspects created or updated `.planning/`
 artifacts before continuing.
@@ -90,8 +90,8 @@ gsd-verify-work <phase>
 ```
 
 For committed phase execution, choose direct or worker execution using the
-shared selector; a stateful phase does not by itself require tmux. Follow the
-shared Codex delegation policy for Codex worker selection. The main session owns integration
+shared delegation policy; a stateful phase does not by itself require a
+separate worker. The main session owns integration
 and must verify any worker output before continuing.
 
 For phase execution that changes local code, carry the commit rhythm into the

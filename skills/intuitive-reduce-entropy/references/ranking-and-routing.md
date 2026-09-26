@@ -185,13 +185,9 @@ Keep the main session as the coordinator, decision point, and canonical
 artifact editor. Use delegation to keep route evidence, worker logs, and
 implementation detail out of the main context when the work naturally separates.
 
-Follow the [shared Codex delegation policy](../../_shared/references/codex-delegation.md)
+Follow the [shared delegation policy](../../_shared/references/delegation.md)
 for worker selection. This skill decides which discovery probes are worth
-delegating; the delegation reference owns host-specific native-subagent,
-Paseo, model, and fallback rules. Prefer the main session for bounded work and
-use a host-approved worker only when isolation, recovery, or parallelism adds
-value. Prefer one mutating worker at a time in a single worktree unless write
-ownership is explicitly disjoint.
+delegating; the policy owns host mechanics.
 
 Worker handoff shape:
 

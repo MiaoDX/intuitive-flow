@@ -64,15 +64,13 @@ Return a compact decision packet rather than reviewer transcripts:
 ```text
 Cross-review verdict: <keep | simplify | replace | needs-decision>
 Proposal reviewed: <one sentence>
-Reviewers: <skill and applicability>
-Independence: <independent workers | limited inline; reason>
-Accepted findings: <material findings or none>
-Rejected or parked: <brief items or none>
+Accepted findings: <material findings>
 Recommended proposal: <revised proposal, or original when kept>
-Material disagreement: <decision needed or none>
-Round: <1 | 2>; stop reason: <why review converged>
 Recommended next action: <stop | preflight | planning route | named review route>
 ```
+
+Add rejected/parked items, a material disagreement, or a note that review ran
+inline rather than with independent workers only when they apply.
 
 If the proposal is already lean, say so and stop. Do not manufacture a revised
 proposal, extra plan, or follow-up review to make the run look productive.

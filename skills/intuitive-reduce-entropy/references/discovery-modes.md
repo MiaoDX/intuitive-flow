@@ -14,14 +14,8 @@ named plan file. Default to repo entropy mode when the prompt asks for repo
 cleanup, maintenance, stale surfaces, source-of-truth drift, or "make this repo
 easier to work in."
 
-Start by saying:
-
-```text
-Selected mode: <repo entropy mode | plan entropy mode>
-Why: <one sentence tied to the user's prompt>
-Redirect: <none | better mode/skill and why>
-Discovery intensity: <quick scan | selection scan | saturation scan>
-```
+Start by naming the mode and discovery intensity in one sentence tied to the
+user's prompt, adding a redirect only when a better mode or skill fits.
 
 Then diagnose likely entropy sources and return a ranked selection packet of
 bounded candidates. It should recommend one next workflow action for the packet,
