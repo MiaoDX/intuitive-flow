@@ -362,6 +362,35 @@ export const skillSizeReport = (
     })
     .sort((a, b) => b.chars - a.chars || a.skillName.localeCompare(b.skillName));
 
+export type ProhibitionReport = {
+  skillName: string;
+  prohibitions: number;
+  words: number;
+  per1kWords: number;
+};
+
+// Latest-model guidance: reserve Never/Do not for true invariants. This is a
+// review signal only; it never fails the check.
+const prohibitionPattern = /\b(?:Do not|Don't|Never|must not|MUST|NEVER|ALWAYS)\b/g;
+
+export const prohibitionReport = (skillsRoot: string): ProhibitionReport[] =>
+  skillNames(skillsRoot)
+    .map((skillName) => {
+      let prohibitions = 0;
+      let words = 0;
+      for (const file of listFiles(join(skillsRoot, skillName))) {
+        if (!isMarkdownFile(file) || file.startsWith("evals/")) {
+          continue;
+        }
+        const text = readFileSync(join(skillsRoot, skillName, file), "utf8");
+        prohibitions += text.match(prohibitionPattern)?.length ?? 0;
+        words += text.split(/\s+/).filter(Boolean).length;
+      }
+      const per1kWords = words === 0 ? 0 : Math.round((prohibitions / words) * 10_000) / 10;
+      return { skillName, prohibitions, words, per1kWords };
+    })
+    .sort((a, b) => b.per1kWords - a.per1kWords || a.skillName.localeCompare(b.skillName));
+
 export const checkSkills = (options = defaultOptions()): string[] => {
   const errors: string[] = [];
   const projectRoot = dirname(options.skillsRoot);
@@ -424,6 +453,13 @@ const main = () => {
       console.log(`  largest skill entrypoints: ${summary}`);
     }
   }
+  const prohibitions = prohibitionReport(options.skillsRoot);
+  const total = prohibitions.reduce((sum, item) => sum + item.prohibitions, 0);
+  const densest = prohibitions
+    .slice(0, 5)
+    .map((item) => `${item.skillName}=${item.prohibitions} (${item.per1kWords}/1k words)`)
+    .join(", ");
+  console.log(`  prohibition phrases (review signal): ${total} total; densest: ${densest}`);
   console.log("  ✓ skills are structurally valid");
 };
 
