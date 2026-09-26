@@ -71,7 +71,8 @@ old wording is not strictly false. Update diagrams when structure changed.
 
 When moving or splitting docs, update every path consumer (links, indexes,
 agent pointers, scripts, CI, prompts). Finish with the cleanup check on nearby
-docs. Show the diff first unless the user already asked for the change.
+docs. An update request authorizes the edit: apply it and summarize the diff,
+asking first only for the protected cases listed under Cleanup.
 
 ## Cleanup (`/intuitive-doc cleanup [scope]`)
 

@@ -6,6 +6,7 @@
 - Fail explicitly in code; avoid `hasattr()` / `getattr()` for known types.
 - Prefer live-at-HEAD behavior and forward migrations; remove obsolete in-repo APIs and shims unless a bridge is explicitly required.
 - Keep commits atomic with a `Co-authored-by:` trailer naming the agent that did the work (for example `Codex <codex@users.noreply.github.com>`). Do not amend or force-push unless asked; fetch and rebase if a push is rejected because the remote moved.
+- Explicit user instructions take precedence over skill instructions. If a skill would make you pause, ask, or stop short of the request, name the `SKILL.md` and quote the instruction.
 - `bun run verify` checks the repo. `scripts/update.sh` mutates installed tools and user configuration; it is not a test command.
 
 ## Task routing
