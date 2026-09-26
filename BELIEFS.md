@@ -54,19 +54,29 @@ Spend human attention on what matters:
 - what good means
 - what must not break
 
-Use `intuitive-flow` for ordinary idea shaping, or `agent-planning-loop`
-when the question needs scouts to challenge options before one review packet.
-Everything else should be cheap.
+Use `intuitive-shape` when it is still unclear whether an idea deserves to
+exist, or `agent-planning-loop` when the question needs scouts to challenge
+options before one review packet. Everything else should be cheap.
 
 ## Default Loops
 
-Use `intuitive-flow` for normal development.
+The primary routes are Shape, Flow, Refactor, Reduce Entropy, and Research:
 
-Use `intuitive-refactor` when you have time to clean the system, or as a
-routine maintenance loop.
+- `intuitive-shape` decides whether unsettled work deserves a bounded bet.
+- `intuitive-flow` executes approved plans and tiny bounded changes.
+- `intuitive-reduce-entropy` finds cleanup targets; `intuitive-refactor`
+  executes a selected seam.
+- `research` answers questions that need multiple sources reconciled.
 
 Everything else should support those loops, not become another surface humans
 have to manage.
+
+## Thin Skills, Strong Models
+
+Model capability moves faster than skill text. A rule that compensated for an
+older model can become noise for a newer one. Keep repo-owned skills thin: state
+intent and the reason behind it, keep one canonical copy of each rule, and put
+deterministic checks in scripts or hooks instead of prose.
 
 ## Docs As Rebuild Spec
 
