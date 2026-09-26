@@ -45,10 +45,10 @@ make the process appear deep.
 ## Acquire Sources
 
 - Follow the target repository's mandated retrieval order. In Intuitive Flow,
-  use the configured host-native `fetch-mcp` MCP server instead of Fetch/WebFetch
-  when it is available; use structured APIs such as `gh api` for structured
-  GitHub metadata. If the MCP server is unavailable, fail explicitly rather than
-  silently switching retrieval providers.
+  prefer the configured `fetch-mcp` MCP server and structured APIs such as
+  `gh api` for GitHub metadata. When the MCP server is unavailable, use the
+  host's native web search or fetch and note the substitution in the method
+  note, so readers can judge coverage.
 - Use search results, aggregators, and community posts for discovery. Verify
   material claims against the source that owns the fact.
 - Prefer current primary sources, but retain older sources when history or a
