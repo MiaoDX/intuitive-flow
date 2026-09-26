@@ -61,12 +61,12 @@ aliases indefinitely, or lack focused proof.
 
 ## Slice Loop
 
-For non-trivial work, name the selected route in one sentence (plus a
-redirect only when another owner fits better), then run one vertical slice at a time:
+Run one vertical slice at a time, naming the route only when another owner
+could plausibly fit:
 
 1. Orient from the smallest context that can prove the target and owner.
 2. Classify findings as P0, P1, P2, or Parked.
-3. State the architecture claim and expected value metrics.
+3. Record the architecture claim and expected value metrics in the gate.
 4. Update code, callers, tests, docs, and stale surfaces together.
 5. Verify with the smallest sufficient evidence ladder.
 6. Checkpoint what changed, what stayed parked, and what proof passed. With the

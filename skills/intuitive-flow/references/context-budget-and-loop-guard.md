@@ -36,8 +36,8 @@ outside actor, stop with that result (see the shared external-blocker gate).
 
 ## Experiment Contract
 
-Before implementation in Hot Resume, state the experiment so the turn is
-aimed at changing a decision rather than at producing activity:
+In Hot Resume, record the experiment in the capsule so the turn is aimed at
+changing a decision rather than at producing activity:
 
 ```text
 Current blocker: <one sentence>

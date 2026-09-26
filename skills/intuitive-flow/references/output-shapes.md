@@ -11,10 +11,13 @@ Every shape follows one rule: include a field only when it carries information
 for this run. Omit fields that would read `none`, `not applicable`, or restate
 the default. Readers should see decisions, not an empty form.
 
-## Upfront Route Brief
+## Route Brief
 
-Return before the first non-trivial artifact or edit. For tiny direct work, one
-sentence naming the path is enough.
+Most work needs no brief: start working, and let a single sentence name the
+path when heavier routing was plausible. Write the brief below only for
+durable or multi-stage runs, and record it in the capsule or plan rather than
+holding the work for it; current models stop early when told to announce a
+plan before acting.
 
 ```text
 Selected path: <stage/skill sequence>
@@ -51,6 +54,10 @@ Stop condition: <what should be true before the next stage>
 ## Implementation Closeout
 
 Use `../templates/closeout.md`.
+
+Before closing, reconcile every item the run stated it would do (task list,
+plan checklist, earlier "next" notes) as done, blocked, or parked; a turn that
+ends on a plan or a promise has not finished.
 
 After completed implementation or refactor work, the final response always
 shows four categories so nothing is hidden in prose or logs: `What changed`,

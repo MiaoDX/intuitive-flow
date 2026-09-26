@@ -17,8 +17,8 @@ workflow, code, test, or documentation surfaces.
 | Plan entropy | An idea, draft plan, or preflight needs missing decisions, weak assumptions, scope leaks, or proof gaps found. | Ranked plan risks and the next planning owner. | The contract is already approved; use `$intuitive-flow`. |
 | Discovery loop | The user asks to continue until meaningful cleanup saturates. | Fresh bounded rounds with deduplicated clear, parked, and rejected items. | A selected queue is ready for `$intuitive-refactor`. |
 
-Before auditing, name the mode and discovery intensity (quick scan, selection
-scan, or saturation scan) in one sentence, plus a redirect only when another
+Pick the mode and discovery intensity (quick scan, selection scan, or
+saturation scan) and name them in the packet, with a redirect only when another
 mode or skill fits better.
 
 ## Read First

@@ -149,8 +149,9 @@ regress. Prefer the repo's existing verification command names.
    pass `npm run test:publish-rules` and old APIs are removed" or "stop before
    implementation because the next proof needs real Gateway access." Write the
    gate file before editing when implementation is approved.
-5. **Execute one vertical slice.** Add or identify the proof (watch new
-   coverage fail), apply the smallest coherent cleanup, run the required proof,
+5. **Execute one vertical slice.** Identify the proof that observes the
+   change, adding coverage (and watching it fail) only when no existing test
+   covers the behavior and the change is not a low-risk mechanical move; apply the smallest coherent cleanup, run the required proof,
    and summarize evidence and residual risk. Split multi-seam changes or park
    the extra seams.
 6. **Close the loop.** Every accepted item has a change or a "no change
