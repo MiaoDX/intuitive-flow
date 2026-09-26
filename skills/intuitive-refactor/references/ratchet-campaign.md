@@ -71,7 +71,7 @@ campaign; both keep it from rediscovering the same non-work.
 
 For each slice, prefer deletion, then merging duplicate concepts, then moving
 behavior to an existing owner; create a new owner or extract a helper only
-around a named ownership boundary. Before editing, state a compact claim:
+around a named ownership boundary. Record a compact claim in the gate:
 
 ```text
 Slice / owner layer:

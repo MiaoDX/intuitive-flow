@@ -21,8 +21,8 @@ wrappers, or makes future agents rediscover the same concepts.
 
 ## Value Metrics
 
-Every ratchet slice should state its net architecture value before editing and
-report the value after proof. Use simple counters instead of prose alone:
+Every ratchet slice records its expected net architecture value in the gate
+and reports the actual value after proof. Use simple counters instead of prose alone:
 
 - stale surfaces, wrappers, aliases, or legacy paths removed;
 - duplicate concept owners merged;
@@ -167,11 +167,11 @@ For each slice:
 
 1. Pick the highest-value concrete seam from the existing gate or a short scout.
 2. Prefer deletion, duplicate-concept merge, or moving callers to an existing owner.
-3. State the architecture claim before editing.
-4. State the value metrics that should improve.
-5. Update code, tests, and the gate file together.
-6. Verify with the smallest proof that covers the slice.
-7. Commit if requested or repo workflow expects process commits.
+3. Record the architecture claim and the value metrics it should improve in
+   the gate.
+4. Update code, tests, and the gate file together.
+5. Verify with the smallest proof that covers the slice.
+6. Commit the verified slice under the campaign commit rules.
 
 Stop when the next candidate is only polish, needs a public migration decision,
 lacks proof, would split by size instead of ownership, or cannot improve a net

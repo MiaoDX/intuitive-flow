@@ -80,7 +80,11 @@ human-doc reorganization goes to `$intuitive-doc`.
 Root `AGENTS.md` and `CLAUDE.md` contain only: the first docs to read, critical
 hazards and permissions, canonical install/test/verify commands or a pointer,
 source-of-truth boundaries, planning-surface pointers, short skill routing,
-host control-message hazards (below), and pointers to longer runbooks.
+host control-message hazards (below), and pointers to longer runbooks. When the
+repo uses skills, include one line that explicit user instructions outrank
+skill instructions, and that an agent blocked by a skill names the `SKILL.md`
+and quotes the rule; current models follow skill text closely enough that this
+precedence needs saying.
 
 `docs/agents/**` holds repo-specific agent material too long for the root:
 release and CI-triage runbooks, bootstrap and GPU/simulator/cloud setup, PR
