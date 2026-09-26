@@ -20,9 +20,11 @@ must not add a second plan artifact or append review logs to the canonical plan.
 
 ## Current Rollout: Shadow
 
-Run the gate for every new or materially revised `docs/plans/<slug>.md` after
-the last content-changing planning stage. A plan-only request runs it before
-the plan checkpoint. A plan that changes after the check runs it again.
+The gate is opt-in: run it after the last content-changing planning stage
+when the user asks for a prose check, or when a long plan will be handed to
+another agent or a human reviewer. Current models already write plan prose
+well, so the trial must show value before the gate runs on every plan. A plan
+that changes after a check runs it again.
 
 Shadow mode is report-only:
 

@@ -1,210 +1,60 @@
 # Checkpoints And Auto-Run Policy
 
-Use this reference before whole-flow, durable, worker, or
-`/goal` runs and before crossing review, GSD, execution, cleanup, or
-verification boundaries.
+Use this reference before whole-flow, durable, worker, or `/goal` runs and
+before crossing review, execution, cleanup, or verification boundaries.
 
-Shared active-capsule, checkpoint cadence, control-plane/worker, and proof
-selection rules live in `../../_shared/references/durable-run.md`. Read that file
-first for durable runs; use this file for Flow-specific contract gates, goal
-ownership, deterministic stop gates, decision triage, and GSD boundaries.
+Run-control gates (latest user intent, host goal state, scope, external
+blockers), the active capsule, execution-surface selection, review cadence, and
+proof selection live in [durable run](../../_shared/references/durable-run.md).
+Read that first. This file adds the Flow-specific contract gate, stop-gate
+discovery, decision triage, and worker supervision.
 
 ## Execution Contract Gate
 
-Before starting a whole-flow or durable auto-run that may cross review, GSD
-handoff, execution, cleanup, and verification, locate the approved execution
-contract instead of drafting a second Flow-owned preflight.
-
-Acceptable contract sources:
+A whole-flow or durable auto-run needs an approved execution contract before it
+starts, because everything downstream (handoff, execution, verification)
+inherits its scope. Acceptable sources:
 
 - an approved `$intuitive-preflight` contract;
-- an equivalent approved contract already reconciled into `docs/plans/<slug>.md`
+- an equivalent approved contract already reconciled into the canonical plan
   or an issue;
-- a tiny direct task where the latest user message itself supplies goal,
-  boundaries, verification, and stop condition.
+- a tiny direct task whose latest message supplies goal, boundaries,
+  verification, and stop condition.
 
-The contract must cover goal, scope/non-goals, acceptance, verification, route,
-worker strategy when relevant, and stop gate. If any material field is missing,
-route to `$intuitive-preflight` and stop before unknown-unknown scouting,
-`to-issues`, GSD ingest/plan, autonomous execution, or
-auto-confirming downstream gates. Flow may summarize the missing fields, but it
-does not own the approval-ready contract template.
-
-## Latest User Intent Gate
-
-At the start of every whole-flow, resume, worker-babysitting, or closeout turn,
-classify the latest user message before reading prior goal state.
-
-| Latest intent | Action |
-| --- | --- |
-| Execute / continue / resume | Continue through the normal gates. |
-| Status / inspect only | Read compact status only; do not execute, edit, or commit. |
-| Discuss / plan first | Discuss options and tradeoffs; do not patch or launch workers. |
-| Stop / pause / why are you implementing | Stop execution, inspect or update host goal state only when appropriate, and do not resume the prior run. |
-
-This gate has higher priority than auto-continue, worker handoffs, capsules,
-GSD phase state, and old run contracts. If the message is ambiguous, choose the
-read-only interpretation until the user explicitly asks for execution.
-
-## Host Goal State Gate
-
-When the host exposes a persistent goal tool or equivalent state, check it
-before treating a durable run as active:
-
-- `active`: continue only if the latest user intent permits execution;
-- `blocked`: do not resume or broaden scope; report the blocker or start a new
-  route only after explicit user resume;
-- `complete`: do not continue the old objective; treat further work as a fresh
-  request;
-- unavailable: rely on canonical artifacts and latest user intent.
-
-If the latest user asks to stop/pause and the host policy allows marking the
-goal blocked, do that once and then stop. Do not clear or restart the main
-session goal just to make progress.
-
-## Goal Ownership Model
-
-Use a parent/child goal shape, not free-form nested goals:
-
-```text
-Main session root goal:
-  Owns the Flow run contract, route, canonical state, stop gate, babysitting,
-  and final complete/blocked decision.
-
-Host-approved worker sub-goal:
-  Owns one bounded sub-phase, one artifact/proof target, and one handoff.
-```
-
-If the main session already has an active root goal when Flow starts, Flow
-adopts it. Do not create a second root goal, clear the root goal, or restart the
-root goal from the Flow route. If there is no active root goal, Flow may create
-one only when the user has requested durable execution and the run contract is
-clear.
-
-Worker-local goals are allowed and encouraged for implementation sub-phases,
-but they are child scopes. They must:
-
-- name the parent/root goal or route they support;
-- cover exactly one sub-phase;
-- include the artifact to update and proof to run;
-- stop with a compact handoff;
-- close or block only the worker-local goal when host policy allows;
-- leave the main-session root goal untouched.
-
-The main session reads the worker handoff and decides whether to continue the
-root goal, relaunch a narrower worker, change route, complete, or block. A
-worker must not mark the root goal complete merely because its sub-phase passed.
+The contract covers goal, scope/non-goals, acceptance, verification, route,
+worker strategy when relevant, and stop gate. If a material field is missing,
+route to `$intuitive-preflight`; Flow can summarize the gap but does not draft
+a second contract.
 
 ## Deterministic Stop Gates
 
-Durable auto-runs need a machine-readable way to stop. Otherwise a goal can keep
-resuming after the work has reached an external-input boundary.
+Durable runs need a machine-readable way to stop; otherwise a goal keeps
+resuming after the work has reached an external-input boundary. At the start of
+each whole-flow turn and before each new milestone, run the strongest available
+gate:
 
-At the start of every whole-flow turn and before moving to a new milestone,
-discover and run the strongest available stop gate:
+1. a command named in `STATUS.md`, the active plan, or phase state (for example
+   `npm run goal:status` or `make verify-goal`);
+2. a package script whose name signals final status (`goal:status`,
+   `validate:<milestone>`, `verify:<milestone>`);
+3. the canonical artifact that records phase status when no command exists.
 
-1. A command explicitly named in `STATUS.md`, `.planning/STATE.md`, or the
-   active phase plan, such as `npm run goal:status`,
-   `npm run validate:human`, `make verify-goal`, or a phase-specific verifier.
-2. A package/script command whose name suggests final gate status, such as
-   `goal:status`, `validate:<milestone>`, `verify:<milestone>`, or
-   `check:<milestone>`.
-3. A canonical artifact that records current phase status when no command
-   exists, such as `.planning/STATE.md`, `.planning/ROADMAP.md`, or
-   `STATUS.md`.
-
-Treat the gate as authoritative when it reports a structured result like:
+Treat a structured result as authoritative:
 
 ```json
-{
-  "ok": false,
-  "status": "blocked",
-  "next_action_owner": "human",
-  "required_input": "5 passing human attempt records"
-}
+{ "ok": false, "status": "blocked", "next_action_owner": "human", "required_input": "..." }
 ```
 
-Also accept the common verifier shape where a non-zero command prints JSON with
-`status: "blocked"` or errors that clearly name missing external evidence.
+- `blocked` on truly external input (human records, credentials, hardware,
+  private data, paid approval): confirm the evidence is not already present,
+  record the gate result in canonical state, then stop or mark the host goal
+  blocked. Adjacent docs, validators, or cleanup do not change a blocked end
+  state.
+- `complete`: audit against the original objective before marking done.
+- `continue` or an agent-fixable failure: take the smallest aligned next slice.
 
-When the stop gate says `blocked`:
-
-- Verify the blocker is truly external: human records, API keys, hardware,
-  real-device access, account approval, missing private data, paid service
-  approval, or another input the agent cannot honestly create.
-- Verify canonical state and current files do not already contain the required
-  evidence.
-- Record the gate result in canonical state if it is missing or stale.
-- Do not continue by inventing adjacent docs, validators, scaffolding, cleanup,
-  or extra tests once the mechanical gate and handoff already exist. That kind
-  of progress keeps the run alive while preserving the same blocked end state.
-- If a host-level persistent goal is active and its blocked-policy threshold is
-  satisfied, call the goal status tool with `blocked`. If the host policy does
-  not yet allow that, stop the turn with the exact gate result and do not ask the
-  user to confirm the obvious external blocker.
-
-When the stop gate says `complete`, perform the completion audit against the
-original objective before marking the goal complete. When it says `continue`, or
-when it fails for an agent-fixable reason, continue with the smallest aligned
-next slice.
-
-Good stop gates are deterministic and cheap. Prefer adding or using them over
-model judgment for milestones that end at human review, human testing, physical
-world proof, credentials, or other external-state boundaries.
-
-## Control Plane And Worker Sessions
-
-For durable runs that may cross multiple stages, follow the shared
-control-plane, worker, review-cadence, and active-capsule rules in
-`../../_shared/references/durable-run.md`, including its execution-surface
-selector. Bounded sequential durable work may run directly in the main session.
-
-Main session responsibilities:
-
-- lock or infer the run contract
-- choose the route and next sub-phase
-- adopt or create the main-session root goal according to the goal ownership
-  model
-- keep source-of-truth decisions coherent
-- inspect worker artifacts, logs, diffs, commits, and verification evidence
-- decide whether to continue, repair, stop, or ask the user
-
-Worker session responsibilities:
-
-- execute one bounded sub-phase
-- use a worker-local `/goal` only for that sub-phase when the host supports it
-- use `/compact` only inside the worker when needed to preserve progress
-- leave durable state before exit: artifact update, verification output, commit,
-  or handoff summary
-- clear, close, or block only the worker-local goal and exit or stop after the
-  handoff
-
-Record the selected execution surface and its concrete reason when delegation
-or context continuity matters. No exception brief is needed for direct work.
-Delegate later if independent work or context pressure makes it useful.
-
-Do not use `/goal clear` or `/clear` in the main session during an active
-durable flow. Those commands can remove the route memory and active goal the
-main session needs for supervision. If the main session needs context relief,
-use a handoff-style `/compact` and immediately re-check the canonical artifact.
-
-Prefer closing a completed worker over clearing it and continuing. A fresh
-worker per sub-phase gives cleaner boundaries and makes stale goals less likely.
-
-For goal-driven workers, set a steering cadence from the shared durable-run
-table. If a worker is active after a review interval without durable progress,
-or if it is pursuing the wrong artifact, the main session should inspect the
-captured pane/logs/diff/canonical artifact and either steer the worker with a
-follow-up, stop it as blocked, or relaunch a fresh worker with a narrower
-corrected goal.
-
-When stopping a bad goal, do not blindly resume. First answer:
-
-- Was the original worker goal too broad, ambiguous, or wrong?
-- Is the canonical artifact still the right source of truth?
-- Is there a smaller sub-phase that can produce durable evidence?
-- Should the next worker use the same skill path, a diagnostic path, or stop for
-  user input?
+Prefer adding a cheap deterministic gate over model judgment for milestones
+that end at human review, physical-world proof, or credentials.
 
 ## Decision Triage
 
@@ -212,125 +62,58 @@ During a confirmed durable run, classify each question or downstream gate:
 
 | Class | Action |
 | --- | --- |
-| Soft continuation | Auto-answer the recommended/default option, log briefly, continue |
-| Hard stop | Stop and ask once with concrete impact |
-| Unclear impact | Investigate repo/docs context; if still materially risky, hard stop; otherwise choose the smallest reversible default |
-| External-input blocker | Run/record the deterministic stop gate, then stop or mark the active goal blocked when host policy allows |
+| Soft continuation | Take the recommended/default option, log it briefly, continue |
+| Hard stop | Ask once, with the concrete impact |
+| Unclear impact | Check repo/docs; if still materially risky, hard stop; otherwise pick the smallest reversible default |
+| External-input blocker | Run the stop gate, then stop or mark the goal blocked |
 
-Soft continuation examples:
+Soft continuations preserve the accepted plan: restating premises already in
+the canonical artifact, following an existing repo convention, running normal
+review/test/doc sync, applying accepted review findings, or choosing the only
+handoff route the evidence supports. A downstream `Confirm`/`Revise` prompt in
+this class gets `Confirm` with a one-line rationale.
 
-- preserves the user's accepted plan
-- restates premises already present in the canonical artifact
-- chooses an existing repo convention
-- runs normal review, test, verification, or doc sync
-- updates the plan with accepted review findings
-- chooses a reversible low-blast-radius default
-- selects the only GSD handoff route supported by evidence
+Hard stops change what the user agreed to: product direction or target user,
+scope boundary, public contract or data model, phase split or roadmap
+ownership, security/privacy posture, paid or external services, destructive
+actions, locked-doc conflicts, more than three new phases, or proof that needs
+resources the agent cannot produce.
 
-Hard-stop examples:
+## Worker Supervision
 
-- target user, demand premise, narrowest wedge, product direction
-- scope boundary, public contract, data model, phase split, roadmap ownership
-- security/privacy posture, paid infrastructure, external service, API key use
-- destructive action, real-device/local-dev requirement, or unavailable proof
-- locked-doc/ADR conflict, multiple plausible phases, or user intent override
-- human/physical-world evidence, credentials, hardware, private data, or paid
-  service approval that the agent cannot honestly produce
+The main session owns the run contract, route, canonical state, and the final
+complete/blocked call. A worker owns one bounded sub-phase and one handoff (see
+the [shared delegation policy](../../_shared/references/delegation.md)).
 
-For unknown-unknown scout premise gates, auto-confirm only when premises restate
-the plan or add low-risk assumptions needed for review. Stop when a premise is
-new, contradicted by repo evidence, disputed by review voices, or changes
-product, scope, contract, security, privacy, cost, data, services, or ownership.
+- Phrase a worker-local goal as one sub-phase, not the project:
 
-If a downstream skill asks a `Confirm`/`Revise` style question and the gate is a
-soft continuation, answer `Confirm` with a one-line rationale instead of waiting
-for the user.
+  ```text
+  /goal For parent <root goal>, complete <sub-phase outcome>; update <artifact>; run <proof>; stop with handoff
+  ```
 
-For worker-local `/goal` prompts, phrase the goal as one sub-phase, not the full
-project. Include the parent/root goal, artifact to update, required proof, and
-stop condition.
+- Trust a worker's completion only after inspecting its handoff, changed files,
+  commits, and proof. Durable state must exist outside the worker context.
+- At each review point, a worker without durable progress, or one pursuing the
+  wrong artifact, is steered with a concise correction or stopped and relaunched
+  with a narrower goal. Before relaunching, ask whether the original goal was
+  too broad and whether the canonical artifact is still right.
+- Keep the main session's route memory: prefer a handoff-style `/compact` over
+  `/clear` or `/goal clear` during an active durable flow, and re-check the
+  canonical artifact afterwards. Close finished workers rather than reusing them.
 
-```text
-/goal For parent <root goal>, complete <sub-phase outcome>; update <artifact>; run <proof>; stop with handoff
-```
+## Flow Boundaries Worth Pausing At
 
-If a worker reports `RECOMMENDED_GOAL_REVISION`, or if the babysitter stops it
-for drift/timeout, treat that as evidence for the next route decision. The main
-session may revise the worker goal and relaunch only after checking actual
-artifacts and diff state.
+Most boundaries are soft continuations. These are the ones that are easy to
+cross by momentum:
 
-## GSD Handoff Gates
-
-Auto-continue when exactly one routing row applies:
-
-- existing roadmap phase clearly matches -> `gsd-plan-phase <phase> --prd`
-- `.planning/` missing -> manifest + `gsd-ingest-docs --mode new`, inspect
-  phase, then `gsd-plan-phase --prd`
-- `.planning/` exists and no phase matches -> manifest +
-  `gsd-ingest-docs --mode merge`, inspect created/changed phase, then
-  `gsd-plan-phase --prd`
-
-Stop for multiple plausible existing phases, more than one new phase, locked
-doc conflicts, or changes to roadmap ownership beyond the accepted plan.
-
-## Required Checkpoints
-
-Apply decision triage before crossing these boundaries:
-
-1. Execution contract: require an approved `$intuitive-preflight` contract or an
-   equivalent approved execution contract. If missing, route to preflight instead
-   of drafting a Flow-specific contract.
-2. Product shaping: route unsettled value, appetite, and competing bets to
-   `$intuitive-shape`; keep settled execution on its existing route.
-3. User-owned decision: ask only for unresolved material scope, contract,
-   service, cost, or intent changes; reuse prior authorization.
-4. Pre-plan -> Review: confirm the plan file is ready for review unless the run
-   contract already says to continue.
-5. Review -> In-place update: update plan only after approval or soft-continuation
-   classification.
-6. Review -> Issues/GSD: continue only when execution is covered by the request
-   or active run contract.
-7. GSD handoff choice: auto-select only with one clear route.
-8. Issues -> GSD: ask if GitHub issue tracking vs direct GSD is material.
-9. GSD plan -> Execute: continue only when execution is covered by request or
-   run contract.
-10. Many phases: ask before creating more than three phases.
-11. Latest user intent: before every resume, closeout, or worker-babysitting
-   turn, classify the newest user message. Stop/status/discuss-first language
-   keeps the turn read-only until explicit execution permission returns.
-12. Host goal state: if the host goal is `blocked` or `complete`, do not resume
-   it as active work. Report the state or start a new route only after explicit
-   user instruction.
-13. Goal ownership: if a main-session root goal is active, adopt it; if none is
-   active, create one only for explicit durable execution with a clear contract.
-   Worker goals are child scopes and must not mutate the root goal.
-14. Execution surface: use the shared selector. Run bounded sequential work in
-   the main session; delegate when isolation, recovery, or independent parallel
-   work adds value. For a worker, record ownership and a task-adjusted review
-   cadence.
-15. Worker -> Main: before trusting completion, inspect the worker handoff,
-   changed files, logs, commits, and verification evidence. Continue only after
-   durable state exists outside the worker context.
-16. Worker drift -> Revised worker: if the worker loops, broadens scope, lacks
-   durable progress at a review point, or pursues the wrong artifact, inspect
-   captured logs and state. Steer the current worker only when a concise
-   correction is enough; otherwise stop it and relaunch with a narrower
-   corrected goal or stop for a hard decision. Do not keep the same bad goal
-   running.
-17. Code slice -> Next slice/cleanup: when local code changed and commits are
-   enabled, create a semantic slice commit after focused proof before starting
-   the next slice or cleanup pass.
-18. Changed-code cleanup -> Verify: skip only for docs-only/trivial changes or
-   explicit user instruction.
-19. Refactor scope -> Execute: require accepted P0/P1 checklist and stop
-   condition.
-20. Refactor doc cleanup: auto-run focused doc status; ask before broad
-   moves/deletions or protected docs outside scope.
-21. Local-dev gate: stop when proof needs real simulator, Gateway, VLM, Docker,
-   GPU, API keys, or similar unavailable resources.
-22. External-input stop gate: when the current milestone requires human records,
-   credentials, hardware, private data, paid approval, or other non-agent-owned
-   evidence, run the deterministic stop gate. If it reports the same blocker
-   recorded in canonical state and no new evidence exists, stop or mark the
-   active goal blocked according to host goal rules. Do not keep the flow alive
-   with tangential cleanup.
+- unsettled value, appetite, or competing bets: route to `$intuitive-shape`;
+- plan review to execution or issue/GSD handoff: continue only when execution
+  is covered by the request or run contract (see [GSD handoff](gsd-handoff.md)
+  for route selection);
+- each verified code slice: commit before starting the next slice or cleanup;
+- after implementation: run changed-code cleanup before final verification,
+  except for docs-only or trivial changes;
+- refactor execution: require an accepted P0/P1 checklist and stop condition;
+- broad doc moves or deletions outside scope: ask first;
+- proof that needs a real simulator, GPU, API keys, Docker, or similar
+  unavailable resources: stop at the local-dev gate.

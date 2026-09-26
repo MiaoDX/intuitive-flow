@@ -27,7 +27,7 @@ Prefer reuse, deletion, and consolidation before introducing a new surface.
 | Starting or resuming durable execution | [Durable state and ownership](../_shared/references/durable-run.md) and [checkpoints](references/checkpoints-and-auto-run.md) |
 | A plan needs intake or reconciliation | [Plan intake](references/plan-intake-and-autoplan.md) |
 | Creating or selecting a canonical plan | [Plan selection](../_shared/references/plan-paths.md) |
-| Finalizing a reconciled plan for handoff | [Plan prose shadow check](references/plan-prose-gate.md) |
+| Prose check requested, or a long plan handed to another reviewer | [Plan prose shadow check](references/plan-prose-gate.md) |
 | Selecting plan/status ownership or phase granularity | [Source of truth](references/source-of-truth.md) |
 | Using a GSD phase | [GSD handoff](references/gsd-handoff.md) |
 | Repeated blockers, experiments, or self-modification | [Loop guard](references/context-budget-and-loop-guard.md) |
