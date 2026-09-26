@@ -11,6 +11,21 @@ do not implement, approve the plan, or let scouts ask the user questions.
 Preserve the full intended scope of a supplied plan unless the user selects a
 subset or a material decision blocks honest full-plan execution.
 
+## Plan artifact ownership
+
+For a normal planning request, the canonical artifact is the target repository's
+existing plan path. When the repository convention is `docs/plans/`, use one
+`docs/plans/<slug>.md` file and reconcile the loop's accepted decisions into that
+file. A planning loop reviews or updates the canonical plan; it does not create
+`.planning/`, `ROADMAP.md`, `STATE.md`, phase `CONTEXT.md`, or a GSD `PLAN.md` as
+a side effect.
+
+Mentioning GSD, agents, or a planning loop does not itself authorize a GSD
+handoff. Stop at the canonical plan checkpoint for a planning-only request. A
+GSD artifact may be generated only when the user requests implementation/GSD
+handoff or an existing GSD phase already owns execution, and the named GSD
+workflow has actually been invoked.
+
 Set a brief charter: goal, non-goals, context, permitted worker actions, and stop
 condition. Use [scouts](references/scouts.md) when preparing worker prompts and
 judging their evidence. Main-session judgment owns the recommendation.
@@ -33,6 +48,10 @@ For plan-file loops, the `Recommended next action` should normally execute or
 preflight the whole plan through the appropriate route. It may name the first
 phase as the starting point, but should not make that phase the whole approved
 scope unless the user asked for that narrowing or a stop gate blocks the rest.
+
+For a repository plan-file loop, `Plan artifact:` must identify the canonical
+plan path (normally `docs/plans/<slug>.md`), not a review log or a newly-created
+GSD phase file.
 
 If no material plan remains, say so directly and explain what evidence caused
 the stop. Do not fill the packet with weak alternatives. Still include

@@ -4,6 +4,13 @@ Use this reference after a plan has an approved execution contract and any
 risk-triggered scout findings have been reconciled into the canonical plan, or
 when a GSD phase already owns execution.
 
+GSD is an execution handoff route, not the default storage location for a plan.
+The normal sequence is: create or update the target repository's canonical
+`docs/plans/<slug>.md`, review/reconcile it, obtain the execution contract, then
+hand off to GSD when implementation is requested. `agent-planning-loop` alone
+does not authorize or perform that handoff. A planning-only request stops at the
+canonical plan checkpoint.
+
 ## Handoff Decision
 
 `gsd-ingest-docs` and `gsd-plan-phase` are not interchangeable.

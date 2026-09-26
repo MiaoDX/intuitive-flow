@@ -34,6 +34,12 @@ Prefer reuse, deletion, and consolidation before introducing a new surface.
 | Closing significant implementation or refactor work | [Docs, commits, and closeout](references/refactor-and-closeout.md) |
 | A structured route brief or proof card is needed | [Output shapes](references/output-shapes.md) |
 
+Plan ownership rule: keep an ordinary plan in the target repository's existing
+canonical plan surface (normally `docs/plans/<slug>.md`). Planning and review
+loops reconcile that file in place; they do not create `.planning/*` or other
+GSD artifacts. Use the GSD handoff reference only after an approved execution
+contract and an explicit implementation/handoff route.
+
 Load only references needed by the current task. Keep the main session responsible
 for scope, integration, and final verification; worker mechanics follow the
 shared delegation policy. The main session is not automatically the

@@ -36,6 +36,14 @@ canonical source. Preserve a supplied execution-ready plan or issue at its
 existing location. Read `source-of-truth.md` for stage ownership and provenance.
 Every plan path below is an example of the selected source, not a migration gate.
 
+When a repository follows the usual plan-file convention, a new ordinary plan
+request resolves to one `docs/plans/<slug>.md` file. Keep the planning loop,
+scout findings, and accepted decisions attached to that canonical file. A
+planning-only request ends at that plan checkpoint; do not create or mutate
+`.planning/*`, `ROADMAP.md`, `STATE.md`, or a GSD phase merely because the user
+mentions GSD, agents, or planning. Preserve a repository's explicit existing
+convention when it uses another canonical path.
+
 Pre-plan contents:
 
 - plan ledger near the top
@@ -118,6 +126,12 @@ When review is approved or classified as a soft continuation:
 2. Keep or link external `~/.gstack` artifacts only as evidence.
 3. Verify the plan body contains accepted acceptance criteria and GSD handoff.
 4. Surface scope changes before execution.
+
+The loop remains a plan review step. It is not a GSD handoff and must not
+manufacture GSD-owned artifacts. Route to GSD only after the canonical plan has
+an approved execution contract and the user requests implementation/handoff (or
+an existing GSD phase already owns execution); then follow
+`gsd-handoff.md` and invoke the named GSD skill.
 
 If the only repo change after review is a restore comment or appended review
 report, do not hand off yet. First edit the plan body so the next stage ingests
