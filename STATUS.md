@@ -29,8 +29,9 @@ currently provides:
   invocation, and explicit Flow routing for unsettled product bets
 - shared plan selection that preserves repo conventions and recommends
   `docs/plans/MM-DD-<slug>.md` when none exists
-- GSD final verification through normally installed `gsd-verify-work`; missing
-  selected wrappers trigger reinstall even at the current upstream version
+- a fixed four-skill GSD handoff slice (`gsd-ingest-docs`, `gsd-plan-phase`,
+  `gsd-execute-phase`, and `gsd-verify-work`); missing selected wrappers trigger
+  reinstall even at the current upstream version
 - update and sync automation under `scripts/`
 - repo-owned Git hooks under `.githooks/`
 - Bun TypeScript helpers and tests under `scripts/lib/`

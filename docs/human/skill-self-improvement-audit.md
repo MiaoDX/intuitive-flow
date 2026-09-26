@@ -43,9 +43,11 @@ Current default-surface correction:
 - `$diagnose` is no longer installed by default. `$gstack-investigate` is the
   default root-cause/debugging entrypoint because the GStack skill set already
   owns browser-visible investigation and QA workflows.
-- GSD keeps the upstream `core` surface plus `gsd-ingest-docs` and
-  `gsd-verify-work` for the complete Flow intake/execution/verification chain.
-  Missing selected wrappers invalidate the updater's already-current check.
+- GSD keeps one fixed four-skill handoff slice: `gsd-ingest-docs`,
+  `gsd-plan-phase`, `gsd-execute-phase`, and `gsd-verify-work`. Missing selected
+  wrappers invalidate the updater's already-current check; GSD status,
+  continuation, project setup, and roadmap-management helpers are outside the
+  installed surface.
 - Shape owns unsettled product decisions, with a narrow implicit trigger and
   explicit routing from Flow; Flow no longer shapes those ideas inline.
 - Shared plan selection preserves existing paths and recommends a creation-date
@@ -165,8 +167,7 @@ mode itself.
 | `gstack-browse`, `gstack-open-gstack-browser` | Browser launch and browser QA helpers. | Keep browse default; open-browser is optional-install. |
 | `gstack-autoplan`, `gstack-plan-eng-review`, `gstack-review`, `gstack-qa` | Managed review and QA wrappers. | Keep planning/review routes installed; QA is optional-install until usage justifies promotion. |
 | `gstack-investigate` | Managed root-cause investigation workflow. | Keep as the default debugging/investigation route; do not also default-install `$diagnose`. |
-| `gsd-discuss-phase`, `gsd-execute-phase`, `gsd-ingest-docs`, `gsd-new-project`, `gsd-phase`, `gsd-plan-phase`, `gsd-surface`, `gsd-update`, `gsd-verify-work` | Small GSD core loop plus document ingestion and final verification. | Keep installed; upstream core supplies the phase loop and Flow retains ingestion and verification dependencies. |
-| `gsd-progress`, `gsd-resume-work`, `gsd-pause-work` | GSD status and continuation helpers. | Registered optional-install; Flow can name them when a GSD run exists. |
+| `gsd-ingest-docs`, `gsd-plan-phase`, `gsd-execute-phase`, `gsd-verify-work` | Fixed GSD handoff slice for Flow document intake, planning, execution, and final verification. | Keep installed as the complete GSD surface; all other upstream GSD skills stay uninstalled. |
 
 Removed from the default surface:
 
@@ -185,7 +186,7 @@ Removed from the default surface:
   external lessons and skill-maintenance doctrine.
 - It argues against adding self-maintenance sections to runtime skill text.
 - It keeps the installed default surface tiered: primary choices stay small,
-  specialists remain routed, and GSD exposes only its selected core phase loop.
+  specialists remain routed, and GSD exposes only its fixed four-skill handoff slice.
 - It exposed `intuitive-layout` as a boundary-smell after user review; layout is
   now treated as a symptom routed by object instead of a root skill.
 - It moved `intuitive-flow` away from a parallel runtime manual: the entrypoint

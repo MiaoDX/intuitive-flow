@@ -62,7 +62,7 @@ describe("default skill allowlist", () => {
     expect(ledger.legacyCommands).toEqual(["old.md"]);
   });
 
-  test("current default surface keeps routed architecture tools available and GSD visibility narrow", () => {
+  test("current default surface keeps routed architecture tools available and GSD handoff narrow", () => {
     const previous = process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS;
     try {
       delete process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS;
@@ -80,7 +80,7 @@ describe("default skill allowlist", () => {
       ]);
       expect(externalSkills).not.toContain("zoom-out");
       expect(allowlist.gstackSkills).toContain("gstack-investigate");
-      expect(gsdSkillsForInstall(allowlist)).toEqual(["gsd-discuss-phase", "gsd-execute-phase", "gsd-ingest-docs", "gsd-new-project", "gsd-phase", "gsd-plan-phase", "gsd-surface", "gsd-update", "gsd-verify-work"]);
+      expect(gsdSkillsForInstall(allowlist)).toEqual(["gsd-execute-phase", "gsd-ingest-docs", "gsd-plan-phase", "gsd-verify-work"]);
     } finally {
       if (previous === undefined) delete process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS;
       else process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS = previous;
@@ -124,19 +124,13 @@ describe("default skill allowlist", () => {
   test("selects registered optional-install skills and filters external skills by host", () => {
     const previous = process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS;
     try {
-      process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS = "skill-creator,gsd-progress";
+      process.env.INTUITIVE_FLOW_OPTIONAL_INSTALL_SKILLS = "skill-creator";
       const allowlist = readDefaultSkillAllowlist(join(process.cwd(), "scripts", "default-skill-allowlist.txt"));
 
       expect(gsdSkillsForInstall(allowlist)).toEqual([
-        "gsd-discuss-phase",
         "gsd-execute-phase",
         "gsd-ingest-docs",
-        "gsd-new-project",
-        "gsd-phase",
         "gsd-plan-phase",
-        "gsd-progress",
-        "gsd-surface",
-        "gsd-update",
         "gsd-verify-work",
       ]);
       expect(externalSourcesForInstall(allowlist, "claude-code").flatMap((source) => source.skills))
