@@ -109,7 +109,7 @@ idea or draft plan
      -> planning-loop/autoplan when independent scouts add value
      -> grill-batch when a human/domain decision remains
   -> canonical plan reconciliation
-  -> plan prose gate (shadow form check)
+  -> plan prose gate (opt-in shadow form check)
   -> preflight
   -> intuitive-flow execution
 ```
@@ -129,7 +129,8 @@ The planning owners are intentionally separate:
 - `$grill-with-docs-batch` owns decision quality against domain language,
   current docs, and durable boundaries.
 - Flow's internal plan prose gate checks writing form after decision
-  reconciliation. During the trial it always checks, reports outside the plan,
+  reconciliation. During the trial it runs on request or before handing a long
+  plan to another reviewer, reports outside the plan,
   and never rewrites the canonical plan. Summary-only events persist in the
   user-local XDG state directory so weekly analysis does not mutate target
   repositories or canonical plans.

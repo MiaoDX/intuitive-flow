@@ -19,8 +19,7 @@ currently provides:
   self-contained
 - portable durable-run ownership that preserves target-repo status conventions,
   isolates task state, and keeps shared project status single-writer
-- a Flow-owned plan prose gate that runs an STE-flavored shadow check after
-  decision reconciliation and before preflight or execution handoff, with
+- an opt-in Flow plan prose gate (STE-flavored shadow check, report-only) with
   summary-only local JSONL trial memory and a seven-day report
 - a single default skill install allowlist at
   `scripts/default-skill-allowlist.txt`
@@ -85,8 +84,9 @@ The current maintenance focus is keeping the repo dogfoodable:
 - keep the primary user-facing routes to Shape, Flow, Refactor, Reduce Entropy,
   and Research; route specialist skills on demand
 - keep install and prune policy explicit in the two ledgers under `scripts/`
-- keep plan-prose checks in report-only shadow mode until fixture and live proof
-  show readability gains without protected-contract regressions
+- keep plan-prose checks opt-in and report-only; if the trial report has not
+  reached `ADVANCE_TO_CANDIDATE_SHADOW` by 2026-11-30, or returns
+  `DROP_OR_RETUNE`, remove the gate and its helper
 - choose direct or delegated execution by context, recovery, and parallelism
   needs; hand off concrete proof commands and success conditions
 - keep durable task state target-local: one task control plane per task, workers

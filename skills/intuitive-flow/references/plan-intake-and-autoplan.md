@@ -154,15 +154,11 @@ once reconciled into the plan.
 
 ## Plan Prose Finalization
 
-After the last content-changing planning stage, read `plan-prose-gate.md` and
-run its shadow gate against the canonical `docs/plans/<slug>.md`. Do this before
-presenting a plan-only checkpoint, invoking `$intuitive-preflight`, or entering
-the plan-backed execution gate.
-
-The gate always checks but does not rewrite during the current trial. Report
-its compact result and local trial-record status outside the plan. If later
-entropy, grill, scout, preflight, or user decisions materially change the plan
-body, rerun the gate before handoff. A missing optional deterministic helper
+The prose gate is opt-in during its trial. Run it (see `plan-prose-gate.md`)
+after the last content-changing planning stage when the user asks for a prose
+check, or when a long plan will be handed to another agent or a human reviewer.
+It reports outside the plan and never rewrites it; rerun it if the plan body
+changes materially before handoff. A missing optional deterministic helper
 reports `score=unavailable; record=unavailable`; it does not block a target repo
 or justify adding Bun there.
 

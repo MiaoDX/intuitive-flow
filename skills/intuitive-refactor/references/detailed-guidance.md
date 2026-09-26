@@ -1,478 +1,170 @@
-# Intuitive Refactor
+# Intuitive Refactor: Detailed Guidance
 
-Use this skill to set the goal, scope, evidence, and stop condition for a
-bounded refactor before code changes start. Once a target slice is accepted, the
-default posture is aggressive cleanup: move callers to the new intuitive API,
-layout, or module boundary and remove stale compatibility surfaces.
+Set the goal, scope, evidence, and stop condition for a bounded refactor before
+code changes start. Once a target slice is accepted, clean it up aggressively:
+move callers to the new API, layout, or module boundary and remove stale
+compatibility surfaces.
 
 This workflow owns the scope gate and stop condition. Architecture scanners,
-TDD, diagnosis, or planning workflows are optional inputs: use them when they
-raise evidence quality, but keep the accepted checklist and stop condition here.
-When no specialist workflow is needed, gather repo context directly and proceed
-against the same gate.
+TDD, diagnosis, or planning skills are optional inputs when they raise evidence
+quality; the accepted checklist and stop condition stay here.
 
-## Operating rule
+## Operating Rule
 
-Start with a scope gate. For broad or ambiguous requests, make the first pass
-report-only. When the user names a bounded target and asks for execution, treat
-that as approval to clean the target up aggressively.
+Start refactors from pressure, not possibility: current breakage, repeated
+friction, an active task blocked by stale structure, source-of-truth drift,
+false-green verification, or a user-named bounded target. "This could be
+cleaner" stays parked until it blocks work or the user scopes it, because every
+healthy project always has more possible refactors.
 
-For periodic repo cleanup, "keep reducing entropy", or "what architecture
-cleanup is worth doing" prompts where no code/API/module seam has been selected,
-route to `$intuitive-reduce-entropy` first. Use this skill after discovery when
-the user selects a cleanup candidate, or when the entropy packet names a
-concrete refactor target that needs a gate, proof, and implementation slice.
+- Broad or ambiguous request: audit and stop at a decision-complete proposal.
+- Named target plus a request to execute: that is approval to clean the target
+  up aggressively, one vertical slice at a time.
+- Repo-wide or periodic cleanup with no selected seam: route to
+  `$intuitive-reduce-entropy` first.
 
-Do not edit production code until all of these are explicit:
+Before editing production code, make explicit: the target seam, the accepted
+checklist, severities in scope (default P0/P1/P2 inside the target), the
+required proof, the stop condition, and the persistent gate file when this is
+more than advice. The goal is a green accepted checklist with the new shape
+canonical, not "no more possible refactors."
 
-- the target module or seam
-- the accepted issue checklist
-- which issue severities are in scope, defaulting to P0/P1/P2 inside the target
-- the required evidence level
-- the stop condition
-- the persistent gate file, if this is more than advice
+## Architecture Packet
 
-The goal is not "no more possible refactors." Any healthy project will always
-have possible refactor points. The goal is "the accepted checklist inside the
-target is green, the new API/layout is canonical, and cross-seam ideas are
-parked instead of implemented by drift."
+Refactors that touch architecture seams, public APIs or contracts,
+task/skill/profile boundaries, MCP/tool surfaces, lifecycle gates, data flow,
+or runtime behavior need an architecture packet before production edits: either
+this turn's `$codebase-design` map plus `$plan-eng-review` findings, or an
+existing plan, ADR, or gate with equivalent evidence. If the interactive review
+is unavailable, apply the same frame in prose and note the limitation. If no
+seam is accepted afterwards, `$improve-codebase-architecture` can add
+report-only candidates.
 
-Start refactors from pressure, not possibility. Good triggers are current
-breakage, repeated friction, an active task blocked by stale structure,
-source-of-truth drift, false-green verification, public-contract drift, or a
-user-named bounded cleanup target. "This could be cleaner" is a parked idea
-until it blocks work or the user explicitly scopes that cleanup.
-
-## Bounded Proposal Rule
-
-For broad or ambiguous cleanup, audit first and stop after a decision-complete
-proposal. Do not move files, delete tests, rewrite guidance, or edit production
-code until the target slice, accepted checklist, evidence level, and stop
-condition are explicit.
-
-For a precise target where the user asks for implementation, apply one coherent
-vertical slice. Keep newly discovered unrelated ideas parked instead of letting
-the work expand by drift.
-
-## Architecture Packet Rule
-
-For refactors that touch architecture seams, public APIs, public contracts,
-task/skill/profile boundaries, MCP/tool surfaces, lifecycle gates, data flow, or
-runtime behavior, require an architecture packet before production edits. The
-packet must come from either:
-
-- the current turn's `$codebase-design` map plus `$plan-eng-review` /
-  `$gstack-plan-eng-review` findings; or
-- an existing plan, ADR, or refactor gate that already contains equivalent
-  evidence and can be cited.
-
-If the packet is missing, run `$codebase-design` first and then `$plan-eng-review`
-before producing the refactor scope gate. If the interactive gstack review gate
-is unavailable, apply the same engineering-review frame in prose and record the
-tool limitation.
-
-Minimum architecture packet shape:
-
-```text
-Codebase-design map:
-Eng-review recommendation:
-Public contract / boundary:
-Data flow:
-Accepted seam:
-Rejected alternatives:
-Verification ladder:
-Stop condition:
-```
+The packet covers the design map, review recommendation, public boundary, data
+flow, accepted seam, rejected alternatives, verification ladder, and stop
+condition.
 
 ## Canonical Cleanup Rule
 
-Prefer the new intuitive API, path, module boundary, command shape, or folder
-layout over backward compatibility. Architecture design should never keep an
-old surface merely because it exists. In an approved cleanup/refactor slice, old
-surfaces are migration targets, not contracts.
+In an approved slice, old surfaces are migration targets, not contracts. Update
+in-repo callers, docs, tests, examples, CI, and command references to the new
+shape, then delete old wrappers, aliases, import paths, dead branches, and shims.
+Keeping a surface merely because it exists is not an architecture choice.
 
-- Update known in-repo callers, docs, tests, recipes, examples, CI, and command
-  references to the new shape.
-- Delete old wrappers, aliases, command paths, import paths, dead branches, and
-  compatibility shims after known consumers are migrated.
-- Do not ask whether to preserve compatibility as a generic architecture
-  choice. If the user explicitly requests a temporary migration bridge, mark it
-  as a tactical exception and record the removal trigger in the active plan,
-  scope gate, or output report.
-- If a broad command, install, or user-facing surface is affected, propose the
-  forward migration/removal plan; do not default to a compatibility layer.
+A user-requested temporary migration bridge is a tactical exception with a
+recorded removal trigger. When broad command, install, or user-facing surfaces
+are affected, propose the forward migration instead of defaulting to a
+compatibility layer. In a full autonomous run, pause before local-only,
+paid-provider, Docker/Gateway, or human-judgment gates unless explicitly
+authorized.
 
-If the user asks for a full autonomous run, continue only through safe,
-deterministic gates. Pause before local-only, paid-provider, Docker/Gateway, or
-human-judgment gates unless the user explicitly authorized them.
+## Persistent Gate
 
-## Persistent state rule
+Chat history and agent memory are not reliable stop conditions across runs, so
+persist the gate in the repo for execution, repeated runs, or "all big known
+issues." Use [plan selection](../../_shared/references/plan-paths.md) for one
+canonical gate (recommended `docs/plans/MM-DD-refactor-<target-slug>.md`). For
+durable runs, also keep the active capsule from
+[durable run](../../_shared/references/durable-run.md); the gate stays
+canonical. When the gate lives under `docs/plans/`, keep its `## Plan Ledger`
+and any `docs/plans/README.md` row current, and leave other plans' ledgers
+alone.
 
-Skills are not stateful by themselves. Chat history, agent memory, and previous
-command output are not reliable stop conditions across repeated runs. Persist
-the refactor gate in the repo when the user asks for execution, repeated runs,
-or "all big known issues."
+Status appears in YAML frontmatter and in `## Status`:
 
-For durable or repeated execution, also maintain the task-owned active capsule
-selected by `../../_shared/references/durable-run.md`, normally
-`docs/status/active/<gate-slug>.md` when no repo-defined equivalent exists and
-the repo permits workflow artifacts. The gate remains canonical for
-scope/status/checklist, while the capsule is only the compact resume surface.
-When the gate is under `docs/plans/`, include or refresh the top `## Plan
-Ledger` and update `docs/plans/README.md` if the gate's status, session scope,
-current slice, next action, blocker, or parent/child relation changed. Keep the
-refactor session locked to this gate; do not opportunistically rewrite other
-plan ledgers while working this seam.
+- `DONE`: accepted checklist complete and evidence green. Stop; P2 polish stays
+  parked unless the user reopens that exact slice.
+- `CONTINUE`: an accepted item remains; continue it.
+- `REOPEN`: the user widened scope or new evidence (including a repeated real
+  failure) shows a P0/P1 regression; update the same gate.
+- `PARK`: only cross-seam or future ideas remain; record them and stop.
 
-Use [plan selection](../../_shared/references/plan-paths.md) for one canonical
-gate. Reuse the existing plan for the seam; when no convention exists, recommend
-`docs/plans/MM-DD-refactor-<target-slug>.md`. Logs and commit history remain
-evidence, not a second gate.
-
-The gate file must mark its status explicitly. Use these exact status values:
-
-- `DONE` — accepted checklist is complete and evidence is still green.
-- `CONTINUE` — accepted P0/P1 item remains incomplete.
-- `REOPEN` — user explicitly expanded scope or new evidence shows a P0/P1
-  regression. A concrete repeated failure from real usage also counts as new
-  evidence.
-- `PARK` — no active target-local cleanup remains; only cross-seam or future
-  ideas exist.
-
-When creating or updating the gate file, write the status in both places:
-
-- YAML frontmatter `status: <DONE|CONTINUE|REOPEN|PARK>` for quick parsing
-- `## Status` for human scanning
-- `## Plan Ledger` near the top when the gate lives under `docs/plans/`
-
-The gate file should contain this shape:
+On a repeated run, read the gate first and act on its status.
 
 ```markdown
 ---
 refactor_scope: <target-slug>
 status: CONTINUE
-accepted_severities:
-  - P0
-  - P1
-  - P2
+accepted_severities: [P0, P1, P2]
 last_verified: null
 ---
 
 # Refactor Scope: <target>
 
 ## Plan Ledger
-
-- Plan status: ACTIVE
-- Session scope: refactor-<target-slug>
-- Parent plan: <path or none>
-- Child plans: <paths or none>
-- Last updated: <YYYY-MM-DD>
-- Current slice: <accepted cleanup slice or gate creation>
-- Next action: <one concrete next step>
-- Blocked on: <blocker or none>
-- Do not touch from this session: <unrelated plans/files>
-
 ## Status
-
-CONTINUE
-
 ## Target
-
-## Accepted Severities
-
 ## Accepted Cleanup Checklist
-
 ## Parked Cross-Seam / Future Ideas
-
 ## Evidence Ladder
-
 ## Stop Condition
-
 ## Execution Log
 ```
 
-On a repeated run, read the existing gate file first. Check the frontmatter
-`status` first, then `## Status` if the frontmatter is missing. Classify the
-current state as:
-
-- **DONE** — accepted checklist is complete and evidence is still green; stop.
-  Park P2-only wording, taste, or "could be cleaner" findings unless the user
-  explicitly names that slice for cleanup.
-- **CONTINUE** — accepted cleanup item remains incomplete; continue that item.
-- **REOPEN** — the user explicitly expands scope or new evidence shows a P0/P1
-  regression; update the same gate file.
-- **PARK** — only cross-seam or future ideas remain; record them and stop.
-
-## Severity gate
-
-Classify every finding before implementation:
+## Severity Gate
 
 | Severity | Meaning | Default action |
 | --- | --- | --- |
-| P0 | Current breakage, data loss, security exposure, deploy failure, or a verifier that gives false green on real failure | Fix now |
-| P1 | A real correctness, source-of-truth, testability, or required code-intelligence gap that can hide failure in the named seam | Fix now |
-| P2 | Maintainability, duplication, naming, drift risk, stale API surface, compatibility shim, or "this could be cleaner" inside the accepted target | Fix by default when it simplifies the target |
-| Parked | Speculative, cross-seam, broad cleanup, taste preference, or future-proofing outside the accepted target | Record only |
+| P0 | Current breakage, data loss, security exposure, deploy failure, or a verifier that is green on real failure | Fix now |
+| P1 | Correctness, source-of-truth, testability, or code-intelligence gap that can hide failure in the seam | Fix now |
+| P2 | Duplication, naming, drift risk, stale API, or shim inside the accepted target | Fix when it simplifies the target |
+| Parked | Speculative, cross-seam, taste, or future-proofing | Record only |
 
-When the user's prompt says "all big known issues," interpret "big" as P0/P1
-plus target-local P2 cleanup that removes stale surfaces or makes the new shape
-canonical.
+"All big known issues" means P0/P1 plus target-local P2 that removes stale
+surfaces. Once implementation starts, new findings join the checklist only when
+they are inside the target and directly support the canonical shape.
 
-After implementation starts, do not add newly discovered P2/Parked items to the
-active checklist unless they are inside the accepted target and directly support
-the canonical new shape. Park cross-seam cleanup and unrelated taste changes.
-After a gate is `DONE`, P2-only polish stays parked unless the user explicitly
-reopens that exact slice.
+## Proof
 
-## Proof Requirements
-
-Use the [shared proof selector](../../_shared/references/durable-run.md#proof-selector).
-Record the exact command or manual procedure, behavior observed, success
-condition, and any missing runtime evidence. Use those requirements throughout
-the gate, worker handoff, and closeout; do not use numbered confidence levels.
+Use the [shared proof selector](../../_shared/references/durable-run.md#proof-selector)
+and inventory the repo's verification layers first for non-trivial work.
+Record the command or manual procedure, observed behavior, success condition,
+and missing runtime evidence. Run full-suite, visual, simulator, browser,
+hardware, or manual gates only when they uniquely observe what the slice can
+regress. Prefer the repo's existing verification command names.
 
 ## Workflow
 
-### 1. Orient and classify
+1. **Orient.** Identify the target and seam, the change shape (bug/perf,
+   architecture, cleanup, feature), behavior that must not regress, old surfaces
+   to remove, minimum proof, and whether evidence is local-only or slow. Read
+   repo agent docs and orientation docs before making claims, and look for an
+   existing gate (`docs/plans/*refactor*.md`, a named plan, or a committed GSD
+   phase). If the seam is still unclear, stop at a report-only map.
+2. **Check tooling.** Before risky symbol-level edits, confirm the target
+   language's LSP signals work from repo evidence. Missing repo-local setup goes
+   through `$intuitive-init`; unsafe or global-only setup is recorded as missing
+   evidence and narrows the proof claim.
+3. **Pick helpers only when they help.** Unclear seam: `$codebase-design` plus
+   `$plan-eng-review`. Missing behavior coverage: TDD one public-interface proof
+   first. Bug, flake, or perf regression: diagnose a reproducible loop first.
+   Docs layout goes to `$intuitive-doc`, test layout to `$intuitive-tests`,
+   mixed repo surfaces to `$intuitive-reduce-entropy`. Doing the work inline is
+   fine when it meets the same evidence and stop condition.
+4. **Present the scope gate.** Target, change type, accepted severities and
+   checklist, parked issues, compatibility removed (and any kept, with its
+   trigger), required proof, existing and missing evidence, architecture packet
+   when required, local-only gates, gate file, and a stop condition concrete
+   enough to stop while more cleanup is imaginable, for example "accepted items
+   pass `npm run test:publish-rules` and old APIs are removed" or "stop before
+   implementation because the next proof needs real Gateway access." Write the
+   gate file before editing when implementation is approved.
+5. **Execute one vertical slice.** Add or identify the proof (watch new
+   coverage fail), apply the smallest coherent cleanup, run the required proof,
+   and summarize evidence and residual risk. Split multi-seam changes or park
+   the extra seams.
+6. **Close the loop.** Every accepted item has a change or a "no change
+   needed" reason; every required proof has output or a stated skip; parked
+   items are recorded, not implemented; old surfaces are gone or have a removal
+   trigger. Update the gate's checklist, evidence, skipped gates, parked ideas,
+   and status.
 
-Read the user's goal and identify:
+## Reporting
 
-- target area or module
-- target seam, if known
-- whether the request is bug/perf shaped, architecture shaped, cleanup shaped, or
-  feature shaped
-- user-visible behavior that must not regress
-- what "done" would prove from a caller's perspective
-- old APIs, paths, wrappers, or compatibility shims that should be removed
-- minimum required proof
-- whether the target repo's LSP is configured and healthy for the affected
-  language stack
-- whether any evidence is local-only, paid, slow, or environment-sensitive
-- whether this is architecture/public-contract shaped and therefore needs an
-  architecture packet before edits
+When only advising, do not edit files. Return the proposed proof gates, current
+gate status if one exists, severity threshold, stop condition, whether to create
+or update a gate, and the next optional skill.
 
-If repo-local docs exist, read the agent config first:
-
-- `docs/agents/domain.md`
-- `docs/agents/issue-tracker.md`
-- `docs/agents/triage-labels.md`
-
-Then read the repo's required orientation docs before making claims.
-
-Look for an existing gate before proposing new work:
-
-- `docs/plans/*refactor*.md`
-- `docs/plans/*architecture*.md`
-- a user-provided plan path
-- GSD phase artifacts if the refactor is already a committed phase
-
-If the target seam is unclear, stop after a report-only map. Do not wander
-through the whole repo looking for unrelated cleanup.
-
-If the target seam is unclear because the user is asking for repo-wide or
-periodic entropy reduction, run `$intuitive-reduce-entropy` in repo entropy or
-discovery-loop mode instead of turning this refactor skill into a broad audit.
-
-If the target is architecture/public-contract shaped, look for an existing
-architecture packet in the user prompt, plan, ADR, or gate. If none exists, run
-`$codebase-design` and `$plan-eng-review` before producing the scope gate. If that
-review sequence still leaves no accepted target seam, use
-`$improve-codebase-architecture` as extra report-only candidate discovery.
-
-Check LSP before risky symbol-level edits. Use repo evidence such as manifests,
-lockfiles, compiler config, `.claude/settings.json`, `.vscode/settings.json`,
-`docs/agents/**`, and language-server config to determine whether definition,
-reference, rename, diagnostics, and hover signals should work for the target
-language. If LSP setup is missing or stale and the fix is repo-local, route the
-setup through `$intuitive-init` or include the minimal setup change before
-production refactor edits. If setup is unsafe, global-only, or unclear, record
-it as missing evidence and either stop or proceed only at the narrower proof
-claim the user accepted.
-
-### 2. Decide the evidence path
-
-Default to the smallest evidence path that can make the gate honest: produce the
-scope gate, write/update the persistent gate file when appropriate, and execute
-the accepted cleanup when the user has approved the target.
-
-Before choosing commands for a non-trivial refactor, inventory the repo's
-available verification layers from local docs, scripts, package/Make targets,
-CI, and existing test or harness guidance. Use the shared proof selector in
-`../../_shared/references/durable-run.md` to pick the smallest sufficient proof by
-change class. Do not run full-suite, visual, simulator, browser, hardware, or
-manual gates after every slice unless that proof uniquely observes the behavior
-the slice can regress.
-
-Use another workflow when it materially improves the current pass:
-
-- unclear architecture or seam quality -> run `$codebase-design` plus
-  `$plan-eng-review`; use `$improve-codebase-architecture` only as extra
-  report-only candidate discovery
-- missing behavior coverage -> use TDD to add one public-interface proof
-  before refactoring
-- bug, flake, perf regression, or known blind spot -> diagnose to build
-  a reproducible feedback loop first
-- large feature or harness program -> create a PRD, then issues
-- existing issue queue or TODO grooming -> triage
-- layout-shaped cleanup -> keep it here only when the object is code, package,
-  module, API, imports, wrappers, or compatibility surfaces; route docs layout
-  to `$intuitive-doc`, test layout to `$intuitive-tests`, and mixed repo-surface
-  diagnosis to `$intuitive-reduce-entropy`
-
-Do not split into issues before the parent plan or PRD is shaped enough to split
-into vertical slices. A capable agent may do the work inline when it can meet
-the same evidence, scope, and stop-condition requirements without extra process.
-
-### 3. Produce the scope gate
-
-Before implementation, present this compact gate:
-
-```markdown
-## Refactor Scope Gate
-
-- Target:
-- Change type:
-- Current status:
-- Accepted severities:
-- Accepted issue checklist:
-- Parked issues:
-- Compatibility kept:
-- Compatibility removed:
-- Required proof and success conditions:
-- Existing evidence:
-- Missing evidence:
-- Architecture packet:
-- LSP status:
-- Local-only gates:
-- Recommended next skill:
-- Persistent gate file:
-- Stop condition:
-```
-
-The stop condition must be concrete enough that an agent can stop even if it can
-still imagine more cleanup. Good stop conditions look like:
-
-- "All accepted cleanup items pass `npm run test:publish-rules` and
-  `npm run quality:check`; old APIs are removed. If the user requested a
-  temporary migration bridge, it has a recorded removal trigger."
-- "Stop after report-only architecture candidates; wait for the user to pick
-  one candidate."
-- "Stop before implementation because the next proof requires real Gateway
-  access."
-
-If implementation is approved, write or update the persistent gate file before
-editing production code. If there are accepted cleanup items, mark it
-`CONTINUE`. If the scan finds only cross-seam or speculative ideas, mark it
-`PARK` and stop.
-
-### 4. Execute one vertical slice
-
-When the user approves action, work in one tracer bullet:
-
-1. Add or identify the proof first.
-2. Verify target-repo LSP setup for the affected language, or record why that
-   evidence is unavailable.
-3. Watch the proof fail if adding new coverage.
-4. Apply the smallest coherent aggressive cleanup/refactor.
-5. Run the required ladder levels.
-6. Summarize evidence and residual risk.
-
-Never batch unrelated refactors. If a proposed architecture cleanup touches
-multiple seams, split it with `/to-issues` or park the extra seams.
-
-### 5. Close the loop
-
-Before declaring completion, audit the accepted checklist against real evidence:
-
-- every accepted cleanup item has a concrete change or a documented "no change
-  needed" reason
-- every required evidence level has command output or a stated skipped gate
-- target-repo LSP setup was checked, refreshed, or explicitly recorded as
-  unavailable with its impact on confidence
-- target-local P2 cleanup is either completed or explicitly deferred
-- every cross-seam/Parked item is recorded and not silently implemented
-- every old API/path/compatibility surface is removed, or any user-requested
-  temporary bridge has a recorded removal trigger
-- no unapproved new refactor work was added after implementation began
-
-Update the gate file with the final checklist status, evidence commands, skipped
-gates, and parked ideas. Also update both status markers:
-
-- mark `DONE` when the accepted checklist is complete and evidence is green
-- mark `CONTINUE` when accepted cleanup work remains
-- mark `PARK` when only cross-seam or future ideas remain
-- mark `REOPEN` only when the user explicitly widens scope or new P0/P1 evidence
-  invalidates a previous `DONE`
-
-## Suggested repo command naming
-
-Prefer a `verify::*` namespace for deterministic safety gates:
-
-- `verify::static`
-- `verify::mock`
-- `verify::contract`
-- `verify::regression-mock`
-- `verify::sim-local`
-- `verify::openclaw-local`
-- `verify::navigator`
-- `verify::full-local`
-
-Reserve `harness::*` for a specific agent/simulator harness, not generic lint
-or unit-test commands.
-
-If the repo has different commands, use the repo's existing names and map them
-to ladder levels in the safety plan.
-
-## Suggested prompt
-
-Use this shape when the user wants a bounded architecture pass:
-
-```text
-Run $intuitive-refactor.
-
-Scope: one named module/seam only.
-Start with a scope gate. For a named target, execute the accepted cleanup.
-Load any existing docs/plans/refactor-*.md or architecture plan first.
-Classify findings as P0/P1/P2/Parked.
-Implement accepted P0/P1/P2 cleanup inside the target.
-Write/update the selected canonical gate using the shared plan-selection rule.
-Remove old APIs, wrappers, and compatibility shims unless explicitly protected.
-Record cross-seam/Parked items there instead of implementing them.
-Stop when the accepted cleanup checklist passes the required proof gates.
-Commit each coherent slice only when the user and repo policy authorize
-commits.
-```
-
-If the user combines this with an architecture scanner, add:
-
-```text
-Use `$improve-codebase-architecture` only for report-only candidate discovery.
-The accepted checklist and stop condition still come from the refactor scope
-gate.
-```
-
-## Output when only advising
-
-If the user is still discussing strategy, do not edit files. Return:
-
-- recommended command namespace
-- proposed proof gates
-- current/persistent status, if a gate file exists
-- accepted severity threshold
-- concrete stop condition
-- whether a persistent gate file should be created or updated
-- which optional skill, if any, should be used next
-- which part should become a PRD or issue only if it is large enough
-
-## Completion summary
-
-After action, report:
-
-- files changed, if any
-- persistent gate file path and status
-- accepted checklist status
-- parked issues, if any
-- ladder levels run and results
-- gates skipped and why
-- whether the change is safe for AFK agent pickup, human review, or local
-  validation
+After action, report changed files, gate path and status, checklist status,
+parked issues, proof run and skipped with reasons, and whether the result is
+ready for agent pickup, human review, or local validation.

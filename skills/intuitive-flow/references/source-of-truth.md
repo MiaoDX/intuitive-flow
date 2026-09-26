@@ -221,7 +221,7 @@ Artifact rules:
 - Discussion skills such as `grill-with-docs` shape decisions through
   questions; the current agent still writes the plan unless a writing skill is
   invoked.
-- The Flow plan prose gate checks form after decision reconciliation. Its
+- The opt-in Flow plan prose gate checks form after decision reconciliation. Its
   shadow result is checkpoint evidence, not canonical plan content. Summary-only
   trial events live in the user-local XDG state file. Do not append lint scores,
   candidate rewrites, or trial logs to the plan.
