@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { checkSkills } from "./check-skills";
-import { skillSizeReport } from "./check-skills";
+import { prohibitionReport, skillSizeReport } from "./check-skills";
 
 const withTempProject = async (callback: (root: string) => Promise<void> | void) => {
   const root = mkdtempSync(join(tmpdir(), "skill-check-project-"));
@@ -389,6 +389,21 @@ describe("skill checker", () => {
           overBudget: false,
         },
       ]);
+    });
+  });
+
+  test("reports prohibition density without counting evals", async () => {
+    await withTempProject((root) => {
+      writeFixtureFile(root, "skills/alpha/SKILL.md", "---\nname: alpha\ndescription: Alpha.\n---\nDo not do x. Never do y.\n");
+      writeFixtureFile(root, "skills/alpha/evals/RUBRIC.md", "Do not count me.\n");
+      writeFixtureFile(root, "skills/beta/SKILL.md", "---\nname: beta\ndescription: Beta.\n---\nPrefer x because y.\n");
+
+      const report = prohibitionReport(join(root, "skills"));
+      expect(report.map((item) => [item.skillName, item.prohibitions])).toEqual([
+        ["alpha", 2],
+        ["beta", 0],
+      ]);
+      expect(report[0]?.per1kWords).toBeGreaterThan(0);
     });
   });
 
