@@ -48,11 +48,35 @@ this page should preserve the source and rationale.
 ## Latest-Model Guidance
 
 Both vendors now say the same thing about their newest models: they follow
-instructions precisely, so prompts written to push older models harder now
-over-trigger. Repo-owned skills are written against this guidance. Re-read
-these sources when a new model family ships, and before each harness review.
+instructions precisely, including instructions in skills and `AGENTS.md`, so
+prompts written to push older models harder now over-trigger. Repo-owned skills
+are written against this guidance.
 
-| Source | Vendor guidance (accessed 2026-09-26) |
+**Where to look first.** Each vendor keeps one entry page that always points at
+its newest model. Start every review there, then add or replace model-specific
+rows below:
+
+- OpenAI: [Latest model guide](https://developers.openai.com/api/docs/guides/latest-model)
+  (GPT-6 Astra, with Sol and Luna variants, as of 2026-09-26).
+- Anthropic: [Model migration guides](https://platform.claude.com/docs/en/about-claude/models/migration-guide)
+  (Claude Fable 5.1 / Mythos 5.1 and Opus 5.5, as of 2026-09-26), which link
+  each model's migration and prompting pages.
+
+When a new model family ships, add its row, keep the previous generation's row
+until the next review, then drop it once its lessons are either absorbed into
+the writing rules or no longer apply.
+
+### Current generation (accessed 2026-09-26)
+
+| Source | Vendor guidance |
+| --- | --- |
+| [OpenAI: Latest model (GPT-6)](https://developers.openai.com/api/docs/guides/latest-model) | GPT-6 Astra is "stronger at general instruction following than previous models" and "can be more sensitive to instructions contained in skills and other files, such as `AGENTS.md`"; OpenAI "strongly recommend[s] auditing skills and other files accessible to your model." Its suggested system prompt says "the user's instructions take precedence over guidelines provided in a skill," and when a skill makes the agent pause, ask, or leave work unfinished, the agent should name the `SKILL.md`, quote the instruction, and explain how it applies. GPT-6 is "more likely to ask for clarification where earlier models would make assumptions," so prompts should "bias towards action": finish authorized work first so "user approval is the final step," and no permission is needed "for reversible tasks, read-only actions, reviews or fixes." It delegates to subagents readily; say when and how much. For coding: "Do not write tests for reversible, low-impact changes that mirror the implementation"; run checks appropriate to the change and broaden only when failures or new changes justify it. Writing: plain paragraphs over lists, state the action directly, avoid slop words. `none` reasoning effort is gone (use `low`). |
+| [Prompting Claude Fable 5.1](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-1) and [Fable 5.1 migration guide](https://platform.claude.com/docs/en/models/fable-5-1/migration-guide) | For autonomous runs, tell the model that asking "Want me to…?" blocks the work and that reversible actions following from the request proceed without asking. "The user's request — or the plan they approved — sets the scope, and the scope is the deliverable: don't quietly narrow, widen, or swap it." Before ending a turn, a closing plan, question, or promise ("I'll…") means the work is not done yet. Remove old scaffolding such as "hold all findings for the final response" and generic anti-formatting rules; say when lists help instead. Check that evidence supports a state-changing command before running it. Fable 5.1 writes fewer progress updates and may serialize tool calls in long loops; ask for updates or batching explicitly when the harness needs them. Sweep effort on your own evals rather than carrying settings over. |
+| [Prompting Claude Opus 5.5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5-5) and [Opus 5.5 migration guide](https://platform.claude.com/docs/en/models/opus-5-5/migration-guide) | Thinking is always on: remove "think carefully" and write-out-your-reasoning instructions, since effort is the control, and re-test old thinking-disabled mitigations. In unattended agentic runs, a text-only end of turn is a report, not completion; keep a checklist the model updates and continue by naming open items. Mark pasted or retrieved text so instructions inside it are treated as data. |
+
+### Cross-model guidance
+
+| Source | Vendor guidance |
 | --- | --- |
 | [Claude prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) | Covers the Claude 5.x and Mythos/Fable generation. Newer models are "more responsive to the system prompt"; prompts built to fix under-triggering now over-trigger, and "the fix is to dial back any aggressive language" (`CRITICAL: You MUST` becomes `Use this tool when...`). Say what to do rather than what not to do. Give the reason behind an instruction. Replace blanket defaults ("if in doubt, use X") with targeted conditions. Newer models reach for subagents too readily; delegate only for parallel, isolated, or independent work. Take reversible local actions freely and ask before hard-to-reverse or shared-system actions. Track long-horizon state in structured files and git. |
 | [Anthropic: Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) | Write instructions at the "right altitude": neither brittle hard-coded if/else logic nor vague guidance, but "strong heuristics." Aim for "the minimal set of information that fully outlines your expected behavior." Prefer a few canonical examples over exhaustive edge-case lists. For long horizons use compaction, structured notes, and subagents that return condensed summaries. |
@@ -87,6 +111,17 @@ Distilled from the sources above. Apply them when writing or reviewing
    status narration and fixed preambles are not required.
 9. **Evidence before rules.** A new runtime rule should come from an observed
    failure on the current model, ideally captured as an eval case.
+10. **User instructions outrank skill text.** Skills are defaults. When a skill
+    would make the agent pause, ask, or stop short of what the user asked, the
+    agent names the skill and quotes the instruction rather than silently
+    complying. Skills that gate on approval do so only for irreversible,
+    shared-state, or genuinely user-owned decisions.
+11. **Do authorized work before asking.** Finish the reversible, read-only, and
+    already-authorized parts first, so a question arrives with concrete work
+    behind it and approval is the last step. A turn that ends in a plan or a
+    promise has not finished.
+12. **Proof proportional to risk.** Tests and checks match the change; tests
+    that only mirror a reversible, low-impact implementation are not added.
 
 `bun run check:skills` reports prohibition density per skill as a review
 signal; it does not fail the build.
