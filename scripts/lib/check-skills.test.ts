@@ -394,13 +394,13 @@ describe("skill checker", () => {
 
   test("reports prohibition density without counting evals", async () => {
     await withTempProject((root) => {
-      writeFixtureFile(root, "skills/alpha/SKILL.md", "---\nname: alpha\ndescription: Alpha.\n---\nDo not do x. Never do y. Reviewers do not edit. You MUST stop.\n");
+      writeFixtureFile(root, "skills/alpha/SKILL.md", "---\nname: alpha\ndescription: Alpha.\n---\nDo not do x. Never do y. Reviewers do not edit. You MUST stop. You MUST NOT push.\n");
       writeFixtureFile(root, "skills/alpha/evals/RUBRIC.md", "Do not count me.\n");
       writeFixtureFile(root, "skills/beta/SKILL.md", "---\nname: beta\ndescription: Beta.\n---\nPrefer x because y; it always helps.\n");
 
       const report = prohibitionReport(join(root, "skills"));
       expect(report.map((item) => [item.skillName, item.prohibitions])).toEqual([
-        ["alpha", 4],
+        ["alpha", 5],
         ["beta", 0],
       ]);
       expect(report[0]?.per1kWords).toBeGreaterThan(0);

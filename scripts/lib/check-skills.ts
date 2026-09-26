@@ -374,7 +374,8 @@ export type ProhibitionReport = {
 // Phrases match in any case (mid-sentence "do not" counts); the all-caps
 // emphasis words match only in caps, since lowercase "always" is ordinary prose.
 const prohibitionPattern = /\b(?:do not|don't|never|must not)\b/gi;
-const emphasisPattern = /\b(?:MUST|ALWAYS)\b/g;
+// "MUST NOT" is already counted as "must not", so skip it here.
+const emphasisPattern = /\b(?:MUST(?!\s+NOT\b)|ALWAYS)\b/g;
 
 export const prohibitionReport = (skillsRoot: string): ProhibitionReport[] =>
   skillNames(skillsRoot)
