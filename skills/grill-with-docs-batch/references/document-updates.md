@@ -4,20 +4,16 @@ Read when accepted answers need recording or the user requests document cleanup.
 
 ## Plan vs ADR Routing
 
-Do not treat `docs/plans/*` and `docs/adr/*` as interchangeable planning
-surfaces.
-
-Use a plan file for execution scope, non-goals, order, files, tests, gates, and
+Plans and ADRs have different jobs. Use a plan file for execution scope, non-goals, order, files, tests, gates, and
 open implementation questions. Use an ADR only for durable decisions future
 agents should not relitigate: public contracts, command surfaces, private-data
 boundaries, safety policy, architecture layers, rejected alternatives, and
 accepted consequences.
 
 Some tasks need both. In that case, keep the ADR short and durable, then let the
-plan reference the ADR while owning execution details. Do not create an ADR for
-local implementation defaults, a checklist, progress notes, or a decision that
-the current plan can reverse cheaply. Do not put phase checklists, verification
-logs, or task sequencing into an ADR.
+plan reference the ADR while owning execution details. Checklists, progress
+notes, verification logs, sequencing, local defaults, and decisions the plan
+can cheaply reverse all belong in the plan.
 
 Before asking "should this be an ADR?", first state whether the current issue is
 contract-shaped or execution-shaped. If it is execution-shaped, default to the
@@ -29,10 +25,9 @@ Use [plan selection](../../_shared/references/plan-paths.md) for existing
 canonical sources and new plan filenames. Keep accepted decisions in that
 source rather than renaming plans or creating a parallel artifact.
 
-Keep ADR numbering for durable decisions, but make the creation threshold strict.
-Do not create ADRs for proof loops, reruns, local-dev evidence, benchmark runs,
-one-off gates, phase checklists, task status, report wording, local artifact
-regeneration, or reversible implementation details.
+Keep ADR numbering for durable decisions with a strict threshold: proof loops,
+reruns, local-dev or benchmark evidence, one-off gates, task status, report
+wording, artifact regeneration, and reversible details are plan material.
 
 ## ADR And Plan Surface Cleanup
 

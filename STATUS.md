@@ -1,6 +1,6 @@
 # Status
 
-Last reviewed: 2026-09-21
+Last reviewed: 2026-09-26
 
 ## Current State
 
@@ -91,6 +91,10 @@ The current maintenance focus is keeping the repo dogfoodable:
   needs; hand off concrete proof commands and success conditions
 - keep durable task state target-local: one task control plane per task, workers
   return evidence, and only an explicit project integrator writes shared status
+- write skills to the latest-model rules in
+  `docs/human/agent-harness-references.md`: outcome first, positive
+  instructions with reasons, prohibitions only for true invariants; watch the
+  prohibition density that `bun run check:skills` reports
 - keep skill entrypoints compact, local hooks and CI aligned, and verify with
   `bun run verify`
 

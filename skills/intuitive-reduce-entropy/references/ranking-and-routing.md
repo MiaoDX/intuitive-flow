@@ -81,8 +81,8 @@ sequence before presenting the direction as decision-ready:
 3. `$intuitive-refactor`: only after the target seam, accepted checklist,
    evidence ladder, and stop condition are explicit.
 
-Do not ask the user to choose these subskills for an architecture slice; the
-sequence is part of this skill's default routing. You may skip a subskill only
+This sequence is the default routing for an architecture slice, so run it
+without asking the user to pick subskills. You may skip a subskill only
 when a current plan, ADR, or gate already contains equivalent evidence. If so,
 cite the source and summarize the evidence instead of rerunning the same
 discussion.
@@ -128,8 +128,8 @@ retrospectives, generated evidence, and proof artifacts.
 ## Bounded Proposal Rule
 
 For broad or ambiguous cleanup, audit first and stop after a decision-complete
-selection packet. Do not move files, delete tests, rewrite guidance, or edit
-production code while the user is still asking what should be cleaned.
+selection packet. While the user is still asking what should be cleaned, the
+repo stays unchanged.
 
 For a precise target where the user asks for implementation or deeper planning,
 return the evidence, proof commands, execution risks, and stop condition so the
@@ -138,8 +138,8 @@ ideas parked instead of letting the work expand by drift.
 
 ## No-Change Outcome Rule
 
-Treat "stable enough; no change needed" as a valid result. This skill must not
-manufacture a maintenance slice just because the user asked for an entropy pass.
+Treat "stable enough; no change needed" as a valid result; an entropy pass
+does not owe a maintenance slice.
 After inspection, recommend no change when the remaining observations are only:
 
 - taste or wording polish that does not change routing, contracts, tests, or
@@ -206,8 +206,8 @@ evidence before trusting final status.
 
 Model policy: prefer the current best/default model for normal delegated work.
 Use smaller or quicker models only for truly easy probes where mistakes are
-low-cost and easy to catch. Do not add multi-run orchestration here; leave
-fan-out/fan-in runners for a later proven need.
+low-cost and easy to catch. Multi-run fan-out/fan-in runners wait for a
+proven need.
 
 ## Canonical Cleanup Rule
 
@@ -221,8 +221,7 @@ are migration targets, not contracts.
   references to the new shape.
 - Delete old wrappers, aliases, command paths, import paths, dead branches, and
   compatibility shims after known consumers are migrated.
-- Do not ask whether to preserve compatibility as a generic architecture
-  choice. If the user explicitly requests a temporary migration bridge, mark it
+- Compatibility is not a generic architecture choice to ask about. If the user explicitly requests a temporary migration bridge, mark it
   as a tactical exception and record the removal trigger in the active plan,
   scope gate, or output report.
 - If a broad command, install, or user-facing surface is affected, propose the

@@ -181,12 +181,12 @@ describe("plan prose gate workflow contract", () => {
     const sourceOfTruth = read("references/source-of-truth.md");
 
     expect(gate).toContain("Shadow mode is report-only");
-    expect(gate).toContain("Do not block planning or add Bun");
+    expect(gate).toContain("planning continues, and the target\nrepo does not need Bun");
     expect(gate).toContain("rewrite=not-run");
     expect(gate).toContain("plan-prose-gate.jsonl");
     expect(gate).toContain("--report --since 7d");
     expect(skill).toContain("references/plan-prose-gate.md");
-    expect(sourceOfTruth).toContain("shadow result is checkpoint evidence");
+    expect(sourceOfTruth).toContain("result is checkpoint evidence");
   });
 });
 

@@ -11,9 +11,9 @@ Default to requiring all relevant validation layers for the changed behavior:
 static/lint/type checks, unit tests, focused contract tests, integration tests,
 and manual or local live proof gates when the behavior depends on an agent
 pipeline, provider route, simulator, Docker service, hardware, UI interaction,
-or other runtime boundary. Do not omit a gate merely because it is local-only,
-credentialed, Docker-backed, provider-backed, slow, hardware-dependent, or
-requires a real simulator. Instead classify it explicitly:
+or other runtime boundary. A gate that is local-only, credentialed,
+Docker-backed, provider-backed, slow, hardware-dependent, or simulator-backed
+still belongs in the contract, classified explicitly:
 
 - required deterministic gate;
 - required integration gate;
@@ -23,7 +23,7 @@ requires a real simulator. Instead classify it explicitly:
 
 ### Runnable Product Proof Rule
 
-Do not stop at code-local tests when the change affects a user-facing run
+Code-local tests are not enough when the change affects a user-facing run
 surface, operator console route, coding-agent workflow, agent prompt/runtime,
 MCP server, simulator-backed task, report artifact, or demo contract. The
 preflight must name the cheapest public command or manual flow that actually

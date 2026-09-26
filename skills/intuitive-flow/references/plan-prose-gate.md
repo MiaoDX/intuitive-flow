@@ -14,9 +14,9 @@ output: checked | rewritten | skipped, findings, deterministic-lint status,
         and protected-contract status
 ```
 
-The plan author remains the only writer. The gate does not own scope,
-architecture, acceptance criteria, verification, approval, or execution. It
-must not add a second plan artifact or append review logs to the canonical plan.
+The plan author remains the only writer. Scope, architecture, acceptance,
+verification, approval, and execution belong to their owners, and gate output
+lives outside the canonical plan (no second artifact, no appended logs).
 
 ## Current Rollout: Shadow
 
@@ -36,7 +36,7 @@ Shadow mode is report-only:
    bun skills/intuitive-flow/scripts/plan-prose-gate.ts docs/plans/<slug>.md
    ```
 
-3. Do not rewrite the canonical plan.
+3. Leave the canonical plan unchanged.
 4. Let the helper append summary-only trial evidence to the local state file.
 5. Report one compact result outside the plan:
 
@@ -46,8 +46,8 @@ Shadow mode is report-only:
 
 The helper is evidence, not a portability requirement. If Bun or the helper is
 unavailable in a target repo, complete the inline inspection and report
-`score=unavailable; record=unavailable`. Do not block planning or add Bun to the
-target repo.
+`score=unavailable; record=unavailable`; planning continues, and the target
+repo does not need Bun.
 
 ## Local Trial Memory
 
@@ -112,7 +112,7 @@ Apply these rules to ordinary plan prose:
   meaning.
 
 Sentence length is an advisory signal, not a hard plan gate. Technical
-conditions sometimes need more than 25 words. Do not trade precision for a
+conditions sometimes need more than 25 words. Keep precision over a
 shorter score.
 
 This is an STE-flavored adapter, not certified ASD-STE100 output. It improves
@@ -147,7 +147,7 @@ and keep the canonical plan unchanged.
 
 ## Promotion Gate
 
-Do not enable automatic rewriting until representative fixture and live shadow
+Automatic rewriting stays off until representative fixture and live shadow
 runs show:
 
 - no protected-contract or semantic regressions;

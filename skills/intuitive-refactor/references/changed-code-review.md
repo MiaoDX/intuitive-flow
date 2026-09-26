@@ -83,5 +83,4 @@ When fixes are authorized:
 4. Skip `NITPICK` unless the user explicitly asked for all fixes.
 5. Rerun the relevant proof after code changes.
 
-Do not broaden into adjacent architecture cleanup. Park broader findings for a
-future `$intuitive-reduce-entropy` or normal `$intuitive-refactor` scope gate.
+Adjacent architecture findings are parked for a future `$intuitive-reduce-entropy` or normal `$intuitive-refactor` scope gate.

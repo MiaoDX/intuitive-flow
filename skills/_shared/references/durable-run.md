@@ -78,14 +78,13 @@ active plan/session scope and keep edits inside that scope. Cross-plan
 dependencies may be linked, but do not reclassify unrelated plans or refresh
 their ledgers unless the user explicitly switches scope.
 
-Do not create parallel resume files such as `.continue-here.md` or
-`.planning/HANDOFF.json`. If GSD owns the run, update state through GSD tools;
-otherwise keep resumable state in the active capsule and canonical plan.
+Resumable state lives in one place: GSD tools when GSD owns the run, otherwise
+the active capsule and canonical plan, with no parallel `.continue-here.md` or
+`.planning/HANDOFF.json`.
 
 Keep the capsule compact enough to read during a hot resume. It should summarize
-state, not preserve history. Do not paste reusable prompts, long command
-transcripts, worker raw logs, or every completed slice into the capsule; put
-durable history in commits and compact gate summaries.
+state, not preserve history; reusable prompts, command transcripts, raw worker
+logs, and completed-slice lists go to commits and compact gate summaries.
 
 Maintain the capsule by replacing stale state, not by appending dated blocks.
 When a new slice changes the objective, blocker, next action, or proof boundary,
@@ -178,8 +177,8 @@ logs, or recovery across sessions provides a concrete benefit and host policy
 permits it. Name that benefit and give each worker one bounded sub-phase,
 artifact/proof target, and handoff. A long task or a plan file alone does not
 require a worker. If delegation is unavailable, execute directly when feasible;
-otherwise report the actual capability needed. A worker must not mark the main
-run complete merely because its sub-phase passed.
+otherwise report the actual capability needed. Only the main session marks the
+run complete; a passing sub-phase is evidence toward that call.
 
 Choose a review cadence instead of a short hard timeout:
 
@@ -207,7 +206,7 @@ minutes during long campaigns. A checkpoint should leave:
   evidence changed;
 - semantic commit when the repo/user workflow expects commits.
 
-Do not grow the canonical plan into a per-command transcript. Compress routine
+Keep the canonical plan a contract, not a per-command transcript: compress routine
 slice details into batch summaries and keep raw logs in artifacts.
 At each checkpoint, also check whether the plan ledger or active capsule has
 started to drift into a timeline. If so, replace the timeline with the current

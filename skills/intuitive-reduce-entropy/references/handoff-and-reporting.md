@@ -39,13 +39,13 @@ Use this route unless the user already names a specific entropy source.
    ranked packet unless the user already selected the architecture candidate.
 6. **Selection packet**: when the user selects all or part of the packet,
    preserve the selected candidates, suggested review order, likely specialist owners,
-   proof commands, execution risks, parked items, and stop condition. Do not
-   silently narrow the selected set to one small slice.
+   proof commands, execution risks, parked items, and stop condition, keeping
+   the whole selected set rather than narrowing it to one small slice.
 7. **Handoff**: end with `Recommended next action:` and `Shortcut:` (a
    ready-to-paste command, or `park`/`none` when none exists). If a plan
    document exists, state whether it was updated or should be updated by the
-   next action. Do not list many equally weighted next options unless the user
-   explicitly asked to compare routes.
+   next action. Give one recommended next action; compare several routes only
+   when the user asked for that.
 
 When the user asks for a compact selected-candidates packet, use this shape so
 the next stage does not repeat the whole audit:
@@ -62,8 +62,8 @@ Add the demand-gate result, architecture packet, eng-review recommendation, or
 parked items only when they apply to the selected candidates.
 
 The user may route the selected packet to implementation, `$grill-with-docs-batch`,
-`$intuitive-preflight`, another planning loop, or simply keep it as a backlog.
-Do not assume which route they will choose.
+`$intuitive-preflight`, another planning loop, or simply keep it as a backlog;
+the route is their choice.
 
 ## User Input Routing
 
@@ -111,8 +111,8 @@ or park the packet.
 
 ## Decision Policy
 
-Suggest a review order only when repo evidence makes the ordering clear. Do not
-auto-select the subset to implement. Pause for the user when a
+Suggest a review order only when repo evidence makes the ordering clear; the
+user picks the subset to implement. Pause for the user when a
 decision would materially change:
 
 - runtime behavior or public APIs

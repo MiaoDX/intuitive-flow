@@ -70,7 +70,8 @@ surface aligned after a large code change.
 The sub-phase must compare the changed implementation surface to the target
 repo's existing human-facing surface: `README.md`, `ARCHITECTURE.md`,
 `STATUS.md`, `docs/human/**`, or explicitly named equivalents when present.
-Do not create a missing human-doc tier merely to complete Flow closeout.
+Closeout aligns the docs the repo already has; a missing tier stays missing
+unless the task calls for it.
 
 Use `$intuitive-doc guard` for focused changed-file checks only when the change
 is small. Use `$intuitive-doc cleanup <scope>` for big refactors and whenever
@@ -123,9 +124,8 @@ as "source plan ledger already current" or "direct edit was not plan-backed".
 
 Before writing closeout docs, run a small plan hygiene pass: if the plan or
 active capsule has become append-only, replace stale sections with the current
-objective, proof boundary, next gate, and evidence links. Do not add another
-"Updated:" paragraph when the useful outcome is to delete or compress old
-status. Routine command transcripts, worker play-by-play, repeated failed
+objective, proof boundary, next gate, and evidence links; deleting or
+compressing old status beats adding another "Updated:" paragraph. Routine command transcripts, worker play-by-play, repeated failed
 attempts, and superseded approach notes belong in result artifacts or commits,
 not in the hot-resume plan surface.
 
@@ -151,9 +151,8 @@ future agents would otherwise rediscover incorrectly, such as:
   boundaries;
 - stable package/module ownership or public contract names.
 
-Do not put volatile current status, active phase progress, one-off decisions,
-logs, secrets, API keys, local artifact paths, or large copied docs into
-memories. If a memory would merely duplicate `README.md`, `ARCHITECTURE.md`,
+Memories hold stable facts only: never secrets or API keys, and not volatile
+status, phase progress, one-off decisions, logs, local paths, or copied docs. If a memory would merely duplicate `README.md`, `ARCHITECTURE.md`,
 `STATUS.md`, `AGENTS.md`, or `docs/human/**`, prefer a short pointer to the
 canonical doc instead of copying the content.
 
@@ -180,7 +179,7 @@ Use this decision table:
 | Unrelated dirty files outside the slice | Leave them untouched; still commit the owned slice. |
 | Inherited in-scope changes | Inspect and verify them, then include them in the owned commit. |
 | Same-file overlap that can be separated safely | Use hunk-specific staging and commit the owned hunks. |
-| Current user says not to commit; repo/phase forbids it; stop condition is review-only; same-file overlap is unsafe; or the slice has an unresolved blocker | Do not commit; cite the exact source or file/blocker in closeout. |
+| Current user says not to commit; repo/phase forbids it; stop condition is review-only; same-file overlap is unsafe; or the slice has an unresolved blocker | Skip the commit; cite the exact source or file/blocker in closeout. |
 | Unsourced handoff note such as "commits disabled" | Ignore it and follow the default. |
 
 For each commit:
@@ -252,10 +251,10 @@ Parked-follow-up rules:
   unless that item is already inside the accepted checklist.
 - The follow-up must be a coherent slice with an explicit verification command
   or durable evidence artifact.
-- Do not auto-run `scope-expansion`, `deferred-by-policy`, or
-  `needs-human-decision` items.
-- Do not turn closeout into a new cleanup loop. List remaining parked work and
-  stop unless the user explicitly approves the next `$intuitive-refactor` slice.
+- `scope-expansion`, `deferred-by-policy`, and `needs-human-decision` items
+  are reported, not run.
+- Closeout ends the run: list remaining parked work and stop, unless the user
+  approves the next `$intuitive-refactor` slice.
 - If the follow-up would require a new plan, new dependency policy, baseline
   blessing, broad migration, or external/human-owned evidence, classify it as
   `needs-human-decision` or `scope-expansion` instead of auto-running it.

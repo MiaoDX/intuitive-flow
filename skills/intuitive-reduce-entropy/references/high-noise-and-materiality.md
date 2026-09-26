@@ -2,7 +2,7 @@
 
 ## High-Noise Surface Budget
 
-Do not solve a large repo by reading every historical or generated artifact.
+Large repos are not audited by reading every historical or generated artifact.
 Those surfaces often matter, but their cleanup value comes from current
 confusion, live references, false confidence, or stale reachable entrypoints,
 not from their size.
@@ -46,9 +46,9 @@ small `sed` windows. Bound both the command and the printed result:
   fewer examples are enough. If the script is not available, produce the same
   summary shape manually; do not substitute a long custom `find`,
   `git ls-files`, or `rg --files` listing.
-- Do not include high-noise roots in broad path-listing commands such as
-  `rg --files gr00t_manipulation scripts tests docs .planning .scratch specs`
-  or `find .planning docs/plans ...`. Use the summary script for those roots,
+- Keep high-noise roots out of broad path listings (`rg --files ... .planning
+  .scratch specs`, `find .planning docs/plans ...`); they flood the context.
+  Use the summary script for those roots,
   then run targeted `rg -n <specific token> <specific paths>` or a small `sed`
   window only after a candidate needs proof.
 - prefer counts, grouped summaries, and 5-20 representative examples over long
@@ -78,10 +78,9 @@ node "<skill-dir>/scripts/bounded-command-summary.mjs" \
   <command> <args...>
 ```
 
-Use the full temp log only for targeted follow-up. Do not paste hundreds of
-collected test names, generated rows, or repeated warnings into the transcript
-when the candidate only needs failure type, count, and a few representative
-lines.
+Use the full temp log only for targeted follow-up. A candidate usually needs
+failure type, count, and a few representative lines, not hundreds of test
+names, generated rows, or repeated warnings.
 
 For `pytest --collect-only`, use the pytest-specific mode. It omits the raw
 tail because the tail often still contains many node IDs:
@@ -93,13 +92,13 @@ node "<skill-dir>/scripts/bounded-command-summary.mjs" \
 ```
 
 If a tiny sample of collected node IDs is relevant, print at most 10 with a
-purpose-specific grep. Never print the full collection list.
+purpose-specific grep rather than the full collection list.
 
 When using `bash -lc`, quote search patterns for the shell that will run `rg`.
 Backticks inside double quotes are still command substitutions; prefer fixed
 string probes such as `rg -n -F -e 'sonic_native' -- docs .planning` or single
-quoted regex patterns. Do not put markdown-code tokens like `` `name` `` inside
-double-quoted `rg` patterns.
+quoted regex patterns; markdown-code tokens like `` `name` `` inside
+double-quoted `rg` patterns are shell substitutions.
 
 When a high-noise surface produces a candidate, include the evidence chain:
 
@@ -173,9 +172,9 @@ These are not eligible by themselves:
 
 Group supporting work with its parent slice. If a route parser changes, its
 regression test belongs to the route-parser candidate. If a gate is strengthened,
-the doc command update belongs to the gate candidate. Do not count supporting
-tests or docs as separate entropy groups unless they independently satisfy the
-eligible list above.
+the doc command update belongs to the gate candidate. Supporting tests or docs
+count as their own group only when they independently meet the eligible list
+above.
 
 ### Commit-Worthiness Gate
 

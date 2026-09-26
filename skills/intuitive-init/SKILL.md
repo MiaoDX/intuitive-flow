@@ -11,7 +11,7 @@ evidence. Preserve commands, hazards, permission boundaries, and ownership rules
 Generated init output is a suggestion to merge, never an overwrite source.
 
 For ordinary guidance edits, inspect the target file and the commands/docs it
-references. Do not require a repo-wide scan, nested agent, or full manual read.
+references; a repo-wide scan, nested agent, or full manual read is optional.
 Keep shared rules in AGENTS.md and Claude-only additions in CLAUDE.md. Use
 $intuitive-doc for broad human-documentation cleanup.
 
@@ -32,8 +32,7 @@ only when they have a real consumer, and leave a task-specific pointer at the ro
 Keep credentials and machine-local paths out of committed guidance.
 
 When durable Intuitive workflow adoption is in scope, preserve the repo's
-planning/status paths and explicit project-integrator ownership. Do not create
-STATUS.md or new state machinery as a side effect of a guidance cleanup.
+planning/status paths and explicit project-integrator ownership.
 Do not create `STATUS.md`, a validator, or a status directory merely because Init ran.
 
 Report changed files, verification, remaining risks, and whether generated init

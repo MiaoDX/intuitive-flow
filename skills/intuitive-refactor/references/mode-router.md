@@ -91,14 +91,14 @@ future slices do not rediscover it.
 Use the [shared proof selector](../../_shared/references/durable-run.md#proof-selector)
 to choose proof by the behavior the slice can change. Record the command or
 manual procedure, observed behavior, success condition, and unavailable proof.
-Do not hand off a bare numbered confidence level; mock and real-runtime proof
-must remain distinguishable in the contract.
+Hand off the proof itself rather than a numbered confidence level, keeping mock
+and real-runtime proof distinguishable in the contract.
 Focused proof is preferred when it observes the changed behavior. Expensive
 full-suite, visual, simulator, product, or manual gates are required only when
 the accepted scope changes behavior those gates uniquely observe, focused proof
 cannot cover the blast radius, or the gate file explicitly requires them.
 
-Do not claim completion from narrower proof than the scope requires.
+Completion claims match the proof: narrower proof supports a narrower claim.
 
 ## Stop Conditions
 
@@ -106,8 +106,8 @@ Stop when the accepted checklist is complete, proof passes or a concrete
 blocker is named, stale surfaces in scope are removed or explicitly parked, and
 remaining findings are outside accepted severities.
 
-Do not broaden into nearby cleanup just because it is visible. Park it with
-enough evidence for a future selection decision.
+Nearby cleanup that is merely visible gets parked with enough evidence for a
+future selection decision.
 
 Stop and discuss or route to `$intuitive-reduce-entropy` when the next
 candidate cannot name a deletion, merge, canonical owner move, stale-surface

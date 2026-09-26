@@ -1,52 +1,40 @@
 # Source Of Truth And Provenance
 
 Use this reference whenever a route creates, promotes, or consumes planning
-artifacts.
-
-Use [plan selection](../../_shared/references/plan-paths.md) for canonical
-sources and new filenames. The paths below illustrate Intuitive defaults;
-preserve the selected repo convention throughout intake and closeout.
+artifacts. Use [plan selection](../../_shared/references/plan-paths.md) for
+canonical sources and new filenames; the paths below are Intuitive defaults,
+and the repo's existing convention wins.
 
 ## Stage Source Of Truth
 
-Keep one authoritative artifact family per stage:
+Each stage has one authoritative artifact family, updated in place at handoff:
 
 | Stage | Source of truth |
 | --- | --- |
 | Before committed execution | `docs/plans/<slug>.md` or GitHub issues |
-| During execution | Selected plan/issue plus task resume state; GSD-owned `.planning/*` when using GSD |
-| After shipping | verification reports, summaries, retrospectives, and release/closeout notes |
+| During execution | The selected plan or issue plus task resume state; GSD-owned `.planning/*` when GSD runs |
+| After shipping | Verification reports, summaries, retrospectives, closeout notes |
 
-When handing work from one stage to the next, update the canonical artifact in
-place. Treat generated review logs, restore files, chat history, and temporary
-notes as evidence only.
+Review logs, restore files, chat history, and temporary notes are evidence.
 
-When adopting the default layout, `docs/plans/` is a flat plan-contract surface:
-one plan, one `docs/plans/<slug>.md` file. Do not create lifecycle subdirectories under
-`docs/plans/` for active, proposed, or archived work. Lifecycle belongs in the
-plan's `Plan Ledger`, `Status`, `Last reviewed`, shipped evidence, remaining
-gates, and superseded-by links. Current execution progress belongs in
-`docs/status/active/<task-slug>.md`; GSD runtime state belongs only in
-GSD-owned `.planning/*` artifacts.
+In the default layout `docs/plans/` is flat: one plan per file. Lifecycle lives
+in each plan's ledger and status fields (status, last reviewed, shipped
+evidence, remaining gates, superseded-by links) rather than in `active/` or
+`archive/` subdirectories. Current execution progress lives in
+`docs/status/active/<task-slug>.md`.
 
 ## Plan Ledger And Dashboard
 
-When creating or materially updating `docs/plans/<slug>.md`, keep a compact
-`## Plan Ledger` near the top of the file, before long rationale. The ledger is
-the hot-resume selector for shared-worktree projects where multiple plan-backed
-sessions may be active at once; it should answer "what session am I in?" before
-an agent reads the full plan.
-
-Use this shape, preserving equivalent local wording when a repo already has a
-ledger convention:
+A plan keeps a compact `## Plan Ledger` near the top so an agent in a shared
+worktree can tell which session it is in before reading the whole plan
+(reuse the repo's wording when it already has one):
 
 ```markdown
 ## Plan Ledger
 
 - Plan status: ACTIVE | PARKED | PROPOSED | DONE | SUPERSEDED
 - Session scope: short-session-name
-- Parent plan: path or none
-- Child plans: paths or none
+- Parent plan / Child plans: paths or none
 - Last updated: YYYY-MM-DD
 - Current slice: one or two lines
 - Next action: one concrete next step
@@ -54,198 +42,115 @@ ledger convention:
 - Do not touch from this session: unrelated plans/files
 ```
 
-`docs/plans/README.md`, when present or useful to create, is the plan dashboard.
-It should list the current plan set and enough session scope to choose the right
-plan without opening every file. Update the dashboard row when creating a plan
-or changing a plan's status, session scope, parent/child relation, current
-slice, next action, or blocker. Do not turn the dashboard into a transcript; it
-is an index.
+`docs/plans/README.md`, when present, is an index of plans with enough session
+scope to pick one; update its row when a plan's status, scope, relations, next
+action, or blocker changes.
 
-Plan maintenance is replacement-first. When current truth changes, edit the
-ledger, dashboard row, and current contract in place; remove or compress stale
-next actions, superseded gates, rejected scene/profile details, completed
-worker slices, and old blocker prose. Prefer one current objective, one next
-gate, one blocker summary, and links to evidence notes over dated append blocks.
-If a plan is drifting away from its main goal or forcing agents to read long
-history before the next action is clear, compact it before continuing.
+Plans are maintained by replacement: when the truth changes, rewrite the
+ledger, dashboard row, and contract in place and delete superseded next
+actions, gates, and blocker prose. One objective, one next gate, one blocker
+summary, and links to evidence keep a plan readable; compact it when agents
+must read history to find the next action.
 
-Before editing a plan-backed repo with multiple active plans, identify the
-active plan/session scope from the user prompt, `docs/plans/README.md`, the
-plan ledger, or the active capsule. Lock the run to that scope. Update only that
-plan's ledger, its related active capsule/result notes, and files in its
-accepted scope unless the user explicitly switches sessions.
-
-Cross-plan artifacts may be linked as evidence or dependencies, but do not
-opportunistically reclassify another plan, tick its checklist, or rewrite its
-ledger/dashboard row from inside the current session. If another plan appears
-stale, mention it as a parked observation or ask for a session switch.
+With several active plans, lock the run to the plan named by the prompt,
+dashboard, ledger, or active capsule, and edit only that plan and its accepted
+scope. Other plans can be linked as dependencies; a plan that looks stale is
+reported as an observation or handled after an explicit session switch.
 
 ## Plan-Like Intake
 
-Accept the user-selected execution-ready plan at its existing path, or the
-issue/GSD artifact that already owns scope. Do not copy it into a new location.
-
-If an ADR or human reference document supplies decisions but is not an execution
-plan, use [plan selection](../../_shared/references/plan-paths.md) to reuse or
-create a plan containing goal, scope, non-goals, constraints, decisions,
-acceptance, verification, risks, and any GSD handoff trigger. Link the source
-as evidence; keep execution ledgers out of ADRs and human docs unless requested.
-
-If the source is mostly reference material, record the material unknowns and
-stay within the requested planning scope. Preserve existing lifecycle layouts;
-changing them is a separate explicitly scoped migration.
+Accept a user-selected execution-ready plan, issue, or GSD artifact at its
+existing path. When an ADR or reference doc supplies decisions but is not an
+execution plan, reuse or create a plan (goal, scope, non-goals, constraints,
+decisions, acceptance, verification, risks, GSD trigger when relevant) that
+links the source as evidence. Execution ledgers stay out of ADRs and human
+docs. Changing a repo's lifecycle layout is its own scoped migration.
 
 ## Context Files
 
-Some repos maintain `CONTEXT.md` or `CONTEXT-MAP.md` through
-`grill-with-docs`. Treat context files as domain-language and
-decision-boundary evidence, not as PRDs, scratch pads, implementation
-checklists, or phase ledgers.
-
-Check context at the start of fuzzy idea shaping, plan shaping,
-architecture/refactor routing, or implementation when terms, invariants, or
-long-lived contract boundaries matter. If `CONTEXT-MAP.md` exists, use it to
-select the relevant context file instead of assuming root `CONTEXT.md`.
-
-For plan-backed implementation, read the source `docs/plans/<slug>.md` and any
-context files it references before editing code. If the plan names domain terms,
-public/private boundaries, acceptance criteria, safety rules, command surfaces,
-or MCP/tool contracts, the relevant `CONTEXT.md` entry is part of the execution
-context package, not optional background reading.
-
-When discussion resolves vocabulary or durable boundaries, update context
-through `grill-with-docs` semantics: keep domain language in context, keep
-implementation steps in `docs/plans` or GSD artifacts, and cite context from the
-plan when it informs acceptance criteria.
-
-Do not delete or relocate `CONTEXT.md` merely because `docs/plans` or
-`.planning` artifacts exist. Remove only obsolete entries after checking
-references and preserving the active domain language somewhere equivalent.
+`CONTEXT.md` and `CONTEXT-MAP.md` (maintained through `grill-with-docs`) record
+domain language and decision boundaries; they are not PRDs, checklists, or
+phase ledgers. Check them when terms, invariants, or contract boundaries
+matter, using `CONTEXT-MAP.md` to pick the right file. For plan-backed
+implementation, the plan and the context entries it references are part of the
+execution context and are read before editing code. Vocabulary decisions go to
+context; implementation steps go to the plan or GSD. Context files stay when
+plans exist; prune only obsolete entries after checking references.
 
 ## Project Status Integration
 
-Use the target-state discovery, roles, capsule selection, and lifecycle rules
-in `../../_shared/references/durable-run.md`.
+Roles, capsule selection, and lifecycle follow
+[durable run](../../_shared/references/durable-run.md).
 
-At start, discover whether the repo already names `STATUS.md` or an equivalent
-project-level status surface. Read it when it is relevant to the task. If none
-exists, record project status as `not present/not adopted`; do not create it or
-fail the run.
+At start, find whether the repo names `STATUS.md` or an equivalent project
+status surface and read it when relevant. If none exists, record project status as `not present/not adopted`
+and continue; status is optional.
 
-Project status changes only for material project truth:
+A project-status delta is material only for supported commands or runtime
+surfaces, public contracts or proof boundaries, or project-wide focus,
+blockers, verification state, or next action. Task slices, worker results,
+task-local blockers, and ordinary completion evidence stay in the task capsule.
 
-- supported commands or install/runtime surfaces;
-- public contracts or proof boundaries;
-- project-wide focus, blocker, verification state, or next action.
+At checkpoint and closeout, the task control plane classifies the delta as
+`none` or `material`. Only the explicit project integrator applies a material
+delta; a task control plane without that role reports it in the handoff. When
+writer ownership is ambiguous, the status edit waits, because merging
+concurrent interpretations corrupts shared status. Status stays short and
+project-level rather than duplicating plans, capsules, or notes.
 
-Routine task slices, worker results, task-local blockers, handoff narration,
-and ordinary completion evidence stay in the task capsule and canonical task
-state. They do not make a project-status delta material.
+When the project integrator edits `STATUS.md` or an equivalent first-read doc,
+it treats 120 lines as a soft budget and 200 lines as a hard closeout limit.
+Between 121 and 200 lines it trims stale history within the owned edit. Above
+200 lines it must compact the document before commit and closeout, keeping current state, commands,
+focus, blockers, next maintenance, and links, and moving detail to an existing
+plan, retrospective, or human doc.
 
-At checkpoint and closeout, the task control plane classifies
-`project-status delta: none|material`. Only the explicit project integrator may
-apply a material delta to the existing project-status surface. A task control
-plane without that role reports the delta in its handoff and leaves shared
-status unchanged. If project-writer ownership is ambiguous, stop the status
-edit rather than merging concurrent interpretations.
-
-Keep project status short and project-level. Do not duplicate the plan, GSD
-ledger, active capsule, or execution notes. If an explicit project integrator
-checks an existing status surface and no material delta exists, report that it
-was checked and left unchanged.
-
-When the explicit project integrator updates an existing `STATUS.md` or an
-equivalent first-read project-status document, treat 120 lines as a soft budget
-and 200 lines as a hard closeout limit. At 121-200 lines, remove stale shipped
-history and repeated task detail when that cleanup is in the owned status edit.
-Above 200 lines, compact the document before commit and closeout: preserve
-current state, supported commands, current focus, blockers, next maintenance,
-and links; move durable detail to an existing plan, retrospective, or
-human-doc surface rather than creating a new archive convention.
-
-This is an agent closeout gate, not permission for a worker or unassigned task
-control plane to rewrite shared status. A target repo may mirror the numeric
-limit in a deterministic hook or CI check, but Flow must not depend on a hook,
-invoke an AI from a commit hook, or mutate target repos during skill install.
-When no material project-status delta exists or project-integrator ownership is
-absent, report an oversized status document as a parked cleanup signal instead
-of expanding the task or violating writer ownership.
+This budget is not permission for a worker or unassigned task control plane to
+rewrite shared status. A target repo may mirror the limit in a hook or CI
+check, but Flow works without one: it does not invoke an AI from a commit hook
+or mutate target repos during install. Without a material delta or integrator
+role, an oversized status doc is reported as a parked cleanup signal.
 
 ## Plan Freshness At Closeout
 
-When a flow implements work from `docs/plans/<slug>.md`, update that source plan
-before final closeout if its status, current contract, or remaining-work list no
-longer matches HEAD. A plan that still says `Proposed`, `Active`, "to
-implement", or "next slice" after the accepted work has shipped is stale
-canonical state and will misroute future agents.
+A plan that still says `Proposed`, `Active`, or "next slice" after its work
+shipped misroutes future agents, so closeout refreshes what changed: ledger
+fields, the dashboard row, status (`Done`, `Partially implemented`,
+`Superseded`, or `Active` with remaining gates), last reviewed, the current
+implementation contract, shipped evidence (commits, commands, reports), and
+remaining or parked work with its unpark trigger. Prefer refreshing existing
+fields over appending history; keep an old decision visible only when a link
+cannot carry it.
 
-Refresh only the planning truth that changed:
-
-- `Plan Ledger`: `Plan status`, `Last updated`, `Current slice`, `Next action`,
-  `Blocked on`, `Parent plan`, `Child plans`, and `Do not touch from this
-  session` when those changed.
-- `docs/plans/README.md`: the dashboard row for that plan when status/session
-  or next action changed.
-- `Status`: `Done`, `Partially implemented`, `Superseded`, or still `Active`
-  with explicit remaining gates, if the plan keeps a separate status section.
-- `Last reviewed`: the closeout date.
-- `Current implementation contract`: current command/API/profile/tool shape if
-  it changed.
-- `Shipped evidence` or equivalent: commit ids, verification commands, report
-  artifacts, or phase/retrospective links.
-- `Remaining work` / `Parked follow-ups`: items not implemented, with why they
-  remain out of scope or what gate would unpark them.
-
-Before adding a new closeout paragraph, decide whether it should replace stale
-state. The default closeout edit is a compact refresh of existing fields plus
-evidence links. Add append-only history only when the old decision must remain
-visible for future agents and cannot be represented by a link to a result note,
-commit, ADR, or archive.
-
-Do not mark a plan implemented merely because code changed. If acceptance gates
-were not verified, local/hardware evidence is still pending, or in-scope work
-remains required, use `Partially implemented` or `Active` and state the blocker.
-If a newer plan supersedes the old one, link the newer plan instead of rewriting
-history into the old file.
+A plan counts as implemented when its acceptance gates are verified. Pending
+local or hardware evidence, or remaining in-scope work, means `Partially
+implemented` or `Active` with the blocker named. A superseding plan is linked
+from the old one.
 
 ## Provenance Honesty
 
-Name where decisions and artifacts came from. If another workflow actually ran,
-say so and use its output as evidence. If you produced an output inline with
-similar reasoning, label it as `intuitive-flow` output instead of borrowing the
-other workflow's name.
+Name where decisions and artifacts came from. Output from a workflow that
+actually ran is cited as that workflow's; output produced inline with similar
+reasoning is labeled `intuitive-flow` output.
 
-Artifact rules:
-
-- `docs/plans/<slug>.md` pre-plans may be produced inline by this skill.
-- Discussion skills such as `grill-with-docs` shape decisions through
-  questions; the current agent still writes the plan unless a writing skill is
-  invoked.
-- The opt-in Flow plan prose gate checks form after decision reconciliation. Its
-  shadow result is checkpoint evidence, not canonical plan content. Summary-only
-  trial events live in the user-local XDG state file. Do not append lint scores,
-  candidate rewrites, or trial logs to the plan.
-- ADRs are not default outputs of this skill. Create/update ADRs only when an
-  ADR-capable skill is explicitly used or the user asks.
-- `.planning/*` files are GSD-owned. Do not approximate GSD by editing
-  `.planning/` inline or by writing `.planning/HANDOFF.json`; use
-  `gsd-ingest-docs` and `gsd-plan-phase`.
-- One-off worker prompts and delegation packets are transient execution
-  material. Do not create `docs/agents/prompts/` by default; promote reusable
-  agent rules to `docs/agents/<runbook>.md` and keep one-run prompt summaries in
-  the active capsule only when they affect resume.
-- `~/.gstack` artifacts, review logs, and restore points are evidence only.
+- Flow may write `docs/plans/<slug>.md` pre-plans inline. Discussion skills such
+  as `grill-with-docs` shape decisions; the current agent writes the plan.
+- The opt-in plan prose gate's result is checkpoint evidence reported outside
+  the plan; scores, candidate rewrites, and trial logs stay out of the plan.
+- ADRs are written only by an ADR-capable skill or on request.
+- `.planning/*` is GSD-owned and changes only through GSD commands
+  (`gsd-ingest-docs`, `gsd-plan-phase`), so GSD's own state stays consistent.
+- One-off worker prompts are transient; reusable agent rules go to
+  `docs/agents/<runbook>.md`, and a prompt summary enters the capsule only when
+  it affects resume.
+- `~/.gstack` artifacts, review logs, and restore points are evidence.
 
 ## Phase Granularity
 
-A GSD phase should be one coherent delivery unit: one user-visible capability,
-acceptance artifact, risk gate, bounded refactor outcome, or local-dev
-validation gate.
-
-Do not create a new phase for every blocker, diagnostic improvement, proof
-retry, report tweak, checker tweak, ADR-worthy detail, or commit. Use tasks,
-checklist items, notes, or verification rows inside the current phase.
-
-Before creating more than three phases from one user prompt, stop and propose a
-smaller grouping. Name the smallest sensible phase set, what stays as tasks,
-what is parked, and what evidence closes each phase.
+A GSD phase is one coherent delivery unit: a user-visible capability, an
+acceptance artifact, a risk gate, a bounded refactor outcome, or a local-dev
+validation gate. Blockers, diagnostics, proof retries, report or checker
+tweaks, and individual commits are tasks or checklist rows inside the current
+phase. Before creating more than three phases from one prompt, propose a
+smaller grouping: the phase set, what stays as tasks, what is parked, and the
+evidence that closes each phase.
