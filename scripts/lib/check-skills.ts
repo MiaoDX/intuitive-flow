@@ -371,7 +371,10 @@ export type ProhibitionReport = {
 
 // Latest-model guidance: reserve Never/Do not for true invariants. This is a
 // review signal only; it never fails the check.
-const prohibitionPattern = /\b(?:Do not|Don't|Never|must not|MUST|NEVER|ALWAYS)\b/g;
+// Phrases match in any case (mid-sentence "do not" counts); the all-caps
+// emphasis words match only in caps, since lowercase "always" is ordinary prose.
+const prohibitionPattern = /\b(?:do not|don't|never|must not)\b/gi;
+const emphasisPattern = /\b(?:MUST|ALWAYS)\b/g;
 
 export const prohibitionReport = (skillsRoot: string): ProhibitionReport[] =>
   skillNames(skillsRoot)
@@ -383,7 +386,7 @@ export const prohibitionReport = (skillsRoot: string): ProhibitionReport[] =>
           continue;
         }
         const text = readFileSync(join(skillsRoot, skillName, file), "utf8");
-        prohibitions += text.match(prohibitionPattern)?.length ?? 0;
+        prohibitions += (text.match(prohibitionPattern)?.length ?? 0) + (text.match(emphasisPattern)?.length ?? 0);
         words += text.split(/\s+/).filter(Boolean).length;
       }
       const per1kWords = words === 0 ? 0 : Math.round((prohibitions / words) * 10_000) / 10;

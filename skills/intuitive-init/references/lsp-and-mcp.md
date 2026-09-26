@@ -82,7 +82,8 @@ When `Cargo.toml` or `Cargo.lock` is present, use this order:
    `.cargo/config.toml`, and any `rust-toolchain.toml`/`rust-toolchain` file.
 2. Verify `rust-analyzer` is available from the repo's declared toolchain or
    approved development environment. Prefer the toolchain manager's pinned
-   version; do not add a second global installation or rewrite toolchain files.
+   version over a second global installation, and leave toolchain files as
+   they are.
 3. Preserve existing workspace/source-root and generated-code settings. If a
    checked-in `.vscode/settings.json` or rust-analyzer config already supplies
    them, verify it rather than creating a competing config.

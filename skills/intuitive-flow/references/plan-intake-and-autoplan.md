@@ -5,8 +5,8 @@ to implement from a plan.
 
 ## Planning Route
 
-Choose the owner from the unresolved decision; do not ask the user to choose a
-workflow menu or repeat settled decisions.
+Choose the owner from the unresolved decision yourself, reusing settled
+decisions rather than offering the user a workflow menu.
 
 | Need | Owner |
 | --- | --- |
@@ -39,9 +39,9 @@ Every plan path below is an example of the selected source, not a migration gate
 When a repository follows the usual plan-file convention, a new ordinary plan
 request resolves to one `docs/plans/<slug>.md` file. Keep the planning loop,
 scout findings, and accepted decisions attached to that canonical file. A
-planning-only request ends at that plan checkpoint; do not create or mutate
-`.planning/*`, `ROADMAP.md`, `STATE.md`, or a GSD phase merely because the user
-mentions GSD, agents, or planning. Preserve a repository's explicit existing
+planning-only request ends at that plan checkpoint. `.planning/*`,
+`ROADMAP.md`, `STATE.md`, and GSD phases appear only through an explicit GSD
+handoff; a mention of GSD, agents, or planning is not one. Preserve a repository's explicit existing
 convention when it uses another canonical path.
 
 Pre-plan contents:
@@ -64,7 +64,7 @@ When drafting or revising `docs/plans/<slug>.md`, follow
 `source-of-truth.md`'s Plan Ledger And Dashboard rules: set the session scope,
 record parent/child relationships, name the no-touch boundary, and update the
 existing plan dashboard when the plan set or next action changes. If multiple
-plans exist, do not update unrelated plan ledgers while shaping this one.
+plans exist, edit only this plan's ledger while shaping it.
 
 ## Risk-Triggered Unknown-Unknown Scout
 

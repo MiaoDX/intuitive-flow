@@ -39,9 +39,8 @@ defaults. Before creating or editing status artifacts, inspect `AGENTS.md`,
 artifacts for an explicit project-status surface and task-owned state path.
 
 Treat project status as optional. An existing `STATUS.md` or explicitly named
-equivalent may be integrated under the ownership rules below. If none exists,
-do not create one merely because an Intuitive skill ran, and do not treat its
-absence as an error.
+equivalent may be integrated under the ownership rules below. Its absence is
+normal: running an Intuitive skill is not a reason to create one.
 
 For plan paths, use [plan selection](plan-paths.md); task resume state is
 selected separately below.
@@ -63,8 +62,8 @@ docs/status/active/<task-slug>.md
 ```
 
 Create the default directory only in case 3. In case 4, report explicitly that
-repository-level cross-session resume is unavailable; do not invent another
-committed path. In the rules below, `active capsule` means whichever task-owned
+repository-level cross-session resume is unavailable rather than inventing
+another committed path. In the rules below, `active capsule` means whichever task-owned
 surface this selection produced.
 
 The capsule is a resume surface, not the canonical plan. Keep the canonical
@@ -75,8 +74,8 @@ When the repo uses `docs/plans/README.md` as a plan dashboard or puts a
 `## Plan Ledger` at the top of plan files, treat those as the session selector.
 Before continuing in a shared worktree with multiple active plans, identify the
 active plan/session scope and keep edits inside that scope. Cross-plan
-dependencies may be linked, but do not reclassify unrelated plans or refresh
-their ledgers unless the user explicitly switches scope.
+dependencies may be linked; unrelated plans and their ledgers change only after
+the user explicitly switches scope.
 
 Resumable state lives in one place: GSD tools when GSD owns the run, otherwise
 the active capsule and canonical plan, with no parallel `.continue-here.md` or
@@ -164,7 +163,7 @@ session, or host orchestrator must assign one task control plane before
 coordinated workers start. When an existing capsule or host activity exposes a
 different owner, stop. Two fully independent processes that start
 simultaneously without shared coordination cannot be made mutually exclusive by
-this contract; do not claim otherwise.
+this contract, and reports should say so.
 
 ### Execution Surface Selection
 

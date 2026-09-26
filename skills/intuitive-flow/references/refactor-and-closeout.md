@@ -50,9 +50,9 @@ independent verification probes; use delegated workers for broad or long-running
 `$intuitive-refactor` execution. Direct edits from any worker require disjoint
 ownership and main-session integration.
 
-Once implementation starts, do not keep discovering and implementing new P2
-cleanup. Add newly discovered work only when it is a P0/P1 regression found
-while verifying the accepted checklist.
+Once implementation starts, the checklist is fixed: newly discovered P2
+cleanup is parked, and new work enters only as a P0/P1 regression found while
+verifying the accepted checklist.
 
 On repeated runs of the same refactor prompt, read the persistent gate first.
 If status is `DONE` and evidence remains green, stop instead of rescanning for

@@ -7,8 +7,9 @@ disable-model-invocation: true
 # Cross Review
 
 Challenge an existing proposal when the user requests a second opinion. Return
-one keep, simplify, replace, or needs-decision verdict; do not edit the proposal,
-implement changes, or invent a plan. Use the appropriate code-review skill for PRs.
+one keep, simplify, replace, or needs-decision verdict. The output is that
+verdict: the proposal, implementation, and any new plan stay with their owners.
+Use the appropriate code-review skill for PRs.
 
 ## Freeze The Input
 

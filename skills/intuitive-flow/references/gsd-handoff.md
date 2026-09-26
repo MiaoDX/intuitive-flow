@@ -17,8 +17,8 @@ canonical plan checkpoint.
 
 - Use `gsd-ingest-docs` for project setup, roadmap changes, requirement merges,
   or conflict detection across multiple ADR/PRD/SPEC/DOC sources.
-- Use a manifest when ingesting a selected `docs/plans/<slug>.md`; do not pass
-  one markdown file as the ingest scan path.
+- Ingest a selected `docs/plans/<slug>.md` through a manifest; a single
+  markdown file is not a valid ingest scan path.
 - Use `gsd-plan-phase` when a GSD roadmap phase already exists and needs an
   executable `PLAN.md`.
 - Use `gsd-plan-phase <phase> --prd docs/plans/<slug>.md` when an approved plan

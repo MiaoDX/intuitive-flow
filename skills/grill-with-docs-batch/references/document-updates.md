@@ -67,4 +67,4 @@ After each accepted batch:
 
 For plan-backed work, prefer updating the existing plan over scattering
 resolved decisions through chat. Refresh any existing lifecycle header
-concisely; do not add one for tiny local changes.
+concisely; tiny local changes need no new header.

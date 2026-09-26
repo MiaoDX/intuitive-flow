@@ -110,8 +110,8 @@ The default human-facing source of truth is intentionally small:
 - `docs/human/**`
 
 `AGENTS.md` and `CLAUDE.md` are agent-operational docs. Use them for startup
-rules, local hazards, command pointers, and skill routing, but do not treat them
-as human-authoritative project truth by default.
+rules, local hazards, command pointers, and skill routing; human-authoritative
+project truth lives in the human docs.
 
 Agent planning, generated evidence, history, and working notes belong in
 explicit agent/process surfaces such as `.planning/**`, `docs/plans/**`,
@@ -176,8 +176,8 @@ Next safe task:
 
 In an active discovery loop, this same rule is the saturation check. If a fresh
 round finds no P0/P1 or materially useful P2 candidate, mark the discovery
-artifact as saturated or parked, record why the loop stopped, and do not invent
-another cleanup direction merely to satisfy a requested count.
+artifact as saturated or parked and record why the loop stopped; a requested
+count is not a reason to invent another direction.
 
 ## Delegation Model
 
@@ -225,7 +225,7 @@ are migration targets, not contracts.
   as a tactical exception and record the removal trigger in the active plan,
   scope gate, or output report.
 - If a broad command, install, or user-facing surface is affected, propose the
-  forward migration/removal plan; do not default to a compatibility layer.
+  forward migration/removal plan rather than a compatibility layer.
 
 ## Public Entry Model
 

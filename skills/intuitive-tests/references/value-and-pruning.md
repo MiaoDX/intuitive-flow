@@ -102,5 +102,5 @@ Actions:
   regression coverage.
 - **Replace** only when deletion would remove the last proof of meaningful
   behavior.
-- **Reject new tests** if they do not pass the admission questions; do not leave
-  TODO-quality tests in the suite to be cleaned later.
+- **Reject new tests** that fail the admission questions now, rather than
+  leaving TODO-quality tests for later cleanup.

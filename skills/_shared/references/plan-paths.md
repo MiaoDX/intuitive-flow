@@ -5,8 +5,8 @@ Use this rule whenever a skill creates, consumes, or moves an execution plan.
 1. Reuse the user-selected or existing canonical plan for the same work. Keep
    its path, including an issue or a GSD-owned plan when that already owns scope.
 2. For a new plan, follow explicit repository guidance, then the conventions of
-   nearby active plans. Existing paths and lifecycle layouts are valid; do not
-   rename or move plans merely to match Intuitive defaults.
+   nearby active plans. Existing paths and lifecycle layouts are valid and stay
+   as they are; Intuitive defaults apply only to new plans.
 3. If no convention exists, recommend `docs/plans/MM-DD-<slug>.md`, using the
    creation date in the user's timezone, for example `docs/plans/09-21-skill-handoff.md`.
    Prefer a date prefix when local examples are mixed or naming is otherwise

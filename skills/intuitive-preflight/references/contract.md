@@ -59,8 +59,8 @@ main session.
 
 ## Approval Handling
 
-If the user approves a DRAFT preflight contract in the next turn, do not
-rewrite the contract unless their approval includes changes. Execute or route
+If the user approves a DRAFT preflight contract in the next turn, the contract
+stands as written unless their approval includes changes. Execute or route
 according to the approved contract.
 
 Approval phrases include `LGTM`, `approve`, `go ahead`, `do this`, and
