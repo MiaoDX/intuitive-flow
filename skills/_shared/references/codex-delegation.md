@@ -1,7 +1,8 @@
 # Codex Delegation Policy
 
-This is the canonical route for Codex worker selection. The managed config is a
-preference; the host-provided tool surface and system safety constraints are the
+This is the Codex half of the [shared delegation policy](delegation.md); read
+that file first for when to delegate and the worker contract. This file covers
+Codex worker selection only. The managed config is a preference; the host-provided tool surface and system safety constraints are the
 runtime authority.
 
 ## Route Selection

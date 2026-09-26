@@ -49,10 +49,8 @@ Use this skill when:
 | Cleanup | Human docs contain stale, duplicated, or over-detailed material. | Moved, archived, shortened, or removed docs with links preserved. | The material belongs in agent guidance or execution plans. |
 | Guard | A proposed doc change needs placement review. | Placement decision and reason. | The user already selected the doc target and asks to edit. |
 
-For non-trivial runs, state `Selected mode:`, `Why:`, and `Redirect:` before
-auditing or editing. For tiny doc edits, one sentence can carry the same
-information. Add a final `Mode note:` only when manual invocation, ambiguity, or
-a better owner matters.
+Name the selected mode in one sentence before non-trivial audits or edits, and
+mention a better owner only when one exists.
 
 ## Human Surface Rules
 

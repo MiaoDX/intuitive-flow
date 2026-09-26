@@ -1,43 +1,35 @@
+Always include these four sections (write `none` when empty):
+
 What changed:
 - <change>
 
-Verification:
-- <command/check> - <result>
-
 Proof:
 - Claim level: <complete | partial | blocked | not-run>
-- Required gates run: <commands/checks and pass/fail summary, or none>
-- Required gates skipped/blocked: <gate - reason - impact on completion claim, or none>
-- Evidence artifacts: <paths/URLs/log summaries/screenshots, or none>
-
-Intuitive-doc alignment:
-- <updated/moved/removed/checked-left-unchanged/skipped with reason; include doc paths>
-
-Commits:
-- <commit id(s) | allowed blocker with exact current instruction/policy/file overlap/unresolved blocker>
-
-Stop gate:
-- <checked command/artifact and result | not applicable>
+- Gates run: <commands/checks and pass/fail summary>
+- Gates skipped/blocked: <gate - reason - impact on the completion claim>
+- Evidence: <paths/URLs/log summaries, when useful>
 
 Scope changes:
-- <none | accepted changes from unknown-unknown scout/plan reconciliation/GSD handoff/refactor gate/execution discoveries>
-
-Source plan:
-- <updated the selected canonical plan/issue/gate to DONE/ACTIVE/PARKED/SUPERSEDED/partially complete with remaining gates | checked and left unchanged because ... | not applicable>
-
-Task state:
-- <selected capsule/equivalent path and ACTIVE/PARKED/BLOCKED state | terminal state reconciled then deleted/moved to existing history surface | host/session persistence with reduced durability | not applicable>
-
-Project status:
-- Role: <project integrator | task control plane only | none>
-- Delta: <none | material: concise project-level change>
-- Integration: <updated existing path | checked and left unchanged | handed off to project integrator | not present/not adopted | blocked by ambiguous ownership>
-
-Serena memories:
-- <updated mem:name | checked and left unchanged | not configured/not available>
-
-Parked todo triage:
-- <classification summary; automatic follow-up ran/not applicable/skipped because ...>
+- <accepted changes from review, reconciliation, handoff, or execution discoveries>
 
 Parked todos:
-- <item> - parked because <reason>; source: <plan/review/doc>; unpark when <trigger>
+- <item> - parked because <reason>; unpark when <trigger>
+
+Include the following only when they carry information for this run:
+
+Commits:
+- <commit id(s) | blocker with the exact instruction/policy/overlap>
+
+Docs:
+- <human docs updated, or checked and intentionally left unchanged>
+
+Source plan:
+- <canonical plan/issue/gate status after this run, with remaining gates>
+
+Task state:
+- <capsule path and ACTIVE/PARKED/BLOCKED | terminal state reconciled then removed | host/session persistence with reduced durability>
+
+Project status:
+- Role: <project integrator | task control plane only>
+- Delta: <none | material: concise project-level change>
+- Integration: <updated existing path | handed off to project integrator | not present/not adopted | blocked by ambiguous ownership>

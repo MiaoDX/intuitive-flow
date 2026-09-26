@@ -33,14 +33,12 @@ small `sed` windows. Bound both the command and the printed result:
   ad hoc directory scans:
 
   ```bash
-  node "$HOME/.codex/skills/intuitive-reduce-entropy/scripts/high-noise-summary.mjs"
+  node "<skill-dir>/scripts/high-noise-summary.mjs"
   ```
 
-  When working inside this source repo, this equivalent path is also valid:
-
-  ```bash
-  node skills/intuitive-reduce-entropy/scripts/high-noise-summary.mjs
-  ```
+  `<skill-dir>` is the directory of the loaded `SKILL.md` (for example
+  `~/.claude/skills/intuitive-reduce-entropy`, `~/.codex/skills/...`, or
+  `skills/intuitive-reduce-entropy` inside this source repo).
 
   Run it from the target repository root. The script includes common historical
   and generated surfaces plus large `tests`/`test` and `profiles` surfaces when
@@ -75,7 +73,7 @@ full output to a temp log and print only a bounded summary. Prefer the bundled
 summary runner over hand-written shell snippets:
 
 ```bash
-node "$HOME/.codex/skills/intuitive-reduce-entropy/scripts/bounded-command-summary.mjs" \
+node "<skill-dir>/scripts/bounded-command-summary.mjs" \
   --kind generic --timeout 180 -- \
   <command> <args...>
 ```
@@ -89,7 +87,7 @@ For `pytest --collect-only`, use the pytest-specific mode. It omits the raw
 tail because the tail often still contains many node IDs:
 
 ```bash
-node "$HOME/.codex/skills/intuitive-reduce-entropy/scripts/bounded-command-summary.mjs" \
+node "<skill-dir>/scripts/bounded-command-summary.mjs" \
   --kind pytest-collect --timeout 180 -- \
   env PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 <pytest collect command>
 ```
@@ -203,17 +201,10 @@ enough impact to justify a standalone commit:
 When validating an open-ended discovery loop, write the candidate groups to JSON
 and run [scripts/materiality-gate.mjs](../scripts/materiality-gate.mjs) before
 adding another group to the selection packet. Resolve the script relative to
-this `SKILL.md`, not relative to the target repository. In Codex that is
-usually:
+this `SKILL.md`, not relative to the target repository:
 
 ```bash
-node "$HOME/.codex/skills/intuitive-reduce-entropy/scripts/materiality-gate.mjs" candidates.json
-```
-
-When working inside this source repo, this equivalent path is also valid:
-
-```bash
-node skills/intuitive-reduce-entropy/scripts/materiality-gate.mjs candidates.json
+node "<skill-dir>/scripts/materiality-gate.mjs" candidates.json
 ```
 
 The gate is intentionally small: it cannot replace engineering judgment, but it

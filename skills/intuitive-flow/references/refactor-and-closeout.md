@@ -44,7 +44,7 @@ approved refactor contract. It is the source of truth for the pass and must name
 - persistent gate file, usually `docs/plans/refactor-<target>.md`
 - stop condition
 
-Follow the shared Codex delegation policy for worker handoffs. Use short workers
+Follow the [shared delegation policy](../../_shared/references/delegation.md) for worker handoffs. Use short workers
 for report-only scans, stale-path searches, test discovery, and
 independent verification probes; use delegated workers for broad or long-running
 `$intuitive-refactor` execution. Direct edits from any worker require disjoint
@@ -162,9 +162,9 @@ is available and memory references changed. This catches broken `mem:`
 references, not semantic drift; still manually compare stale operational facts.
 
 If memories are ignored by Git, memory updates are local-only unless the repo
-explicitly tracks curated `.serena/project.yml` or `.serena/memories/**`. Do not
-fail closeout merely because Serena is unavailable or unconfigured; report
-`Serena memories: not configured/not available`.
+explicitly tracks curated `.serena/project.yml` or `.serena/memories/**`.
+Serena being unavailable or unconfigured does not affect closeout; mention
+memories in the closeout only when you updated one.
 
 ## Semantic Commits
 

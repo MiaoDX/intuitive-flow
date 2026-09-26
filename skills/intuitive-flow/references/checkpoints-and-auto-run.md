@@ -1,6 +1,6 @@
 # Checkpoints And Auto-Run Policy
 
-Use this reference before whole-flow, durable, tmux-worker, or
+Use this reference before whole-flow, durable, worker, or
 `/goal` runs and before crossing review, GSD, execution, cleanup, or
 verification boundaries.
 

@@ -7,19 +7,29 @@ its own domain gate, source plan, and completion criteria.
 
 ## First Gates
 
-Apply these gates before reading large context, launching workers, running
-tests, or editing files:
+This section is the single canonical copy of the run-control gates. Other
+references link here instead of restating them.
 
-- Latest user intent wins over old run state. Stop, pause, status-only, and
-  discuss-first language means read-only control mode until the user explicitly
-  resumes execution.
-- Host goal state is a stop gate when it is `blocked` or `complete`. An active
-  host goal is prior intent, not permission to ignore the latest message.
-- A canonical plan, issue, refactor gate, or equivalent accepted contract owns
-  scope. Do not invent adjacent cleanup because a long run still has budget.
-- If the next required proof depends on hardware, credentials, private data,
-  paid services, human records, or another outside actor, record that blocker
-  and stop instead of switching to unrelated cleanup.
+Apply these before reading large context, launching workers, running tests, or
+editing files:
+
+- **Latest user intent wins over old run state.** A durable run remembers what
+  the user wanted earlier; the latest message says what they want now.
+  Execute/continue/resume proceeds through the normal gates. Status-only,
+  discuss-first, stop, or pause means read-only control mode: summarize state
+  and options, but do not edit, run workers, or commit until the user resumes.
+- **Host goal state is prior intent, not permission.** An `active` host goal
+  continues only when the latest message allows execution. `blocked` or
+  `complete` ends the old objective; further work is a fresh request. The main
+  session adopts an existing root goal rather than creating a second one;
+  workers may hold only a child goal for their own sub-phase.
+- **The accepted contract owns scope.** A canonical plan, issue, refactor gate,
+  or equivalent accepted contract decides what is in scope. Remaining budget is
+  not a reason to add adjacent cleanup.
+- **External blockers end the run.** If the next required proof depends on
+  hardware, credentials, private data, paid services, human records, or another
+  outside actor, record the blocker and stop. Work that only keeps the run busy
+  without changing that blocker is not progress.
 
 ## Target-Repo State Discovery
 

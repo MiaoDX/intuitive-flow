@@ -7,62 +7,33 @@ in `../templates/` when creating durable artifacts:
 - `../templates/pre-plan.md`
 - `../templates/closeout.md`
 
+Every shape follows one rule: include a field only when it carries information
+for this run. Omit fields that would read `none`, `not applicable`, or restate
+the default. Readers should see decisions, not an empty form.
+
 ## Upfront Route Brief
 
-Return before the first non-trivial artifact or edit:
+Return before the first non-trivial artifact or edit. For tiny direct work, one
+sentence naming the path is enough.
 
 ```text
-Current state: <classification>
-Latest user intent: <execute | read-only/status | discuss-first | stop/pause>
-Host goal state: <none | active | blocked | complete | unavailable>
-Goal ownership: <adopt existing root | create root | no root goal | worker sub-goal only>
 Selected path: <stage/skill sequence>
 Why: <one sentence>
-Bypassed/left behind: <stage - reason; stage - reason>
-Execution surface: <read-only main session | main session direct | host-approved worker>
-Babysitter cadence: <none | every N min based on task risk/proof duration>
-Task control plane: <current main session | named owner | not applicable>
-Project status role: <project integrator | task control plane only | none>
-Commit rhythm: <auto-commit verified owned slices | blocked by exact current source/file>
-Stop gate: <repo command/artifact deciding complete | blocked | continue, or "none">
-Stop/continue point: <what happens before the next checkpoint>
+Bypassed: <stage - reason>                    (when heavier routing was plausible)
+Execution surface: <main session | worker - benefit>  (when delegation is considered)
+Commit rhythm: <auto-commit verified owned slices | blocked by ...>
+Stop gate: <command/artifact that decides complete or blocked>
 ```
 
-For tiny direct work, one sentence is enough, but still name the selected path
-when heavier routing was plausible.
+Add task control plane, project status role, or review cadence only when
+ownership is shared or a worker runs. When the latest user intent is read-only
+(see the shared First Gates), return a status/decision summary instead of a
+route brief with implementation steps.
 
-When execution-surface choice matters, add one reason based on the shared
-selector: bounded sequential work, independent parallel work, context isolation,
-or recovery needs. Direct durable work does not require an exception.
+## Hot Resume
 
-If the latest user intent is read-only, discuss-first, stop, or pause, use
-`Execution surface: read-only main session` and do not include implementation
-steps.
-
-## Hot Resume Experiment Contract
-
-Return before implementation in active-goal resume/debug turns:
-
-```text
-Context budget: <low | medium | high, plus reason if not low>
-Latest user intent: <execute | read-only/status | discuss-first | stop/pause>
-Host goal state: <none | active | blocked | complete | unavailable>
-Goal ownership: <adopt existing root | create root | no root goal | worker sub-goal only>
-Current blocker: <one sentence>
-Hypothesis: <one falsifiable claim>
-Expected decision delta: <what next decision changes if this succeeds/fails>
-Command/artifact: <exact command or artifact summary path>
-Success means: <observable outcome>
-Failure means: <observable outcome and next stop/route>
-No-touch scope: <files, subsystems, services, or workflows not touched>
-```
-
-If `Expected decision delta` is empty, continue read-only inspection only long
-enough to form a decision-changing contract. Do not make an observability edit
-that preserves the same next decision.
-
-Do not emit an implementation contract when latest user intent or host goal
-state says to stop. Emit a read-only status/decision summary instead.
+Use the experiment contract in
+[context budget and loop guard](context-budget-and-loop-guard.md).
 
 ## Pre-Plan
 
@@ -81,16 +52,13 @@ Stop condition: <what should be true before the next stage>
 
 Use `../templates/closeout.md`.
 
-The final user-facing response after completed implementation/refactor work must
-visibly enumerate `What changed`, `Proof`, `Scope changes`, and `Parked todos`.
-Do not bury these categories inside prose, verification logs, commit messages,
-worker handoffs, or "follow-ups available" language. If a category is empty,
-print it with `none`. If any required product-run, local/live, or manual gate
-was skipped or blocked, set the proof claim level to `partial` or `blocked`
-instead of implying full completion.
+After completed implementation or refactor work, the final response always
+shows four categories so nothing is hidden in prose or logs: `What changed`,
+`Proof`, `Scope changes`, and `Parked todos` (write `none` for an empty one of
+these four). If a required product-run, live, or manual gate was skipped or
+blocked, the proof claim level is `partial` or `blocked`, not complete.
 
 ## Repo Guidance Updates
 
-When updating root agent guidance, update `AGENTS.md` and `CLAUDE.md` only. Do
-not scatter workflow rules across README or architecture docs unless the user
-asks.
+When updating root agent guidance, update `AGENTS.md` and `CLAUDE.md` only,
+unless the user asks for README or architecture changes.

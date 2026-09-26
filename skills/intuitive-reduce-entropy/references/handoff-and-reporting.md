@@ -7,9 +7,8 @@ Use this route unless the user already names a specific entropy source.
 1. **Orient**: launch parallel bounded probes for root guidance, human docs,
    package/test config, automation, top-level layout, and the current
    verification command when two or more surfaces need inspection. Use the
-   current host's approved delegation policy for those probes. On Codex, this
-   means the capability-gated native-v2 route in
-   [shared Codex delegation policy](../../_shared/references/codex-delegation.md). For
+   [shared delegation policy](../../_shared/references/delegation.md) for those
+   probes. For
    tiny repos or precise prompts, inspect the relevant surface directly. For
    broad prompts, run the high-noise summary preflight before searching
    `.planning`, `docs/plans`, `.scratch`, generated/log/tmp surfaces, large
@@ -42,7 +41,8 @@ Use this route unless the user already names a specific entropy source.
    preserve the selected candidates, suggested review order, likely specialist owners,
    proof commands, execution risks, parked items, and stop condition. Do not
    silently narrow the selected set to one small slice.
-7. **Handoff**: end with `Recommended next action:` and `Shortcut:`. If a plan
+7. **Handoff**: end with `Recommended next action:` (and a ready-to-paste
+   `Shortcut:` command when one exists). If a plan
    document exists, state whether it was updated or should be updated by the
    next action. Do not list many equally weighted next options unless the user
    explicitly asked to compare routes.
@@ -52,21 +52,14 @@ the next stage does not repeat the whole audit:
 
 ```text
 Selected candidates:
-Entropy source:
-Demand gate:
-Zen hint:
-Pattern hint:
-Zoom-out map (architecture-shaped slices only):
-Eng-review recommendation (architecture-shaped slices only):
-Evidence:
-Affected paths:
-Discovery skill:
-Architecture packet (architecture-shaped slices only):
+Evidence and affected paths:
 Owner skills:
 Proof commands:
-Parked items:
 Stop condition:
 ```
+
+Add the demand-gate result, architecture packet, eng-review recommendation, or
+parked items only when they apply to the selected candidates.
 
 The user may route the selected packet to implementation, `$grill-with-docs-batch`,
 `$intuitive-preflight`, another planning loop, or simply keep it as a backlog.

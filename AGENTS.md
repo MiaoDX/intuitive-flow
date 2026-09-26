@@ -13,7 +13,7 @@
 - Use `$intuitive-flow` for ordinary execution, `$intuitive-reduce-entropy` for unknown cleanup targets, and `$intuitive-refactor` for selected seams.
 - Use `$intuitive-preflight` for unresolved scope or acceptance decisions; reuse the user's existing authorization.
 - Guidance/setup belongs to `$intuitive-init`, human docs to `$intuitive-doc`, test-suite organization to `$intuitive-tests`, and requested history cleanup to `$intuitive-squash`.
-- For delegation, read `skills/_shared/references/codex-delegation.md`; assign disjoint ownership and keep integration and verification in the main session.
+- For delegation, read `skills/_shared/references/delegation.md`; assign disjoint ownership and keep integration and verification in the main session.
 
 ## Sources of truth
 

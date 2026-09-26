@@ -17,14 +17,9 @@ workflow, code, test, or documentation surfaces.
 | Plan entropy | An idea, draft plan, or preflight needs missing decisions, weak assumptions, scope leaks, or proof gaps found. | Ranked plan risks and the next planning owner. | The contract is already approved; use `$intuitive-flow`. |
 | Discovery loop | The user asks to continue until meaningful cleanup saturates. | Fresh bounded rounds with deduplicated clear, parked, and rejected items. | A selected queue is ready for `$intuitive-refactor`. |
 
-Before auditing, state:
-
-```text
-Selected mode:
-Why:
-Redirect:
-Discovery intensity: <quick scan | selection scan | saturation scan>
-```
+Before auditing, name the mode and discovery intensity (quick scan, selection
+scan, or saturation scan) in one sentence, plus a redirect only when another
+mode or skill fits better.
 
 ## Read First
 
@@ -77,10 +72,8 @@ credentials, hardware, paid services, or unavailable proof.
 - `$intuitive-preflight` owns the approved execution contract.
 - `$intuitive-flow` starts only after that contract is approved.
 
-Use the host's approved delegation policy for independent read-only probes.
-Do not hardcode a host-specific worker surface here; on Codex, follow the
-[shared Codex delegation policy](../_shared/references/codex-delegation.md) for
-the native-v2 probe and fallback. Keep the main session responsible for ranking,
+Use the [shared delegation policy](../_shared/references/delegation.md) for
+independent read-only probes. Keep the main session responsible for ranking,
 architecture decisions, and final synthesis.
 
 ## Stop And Handoff
@@ -90,17 +83,7 @@ finds no new material candidate. Do not silently select a subset or begin
 implementation. If nothing passes, say `Selected candidates: none` and do not
 create a gate, commit, or follow-up refactor proposal.
 
-End with:
-
-```text
-Entropy source:
-Discovery intensity:
-Recommended packet:
-Selected candidates:
-Specialist owners:
-Evidence and proof commands:
-Parked items:
-Saturation status:
-Recommended next action:
-Shortcut:
-```
+End with a packet the next owner can act on without repeating the audit.
+Always include selected candidates (with evidence, specialist owner, and proof
+command) and `Recommended next action:`. Add parked items, saturation status,
+or a ready-to-paste `Shortcut:` command only when they carry information.
