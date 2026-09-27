@@ -44,6 +44,11 @@ export const syncGsdSkillState = (
   const desired = new Set(desiredSkills);
   const statePath = gsdStatePath(home);
   const previous = readState(statePath);
+  const skillRoots = [...new Set([
+    join(codexHome, "skills"),
+    join(home, ".agents", "skills"),
+    join(home, ".claude", "skills"),
+  ])];
   let removed = 0;
 
   if (previous) {
@@ -52,12 +57,13 @@ export const syncGsdSkillState = (
         continue;
       }
 
-      removed += removeGsdSkillIfManaged(join(codexHome, "skills", skillName));
-      removed += removeGsdSkillIfManaged(join(home, ".claude", "skills", skillName));
+      for (const root of skillRoots) {
+        removed += removeGsdSkillIfManaged(join(root, skillName));
+      }
     }
   }
 
-  for (const root of [join(codexHome, "skills"), join(home, ".claude", "skills")]) {
+  for (const root of skillRoots) {
     if (!existsSync(root)) {
       continue;
     }
@@ -71,7 +77,7 @@ export const syncGsdSkillState = (
 
   writeState(statePath, {
     schemaVersion: 1,
-    source: "opengsd/get-shit-done-redux",
+    source: "opengsd/gsd-core",
     skills: desiredSkills,
   });
 

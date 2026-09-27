@@ -50,12 +50,19 @@ gsd_current_for_target() {
     local label="$1"
     local config_dir="$2"
     local latest="$3"
-    local version_file="$config_dir/get-shit-done/VERSION"
+    local version_file="$config_dir/gsd-core/VERSION"
     local profile_file="$config_dir/.gsd-profile"
+    local skill_dir
     local desired_profile="core"
     local installed=""
     local active_profile=""
     local desired_skills skill
+
+    if [ "$label" = "codex" ]; then
+        skill_dir="$(dirname "$config_dir")/.agents/skills"
+    else
+        skill_dir="$config_dir/skills"
+    fi
 
     if [ -f "$version_file" ]; then
         installed=$(cat "$version_file")
@@ -70,7 +77,7 @@ gsd_current_for_target() {
             desired_skills=$(bun "$SCRIPT_DIR/lib/default-skill-allowlist.ts" gsd-skills "$SCRIPT_DIR/default-skill-allowlist.txt") || return 1
             while IFS= read -r skill; do
                 [ -n "$skill" ] || continue
-                if [ ! -f "$config_dir/skills/$skill/SKILL.md" ]; then
+                if [ ! -f "$skill_dir/$skill/SKILL.md" ]; then
                     echo "  ! gsd $label missing selected skill $skill; reinstalling v$installed"
                     return 1
                 fi
@@ -110,16 +117,16 @@ run_gsd_installer() {
     else
         task_notice "GSD workflow: running installer $target --profile=$profile via $registry"
     fi
-    out=$(npx --registry="$registry" -y @opengsd/get-shit-done-redux "$target" --global "--profile=$profile" 2>&1) || { echo "$out"; return 1; }
+    out=$(npx --registry="$registry" -y @opengsd/gsd-core "$target" --global "--profile=$profile" 2>&1) || { echo "$out"; return 1; }
     echo "$out" | grep -E '^  [⚠✗!]' || true
 }
 
 run_gsd_workflow() {
     local registry
     local latest
-    registry=$(select_npm_registry "GSD workflow" @opengsd/get-shit-done-redux) || return 1
+    registry=$(select_npm_registry "GSD workflow" @opengsd/gsd-core) || return 1
     task_notice "GSD workflow: resolving latest version"
-    latest=$(npm_package_version @opengsd/get-shit-done-redux "$registry") || return 1
+    latest=$(npm_package_version @opengsd/gsd-core "$registry") || return 1
 
     task_notice "GSD workflow: checking Claude install"
     # Claude Code mirrors Codex: neither host keeps GSD runtime hooks. File
@@ -162,7 +169,7 @@ run_gsd_workflow() {
     fi
 
     local gsd_version
-    gsd_version=$(cat ~/.claude/get-shit-done/VERSION 2>/dev/null || echo "?")
+    gsd_version=$(cat "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/gsd-core/VERSION" 2>/dev/null || echo "?")
     bun "$SCRIPT_DIR/lib/gsd-skill-state.ts" sync "$SCRIPT_DIR/default-skill-allowlist.txt" || return 1
     printf 'core\n' > "${CODEX_HOME:-$HOME/.codex}/.gsd-profile"
     printf 'core\n' > "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/.gsd-profile"

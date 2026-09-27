@@ -379,7 +379,7 @@ describe("skill state lifecycle", () => {
       mkdirSync(join(home, ".intuitive-flow"), { recursive: true });
       writeFileSync(
         join(home, ".intuitive-flow", "gsd-skills.json"),
-        JSON.stringify({ schemaVersion: 1, source: "opengsd/get-shit-done-redux", skills: ["gsd-plan-phase", "gsd-old"] }),
+        JSON.stringify({ schemaVersion: 1, source: "opengsd/gsd-core", skills: ["gsd-plan-phase", "gsd-old"] }),
       );
       mkdirSync(join(home, ".codex", "skills", "gsd-plan-phase"), { recursive: true });
       writeFileSync(join(home, ".codex", "skills", "gsd-plan-phase", "SKILL.md"), "get-shit-done plan\n");
@@ -387,16 +387,22 @@ describe("skill state lifecycle", () => {
       writeFileSync(join(home, ".codex", "skills", "gsd-old", "SKILL.md"), "<codex_skill_adapter>\nold\n");
       mkdirSync(join(home, ".codex", "skills", "gsd-user"), { recursive: true });
       writeFileSync(join(home, ".codex", "skills", "gsd-user", "SKILL.md"), "# User skill\n");
+      mkdirSync(join(home, ".agents", "skills", "gsd-shared-old"), { recursive: true });
+      writeFileSync(join(home, ".agents", "skills", "gsd-shared-old", "SKILL.md"), "<codex_skill_adapter>\nold\n");
+      mkdirSync(join(home, ".agents", "skills", "gsd-shared-user"), { recursive: true });
+      writeFileSync(join(home, ".agents", "skills", "gsd-shared-user", "SKILL.md"), "# User skill\n");
 
       const removed = syncGsdSkillState(allowlistPath, home, join(home, ".codex"));
 
-      expect(removed).toBe(1);
+      expect(removed).toBe(2);
       expect(existsSync(join(home, ".codex", "skills", "gsd-plan-phase", "SKILL.md"))).toBe(true);
       expect(existsSync(join(home, ".codex", "skills", "gsd-old"))).toBe(false);
       expect(existsSync(join(home, ".codex", "skills", "gsd-user", "SKILL.md"))).toBe(true);
+      expect(existsSync(join(home, ".agents", "skills", "gsd-shared-old"))).toBe(false);
+      expect(existsSync(join(home, ".agents", "skills", "gsd-shared-user", "SKILL.md"))).toBe(true);
       expect(JSON.parse(readFileSync(join(home, ".intuitive-flow", "gsd-skills.json"), "utf8"))).toEqual({
         schemaVersion: 1,
-        source: "opengsd/get-shit-done-redux",
+        source: "opengsd/gsd-core",
         skills: ["gsd-plan-phase"],
       });
     } finally {
@@ -412,12 +418,15 @@ describe("skill state lifecycle", () => {
     try {
       for (const label of ["codex", "claude"]) {
         const configDir = join(home, `.${label}`);
-        mkdirSync(join(configDir, "get-shit-done"), { recursive: true });
-        writeFileSync(join(configDir, "get-shit-done", "VERSION"), "1.2.3\n");
+        mkdirSync(join(configDir, "gsd-core"), { recursive: true });
+        writeFileSync(join(configDir, "gsd-core", "VERSION"), "1.2.3\n");
         writeFileSync(join(configDir, ".gsd-profile"), "core\n");
+        const skillDir = label === "codex"
+          ? join(home, ".agents", "skills")
+          : join(configDir, "skills");
         for (const name of desired.filter((name) => name !== "gsd-verify-work")) {
-          mkdirSync(join(configDir, "skills", name), { recursive: true });
-          writeFileSync(join(configDir, "skills", name, "SKILL.md"), "get-shit-done\n");
+          mkdirSync(join(skillDir, name), { recursive: true });
+          writeFileSync(join(skillDir, name, "SKILL.md"), "get-shit-done\n");
         }
         const check = () => spawnSync("bash", ["-c", [
           'SCRIPT_DIR="$1"',
@@ -431,14 +440,13 @@ describe("skill state lifecycle", () => {
         expect(missing.status).toBe(1);
         expect(missing.stdout).toContain("missing selected skill gsd-verify-work");
 
-        mkdirSync(join(configDir, "skills", "gsd-verify-work"), { recursive: true });
-        writeFileSync(join(configDir, "skills", "gsd-verify-work", "SKILL.md"), "get-shit-done verify\n");
+        mkdirSync(join(skillDir, "gsd-verify-work"), { recursive: true });
+        writeFileSync(join(skillDir, "gsd-verify-work", "SKILL.md"), "get-shit-done verify\n");
         expect(check().status).toBe(0);
       }
       expect(syncGsdSkillState(allowlistPath, home, join(home, ".codex"))).toBe(0);
-      for (const label of ["codex", "claude"]) {
-        expect(existsSync(join(home, `.${label}`, "skills", "gsd-verify-work", "SKILL.md"))).toBe(true);
-      }
+      expect(existsSync(join(home, ".agents", "skills", "gsd-verify-work", "SKILL.md"))).toBe(true);
+      expect(existsSync(join(home, ".claude", "skills", "gsd-verify-work", "SKILL.md"))).toBe(true);
     } finally {
       rmSync(home, { recursive: true, force: true });
     }
@@ -458,6 +466,8 @@ describe("skill state lifecycle", () => {
     expect(updateSkills).toContain("external-host-scoped-skills");
     expectBunToolCommand(updateGsdWorkflow, "gsd-skill-state.ts", "sync");
     expect(updateGsdWorkflow).toContain('local profile="full"');
+    expect(updateGsdWorkflow).toContain("@opengsd/gsd-core");
+    expect(updateGsdWorkflow).toContain('config_dir/gsd-core/VERSION');
     expect(updateGsdWorkflow).toContain('local desired_profile="core"');
     expectOwnedRootStateToolCall(syncLocal, "prune-legacy-artifacts", "$default_skill_prune_ledger");
     expectOwnedRootStateToolCall(syncLocal, "prune-owned-root-skills", "$default_skill_allowlist");
