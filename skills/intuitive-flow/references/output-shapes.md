@@ -33,6 +33,25 @@ ownership is shared or a worker runs. When the latest user intent is read-only
 (see the shared First Gates), return a status/decision summary instead of a
 route brief with implementation steps.
 
+## Execution Contract Summary
+
+Emit this immediately before the first edit for approved plan-backed or
+refactor work. Reuse the canonical contract; do not invent a second one.
+
+```text
+Execution contract: APPROVED | BLOCKED
+Canonical source: <plan, issue, or approved conversation contract>
+Scope: <accepted target and boundaries>
+Non-goals: <explicit exclusions>
+Acceptance: <success and required blocked states>
+Verification: <commands and required live/manual gates>
+Stop condition: <exact end condition>
+To execute: <selected route and canonical source>
+```
+
+For `BLOCKED`, replace the execution fields with the missing decision or
+unavailable proof and stop before editing.
+
 ## Hot Resume
 
 Use the experiment contract in

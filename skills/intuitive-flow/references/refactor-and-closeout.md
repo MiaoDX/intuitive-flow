@@ -44,6 +44,12 @@ approved refactor contract. It is the source of truth for the pass and must name
 - persistent gate file, usually `docs/plans/refactor-<target>.md`
 - stop condition
 
+Before the first edit, surface the accepted gate as an execution contract
+summary in the current session. It must name the canonical source, target
+scope, non-goals, acceptance, required verification, and stop condition. A
+refactor `LGTM` authorizes this accepted gate; it does not replace the summary
+or allow edits when a P0/P1 checklist or stop condition is missing.
+
 Follow the [shared delegation policy](../../_shared/references/delegation.md) for worker handoffs. Use short workers
 for report-only scans, stale-path searches, test discovery, and
 independent verification probes; use delegated workers for broad or long-running

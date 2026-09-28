@@ -26,6 +26,26 @@ worker strategy when relevant, and stop gate. If a material field is missing,
 route to `$intuitive-preflight`; Flow can summarize the gap but does not draft
 a second contract.
 
+Before the first implementation edit, make the approved contract observable in
+the current session with a compact execution summary. For plan-backed or
+refactor work, include:
+
+```text
+Execution contract: APPROVED
+Canonical source: <plan, issue, or approved conversation contract>
+Scope: <accepted target and boundaries>
+Non-goals: <explicit exclusions>
+Acceptance: <success and required blocked states>
+Verification: <deterministic, integration, and required live/manual gates>
+Stop condition: <the exact condition that ends this slice>
+To execute: <route and canonical source>
+```
+
+If the contract is not executable, use `Execution contract: BLOCKED` and name
+the missing material field or unavailable gate instead of emitting an approved
+summary. Do not rely on raw chat history, a prior `LGTM`, or an external
+`~/.gstack` artifact as the only visible execution authorization.
+
 ## Deterministic Stop Gates
 
 Durable runs need a machine-readable way to stop; otherwise a goal keeps

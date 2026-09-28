@@ -70,6 +70,20 @@ describe("portable concurrent status contract", () => {
     expect(routeBrief).toContain("auto-commit verified owned slices");
   });
 
+  test("makes approved execution contracts visible before edits", () => {
+    const checkpoints = read("skills/intuitive-flow/references/checkpoints-and-auto-run.md");
+    const outputShapes = read("skills/intuitive-flow/references/output-shapes.md");
+    const closeout = read("skills/intuitive-flow/references/refactor-and-closeout.md");
+
+    expect(checkpoints).toContain("Before the first implementation edit");
+    expect(checkpoints).toContain("Execution contract: APPROVED");
+    expect(checkpoints).toContain("Do not rely on raw chat history");
+    expect(outputShapes).toContain("## Execution Contract Summary");
+    expect(outputShapes).toContain("Execution contract: APPROVED | BLOCKED");
+    expect(closeout).toContain("Before the first edit, surface the accepted gate");
+    expect(closeout).toContain("P0/P1 checklist or stop condition is missing");
+  });
+
   test("keeps initializer adoption conditional and local", () => {
     const initializer = read("skills/intuitive-init/SKILL.md");
 
