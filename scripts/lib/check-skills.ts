@@ -96,6 +96,7 @@ const requiredWorkflowMarkers: Record<string, string[]> = {
   "intuitive-flow": ["Proof", "What changed", "Scope changes", "Parked todos"],
   "intuitive-preflight": ["To execute:", "Approval:"],
   "intuitive-reduce-entropy": ["Recommended next action:", "Shortcut:"],
+  "intuitive-squash": ["**Aggressive**", "**Moderate**"],
 };
 
 const invocationPolicy = (skillDir: string, header: string | undefined) => {

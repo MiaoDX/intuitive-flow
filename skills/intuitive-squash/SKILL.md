@@ -1,6 +1,6 @@
 ---
 name: intuitive-squash
-description: Safely rewrite noisy local history into reviewable commits when the user explicitly asks to squash.
+description: Safely rewrite noisy local history into reviewable commits, with aggressive or moderate plan choices, when the user explicitly asks to squash.
 disable-model-invocation: true
 ---
 
@@ -10,6 +10,19 @@ Turn noisy local history into reviewable commits without changing the final tree
 Read [planning](references/planning.md) to resolve the base, run the bundled
 read-only preflight, identify preserved commits, and propose the commit map.
 Do not mutate branches or the worktree during planning.
+
+## Modes
+
+Offer both modes by default, unless the user requests one exact strategy:
+
+| Mode | Commit shape |
+| --- | --- |
+| **Aggressive** | The fewest coherent reviewable commits, while keeping preserved commits and unrelated change surfaces separate. |
+| **Moderate** | Semantic review and rollback boundaries with phase and fixup churn removed; prefer this for large or high-risk branches. |
+
+State the recommended mode and why, then use the mode the user approves for the
+commit map. For a small stack, the plans may differ only slightly; do not invent
+splits to make them look different.
 
 Keep marked, security/hotfix, configured-path, and other-author commits standalone
 as the preflight requires. Disclose publication, merge, signature, and tag risks;
