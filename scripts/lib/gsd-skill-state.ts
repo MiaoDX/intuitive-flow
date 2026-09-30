@@ -2,14 +2,77 @@
 
 import {
   existsSync,
+  mkdirSync,
   readFileSync,
   readdirSync,
+  writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
 import { gsdSkillsForInstall, readDefaultSkillAllowlist } from "./default-skill-allowlist";
 import { isSafeName, readState, removeIfExists, stateDir, writeState } from "./managed-skill-state-common";
 
 const gsdStatePath = (home: string) => join(stateDir(home), "gsd-skills.json");
+
+const ensureClaudeExplicitOnly = (path: string): void => {
+  if (!existsSync(path)) {
+    return;
+  }
+
+  const text = readFileSync(path, "utf8");
+  if (!text.startsWith("---\n")) {
+    return;
+  }
+
+  if (/^disable-model-invocation:\s*true\s*$/m.test(text)) {
+    return;
+  }
+
+  const end = text.indexOf("\n---\n", 4);
+  if (end === -1) {
+    return;
+  }
+
+  const updated = `${text.slice(0, end)}\ndisable-model-invocation: true${text.slice(end)}`;
+  writeFileSync(path, updated);
+};
+
+const ensureCodexExplicitOnly = (skillDir: string): void => {
+  const path = join(skillDir, "agents", "openai.yaml");
+  mkdirSync(join(skillDir, "agents"), { recursive: true });
+  const text = existsSync(path) ? readFileSync(path, "utf8") : "";
+
+  if (/^\s+allow_implicit_invocation:\s*false\s*$/m.test(text)) {
+    return;
+  }
+
+  const updated = /^\s+allow_implicit_invocation:\s*/m.test(text)
+    ? text.replace(/^\s+allow_implicit_invocation:.*$/m, "  allow_implicit_invocation: false")
+    : `${text.replace(/\s*$/, "")}\npolicy:\n  allow_implicit_invocation: false\n`;
+  writeFileSync(path, updated);
+};
+
+const enforceExplicitInvocationPolicy = (
+  roots: string[],
+  claudeRoot: string,
+  desiredSkills: string[],
+): void => {
+  for (const root of roots) {
+    const isClaude = root === claudeRoot;
+    for (const skillName of desiredSkills) {
+      const skillDir = join(root, skillName);
+      const skillPath = join(skillDir, "SKILL.md");
+      if (!existsSync(skillPath)) {
+        continue;
+      }
+
+      if (isClaude) {
+        ensureClaudeExplicitOnly(skillPath);
+      } else {
+        ensureCodexExplicitOnly(skillDir);
+      }
+    }
+  }
+};
 
 const removeGsdSkillIfManaged = (path: string): number => {
   const skillPath = join(path, "SKILL.md");
@@ -74,6 +137,8 @@ export const syncGsdSkillState = (
       removed += removeGsdSkillIfManaged(join(root, entry));
     }
   }
+
+  enforceExplicitInvocationPolicy(skillRoots, join(home, ".claude", "skills"), desiredSkills);
 
   writeState(statePath, {
     schemaVersion: 1,

@@ -411,6 +411,34 @@ describe("skill state lifecycle", () => {
     }
   });
 
+  test("GSD sync makes managed skills explicit-only on both hosts", () => {
+    const home = mkdtempSync(join(tmpdir(), "gsd-explicit-home-"));
+    const root = mkdtempSync(join(tmpdir(), "gsd-explicit-allowlist-"));
+    try {
+      const allowlistPath = writeAllowlist(root, "gsd-skill default gsd-plan-phase\n");
+      for (const skillRoot of [
+        join(home, ".agents", "skills", "gsd-plan-phase"),
+        join(home, ".claude", "skills", "gsd-plan-phase"),
+      ]) {
+        mkdirSync(skillRoot, { recursive: true });
+        writeFileSync(
+          join(skillRoot, "SKILL.md"),
+          "---\nname: gsd-plan-phase\ndescription: Plan a phase.\n---\n",
+        );
+      }
+
+      syncGsdSkillState(allowlistPath, home, join(home, ".codex"));
+
+      expect(readFileSync(join(home, ".claude", "skills", "gsd-plan-phase", "SKILL.md"), "utf8"))
+        .toContain("disable-model-invocation: true");
+      expect(readFileSync(join(home, ".agents", "skills", "gsd-plan-phase", "agents", "openai.yaml"), "utf8"))
+        .toContain("allow_implicit_invocation: false");
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("current-version GSD installs require every selected skill and retain verification after pruning", () => {
     const home = mkdtempSync(join(tmpdir(), "gsd-current-surface-"));
     const allowlistPath = join(repoRoot, "scripts", "default-skill-allowlist.txt");
