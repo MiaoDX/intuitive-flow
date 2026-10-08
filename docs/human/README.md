@@ -10,6 +10,8 @@ Start here:
   points
 - [STATUS.md](../../STATUS.md) for current state and maintenance focus
 - [BELIEFS.md](../../BELIEFS.md) for the doctrine behind the workflow
+- [web-retrieval.md](web-retrieval.md) for the fetch MCP, Firecrawl, and Jina
+  recommendation, setup, DNS handling, and verification limits
 - [agent-harness-references.md](agent-harness-references.md) for the external
   references and lessons that guide agent harness upgrades, including the
   vendors' latest-model guidance and the writing rules repo-owned skills follow

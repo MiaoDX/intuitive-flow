@@ -2,7 +2,7 @@
 
 - Repo-owned skill sources live in `skills/`; update installed copies through the sync script.
 - Use Bash for orchestration and Bun-run TypeScript for structured scripts. For Python, use `uv` and the repository `.venv`; avoid unnecessary dependencies.
-- Prefer the configured `fetch-mcp` MCP server for network retrieval; when it is unavailable, use the host's native web retrieval and say so.
+- For web retrieval, use `fetch` MCP for simple direct reads, Firecrawl for general external pages, and Jina Reader as fallback; follow [the retrieval reference](skills/_shared/references/web-retrieval.md).
 - Fail explicitly in code; avoid `hasattr()` / `getattr()` for known types.
 - Prefer live-at-HEAD behavior and forward migrations; remove obsolete in-repo APIs and shims unless a bridge is explicitly required.
 - Keep commits atomic with a `Co-authored-by:` trailer naming the agent that did the work (for example `Codex <codex@users.noreply.github.com>`). Do not amend or force-push unless asked; fetch and rebase if a push is rejected because the remote moved.

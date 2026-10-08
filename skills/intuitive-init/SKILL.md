@@ -25,7 +25,8 @@ $intuitive-doc for broad human-documentation cleanup.
 | Long root instructions | [Slim / cleanup](references/detailed-guidance.md#slim--cleanup) |
 | Root file linked to a shared toolkit | [Symlink migration](references/detailed-guidance.md#symlink-migration) |
 | Native init suggestions are useful | [Init discovery](references/detailed-guidance.md#agent-init-discovery) |
-| LSP, Serena, language server, or MCP setup | [Tool setup](references/lsp-and-mcp.md) before editing configuration |
+| LSP, Serena, or symbol MCP setup | [Tool setup](references/lsp-and-mcp.md) before editing configuration |
+| Web retrieval, fetch MCP, Firecrawl, or Jina setup | [Retrieval reference](../_shared/references/web-retrieval.md) |
 
 Use the indicated sections, not the entire detailed guide. Extract long procedures
 only when they have a real consumer, and leave a task-specific pointer at the root.

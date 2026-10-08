@@ -218,6 +218,19 @@ Use this baseline when creating or revising repo-owned skills:
 | [Codex changelog](https://developers.openai.com/codex/changelog) | Re-check release notes after major CLI changes. Goal mode and skill/plugin behavior can shift normal workflow boundaries and should be tested before becoming default runtime rules. When goal mode is used in Codex, keep it worker-local unless a direct main-session task is tiny. |
 | [AGENTS.md open format](https://agents.md/) | `AGENTS.md` is a cross-agent convention supported by multiple coding tools. Prefer it for shared repo rules, with tool-specific deltas kept in tool-specific files. |
 
+## Web Retrieval Sources (reviewed 2026-10-08)
+
+The [retrieval guide](web-retrieval.md) records the recommendation and bounded
+live observations. Use these upstream sources when interfaces or quotas change:
+
+| Source | What It Teaches This Repo |
+| --- | --- |
+| [fetch MCP](https://github.com/zcaceres/fetch-mcp) | Local HTTP retrieval and extraction; keep it for simple accessible content. |
+| [Firecrawl MCP](https://github.com/firecrawl/firecrawl-mcp-server) | Hosted scraping/search, limited anonymous access, and separate OAuth or bearer-key setup. |
+| [Jina Reader](https://github.com/jina-ai/reader) | HTTP URL-prefix retrieval and page-cache controls; use as an independent fallback. |
+| [Jina MCP](https://github.com/jina-ai/MCP) | A separate Streamable HTTP service; tool discovery alone does not verify a successful read. |
+| [curl DoH](https://curl.se/docs/manpage.html#--doh-url) | Per-request encrypted DNS with normal TLS verification; resolver bootstrap still needs connectivity. |
+
 ## Community And Field Reports
 
 | Source | What It Teaches This Repo |

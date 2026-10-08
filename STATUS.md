@@ -1,6 +1,6 @@
 # Status
 
-Last reviewed: 2026-09-26
+Last reviewed: 2026-10-08
 
 ## Current State
 
@@ -67,6 +67,11 @@ The updater registers the `fetch` MCP server for both Claude Code and Codex
 through `npx -y mcp-fetch-server@latest`; it does not clone or maintain a local
 fetch-mcp checkout. The server is host-native and must be health-checked in each
 client after an update.
+
+The [web retrieval guide](docs/human/web-retrieval.md) recommends Firecrawl for
+general external pages and a bundled Jina Reader helper with per-request DoH
+as fallback. Research and Init share this guidance. The updater still registers
+only `fetch`; Firecrawl setup is separate, and Jina Reader is an HTTP helper.
 
 ## Active Focus
 
