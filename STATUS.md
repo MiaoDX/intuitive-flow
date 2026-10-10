@@ -72,6 +72,9 @@ The [web retrieval guide](docs/human/web-retrieval.md) recommends Firecrawl for
 general external pages and a bundled Jina Reader helper with per-request DoH
 as fallback. Research and Init share this guidance. The updater still registers
 only `fetch`; Firecrawl setup is separate, and Jina Reader is an HTTP helper.
+If paid retrieval is needed, the current recommendation is Firecrawl Hobby
+($19/month, or $16/month annual billing) as the primary, with anonymous Jina
+Reader retained as fallback until its rate limit becomes a measured bottleneck.
 
 ## Active Focus
 

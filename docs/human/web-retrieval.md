@@ -1,6 +1,6 @@
 # Web Retrieval: Fetch MCP, Firecrawl, And Jina
 
-Reviewed: 2026-10-08.
+Reviewed: 2026-10-10.
 
 Use **Firecrawl for general external pages, keep fetch MCP for simple direct
 reads, and use Jina Reader as an on-demand fallback**. This keeps the existing
@@ -56,6 +56,33 @@ Configure the secret in the launching environment or client secret store.
 Connection and tool discovery are only setup checks; verify a real scrape
 returns the requested document body before relying on it.
 
+### Paid choice
+
+As of 2026-10-10, Firecrawl's public plans are:
+
+| Plan | Monthly price | Included credits |
+| --- | ---: | ---: |
+| Hobby | $19 monthly, or $16/month billed annually | 5,000 |
+| Standard | $99 monthly, or $83/month billed annually | 100,000 |
+| Growth | $399 monthly, or $333/month billed annually | 500,000 |
+
+One basic scrape is one credit; search costs two credits per ten results.
+Paid plans can add credits in $5 increments. The free plan has 1,000 credits
+per month, but the hosted MCP remains rate-limited. For this repository, start
+with **Firecrawl Hobby** if a paid service is needed. It gives a predictable
+budget for the primary path without paying for both providers.
+
+Jina Reader does not use the same monthly-plan model. Jina issues free tokens
+to new API keys and sells additional token packages through its dashboard. The
+public catalog currently shows packages such as 10M tokens for $10 and larger
+packages with different speed tiers; the exact available package and currency
+depend on the account and checkout page. Buy a small Jina package only if its
+anonymous fallback rate limit becomes a real bottleneck. Do not treat the
+catalog as a fixed monthly subscription or assume unused tokens renew.
+
+Therefore the default paid arrangement is **Firecrawl Hobby plus anonymous
+Jina Reader fallback**. Add Jina credits later based on measured usage.
+
 ## Jina Fallback And DNS
 
 [`r.jina.ai`](https://github.com/jina-ai/reader) is the Reader HTTP API. Its URL
@@ -84,7 +111,7 @@ configuration guarantees access on every network.
 
 ## Evidence And Limits
 
-Bounded observations on 2026-10-08:
+Bounded observations on 2026-10-08; pricing checked 2026-10-10:
 
 - Local direct retrieval of OpenAI docs failed. Firecrawl returned actual Docs
   MCP and Codex config-reference content with `maxAge: 0` (fresh requests).
@@ -100,3 +127,6 @@ or unlimited quotas. Check the useful body, tool errors, cache metadata, and
 truncation; a successful HTTP response alone is insufficient. Cite the original
 source URL and record retrieval limitations. Use remote services for public
 material within the task's authorized scope.
+
+Pricing sources: [Firecrawl pricing](https://www.firecrawl.dev/pricing.md) and
+[Jina Reader rate limits and billing](https://jina.ai/contact-sales#rate-limit).

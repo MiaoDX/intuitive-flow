@@ -231,6 +231,13 @@ live observations. Use these upstream sources when interfaces or quotas change:
 | [Jina MCP](https://github.com/jina-ai/MCP) | A separate Streamable HTTP service; tool discovery alone does not verify a successful read. |
 | [curl DoH](https://curl.se/docs/manpage.html#--doh-url) | Per-request encrypted DNS with normal TLS verification; resolver bootstrap still needs connectivity. |
 
+Current pricing decision (checked 2026-10-10): use Firecrawl Hobby as the
+first paid tier when a predictable primary is needed; leave Jina Reader
+anonymous until its measured rate limit requires token top-ups. Prices and
+allowances are maintained in [the retrieval guide](web-retrieval.md), with
+[Firecrawl's pricing page](https://www.firecrawl.dev/pricing.md) and [Jina's
+rate-limit/billing page](https://jina.ai/contact-sales#rate-limit) as sources.
+
 ## Community And Field Reports
 
 | Source | What It Teaches This Repo |

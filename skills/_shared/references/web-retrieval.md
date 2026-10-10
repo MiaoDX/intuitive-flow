@@ -30,6 +30,20 @@ on `/v2/mcp`. Keep secrets in the client's secret store or environment.
 Register through the host's MCP setup and verify an actual document read.
 Installing servers alone does not wire automatic failover.
 
+For paid use, Firecrawl is the predictable primary: the current Hobby plan is
+$19/month ($16/month annual billing) for 5,000 credits; Standard is $99/month
+($83 annual equivalent) for 100,000 credits. A basic scrape costs one credit,
+and search costs two credits per ten results. The free plan provides 1,000
+credits/month, while paid plans can add credits in $5 increments. Start with
+Hobby when a paid plan is justified.
+
+Jina Reader uses token top-ups rather than a simple monthly subscription. New
+keys receive free tokens; the public catalog currently shows packages such as
+10M tokens for $10, with larger packages and speed tiers. Treat the checkout
+catalog as the current price source, since package availability and currency
+can vary. Keep Jina anonymous as fallback until measured volume justifies
+buying tokens.
+
 ## Jina Reader
 
 Run [the helper](../scripts/jina-reader.sh) with a public source URL, resolving
